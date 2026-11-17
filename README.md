@@ -17,6 +17,7 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 | Resource | Purpose |
 | --- | --- |
 | [Checkpoint notes](docs/releases/v0.1.1-checkpoint.md) | Install, controls, included work and limitations |
+| [Closed checkpoint verification](docs/releases/v0.1.1-verification.md) | Compiled revision, archive identity and bounded regression results |
 | [Changelog](CHANGELOG.md) | Changes in v0.1.1 |
 | [Work board](STATUS.md) | Evidence and outstanding work |
 | [Contributing](CONTRIBUTING.md) | Reproduction and review expectations |
