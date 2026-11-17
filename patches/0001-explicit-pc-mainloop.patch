@@ -1,0 +1,75 @@
+diff --git a/runner/glue.c b/runner/glue.c
+index 9678eef..9648352 100644
+--- a/runner/glue.c
++++ b/runner/glue.c
+@@ -1089,7 +1089,13 @@ void glue_own_interrupt(int level, GVDP *vdp)
+         M68KState saved = g_cpu;
+         int saved_split_sp_popped = recomp_interrupt_context_enter();
+         for (int i = 0; i < 256; i++) save[i] = g_ram[(byteoff + i) & 0xFFFFu];
+-        g_cpu.A[7] = STK;
++        int precise=s_native_pc_scope;
++        uint32_t exception_sp=(saved.A[7]-6u)&0xFFFFFFu;
++        g_cpu.A[7] = precise ? exception_sp : STK;
++        if(precise) {
++            native_interrupt_frame_write(g_ram,exception_sp,saved.SR,saved.PC);
++            g_cpu.SR=(uint16_t)((saved.SR&~0x0700u)|0x0400u);
++        }
+         s_in_vblank_service = 1;
+         /* Same audio-stamp re-base as own_deliver_vint: H-int handler chip
+          * writes stamp at the delivery raster, not the parked counter. */
+@@ -1098,6 +1104,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
+         g_rte_pending = 0; g_rte_pending_ptr = &s_rte_dummy; g_rte_pending = 0;
+         /* H-int handler cycles owe raster time too (same rule as V-int). */
+         uint32_t cyc_before = g_audio_cycle_counter;
++        if(precise) { g_audio_cycle_counter+=44; g_cycle_accumulator+=44; }
+         if (genesis_force_interp()) {
+             /* Interpret the H-int handler body from the level-4 autovector. */
+             m68k_interp_run_handler(m68k_read32(0x70) & 0xFFFFFFu);
+@@ -1109,8 +1116,15 @@ void glue_own_interrupt(int level, GVDP *vdp)
+         g_rte_pending_ptr = &s_rte_real; g_rte_pending = 0;
+         g_68k_stamp_rebase = saved_rebase;
+         s_in_vblank_service = 0;
+-        for (int i = 0; i < 256; i++) g_ram[(byteoff + i) & 0xFFFFu] = save[i];
++        uint32_t return_pc=saved.PC;
++        uint16_t return_sr=saved.SR;
++        if(precise)native_interrupt_frame_read(g_ram,exception_sp,&return_sr,&return_pc);
++        else for (int i = 0; i < 256; i++) g_ram[(byteoff + i) & 0xFFFFu] = save[i];
+         g_cpu = saved;
++        if(precise) {
++            g_cpu.PC=return_pc&0xFFFFFFu;g_cpu.SR=return_sr;
++            s_budget_cyc_seen=g_audio_cycle_counter;
++        }
+         recomp_interrupt_context_leave(saved_split_sp_popped);
+     }
+ }
+@@ -1186,6 +1200,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
+     abort();
+ }
+ 
++/* Game-owned full-program AOT driver. Unlike the bounded native helper,
++ * reset programs have no host return and retain explicit PC across IRQs. */
++void genesis_native_mainloop(uint32_t entry,GenesisNativeInstruction step,void *user)
++{
++    g_cpu.PC=entry&0xFFFFFFu;
++    s_native_pc_scope=1;
++    for (;;) {
++        s_native_instruction_open=0;
++        glue_own_vint_service_latched(&g_machine.vdp);
++        glue_own_hint_service_latched(&g_machine.vdp);
++        unsigned cycles=0;
++        s_native_instruction_open=1;
++        if (!step(user,&cycles) || !cycles || cycles>65535u) {
++            fprintf(stderr,"native main program miss at $%06X\n",g_cpu.PC);
++            abort();
++        }
++        s_native_instruction_open=0;
++        ++g_native_insn_count;
++        g_cycle_accumulator+=cycles;g_audio_cycle_counter+=cycles;
++        GEN_COSIM_TICK(cycles);
++        check_cycle_budget();
++    }
++}
++
+ /* Non-clearing read of the masked-V-int latch for full-state hashing
+  * (glue_own_vint_service_latched() would consume it — must not, during a
+  * side-effect-free snapshot). */

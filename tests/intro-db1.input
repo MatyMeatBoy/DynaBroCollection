@@ -1,0 +1,5 @@
+WAIT 1800
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/evidence/db1-native-1800.png
+WAIT 1800
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/evidence/db1-native-3600.png
+EXIT 0

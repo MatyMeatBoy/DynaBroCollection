@@ -1,0 +1,17 @@
+# Vector-derived initial discovery; game RAM roles remain unknown.
+[game]
+output_prefix = "db1"
+jump_table_autodiscovery = true
+[ram_layout]
+game_mode = 0
+vint_runcount = 0
+vint_routine = 0
+plc_pending = 0
+initial_ssp = 0x00FFFFF0
+vbla_stack = 0x00FFFFF0
+intr_stack = 0x00FFFFF0
+player_object = 0
+level_modes = []
+[functions]
+extra = [0x200, 0x310, 0x312, 0x340, 0x35c]
+blacklist = []

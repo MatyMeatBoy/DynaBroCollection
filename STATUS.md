@@ -1,0 +1,54 @@
+# Work board — 2026-11-17
+
+**The requested project is unfinished.** No stable release, full translation, finished launcher, or widescreen mode is being claimed.
+
+## Completed work with bounded evidence
+
+| Work | Evidence and limit |
+|---|---|
+| Protected dump/patch inventory | SHA256/CRC32 identities in initial audit; original MD checksums correct |
+| DB1 English patch application | Output CRC32 `C1E5C0DA`; independent reference reaches English intro, options and first gameplay |
+| Retail DB2 IPS incompatibility | Writes strings over Special instructions; changes 379,723 of its 524,288 extension bytes. Not applied as a supported patch |
+| Special English adaptation | 22 guarded, fixed-capacity gameplay prompts; no ROM resize; MD checksum recomputed; source/target/patch CRCs and BPS roundtrip checked |
+| Special English visible control | Independent reference and native tutorial capture show `PRESS START`; the other 21 prompts await scene-specific visual checks |
+| Native 68000 execution | Explicit-PC AOT operations rather than the initial incorrect function-based route. DB1 reaches first gameplay in EN and JP; DB2 reaches early tutorial gameplay in the scoped EN image |
+| DB2 compact calls | Original F-line exception handler executes through the AOT MC68000 exception ABI; not replaced with guessed game behavior |
+| DB2 RAM program | Original compressed code at ROM `$E852` is recovered to `$FFE294`, 3,398 bytes; emitted ahead of time and guarded against current RAM bytes |
+| DB2 RAM return stub | `$FF0070` RTS byte/stack/cycle contract tested, including rejection of another opcode |
+| Correct regional hardware | Japanese NTSC version register rather than bypassing the game's regional check |
+| H-int contract repair | Real frame/mask/44 entry cycles. Forced H-int probe fails before and passes after; both V-int and H-int checks observed |
+| Source pin integrity | Build helper checks exact approved tracked patch plus recursive submodule pins/cleanliness; negative tests reject additional tracked/untracked edits |
+| Resource codecs | Bounded LZ and dictionary formats recovered from original routines; synthetic tests and 33 observed dictionary assets decoded. Not all game resource formats are qualified |
+
+## Current local artifacts
+
+- `local/roms/db1-en-v01.md`: supplied DB1 translation, not newly completed translation.
+- `local/roms/db2special-en-v02.md`: **partial** Special translation; CRC32 `DAC9BAFC`, SHA256 `157c75e691528da42abf87e1074d26dca96c14151026be1bd4f8d288889be2db`.
+- `local/patches/db2special-en-v02.bps`: 461-byte delta; SHA256 `4e1b3e46611ccd3f37d111f79ee8a16d91f7d876ff50cc4ec350f9b5aeb50971`.
+- `build/dev/DynaBrothers1AOT.exe`, `build/dev/DynaBrothers2AOT.exe`: mutable development builds. Not packaged or published.
+
+These local files are not Git inputs. Reproduce from source/catalogs and the user's qualified dumps. Previous partial patch versions and all originals are retained.
+
+## Verification ledger
+
+- 17 Python tests: patch corruption/source/bounds, BPS writer roundtrips, codec limits, translation guards/layout/checksum, and engine-source pin rejection.
+- CTest `db2_ram_instruction_contract`: valid guarded RTS and wrong-byte rejection.
+- DB1 native EN and JP: 6,010-frame menu-to-gameplay probes; captures under `local/evidence`.
+- DB2 native scoped EN: 10,010-frame early tutorial probe and screenshots.
+- Audio PCM captured with uncapped dummy output. Large queue drops in those accelerated runs are **not** accepted as real-time sound behavior; physical audio output and sound fidelity remain unverified.
+- H-int before/after: `local/evidence/hint-before-forced` fails; `hint-after-forced` passes and observes IRQ levels 4 and 6.
+- A separate read-only reviewer identified H-int and source-pin issues; both were fixed and the reviewer found no remaining substantive issue in those two fixes.
+- Exact executable hashes and measured frame counts belong to each `probe.json`; changes after a probe require new evidence. Finite execution does not prove campaign or timing equivalence.
+
+## Outstanding authorized work, in order
+
+1. Finish a verified text/graphics inventory for DB1, including practice, results, endings and secrets; complete genuinely missing English rather than guessing from patch version numbers.
+2. Complete Special's English: unit names, menus, tutorials, story, scenarios, result/ending text and graphical text. Candidate extraction found 684 byte sequences, including false positives: **not** a translation denominator. Do not bulk-patch those candidates.
+3. Visually exercise all 22 scoped prompts and their layout/meaning. Establish ROM-backed regression captures for each context.
+4. Resolve remaining timing/color differences against independent reference, audio acceptance, lifecycle, saves and longer routes. Whole-game correctness remains unverified.
+5. Implement translation toggle enabled by default in the final shared launcher/in-game settings. Current language selection by ROM path is only a development mechanism.
+6. Implement the requested launcher, in-game menu, Original/Enhanced modes and persistent shared settings. Verify actual 3-/6-button hardware and remapping.
+7. Original must preserve the requested 4:3 presentation; distinguish CRT pixel-aspect correction from raw square-pixel integer scaling. Current engine labels alone are insufficient.
+8. Implement real 16:9 world extension, terrain and actors outside the MD frame, UI/cursor alignment, and largest integer scaling at 1080p/1440p/4K. No widescreen capability is implemented or exposed yet.
+9. Qualify host state snapshots before enabling saving/rewind in the new AOT path; current development adapters explicitly disable them. Original DB2 SRAM remains separate from snapshot acceptance.
+10. Package and verify a standalone build with notices and no proprietary inputs. No remote repository, PR, release or upload was created.

@@ -1,0 +1,6 @@
+WAIT 120
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/evidence/db1-frame120.png
+WAIT 480
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/evidence/db1-frame600.png
+DUMP_RAM D:/01Claude/Dynabrothers1+2/local/evidence/db1-frame600.ram
+EXIT 0

@@ -1,0 +1,6 @@
+/upstream/
+/build/
+/generated/
+/local/
+__pycache__/
+*.pyc

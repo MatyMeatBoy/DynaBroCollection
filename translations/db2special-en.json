@@ -1,0 +1,183 @@
+{
+  "source_sha256": "1d3f08e235fa8e51b9656820fabfb5b703acaf36bc34d5378a3f9613d453bb76",
+  "scope": "Initial gameplay prompts only; incomplete translation",
+  "entries": [
+    {
+      "id": "upgrade_egg",
+      "address": 32846,
+      "before": "b6b2bfdeb3bdd901c0cfbadea601b4d7ddc3dec8af",
+      "english": "PICK_EGG\u0001TO__\u0001UPGRADE",
+      "capacity": 21,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "pick_egg",
+      "address": 33206,
+      "before": "c0cfbadea601b4d7ddc3dec8",
+      "english": "PICK\u0001AN_EGG_",
+      "capacity": 12,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "advance",
+      "address": 33414,
+      "before": "bcddb9deb7015f5f5f5f40d3b0c4de40",
+      "english": "ADVANCE\u0001____MODE",
+      "capacity": 16,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "gather_spot",
+      "address": 33498,
+      "before": "b1c2cfd901cadebcaea601b4d7ddc3dec8af",
+      "english": "PICK_A\u0001GATHER\u0001SPOT",
+      "capacity": 18,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "gather",
+      "address": 33678,
+      "before": "bcadb3badeb3015f5f5f5f40d3b0c4de40",
+      "english": "GATHER\u0001____MODE__",
+      "capacity": 17,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "brawl",
+      "address": 33744,
+      "before": "d7ddc4b3015f5f5f5f40d3b0c4de40",
+      "english": "BRAWL\u0001____MODE_",
+      "capacity": 15,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "breed",
+      "address": 33808,
+      "before": "caddbcaeb8015f5f5f5f40d3b0c4de40",
+      "english": "BREED\u0001____MODE__",
+      "capacity": 16,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "assault_blocked",
+      "address": 33966,
+      "before": "c4c2b9deb75f01c3deb7cfbedd",
+      "english": "CAN'T\u0001ASSAULT",
+      "capacity": 13,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "assault_target",
+      "address": 34078,
+      "before": "d4afc2b9d901b1b2c3a601b4d7ddc3dec8af",
+      "english": "PICK_THE\u0001TARGET___",
+      "capacity": 18,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "assault",
+      "address": 34097,
+      "before": "c4c2b9deb7015f5f5f5f40d3b0c4de2140",
+      "english": "ASSAULT\u0001___MODE!_",
+      "capacity": 17,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "guide_target",
+      "address": 34438,
+      "before": "d5b3c4deb3bdd90140b7acd7b8c0b040a601b4d7ddc3dec8af",
+      "english": "CHOOSE_A\u0001UNIT_TO\u0001GUIDE___",
+      "capacity": 25,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "guide_blocked",
+      "address": 34630,
+      "before": "d5b3c4deb35f01c3deb7cfbedd",
+      "english": "CAN'T\u0001GUIDE__",
+      "capacity": 13,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "plant_spot",
+      "address": 35836,
+      "before": "b3b4d901cadebcaea601b4d7ddc3dec8af",
+      "english": "WHERE\u0001TO_PLANT?__",
+      "capacity": 17,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "plant_blocked",
+      "address": 36332,
+      "before": "bfbac6ca01b3b4d7dacfbedd",
+      "english": "CAN'T\u0001PLANT_",
+      "capacity": 12,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "mark_target",
+      "address": 36476,
+      "before": "40cfb0b840bdd90140b7acd7b8c0b040a601b4d7ddc3dec8af",
+      "english": "CHOOSE_A\u0001UNIT_TO\u0001MARK____",
+      "capacity": 25,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "mark_blocked",
+      "address": 36656,
+      "before": "40cfb0b8405f01c3deb7cfbedd",
+      "english": "CAN'T\u0001MARK___",
+      "capacity": 13,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "rain",
+      "address": 37102,
+      "before": "ccd7bed901caddb2a601b4d7ddc3dec8af",
+      "english": "PICK_AREA\u0001TO_RAIN",
+      "capacity": 17,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "dry",
+      "address": 37120,
+      "before": "c3d7bd01caddb2a601b4d7ddc3dec8af",
+      "english": "PICK_AREA\u0001TO_DRY",
+      "capacity": 16,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "bolt",
+      "address": 37137,
+      "before": "b5c4bd01cadebcaea601b4d7ddc3dec8af",
+      "english": "PICK_BOLT\u0001SPOT___",
+      "capacity": 17,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "meteor",
+      "address": 37155,
+      "before": "b5c4bd01caddb2a601b4d7ddc3dec8af",
+      "english": "PICK_AREA\u0001TO_HIT",
+      "capacity": 16,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "quake",
+      "address": 37172,
+      "before": "b5babd01caddb2a601b4d7ddc3dec8af",
+      "english": "PICK_AREA\u0001QUAKE_",
+      "capacity": 16,
+      "verification": "binary-only; scene-pending"
+    },
+    {
+      "id": "press_start",
+      "address": 64308,
+      "before": "40bdc0b0c4cedec0dd40a65fb5bcc3c8",
+      "english": "PRESS_START_____",
+      "capacity": 16,
+      "verification": "scene-pending"
+    }
+  ],
+  "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused."
+}

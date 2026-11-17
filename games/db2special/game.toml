@@ -1,0 +1,1128 @@
+# Vector-derived initial discovery; game RAM roles remain unknown.
+[game]
+output_prefix = "db2special"
+discovery_files = ["flines.toml"]
+jump_table_autodiscovery = true
+[ram_layout]
+game_mode = 0
+vint_runcount = 0
+vint_routine = 0
+plc_pending = 0
+initial_ssp = 0x00FFFFFE
+vbla_stack = 0x00FFFFFE
+intr_stack = 0x00FFFFFE
+player_object = 0
+level_modes = []
+[functions]
+extra = [0x200, 0x242, 0x284, 0x2c6, 0x3a0, 0x3a2, 0x3a8, 0x44a, 0x68c, 0x694, 0x738]
+blacklist = []
+
+# BEGIN GENERATED FLINE HOOKS
+
+[[widescreen_site]]
+addr = 0x00020A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00021A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00024C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00025C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00028E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00029E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0002D0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0002E0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00031A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000382
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000844
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000918
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000924
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000926
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000936
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000982
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000990
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000A76
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000A88
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000A9C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000B58
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000B68
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000BB2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000BB4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000BC6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x000BD0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0014AA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x002114
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003A14
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003A38
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003A46
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003A54
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003A66
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x003AE2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005110
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005122
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005150
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005180
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005194
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0051DE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0051EA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0051FA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005214
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005228
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005244
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005276
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00531E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005484
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005492
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0054A2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0054B0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0054C0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0054CE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00576E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0057E8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005BE6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005BF8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005C34
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005C56
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005CA2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005CF0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x005FA8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00678E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00679E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0069C0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0069D0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x006EE0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x006F52
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x006F80
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x006F8E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x006FC8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00BBF6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00BC10
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00C2BC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F6FA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F75C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F7E8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F7EC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F97C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F9B8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00F9CA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x00FB28
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x014B5C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x01E8EA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x01E8F6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x03DA24
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x03DAAC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x043E0C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x043FE8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0441AE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0442E0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0442F4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044302
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044314
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0443B2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0443E6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044442
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0444C8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0444DA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0444EA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044512
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044520
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044532
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044542
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044572
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044586
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044594
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0445A2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0445B0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0445CA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0445DC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0445EC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0446C2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x044756
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04479E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0447A0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0447A2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A562
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A564
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A566
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A662
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A782
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A7B4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A82E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A86E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04A90A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AA4E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AAD0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AC5C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04ACD6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AD0C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AD1E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AD2E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04ADF2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AE04
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AF44
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04AF5A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CB5C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CBA8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CBB2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CBC0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CBF6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CC00
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CC0E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CCAC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CCBE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x04CCF4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x0539AA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x053B16
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x057A66
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x059A5C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x059ACA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x059B1C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05A2FA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05A314
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AB9C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05ABBC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05ABEE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AC0E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AC44
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AC54
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AD72
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05AD8E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B1B0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B1CE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B2C4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B394
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B396
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B42A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B442
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B4CE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B4DA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B4DC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B50A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B516
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B526
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B56A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B572
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B5DE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B5EA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B64E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B65C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B66A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B6AC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B6B2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B6C0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B6C2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B832
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B866
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B936
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B952
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B9C2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B9D0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05B9DE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05BA92
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05BBDA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05BE40
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05BE5C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C3FC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C3FE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C400
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C46C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C4AA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C4BC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C502
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C514
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C540
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C552
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C562
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C574
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C6CC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C6F4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C71C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C744
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C81E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C8B4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C922
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05C9F2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CB9A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CBB0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CBCE
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CD4A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CD90
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CDA2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CDB4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CDC4
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CDD6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CEFC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CF3A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CF3C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CF90
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05CFC6
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D002
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D092
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D0A0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D0A8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D0B8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D0CA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D2A2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D300
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D3E0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D3E2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D4EA
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D538
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D604
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D616
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D674
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D69E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D71C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D722
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D724
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D7DC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D94A
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D960
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05D9CC
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DA90
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DAA2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DD02
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DD14
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DD32
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DDF8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DE4E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DED0
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DED2
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DED8
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DF2E
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DF40
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05DF94
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E01C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E022
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E024
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E056
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E068
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E078
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E18C
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E192
+kind = "game_hook"
+
+[[widescreen_site]]
+addr = 0x05E194
+kind = "game_hook"

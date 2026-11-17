@@ -1,0 +1,80 @@
+[
+  {
+    "repository": "mstan/segagenesisrecomp",
+    "branch": "master",
+    "commit": "4b2247d2b33a45623a686043a48c2021744c39ab",
+    "date": "2026-11-17T20:21:18Z",
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "url": "https://github.com/mstan/segagenesisrecomp"
+  },
+  {
+    "repository": "mstan/SonicTheHedgehogRecomp",
+    "branch": "master",
+    "commit": "2419789c541a3399653ab6e66346453984bf8456",
+    "date": "2026-11-16T18:46:06Z",
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "url": "https://github.com/mstan/SonicTheHedgehogRecomp"
+  },
+  {
+    "repository": "mstan/SonicTheHedgehog2Recomp",
+    "branch": "master",
+    "commit": "fb2473a60f43b9a51dae8dc0912119b051e0e306",
+    "date": "2026-11-17T12:11:34Z",
+    "license": null,
+    "url": "https://github.com/mstan/SonicTheHedgehog2Recomp"
+  },
+  {
+    "repository": "mstan/Sonic3AndKnucklesRecomp",
+    "branch": "main",
+    "commit": "04935207da282c17591445f1a104f8b6a5f9e04c",
+    "date": "2026-11-17T20:21:28Z",
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "url": "https://github.com/mstan/Sonic3AndKnucklesRecomp"
+  },
+  {
+    "repository": "mstan/RocketKnightAdventuresRecomp",
+    "branch": "main",
+    "commit": "609243318edde8b26f489ae20fc94350b4f649b9",
+    "date": "2026-11-06T19:08:51Z",
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "url": "https://github.com/mstan/RocketKnightAdventuresRecomp"
+  },
+  {
+    "repository": "mstan/SonicCDRecomp",
+    "branch": "main",
+    "commit": "adcde75e53841cf85c7dcc3b0adc1ee8750f91ea",
+    "date": "2026-11-09T04:52:05Z",
+    "license": {
+      "key": "other",
+      "name": "Other",
+      "spdx_id": "NOASSERTION",
+      "url": null,
+      "node_id": "MDc6TGljZW5zZTA="
+    },
+    "url": "https://github.com/mstan/SonicCDRecomp"
+  }
+]
