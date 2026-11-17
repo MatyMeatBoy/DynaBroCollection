@@ -6,7 +6,10 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import time
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
+from tools.windows_environment import portable_windows_env
 
 
 def prepare_scene_script(script, output):
@@ -72,7 +75,7 @@ def main():
     env['GENESIS_USER_DIR'] = str(profile)
     env['SDL_AUDIODRIVER'] = 'dummy'
     if args.portable_env:
-        env['PATH'] = str(Path(env['SystemRoot']) / 'System32') + ';' + env['SystemRoot']
+        env = portable_windows_env(env)
     elif Path('C:/msys64/ucrt64/bin').exists():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
     argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher', '--pacing', 'accurate']

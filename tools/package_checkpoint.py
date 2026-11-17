@@ -11,6 +11,8 @@ import sys
 import zipfile
 
 ROOT=Path(__file__).resolve().parent.parent
+sys.path.insert(0,str(ROOT))
+from tools.windows_environment import portable_windows_env
 BIN=Path('C:/msys64/ucrt64/bin')
 EXECUTABLES=['DynaBrothersLauncher.exe','DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']
 
@@ -67,7 +69,7 @@ def stage(candidate):
                 queue.append(target)
             else:system.add(name)
     embedded={}
-    portable_env=dict(env);portable_env['PATH']=str(Path(env['SystemRoot'])/'System32')+';'+env['SystemRoot']
+    portable_env=portable_windows_env(env)
     for target in ['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']:
         text=subprocess.check_output([str(payload/target),'--build-info'],env=portable_env,text=True).strip()
         validate_build_info(text,revision);embedded[target]=text
