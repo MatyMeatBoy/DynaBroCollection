@@ -9,6 +9,37 @@ import subprocess
 import time
 
 
+def prepare_scene_script(script, output):
+    lines, captures = [], []
+    for line in script.splitlines():
+        command = line.strip().split(maxsplit=1)
+        if command and command[0] == 'EXIT':
+            continue
+        if command and command[0] == 'SCREENSHOT':
+            if len(command) != 2:
+                raise ValueError('SCREENSHOT requires a path')
+            name = command[1].replace('\\', '/').rsplit('/', 1)[-1]
+            if not name.lower().endswith('.png') or name in ('.png', '..png'):
+                raise ValueError('Capture must have a PNG filename')
+            target = output / name
+            if target in captures:
+                raise ValueError('Duplicate capture filename: ' + name)
+            captures.append(target)
+            line = 'SCREENSHOT ' + target.as_posix()
+        lines.append(line)
+    return '\n'.join(lines), captures
+
+
+def missing_captures(captures):
+    failures = []
+    for path in captures:
+        if not path.is_file():
+            failures.append('Missing capture: ' + path.name)
+        elif not path.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):
+            failures.append('Invalid PNG capture: ' + path.name)
+    return failures
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('binary', type=Path)
@@ -37,10 +68,9 @@ def main():
         argv += ['--measure-runtime', str(args.frames), '--runtime-uncapped', '--wav', str(output / 'audio.wav')]
     else:
         argv += ['--benchmark', str(args.frames)]
+    captures = []
     if args.script:
-        script = args.script.read_text(encoding='utf-8')
-        script = '\n'.join(line for line in script.splitlines() if not line.startswith('EXIT'))
-        script = script.replace('D:/01Claude/Dynabrothers1+2/local/evidence/', output.as_posix() + '/')
+        script, captures = prepare_scene_script(args.script.read_text(encoding='utf-8'), output)
         path = output / 'scene.input'
         path.write_text(script, encoding='utf-8')
         argv += ['--input-script', str(path)]
@@ -56,6 +86,7 @@ def main():
     failures = [line for line in log.splitlines() if any(marker in line for marker in
                 ('[AOT] missing', '[ILLEGAL]', 'unexpectedly', 'native main program miss', 'HALT st=',
                  'IRQ instruction guard', '[AOT-IRQ] INVALID', 'replay file write failed', 'ROM mismatch'))]
+    failures.extend(missing_captures(captures))
     if env.get('DYNA_IRQ_SELFTEST') and '[AOT-IRQ] PASS level=4' not in log:
         failures.append('H-int exception-frame check was not exercised')
     summaries = re.findall(r'GENESISRECOMP_BENCHMARK (\{[^\n]+\})', log)

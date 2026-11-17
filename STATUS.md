@@ -22,7 +22,9 @@
 
 ## Current local artifacts
 
-- `local/roms/db1-en-v01.md`: supplied DB1 translation, not newly completed translation.
+- `local/roms/db1-en-v01.md`: supplied DB1 translation.
+- `local/roms/db1-en-v02.md`: six additional map/surrender label repairs; CRC32 `3BE23E09`, SHA256 `04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4`.
+- `local/patches/db1-en-v02-addon.bps`: 206-byte add-on, applies to supplied English v0.1 output (not directly to Japanese).
 - `local/roms/db2special-en-v02.md`: **partial** Special translation; CRC32 `DAC9BAFC`, SHA256 `157c75e691528da42abf87e1074d26dca96c14151026be1bd4f8d288889be2db`.
 - `local/patches/db2special-en-v02.bps`: 461-byte delta; SHA256 `4e1b3e46611ccd3f37d111f79ee8a16d91f7d876ff50cc4ec350f9b5aeb50971`.
 - `build/dev/DynaBrothers1AOT.exe`, `build/dev/DynaBrothers2AOT.exe`: mutable development builds. Not packaged or published.
@@ -31,7 +33,7 @@ These local files are not Git inputs. Reproduce from source/catalogs and the use
 
 ## Verification ledger
 
-- 17 Python tests: patch corruption/source/bounds, BPS writer roundtrips, codec limits, translation guards/layout/checksum, and engine-source pin rejection.
+- 21 Python tests: patch corruption/source/bounds, BPS writer roundtrips, codec limits, translation guards/layout/checksum, and engine-source pin rejection.
 - CTest `db2_ram_instruction_contract`: valid guarded RTS and wrong-byte rejection.
 - DB1 native EN and JP: 6,010-frame menu-to-gameplay probes; captures under `local/evidence`.
 - DB2 native scoped EN: 10,010-frame early tutorial probe and screenshots.
@@ -52,3 +54,9 @@ These local files are not Git inputs. Reproduce from source/catalogs and the use
 8. Implement real 16:9 world extension, terrain and actors outside the MD frame, UI/cursor alignment, and largest integer scaling at 1080p/1440p/4K. No widescreen capability is implemented or exposed yet.
 9. Qualify host state snapshots before enabling saving/rewind in the new AOT path; current development adapters explicitly disable them. Original DB2 SRAM remains separate from snapshot acceptance.
 10. Package and verify a standalone build with notices and no proprietary inputs. No remote repository, PR, release or upload was created.
+
+## DB1 map-label milestone
+
+Recovered the compact font-selection table at `$1B510` and six nine-tile labels at `$1B464`. The supplied patch changed the font but left these Japanese indices, producing garbled text. Repaired CREATURES, LAND MAP, EGG MAP, SURRENDER, NO and REALLY? with guarded data edits; no code or ROM-size change. All six visually checked in the independent reference and current native runner (`local/evidence/db1-v02-all-map-native`, 8,900 frames). The route previously missed AOT PC `$AF26`; expanded the aligned candidate catalog over the observed DB1 program region `$200..$30000` rather than enabling an interpreter fallback. Counts include data candidates. The existing English defeat/results screen was also visually checked in the reference.
+
+The native probe now relocates screenshot basenames and fails on missing/invalid captures. `current-db2-en` has finite-execution evidence only because its nested captures failed; `current-db2-en-captures` repeats the route with both valid captures. This does not alter earlier probe results retroactively.

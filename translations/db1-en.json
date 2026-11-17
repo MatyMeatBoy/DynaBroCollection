@@ -1,0 +1,15 @@
+{
+  "source_sha256": "30ba0e06ce6a0704168d191cbb4d45487406908859f5df7aacd484bd42b0e7b7",
+  "scope": "Six map/menu labels repaired; overall translation remains incomplete",
+  "labels_before": "0009000400110015000c0013000300110016000b00060004000d00150001000a00020002000a0013000700150013000300110016000200070005000800140002000200020002000200040004001000000002000200020002000200120014000e0005000f0000000200020002",
+  "font_before": "02000260028003400360038003e0042004400460048004a004e0054005a005e0060007c007e00800",
+  "labels": [
+    "CREATURES",
+    "LAND MAP",
+    "EGG MAP",
+    "SURRENDER",
+    "NO",
+    "REALLY?"
+  ],
+  "verification": "All six labels visually checked in independent reference and native AOT scenes; see games/db1/scenes/map-labels.input. Campaign and remaining translation inventory are separate."
+}

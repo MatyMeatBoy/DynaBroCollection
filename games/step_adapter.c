@@ -10,7 +10,11 @@
 #include DYNA_STEP_HEADER
 #ifdef DYNA_HAS_JP
 #include "db1jp.h"
-static const GameRomAlias japanese_alias={"Japanese original",0x360C1B20u};
+#include "translation_identity_db1.h"
+static const GameRomAlias db1_aliases[]={
+    {"Japanese original",0x360C1B20u},
+    {"English map-label repairs (partial)",DYNA_DB1_ENGLISH_CRC}
+};
 #endif
 #ifdef DYNA_HAS_OVERLAY
 #include "db2overlay.h"
@@ -35,6 +39,12 @@ static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write1
 
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
+    if(DYNA_ENTRY==0x200u && g_cpu.PC==0x9828u && getenv("DYNA_LZ_TRACE")) {
+        uint32_t dst=glue_peek32(g_cpu.A[7]+4u);
+        uint32_t src=glue_peek32(g_cpu.A[7]+8u);
+        fprintf(stderr,"[DB1-LZ] source=$%06X target=$%06X bytes=%u method=%u\n",
+                src,dst,glue_peek16(src),glue_peek8(src+2u));
+    }
     if(ctx==&main_cpu && !ctx->state.instructions && getenv("DYNA_IRQ_SELFTEST")) {
         g_cpu.SR=0x2300u;
         g_machine.vdp.reg[0]|=16u;
@@ -128,7 +138,7 @@ const GameSpec g_game_spec={
     .load_settings=settings,
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
-    .rom_aliases=&japanese_alias,.num_rom_aliases=1,
+    .rom_aliases=db1_aliases,.num_rom_aliases=2,
 #elif defined(DYNA_HAS_OVERLAY)
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,
 #endif

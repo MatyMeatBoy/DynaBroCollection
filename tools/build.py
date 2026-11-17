@@ -97,6 +97,20 @@ def main():
     from tools.translate_db2 import translate
     import json
     import zlib
+    from tools.translate_db1 import translate as translate_db1
+    catalog_db1 = json.loads((ROOT / 'translations/db1-en.json').read_text(encoding='utf-8'))
+    db1_en = translate_db1(translated, catalog_db1)
+    db1_crc = f'{zlib.crc32(db1_en):08X}'
+    db1_cache = ROOT / f'local/roms/db1-en-{db1_crc}.md'
+    if db1_cache.exists():
+        if db1_cache.read_bytes() != db1_en:
+            raise RuntimeError('Existing DB1 English cache differs')
+    else:
+        with db1_cache.open('xb') as out:
+            out.write(db1_en)
+    db1_step_dir = ROOT / 'generated/db1step'
+    db1_step_dir.mkdir(parents=True, exist_ok=True)
+    (db1_step_dir / 'translation_identity_db1.h').write_text('#pragma once\n#define DYNA_DB1_ENGLISH_CRC 0x' + db1_crc + 'u\n')
     catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
     db2_en = translate(db2.read_bytes(), catalog)
     db2_crc = f'{zlib.crc32(db2_en):08X}'
@@ -130,7 +144,10 @@ def main():
             # Counts are native operations, never recovered game functions.
             pcs = set(range(0x200, 0x62000, 2))
         else:
-            pcs = set()
+            # Include every aligned candidate in the observed program region.
+            # Menu/map branches need entries beyond the boot trace. Runtime
+            # opcode guards still reject stale or different instructions.
+            pcs = set(range(0x200, 0x30000, 2))
             for part in (ROOT / 'generated' / legacy).glob('*part*.c'):
                 pcs.update(int(x, 16) for x in re.findall(r'/\* \$([0-9A-F]{6}) \*/', part.read_text(encoding='utf-8')))
             pcs.update(int(x, 16) for x in (ROOT / 'games/db1/boot-gameplay-pcs.txt').read_text().splitlines() if x and not x.startswith('#'))

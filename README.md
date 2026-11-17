@@ -56,3 +56,5 @@ Native probes use separate `GENESIS_USER_DIR` profiles, remove diagnostic interp
 - [OptiPort](https://github.com/MatyMeatBoy/OptiPort), commit `9673006504bf6712b320da70965bc3f65f2dd41a`, guides preservation and validation.
 
 Recent framework/game repositories and exact revisions are recorded in [upstream-pins.json](docs/research/upstream-pins.json). Availability of another project's feature does not establish that it works in Dyna Brothers.
+
+DB1 map-label revision: `python tools/translate_db1.py local/roms/db1-en-v01.md` creates `local/roms/db1-en-v02.md` and a BPS add-on for English v0.1. Six map/surrender labels are now readable and checked in both runtimes; this is still a partial project. The build helper also produces a CRC-named copy and accepts it in the AOT runner.
