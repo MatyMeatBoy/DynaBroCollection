@@ -1,0 +1,2 @@
+# Exact approved-patch comparisons must survive Windows checkouts unchanged.
+patches/*.patch -text whitespace=-blank-at-eol

@@ -1,4 +1,5 @@
 import pathlib
+import os
 import struct
 import unittest
 import zlib
@@ -25,9 +26,12 @@ class PatchTests(unittest.TestCase):
                 apply_bps(source, self.bps(source, target, stream))
 
     def test_real_db1_crc_and_wrong_source(self):
-        root = pathlib.Path(r'D:\01Claude\Dynabrothers')
-        rom = next(p for p in root.rglob('*.md') if p.stat().st_size == 1048576).read_bytes()
-        patch = next(root.rglob('*.bps')).read_bytes()
+        root = pathlib.Path(os.environ.get('DYNA_TEST_INPUTS', r'D:\01Claude\Dynabrothers'))
+        if not root.exists():
+            self.skipTest('Private cartridge fixture unavailable; public CI uses synthetic fixtures')
+        from tools.build import find_by_hash, DB1_SHA, PATCH_SHA
+        rom = find_by_hash(root, DB1_SHA, {'.md', '.bin'}).read_bytes()
+        patch = find_by_hash(root, PATCH_SHA, {'.bps'}).read_bytes()
         result = apply_bps(rom, patch)
         self.assertEqual(zlib.crc32(result), 0xC1E5C0DA)
         with self.assertRaises(PatchError):

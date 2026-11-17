@@ -85,5 +85,12 @@
     "license": "MIT",
     "url": "https://github.com/mstan/recomp-ui",
     "usage": "Shared launcher and in-game settings integration; local development validation in progress"
+  },
+  {
+    "repository": "mdqinc/SDL_GameControllerDB",
+    "commit": "4e87e3c6c2574f49e1cdf8526b6f829b61e5ccb3",
+    "license": "zlib",
+    "url": "https://github.com/mdqinc/SDL_GameControllerDB",
+    "usage": "Bundled SDL2 device mappings; physical hardware acceptance is separate"
   }
 ]

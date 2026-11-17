@@ -1,16 +1,17 @@
 diff --git a/runner/game_spec.h b/runner/game_spec.h
-index a135a9b..f42124b 100644
+index a135a9b..5eb2ae3 100644
 --- a/runner/game_spec.h
 +++ b/runner/game_spec.h
-@@ -26,6 +26,7 @@
+@@ -26,6 +26,8 @@
  #include <stdint.h>
  #include "game_video.h"
  struct RecompLauncherCModProvider;
 +struct RecompRuntimeUiItem;
++struct _SDL_GameController;
  
  /*
   * One per-game TCP debug command. The handler receives the request id
-@@ -77,6 +78,12 @@ typedef struct GameSpec {
+@@ -77,6 +79,15 @@ typedef struct GameSpec {
      /* Clean game name for gameplay and launcher captions, e.g. "Sonic the
       * Hedgehog". Build/backend/debug identity belongs in logs and About. */
      const char *display_name;
@@ -20,9 +21,70 @@ index a135a9b..f42124b 100644
 +    size_t runtime_menu_item_count;
 +    int (*runtime_menu_get)(const char *key,int *value);
 +    int (*runtime_menu_set)(const char *key,int value);
++    void (*controller_prepare)(int joystick_index);
++    uint16_t (*controller_mask)(unsigned player,struct _SDL_GameController *pad,uint16_t normal);
++    void (*controller_removed)(unsigned player);
      const char *short_name;          /* "Sonic1" — shows up in info / ping */
      /* Box-art file staged next to the exe under assets/img/, e.g.
       * "boxart-sonic3.tga". NULL => the shared "boxart.tga" (single-boxart
+diff --git a/runner/gamepad.c b/runner/gamepad.c
+index c57d756..fe64626 100644
+--- a/runner/gamepad.c
++++ b/runner/gamepad.c
+@@ -15,6 +15,7 @@
+ 
+ #include "gamepad.h"
+ #include "input_map.h"
++#include "game_spec.h"
+ 
+ #include <SDL2/SDL.h>
+ #include <stdio.h>
+@@ -29,6 +30,7 @@ static int s_pending_load = 0;
+ 
+ static void open_pad_index(int joystick_index)
+ {
++    if(g_game_spec.controller_prepare)g_game_spec.controller_prepare(joystick_index);
+     if (!SDL_IsGameController(joystick_index)) return;
+ 
+     /* Preserve other assignments on disconnect; fill the first empty slot. */
+@@ -61,6 +63,7 @@ static void close_pad_by_jid(SDL_JoystickID jid)
+             SDL_GameControllerClose(s_pad[i]);
+             s_pad[i]     = NULL;
+             s_pad_jid[i] = -1;
++            if(g_game_spec.controller_removed)g_game_spec.controller_removed((unsigned)i);
+             if (i == 0) s_pending_load = 0;
+         }
+     }
+@@ -87,6 +90,7 @@ void gamepad_shutdown(void)
+         if (s_pad[i]) SDL_GameControllerClose(s_pad[i]);
+         s_pad[i]     = NULL;
+         s_pad_jid[i] = -1;
++        if(g_game_spec.controller_removed)g_game_spec.controller_removed((unsigned)i);
+     }
+     s_pending_save = 0;
+     s_pending_load = 0;
+@@ -99,10 +103,12 @@ void gamepad_handle_event(const SDL_Event *ev)
+     if (gamepad_cancels_quickload(ev)) s_pending_load = 0;
+     switch (ev->type) {
+         case SDL_CONTROLLERDEVICEADDED:
++        case SDL_JOYDEVICEADDED:
+             /* cdevice.which is a joystick index here (not an instance id). */
+             open_pad_index(ev->cdevice.which);
+             break;
+         case SDL_CONTROLLERDEVICEREMOVED:
++        case SDL_JOYDEVICEREMOVED:
+             /* cdevice.which is an instance id on REMOVED. */
+             close_pad_by_jid((SDL_JoystickID)ev->cdevice.which);
+             break;
+@@ -169,7 +175,7 @@ uint16_t gamepad_player_mask(int player)
+     if (ly < -dz) m |= input_button_bit(GB_UP);
+     if (ly >  dz) m |= input_button_bit(GB_DOWN);
+ 
+-    return m;
++    return g_game_spec.controller_mask?g_game_spec.controller_mask((unsigned)player,c,m):m;
+ }
+ 
+ int gamepad_player_connected(int player)
 diff --git a/runner/glue.c b/runner/glue.c
 index 9678eef..9648352 100644
 --- a/runner/glue.c
@@ -99,7 +161,7 @@ index 9678eef..9648352 100644
   * (glue_own_vint_service_latched() would consume it — must not, during a
   * side-effect-free snapshot). */
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..893b650 100644
+index df30a08..db3f7f8 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -389,7 +389,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
@@ -129,7 +191,17 @@ index df30a08..893b650 100644
          gi.expected_crc         = g_game_spec.expected_rom_crc32;
          gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
  #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
-@@ -3190,7 +3190,7 @@ int main(int argc, char *argv[])
+@@ -2484,6 +2484,9 @@ static void replay_view(GenesisReplayView *v,int apply)
+ 
+ int main(int argc, char *argv[])
+ {
++    if(argc==2&&!strcmp(argv[1],"--build-info")) {
++        puts(genesis_build_info_string());return 0;
++    }
+     cmd_server_owner_review_init(getenv("GENESIS_OWNER_REVIEW"));
+     init_exe_dir(argv[0]);
+     const char *user_dir=getenv("GENESIS_USER_DIR");
+@@ -3190,7 +3193,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -138,7 +210,7 @@ index df30a08..893b650 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3201,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3204,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }

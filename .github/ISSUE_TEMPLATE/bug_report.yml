@@ -1,0 +1,38 @@
+name: Fallo del checkpoint
+description: Reportar un fallo reproducible sin adjuntar ROMs ni datos privados.
+title: '[Bug] '
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Versión y build
+      description: Versión del checkpoint y revisión que aparece con --build-info o en PACKAGE.json.
+    validations:
+      required: true
+  - type: dropdown
+    id: game
+    attributes:
+      label: Juego
+      options:
+        - Dyna Brothers
+        - Dyna Brothers 2 Special (Virtual Console)
+        - Launcher
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Pasos para reproducir
+      description: Indica idioma, escena y ajustes. Incluye qué esperabas y qué ocurrió.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Equipo y controles
+      description: Windows, GPU, resolución, mando y modo de conexión (Bluetooth, receptor, XInput o DirectInput), si corresponde.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidencia opcional revisada
+      description: Capturas o extractos breves de errores. No adjuntes ROMs, saves, logs privados ni archivos personales. Revisa cualquier repetición antes de compartirla.

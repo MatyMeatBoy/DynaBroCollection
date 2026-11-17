@@ -3,5 +3,6 @@
 /generated/
 /local/
 /rom.cfg
+/releases/
 __pycache__/
 *.pyc

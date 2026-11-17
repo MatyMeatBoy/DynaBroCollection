@@ -14,6 +14,7 @@ from tools.rompatch import apply_bps, create_bps
 ROOT = Path(__file__).resolve().parent.parent
 ENGINE_SHA = '4b2247d2b33a45623a686043a48c2021744c39ab'
 UI_SHA = 'd55bf8304c455dbc5773a000c919f6ba0a26d6bb'
+CONTROLLER_DB_SHA = '4e87e3c6c2574f49e1cdf8526b6f829b61e5ccb3'
 DB1_SHA = 'b4918a9156365d500ff415ce2a5197798d7529c3be91ce8370c6900df57d893c'
 DB2_SHA = '1d3f08e235fa8e51b9656820fabfb5b703acaf36bc34d5378a3f9613d453bb76'
 PATCH_SHA = '01be7ab1e20d5603bca9da531e18f9f0baf178d0e64aa5c049c3a1f3a92000d2'
@@ -91,6 +92,12 @@ def main():
     ui_dirty = subprocess.check_output(['git', '-C', str(ui), 'status', '--porcelain', '--untracked-files=normal'], text=True)
     if ui_head != UI_SHA or ui_dirty:
         raise RuntimeError('Shared UI differs from the qualified clean pin; existing work was preserved')
+    controllers = ROOT / 'upstream/controller-db'
+    if not controllers.exists():
+        run('clone-controller-db', ['git', 'clone', '--no-checkout', 'https://github.com/mdqinc/SDL_GameControllerDB.git', controllers])
+        run('pin-controller-db', ['git', 'checkout', '--detach', CONTROLLER_DB_SHA], cwd=controllers)
+    if subprocess.check_output(['git', '-C', str(controllers), 'rev-parse', 'HEAD'], text=True).strip() != CONTROLLER_DB_SHA or subprocess.check_output(['git', '-C', str(controllers), 'status', '--porcelain'], text=True):
+        raise RuntimeError('Controller database differs from the qualified clean pin')
     db1 = find_by_hash(args.inputs, DB1_SHA, {'.md', '.bin'})
     db2 = find_by_hash(args.inputs, DB2_SHA, {'.md', '.bin'})
     bps = find_by_hash(args.inputs, PATCH_SHA, {'.bps'})
@@ -191,6 +198,8 @@ def main():
             run('operations-db2-overlay', [step, overlay_dir / 'overlay.bin', overlay_dir, 'db2overlay', '0xFFE294', '--all'])
     run('configure-game', [cmake, '-S', ROOT, '-B', ROOT / 'build/dev', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', '-DGENESIS_NATIVE_IPO=OFF'])
     targets = ['DynaBrothers1AOT', 'DynaBrothers2AOT'] if args.target == 'both' else ['DynaBrothers1AOT' if args.target == 'db1' else 'DynaBrothers2AOT']
+    if os.name == 'nt' and args.target == 'both':
+        targets.append('DynaBrothersLauncher')
     run('build-game', [cmake, '--build', ROOT / 'build/dev', '--target', *targets, '--parallel', args.jobs])
     print('Experimental native build complete. Translation completion and whole-game validation remain separate.')
 

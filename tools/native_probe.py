@@ -49,8 +49,14 @@ def main():
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--audio', action='store_true')
     parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
+    parser.add_argument('--lookup', choices=['binary', 'cached'], help='Compare native descriptor lookup policies')
+    parser.add_argument('--cpu-core', type=int, help='Pin a Windows measurement to one logical processor')
+    parser.add_argument('--replay', type=Path, help='Validate all executions from an existing diagnostic recording')
+    parser.add_argument('--portable-env', action='store_true', help='Exclude development DLL directories from the child environment')
     parser.add_argument('--timeout', type=int, default=180)
     args = parser.parse_args()
+    if args.replay and args.script:
+        parser.error('Replay supplies its own inputs; do not combine with a scene script')
     output = args.output.resolve()
     if output.exists():
         parser.error('Use a fresh output directory to preserve earlier evidence')
@@ -61,11 +67,17 @@ def main():
         (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
     env = dict(os.environ)
     env.pop('GENESIS_FORCE_INTERP', None)
+    if args.lookup:
+        env['DYNA_AOT_LOOKUP'] = args.lookup
     env['GENESIS_USER_DIR'] = str(profile)
     env['SDL_AUDIODRIVER'] = 'dummy'
-    if Path('C:/msys64/ucrt64/bin').exists():
+    if args.portable_env:
+        env['PATH'] = str(Path(env['SystemRoot']) / 'System32') + ';' + env['SystemRoot']
+    elif Path('C:/msys64/ucrt64/bin').exists():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
     argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher', '--pacing', 'accurate']
+    if args.replay:
+        argv += ['--replay-diagnostic', str(args.replay.resolve())]
     if args.audio:
         env.update(LNG_SCRIPT='1', LNG_TEST_HIDDEN='1')
         argv += ['--measure-runtime', str(args.frames), '--runtime-uncapped', '--wav', str(output / 'audio.wav')]
@@ -79,11 +91,22 @@ def main():
         argv += ['--input-script', str(path)]
     start = time.monotonic()
     try:
-        run = subprocess.run(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=args.timeout)
-        log = run.stdout.decode('utf-8', errors='replace')
-        code = run.returncode
+        process = subprocess.Popen(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if args.cpu_core is not None:
+            import ctypes
+            if os.name != 'nt' or not 0 <= args.cpu_core < 64:
+                process.kill();process.communicate();raise ValueError('CPU affinity requires a Windows logical processor 0..63')
+            kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+            kernel.SetProcessAffinityMask.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+            kernel.SetProcessAffinityMask.restype = ctypes.c_int
+            if not kernel.SetProcessAffinityMask(int(process._handle), 1 << args.cpu_core):
+                process.kill();process.communicate();raise ctypes.WinError(ctypes.get_last_error())
+        raw, _ = process.communicate(timeout=args.timeout)
+        log = raw.decode('utf-8', errors='replace')
+        code = process.returncode
     except subprocess.TimeoutExpired as error:
-        log = (error.stdout or b'').decode('utf-8', errors='replace')
+        process.kill();raw, _ = process.communicate()
+        log = raw.decode('utf-8', errors='replace')
         code = 'timeout'
     (output / 'run.log').write_text(log, encoding='utf-8')
     failures = [line for line in log.splitlines() if any(marker in line for marker in
@@ -99,10 +122,17 @@ def main():
     summaries = re.findall(r'GENESISRECOMP_BENCHMARK (\{[^\n]+\})', log)
     measurement = json.loads(summaries[-1]) if summaries else None
     complete = bool(code == 0 and not failures and measurement and measurement.get('complete') and measurement.get('frames') == args.frames)
+    matched = re.findall(r'\[feedback-replay\] all (\d+) recorded executions matched', log)
+    if args.replay:
+        complete = bool(code == 0 and not failures and matched and measurement and measurement.get('frames') == int(matched[-1]))
     report = dict(passed=complete, returncode=code, failures=failures, elapsed_seconds=time.monotonic() - start,
                   binary_sha256=hashlib.sha256(args.binary.read_bytes()).hexdigest(),
                   rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest(), frames=args.frames,
                   language_request=args.language or 'default',
+                  lookup_request=args.lookup or 'default',
+                  cpu_core=args.cpu_core,
+                  replay_executions=int(matched[-1]) if matched else None,
+                  portable_environment=args.portable_env,
                   measurement=measurement, screenshots=[p.name for p in output.glob('*.png')],
                   scope='Finite execution only; visual/translation correctness and campaign acceptance are separate')
     (output / 'probe.json').write_text(json.dumps(report, indent=2), encoding='utf-8')

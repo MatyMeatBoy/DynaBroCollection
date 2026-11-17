@@ -9,13 +9,18 @@
 #include "input_map.h"
 #include "language_settings.h"
 #include "language_patch.h"
+#include "controller_profiles.h"
+#include "step_lookup.h"
 #include DYNA_LANGUAGE_HEADER
 #if RECOMP_LAUNCHER
 #include "recomp_runtime_ui.h"
+static const char *const controller_choices[]={"Automatic","Custom SDL bindings","M30 Bluetooth / DirectInput","M30 Mini 2.4GHz receiver","M30 XInput"};
 static const RecompRuntimeUiItem language_items[]={
     {"dyna.english","Language","English translation (restart)",
      "Partial translation. Changes apply after restarting the application; the running game keeps its current language.",
-     RECOMP_RUNTIME_UI_BOOL,0,1,1}
+     RECOMP_RUNTIME_UI_BOOL,0,1,1},
+    {"controls.p1_profile","Controls","Player 1 layout","Automatic detects known M30 devices. Select an M30 preset for shared/generic IDs; Custom uses your SDL bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
+    {"controls.p2_profile","Controls","Player 2 layout","Saved per connected device; does not overwrite another controller's bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5}
 };
 #endif
 #include DYNA_STEP_HEADER
@@ -39,6 +44,10 @@ static const GameRomAlias english_prompts_alias={"English gameplay prompts (part
 extern void genesis_native_mainloop(uint32_t, GenesisNativeInstruction, void *);
 extern void glue_own_interrupt(int, GVDP *);
 static M68kStepContext main_cpu;
+static int cached_lookup=1;
+static M68kStepResult execute_module(M68kStepContext *ctx,const M68kStepModule *module) {
+    return cached_lookup?dyna_step_cached(ctx,module):m68k_step_module_execute(ctx,module);
+}
 static uint32_t expected_hint_audio;
 extern const M68kStepEntry dyna_db2_ram_return;
 static M68kStepBusResult read8(void *u,uint32_t a,uint8_t *v) { (void)u;*v=m68k_read8(a);return M68K_BUS_OK; }
@@ -69,14 +78,14 @@ static int retire(void *user,unsigned *cycles) {
     _Static_assert(sizeof(ctx->state.regs)==sizeof(g_cpu),"MC68000 register ABI");
     memcpy(&ctx->state.regs,&g_cpu,sizeof(g_cpu));
     uint64_t before=ctx->state.cycles;
-    M68kStepResult result=m68k_step_module_execute(ctx,&DYNA_STEP_MODULE);
+    M68kStepResult result=execute_module(ctx,&DYNA_STEP_MODULE);
 #ifdef DYNA_HAS_JP
     if(result==M68K_STEP_MISS)
-        result=m68k_step_module_execute(ctx,&db1jp_module);
+        result=execute_module(ctx,&db1jp_module);
 #endif
 #ifdef DYNA_HAS_OVERLAY
     if(result==M68K_STEP_MISS)
-        result=m68k_step_module_execute(ctx,&db2overlay_module);
+        result=execute_module(ctx,&db2overlay_module);
 #endif
     if(result==M68K_STEP_MISS && DYNA_ENTRY==0x738u && g_cpu.PC==0xFF0070u)
         result=m68k_step_execute(ctx,&dyna_db2_ram_return);
@@ -92,6 +101,9 @@ static int retire(void *user,unsigned *cycles) {
     return 1;
 }
 static void entry(void) {
+    const char *lookup=getenv("DYNA_AOT_LOOKUP");
+    cached_lookup=!lookup||strcmp(lookup,"binary");
+    dyna_step_cache_clear();
     char error[160];
     if(!dyna_language_apply(g_rom,DYNA_SIZE,&DYNA_LANGUAGE_IMAGE,dyna_language_english(),error,sizeof error)) {
         fprintf(stderr,"[language] %s\n",error);abort();
@@ -146,15 +158,18 @@ static void settings(const char *path){
      * saved 3-button choices and unrelated settings retain their values. */
     for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_6BUTTON;
     app_config_load(path);
+    dyna_controllers_load(path);
 }
 static const char *snapshot_reason(void){return "Saving and rewind are not available in this development build.";}
 const GameSpec g_game_spec={
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
     .region_label="NTSC-J (Japan)",
 #if RECOMP_LAUNCHER
-    .runtime_menu_items=language_items,.runtime_menu_item_count=1,
+    .runtime_menu_items=language_items,.runtime_menu_item_count=3,
     .runtime_menu_get=dyna_language_runtime_get,.runtime_menu_set=dyna_language_runtime_set,
 #endif
+    .controller_prepare=dyna_controller_prepare,.controller_mask=dyna_controller_mask,
+    .controller_removed=dyna_controller_removed,
     .expected_rom_crc32=DYNA_CRC,.expected_rom_size=DYNA_SIZE,
     .call_entry_point=entry,.call_vblank=vint,.call_hblank=hint,
     .tier3_floor_default=0,

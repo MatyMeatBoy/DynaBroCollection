@@ -1,8 +1,12 @@
 #include "language_settings.h"
 #include "recomp_launcher.h"
+#include "game_spec.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+const GameSpec g_game_spec={0};
+static int replaying;
+int genesis_replay_playing(void){return replaying;}
 
 int main(int argc,char **argv) {
     assert(argc==2);
@@ -21,7 +25,14 @@ int main(int argc,char **argv) {
     assert(dyna_language_runtime_set("dyna.english",1));
     RecompLauncherCModProvider empty={0};
     const RecompLauncherCModProvider *provider=dyna_language_mods(&empty);
-    assert(provider->feature_count(NULL)==1);
+    assert(provider->feature_count(NULL)==3);
+    assert(!provider->feature_enable(NULL,"dyna-controls","player-1",0));
+    replaying=1;
+    assert(provider->feature_enable(NULL,"dyna-controls","player-1",0));
+    assert(provider->feature_enable(NULL,"dyna-controls","player-2",1));
+    assert(provider->feature_set_option(NULL,"dyna-controls","player-1","layout","4"));
+    assert(!provider->feature_set_option(NULL,"dyna-controls","player-1","layout","9"));
+    replaying=0;
     RecompLauncherCModFeature feature;
     assert(provider->feature_get(NULL,0,&feature)&&feature.enabled);
     assert(provider->feature_enable(NULL,"dyna-language","english",0));
