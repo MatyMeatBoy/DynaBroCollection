@@ -2,5 +2,6 @@
 /build/
 /generated/
 /local/
+/rom.cfg
 __pycache__/
 *.pyc

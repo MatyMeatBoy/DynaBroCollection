@@ -7,6 +7,17 @@
 #include "m68k_step.h"
 #include "app_config.h"
 #include "input_map.h"
+#include "language_settings.h"
+#include "language_patch.h"
+#include DYNA_LANGUAGE_HEADER
+#if RECOMP_LAUNCHER
+#include "recomp_runtime_ui.h"
+static const RecompRuntimeUiItem language_items[]={
+    {"dyna.english","Language","English translation (restart)",
+     "Partial translation. Changes apply after restarting the application; the running game keeps its current language.",
+     RECOMP_RUNTIME_UI_BOOL,0,1,1}
+};
+#endif
 #include DYNA_STEP_HEADER
 #ifdef DYNA_HAS_JP
 #include "db1jp.h"
@@ -81,6 +92,12 @@ static int retire(void *user,unsigned *cycles) {
     return 1;
 }
 static void entry(void) {
+    char error[160];
+    if(!dyna_language_apply(g_rom,DYNA_SIZE,&DYNA_LANGUAGE_IMAGE,dyna_language_english(),error,sizeof error)) {
+        fprintf(stderr,"[language] %s\n",error);abort();
+    }
+    dyna_language_started();
+    fprintf(stderr,"[language] %s (translation remains partial)\n",dyna_language_english()?"English":"Japanese original");
     /* Both qualified dumps are Japan NTSC. DB2 reads $A10001 & $C0 at
      * $000A54 and rejects the shared runner's overseas default $80. */
     g_machine.bus.version=0x00;
@@ -124,6 +141,7 @@ static void interrupt(uint32_t pc,unsigned level) {
 static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
 static void settings(const char *path){
+    dyna_language_settings_load(path);
     /* Use the common parser again after installing game defaults. Explicit
      * saved 3-button choices and unrelated settings retain their values. */
     for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_6BUTTON;
@@ -132,10 +150,16 @@ static void settings(const char *path){
 static const char *snapshot_reason(void){return "Saving and rewind are not available in this development build.";}
 const GameSpec g_game_spec={
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
+    .region_label="NTSC-J (Japan)",
+#if RECOMP_LAUNCHER
+    .runtime_menu_items=language_items,.runtime_menu_item_count=1,
+    .runtime_menu_get=dyna_language_runtime_get,.runtime_menu_set=dyna_language_runtime_set,
+#endif
     .expected_rom_crc32=DYNA_CRC,.expected_rom_size=DYNA_SIZE,
     .call_entry_point=entry,.call_vblank=vint,.call_hblank=hint,
     .tier3_floor_default=0,
     .load_settings=settings,
+    .mods=dyna_language_mods,
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
     .rom_aliases=db1_aliases,.num_rom_aliases=2,

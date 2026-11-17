@@ -9,10 +9,11 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from tools.rompatch import apply_bps
+from tools.rompatch import apply_bps, create_bps
 
 ROOT = Path(__file__).resolve().parent.parent
 ENGINE_SHA = '4b2247d2b33a45623a686043a48c2021744c39ab'
+UI_SHA = 'd55bf8304c455dbc5773a000c919f6ba0a26d6bb'
 DB1_SHA = 'b4918a9156365d500ff415ce2a5197798d7529c3be91ce8370c6900df57d893c'
 DB2_SHA = '1d3f08e235fa8e51b9656820fabfb5b703acaf36bc34d5378a3f9613d453bb76'
 PATCH_SHA = '01be7ab1e20d5603bca9da531e18f9f0baf178d0e64aa5c049c3a1f3a92000d2'
@@ -82,6 +83,14 @@ def main():
         run('check-engine-adapter', ['git', 'apply', '--check', patch], cwd=engine)
         run('apply-engine-adapter', ['git', 'apply', patch], cwd=engine)
     verify_engine_checkout(engine, ENGINE_SHA, patch)
+    ui = ROOT / 'upstream/recomp-ui'
+    if not ui.exists():
+        run('clone-ui', ['git', 'clone', '--no-checkout', 'https://github.com/mstan/recomp-ui.git', ui])
+        run('pin-ui', ['git', 'checkout', '--detach', UI_SHA], cwd=ui)
+    ui_head = subprocess.check_output(['git', '-C', str(ui), 'rev-parse', 'HEAD'], text=True).strip()
+    ui_dirty = subprocess.check_output(['git', '-C', str(ui), 'status', '--porcelain', '--untracked-files=normal'], text=True)
+    if ui_head != UI_SHA or ui_dirty:
+        raise RuntimeError('Shared UI differs from the qualified clean pin; existing work was preserved')
     db1 = find_by_hash(args.inputs, DB1_SHA, {'.md', '.bin'})
     db2 = find_by_hash(args.inputs, DB2_SHA, {'.md', '.bin'})
     bps = find_by_hash(args.inputs, PATCH_SHA, {'.bps'})
@@ -113,6 +122,22 @@ def main():
     (db1_step_dir / 'translation_identity_db1.h').write_text('#pragma once\n#define DYNA_DB1_ENGLISH_CRC 0x' + db1_crc + 'u\n')
     catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
     db2_en = translate(db2.read_bytes(), catalog)
+    from tools.generate_language import emit_image
+    emit_image([db1.read_bytes(), db1_en, translated], 'db1', ROOT / 'generated/language')
+    emit_image([db2.read_bytes(), db2_en], 'db2', ROOT / 'generated/language')
+    for name, original, target, crc in [('db1', db1.read_bytes(), db1_en, db1_crc),
+                                         ('db2special', db2.read_bytes(), db2_en, f'{zlib.crc32(db2_en):08X}')]:
+        cumulative = create_bps(original, target)
+        if apply_bps(original, cumulative) != target:
+            raise RuntimeError('Cumulative translation patch roundtrip failed')
+        patch_path = ROOT / f'local/patches/{name}-en-{crc}.bps'
+        patch_path.parent.mkdir(parents=True, exist_ok=True)
+        if patch_path.exists():
+            if patch_path.read_bytes() != cumulative:
+                raise RuntimeError('Existing cumulative patch differs')
+        else:
+            with patch_path.open('xb') as out:
+                out.write(cumulative)
     db2_crc = f'{zlib.crc32(db2_en):08X}'
     db2_cache = ROOT / f'local/roms/db2special-en-{db2_crc}.md'
     if db2_cache.exists():

@@ -58,3 +58,5 @@ Native probes use separate `GENESIS_USER_DIR` profiles, remove diagnostic interp
 Recent framework/game repositories and exact revisions are recorded in [upstream-pins.json](docs/research/upstream-pins.json). Availability of another project's feature does not establish that it works in Dyna Brothers.
 
 DB1 map-label revision: `python tools/translate_db1.py local/roms/db1-en-v01.md` creates `local/roms/db1-en-v02.md` and a BPS add-on for English v0.1. Six map/surrender labels are now readable and checked in both runtimes; this is still a partial project. The build helper also produces a CRC-named copy and accepts it in the AOT runner.
+
+The native targets now use the shared graphical launcher on a plain double-click (passing a ROM path directly bypasses it). English is enabled by default even when loading the original Japanese dump. In Mods > Language, disable **English translation** to restore Japanese on the next start. The selection is shared by the two executables in `dynabrothers-language.ini` beside the selected profile settings. Translations remain partial. An in-session restart-required item is wired, but its visual interaction still needs verification.

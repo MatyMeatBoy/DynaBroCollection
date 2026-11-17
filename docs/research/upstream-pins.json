@@ -76,5 +76,14 @@
       "node_id": "MDc6TGljZW5zZTA="
     },
     "url": "https://github.com/mstan/SonicCDRecomp"
+  },
+  {
+    "repository": "mstan/recomp-ui",
+    "branch": "master",
+    "commit": "d55bf8304c455dbc5773a000c919f6ba0a26d6bb",
+    "date": "2026-11-16T10:41:00-08:00",
+    "license": "MIT",
+    "url": "https://github.com/mstan/recomp-ui",
+    "usage": "Shared launcher and in-game settings integration; local development validation in progress"
   }
 ]

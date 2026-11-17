@@ -33,7 +33,7 @@ These local files are not Git inputs. Reproduce from source/catalogs and the use
 
 ## Verification ledger
 
-- 21 Python tests: patch corruption/source/bounds, BPS writer roundtrips, codec limits, translation guards/layout/checksum, and engine-source pin rejection.
+- 23 Python tests: patch corruption/source/bounds, BPS writer roundtrips, codec limits, translation guards/layout/checksum, and engine-source pin rejection.
 - CTest `db2_ram_instruction_contract`: valid guarded RTS and wrong-byte rejection.
 - DB1 native EN and JP: 6,010-frame menu-to-gameplay probes; captures under `local/evidence`.
 - DB2 native scoped EN: 10,010-frame early tutorial probe and screenshots.
@@ -60,3 +60,15 @@ These local files are not Git inputs. Reproduce from source/catalogs and the use
 Recovered the compact font-selection table at `$1B510` and six nine-tile labels at `$1B464`. The supplied patch changed the font but left these Japanese indices, producing garbled text. Repaired CREATURES, LAND MAP, EGG MAP, SURRENDER, NO and REALLY? with guarded data edits; no code or ROM-size change. All six visually checked in the independent reference and current native runner (`local/evidence/db1-v02-all-map-native`, 8,900 frames). The route previously missed AOT PC `$AF26`; expanded the aligned candidate catalog over the observed DB1 program region `$200..$30000` rather than enabling an interpreter fallback. Counts include data candidates. The existing English defeat/results screen was also visually checked in the reference.
 
 The native probe now relocates screenshot basenames and fails on missing/invalid captures. `current-db2-en` has finite-execution evidence only because its nested captures failed; `current-db2-en-captures` repeats the route with both valid captures. This does not alter earlier probe results retroactively.
+
+## Reversible language-system milestone
+
+Added a default-on English selector backed by qualified sparse ROM data (DB1: original, supplied v0.1, current v0.2; DB2: original Special/current partial English). ROM files on disk are untouched; all spans and the full image CRC are checked before mutation, and invalid target metadata restores the source. Generated cartridge payloads stay private under `generated/language`.
+
+Pinned shared `recomp-ui` at `d55bf8304c455dbc5773a000c919f6ba0a26d6bb`, MIT. The graphical launcher was visually opened: six-button default and checked English feature observed; unchecking it, pressing Play, persisted `english=0` and booted Japanese text. Both games passed finite native routes from original Japanese inputs with default English and from translated inputs with Japanese selected (DB1 8,900; DB2 10,010 frames; `local/evidence/language-*`). These exact executable hashes precede the additional region-label/runtime-item seam.
+
+Added game-owned runtime-menu item/get/set seams to the approved engine patch, a Japanese region caption, and an English (restart) in-session item with transactional preference persistence. The in-session preference callback is covered by CTest, but visual opening of the runtime menu is still unverified: the Windows automation keyboard attempts produced no SDL key events in `runtime-menu-input/run.log`; no game-input fix is claimed from that. Mouse interaction with the launcher and its actual Japanese boot were observed.
+
+Three CTests pass: language patch transaction/rollback, language preference/provider persistence, and RAM RTS contract. Shared preboot UI is integrated, not a finished combined two-game launcher or Original/Enhanced mode system.
+
+Additional authorized controls work: automatic 8BitDo M30 Bluetooth and 2.4GHz profiles with six-button Genesis layout, SDL2/XInput/DirectInput and generic joystick support. Research found distinct M30 IDs in DirectInput; some XInput/adapter identities are generic, so those connections require an explicit M30 profile override. No physical M30 validation has occurred.

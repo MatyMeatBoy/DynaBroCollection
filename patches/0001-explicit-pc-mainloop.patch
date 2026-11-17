@@ -1,3 +1,28 @@
+diff --git a/runner/game_spec.h b/runner/game_spec.h
+index a135a9b..f42124b 100644
+--- a/runner/game_spec.h
++++ b/runner/game_spec.h
+@@ -26,6 +26,7 @@
+ #include <stdint.h>
+ #include "game_video.h"
+ struct RecompLauncherCModProvider;
++struct RecompRuntimeUiItem;
+ 
+ /*
+  * One per-game TCP debug command. The handler receives the request id
+@@ -77,6 +78,12 @@ typedef struct GameSpec {
+     /* Clean game name for gameplay and launcher captions, e.g. "Sonic the
+      * Hedgehog". Build/backend/debug identity belongs in logs and About. */
+     const char *display_name;
++    const char *region_label; /* NULL retains the shared runner's default. */
++    /* Optional game-owned in-session settings, composed with common items. */
++    const struct RecompRuntimeUiItem *runtime_menu_items;
++    size_t runtime_menu_item_count;
++    int (*runtime_menu_get)(const char *key,int *value);
++    int (*runtime_menu_set)(const char *key,int value);
+     const char *short_name;          /* "Sonic1" — shows up in info / ping */
+     /* Box-art file staged next to the exe under assets/img/, e.g.
+      * "boxart-sonic3.tga". NULL => the shared "boxart.tga" (single-boxart
 diff --git a/runner/glue.c b/runner/glue.c
 index 9678eef..9648352 100644
 --- a/runner/glue.c
@@ -73,3 +98,58 @@ index 9678eef..9648352 100644
  /* Non-clearing read of the masked-V-int latch for full-state hashing
   * (glue_own_vint_service_latched() would consume it — must not, during a
   * side-effect-free snapshot). */
+diff --git a/runner/main.c b/runner/main.c
+index df30a08..893b650 100644
+--- a/runner/main.c
++++ b/runner/main.c
+@@ -389,7 +389,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
+     else if (!strcmp(i->key,"video.internal_resolution")) {
+         *out=0;for(int n=0;n<7;++n)if(s_hd_scales[n]==g_app_config.internal_scale)*out=n;
+     }
+-    else return 0; return 1;
++    else return g_game_spec.runtime_menu_get?g_game_spec.runtime_menu_get(i->key,out):0; return 1;
+ }
+ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
+     RuntimeUiContext *c = (RuntimeUiContext *)p;
+@@ -438,7 +438,7 @@ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
+             s_frame_texture_filtered = mode != SDL_ScaleModeNearest;
+     } else if (!strcmp(i->key, RECOMP_RUNTIME_UI_KEY_VOLUME)) {
+         g_app_config.volume = v; audio_set_master_volume(v);
+-    } else return 0; return 1;
++    } else return g_game_spec.runtime_menu_set?g_game_spec.runtime_menu_set(i->key,v):0; return 1;
+ }
+ static void runtime_ui_save(void *p) {
+     (void)p;
+@@ -2197,7 +2197,7 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+         RecompLauncherCGameInfo gi;
+         memset(&gi, 0, sizeof gi);
+         gi.name                 = g_game_spec.display_name;
+-        gi.region               = "NTSC-U (USA)";
++        gi.region               = g_game_spec.region_label?g_game_spec.region_label:"NTSC-U (USA)";
+         gi.expected_crc         = g_game_spec.expected_rom_crc32;
+         gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
+ #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
+@@ -3190,7 +3190,7 @@ int main(int argc, char *argv[])
+             cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
+         }
+         {
+-            static RecompRuntimeUiItem items[8]; unsigned count=0;
++            static RecompRuntimeUiItem items[24]; unsigned count=0;
+             if (game_video_has_viewport(g_game_spec.video)) {
+                 memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
+             }
+@@ -3201,6 +3201,14 @@ int main(int argc, char *argv[])
+             if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
+                 memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
+             }
++            if(g_game_spec.runtime_menu_item_count) {
++                if(!g_game_spec.runtime_menu_items || g_game_spec.runtime_menu_item_count>24u-count) {
++                    fprintf(stderr,"Invalid game runtime settings catalog\n");return 2;
++                }
++                memcpy(items+count,g_game_spec.runtime_menu_items,
++                       g_game_spec.runtime_menu_item_count*sizeof(*items));
++                count+=(unsigned)g_game_spec.runtime_menu_item_count;
++            }
+             cfg.extra_items=items;cfg.extra_item_count=count;
+         }
+         s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);

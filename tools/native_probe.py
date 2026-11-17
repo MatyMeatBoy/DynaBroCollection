@@ -48,6 +48,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--audio', action='store_true')
+    parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
     parser.add_argument('--timeout', type=int, default=180)
     args = parser.parse_args()
     output = args.output.resolve()
@@ -56,6 +57,8 @@ def main():
     output.mkdir(parents=True)
     profile = output / 'profile'
     profile.mkdir()
+    if args.language:
+        (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
     env = dict(os.environ)
     env.pop('GENESIS_FORCE_INTERP', None)
     env['GENESIS_USER_DIR'] = str(profile)
@@ -89,12 +92,17 @@ def main():
     failures.extend(missing_captures(captures))
     if env.get('DYNA_IRQ_SELFTEST') and '[AOT-IRQ] PASS level=4' not in log:
         failures.append('H-int exception-frame check was not exercised')
+    if args.language:
+        expected = '[language] ' + ('English' if args.language == 'en' else 'Japanese original')
+        if expected not in log:
+            failures.append('Requested language was not applied')
     summaries = re.findall(r'GENESISRECOMP_BENCHMARK (\{[^\n]+\})', log)
     measurement = json.loads(summaries[-1]) if summaries else None
     complete = bool(code == 0 and not failures and measurement and measurement.get('complete') and measurement.get('frames') == args.frames)
     report = dict(passed=complete, returncode=code, failures=failures, elapsed_seconds=time.monotonic() - start,
                   binary_sha256=hashlib.sha256(args.binary.read_bytes()).hexdigest(),
                   rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest(), frames=args.frames,
+                  language_request=args.language or 'default',
                   measurement=measurement, screenshots=[p.name for p in output.glob('*.png')],
                   scope='Finite execution only; visual/translation correctness and campaign acceptance are separate')
     (output / 'probe.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
