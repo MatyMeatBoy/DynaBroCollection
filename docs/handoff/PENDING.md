@@ -109,3 +109,5 @@ Still open: a "Manuals" entry under Settings showing the original Japanese scan 
 
 ## Stage-number RAM write experiment (2026-11-18)
 Writing 0xFF027D (WRITE_RAM8) after the KAIGAN password, before the briefing screenshot, did NOT change the briefing (still STAGE 2 / COAST MEADOW). The stage index is read elsewhere or earlier; next try: locate the briefing's stage-index source (DYNA_TRACE_GLYPH a1 around 0x220FF9..0x2222E2) and write it before the password submit. Remaining briefing texts are already translated in ROM (see scratchpad brief list addresses 0x220FF9-0x2222E2), only on-screen verification is pending.
+
+Second attempt (write 0xFF027D/7E before WAIT 1500, after password submit) also left the briefing at STAGE 2. RAM-write route is dead; remaining route is more password guesses or finding the real stage-index variable via a write watchpoint.
