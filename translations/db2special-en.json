@@ -1223,7 +1223,7 @@
       "address": 2232477,
       "capacity": 21,
       "before": "cab2d7c5b22e20b1d2a620ccd7bed9c420b7dab2c5",
-      "english": "AND AVOID IT. MAKE IT",
+      "english": "AND AVOID IT. RAIN   ",
       "verification": "stage briefing half-width text; guard exact; scene capture pending"
     },
     {
@@ -1231,7 +1231,7 @@
       "address": 2232499,
       "capacity": 10,
       "before": "c4c1c620c5d9c9c0de2e",
-      "english": "MAKE LUSH!",
+      "english": "IT LUSH!  ",
       "verification": "stage briefing half-width text; guard exact; scene capture pending"
     },
     {
@@ -4670,6 +4670,126 @@
         "HE KNOWS NOT HIS PLACE"
       ],
       "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "018E 01C3 018A 01A3 000A 0164 0143 013F 013E 000A",
+      "lines": [
+        "GYAOO! WE DID IT!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0607 0D08 0B6D 012C 015E 0140 09E4 0143 0146 013F 014A 0173 0146 0024",
+      "lines": [
+        "ALIENS WERE STILL AROUND..."
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0C7E 014B 0162 0124 013F 0169 0184 01C4 0140 014A 0121",
+      "lines": [
+        "HOPE THERE ARE NO MORE"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "012A 0124 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0122 0124 0144 0001 01C4 01C9 01CC 0141 015E 0143 013F 0169 0137 0124 013C 0143 000A",
+      "lines": [
+        "HEY",
+        "LOOKS LIKE HE GOT TAKEN OUT!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "014A 0173 0140 0148 0129 0021 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 01A6 0183 01C9 01AE 014E 01C4 01CD 001C 014B 012B 000A 0009",
+      "lines": [
+        "WHAT?!",
+        "BY THAT TYRANNO GUY?!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0199 01A6 0194 0150 012B 016A 014E 0B2C 0ACA 014B 0001 0148 0144 013C 0173 0001 0001 08BD 016C 0164 012C 0143 013F 0169 0137 0124 013C",
+      "lines": [
+        "SUDDENLY APPEARED WHERE ONLY",
+        "STEGOS ARE, THEY SAY"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "014A 014B 0123 0021 000A 0133 014E 0122 013F 016A 014F 0199 01A6 0194 0140 0131 014E 014F 013A 0147 014F 014A 0124 014E 012B 0121 0021 000A 0009 07BE 012C 014D 0150 000A",
+      "lines": [
+        "WHAT?! THIS AREA SHOULD HAVE",
+        "ONLY STEGOS?! WE MUST HURRY!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0963 0DB9 014F 0149 0173 014A 014E 09AE 016B 0173 0147 0139 012B 0121 0009 0001 0001 01AF 018B 019B 001C",
+      "lines": [
+        "WHAT WILL YOU MAKE THIS TIME,",
+        "DOC?"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0963 0DB9 0162 01AA 01C1 013F 01C4 01CD 001C 0140 0143 013F 0169 0001 0001 0001 0001 0133 014E 0B2C 0147 0B49 0143 0146 0164 016B",
+      "lines": [
+        "IF HE IS A PUNK AGAIN,",
+        "I EAT HIM HERE!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0987 0942 014E 0FE9 08E6 110F 0172 0A1D 0144 0FE9 0632 085F 0C50 0B49 0AA3 0140 0001 0A91 016F 016C 0146 0162 074A 0CD1 014B 014F 01C4 01C9 016C 0173 014F 013A 0140",
+      "lines": [
+        "THE ULTIMATE DEFENSE HERBIVORE.",
+        "IT WILL NOT BE EASY TO BEAT"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0124 012F 013E 0143 0001 013D 016C 0143 000A",
+      "lines": [
+        "GO! HERE WE GO!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0164 001C 0173 0001 0158 0173 014A 014E 001C",
+      "lines": [
+        "EEK! HOW WEIRD!"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0126 016F 0143 014F 0143 014F 0001 0BAE 08F9 0140 0143 000A 0149 001C 0140 0143 000A 0B57 0137 0124 0D07 0756 014E 0024",
+      "lines": [
+        "HAHAHA! SUCCESS! SEE?!",
+        "NEW ALLY..."
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0126 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021",
+      "lines": [
+        "UUUUUUUUUUUUUUUU"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0122 0121 0021 0021",
+      "lines": [
+        "AAH..."
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "0160 0173 012D 001C",
+      "lines": [
+        "MUNKI"
+      ],
+      "verification": "script dialogue in RAM stream (stage 2 cutscene)"
     }
   ]
 }
