@@ -75,9 +75,9 @@ def render_ram(catalog: dict) -> str:
     seen = set()
     for entry in catalog.get('ram_text', []):
         words = [int(x, 16) for x in entry['words'].split()]
-        if not 6 <= len(words) <= 64 or not 1 <= len(entry['lines']) <= 6:
+        if not 3 <= len(words) <= 64 or not 1 <= len(entry['lines']) <= 6:
             raise ValueError('Invalid ram_text entry')
-        prefix = tuple(1 if w == 2 else w for w in words[:6])
+        prefix = tuple(1 if w == 2 else w for w in words[:6]) + (0xFFFF,) * max(0, 6 - len(words))
         if prefix in seen:
             raise ValueError('ram_text prefixes must be unique')
         seen.add(prefix)

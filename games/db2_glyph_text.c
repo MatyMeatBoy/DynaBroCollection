@@ -72,7 +72,8 @@ static int ram_observe(uint32_t a1,uint32_t a0)
   const RamText *e=&ram_table[i];
   for(uint32_t p=a1;p+12u<=0xfffff0u&&a1-p<=2u*e->cells;p-=2){
    if((p&0xffffu)<2)break;
-   if(norm(ram_word(p))==e->prefix[0]&&norm(ram_word(p+2))==e->prefix[1]&&norm(ram_word(p+4))==e->prefix[2]&&norm(ram_word(p+6))==e->prefix[3]&&norm(ram_word(p+8))==e->prefix[4]&&norm(ram_word(p+10))==e->prefix[5]){t=e;start=p;break;}
+   int ok=1;for(unsigned k=0;k<6&&ok;k++)if(e->prefix[k]!=0xffffu&&norm(ram_word(p+2*k))!=e->prefix[k])ok=0;
+   if(ok){t=e;start=p;break;}
   }
  }
  if(!t)return 0;
