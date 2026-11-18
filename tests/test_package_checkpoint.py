@@ -5,10 +5,15 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.package_checkpoint import close, digest, inventory, validate_build_info, project_version
+from tools.package_checkpoint import close, digest, inventory, validate_build_info, project_version, package_version
 
 
 class PackageTests(unittest.TestCase):
+    def test_package_version_rejects_malformed_strings(self):
+        for bad in ['1.2', '1.2.3.4', 'abc', 'v1.2.3', 1.2, '1' * 40]:
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                package_version(bad)
+
     def test_requires_embedded_clean_revision_and_checkpoint_version(self):
         version=project_version()
         validate_build_info(f'game {version} git abcdef1234; engine git example', 'abcdef1234567890')
