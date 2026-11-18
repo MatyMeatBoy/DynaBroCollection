@@ -6,4 +6,11 @@ void db2_video_observe(unsigned pc);
 void db2_video_reset(void);
 void db2_video_visor_offset(int tiles);
 int db2_video_visor_requested(void);
+/* Diagnostic only (see evidence/db2-visor-research/coherence.md step 1):
+ * producer_epoch counts completed cache/gather producer passes (0x15220
+ * entries preceded by a 0x146C0 dirty mark); producer_dirty live-checks
+ * whether one is currently in progress. Frame accept/reject behavior does
+ * not yet use these. */
+unsigned db2_video_producer_epoch(void);
+int db2_video_producer_dirty(void);
 #endif

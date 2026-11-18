@@ -34,6 +34,13 @@ static int visor_offset;
 static int trace_enabled;
 static unsigned frame_reasons,trace_seen,trace_signature,trace_budget;
 static unsigned trace_ok_frames,trace_fallback_frames,trace_reason_frames[6];
+/* Diagnostic-only producer epoch counter (evidence/db2-visor-research/coherence.md
+ * step 1): 0x146C0 is the cache/gather producer's dirty entry point, 0x15220 its
+ * completion point (MOVEM restore + RTS after the source-list terminator). This
+ * only counts transitions and logs when a widened frame's capture() falls inside
+ * a dirty span; it does not yet change frame accept/reject behavior (steps 2-4
+ * of the proposed contract are not implemented). */
+static unsigned producer_epoch,producer_dirty_since_epoch;
 void db2_video_visor_offset(int tiles){visor_offset=tiles;}
 int db2_video_visor_requested(void){return visor_offset;}
 static int plane_layout(const GVDP *v){
@@ -43,12 +50,16 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;}
 void db2_video_observe(unsigned pc){
  if(pc==0x3bb0)world_scene=WORLD_BATTLE;
  else if(pc==0xf794)world_scene=WORLD_DEMO;
  else if(pc==0x3bb4||pc==0x734e||pc==0xf728)world_scene=WORLD_NONE;
+ else if(pc==0x146c0)producer_dirty_since_epoch=1;
+ else if(pc==0x15220){if(producer_dirty_since_epoch)producer_epoch++;producer_dirty_since_epoch=0;}
 }
+unsigned db2_video_producer_epoch(void){return producer_epoch;}
+int db2_video_producer_dirty(void){return producer_dirty_since_epoch;}
 static int configure(const char *s){return dyna_viewport_configure(&view,s);}
 static int enabled(void){return view.enabled;}
 static int width(int dw,int dh,int nw,int nh){(void)nw;canvas_top=0;canvas_height=nh;return dyna_viewport_width(&view,dw,dh,nh);}
@@ -60,6 +71,8 @@ static int geometry(int dw,int dh,int nw,int nh,int *w,int *h){
  canvas_top=(*h-nh)/2;canvas_height=*h;return scale;
 }
 static void capture(const GVDP *v){
+ if(trace_enabled&&producer_dirty_since_epoch)
+  fprintf(stderr,"[db2-video] capture during dirty producer epoch=%u pc=%06X\n",producer_epoch,g_cpu.PC);
  memcpy(ram,g_ram,sizeof ram);memcpy(&snapshot,v,sizeof snapshot);
  Db2WorldContext c={g_rom,2621440,ram,sizeof ram,snapshot.vram,sizeof snapshot.vram};
  ready=db2_world_read_camera(&c,&camera)&&plane_layout(v)&&
