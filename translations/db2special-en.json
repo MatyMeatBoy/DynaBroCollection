@@ -3297,6 +3297,70 @@
       "before": "cab6be20202020202876657279206861726429",
       "english": "DOC     (very hard)",
       "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f1d0",
+      "address": 324048,
+      "capacity": 5,
+      "before": "b5ddb6deb8",
+      "english": "MUSIC",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f1d6",
+      "address": 324054,
+      "capacity": 5,
+      "before": "bab3b6b5dd",
+      "english": "SOUND",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f1dc",
+      "address": 324060,
+      "capacity": 13,
+      "before": "282820cedec0ddcab2c1202929",
+      "english": "(( BUTTONS ))",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f1ea",
+      "address": 324074,
+      "capacity": 6,
+      "before": "3150cdddbab3",
+      "english": "1P SET",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f1f1",
+      "address": 324081,
+      "capacity": 6,
+      "before": "3250cdddbab3",
+      "english": "2P SET",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f20f",
+      "address": 324111,
+      "capacity": 12,
+      "before": "20bcdeafbab3202020202020",
+      "english": " EXECUTE    ",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f21c",
+      "address": 324124,
+      "capacity": 13,
+      "before": "40b7acddbed940202020202020",
+      "english": "CANCEL       ",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "options-04f22a",
+      "address": 324138,
+      "capacity": 11,
+      "before": "bcdeaeb3ceb3cbaeb3bcde",
+      "english": "INFO VIEW  ",
+      "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
