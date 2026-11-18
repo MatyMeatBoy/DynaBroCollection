@@ -2998,6 +2998,54 @@
       "verification": "glyph-ID string; guard exact; scene capture pending"
     },
     {
+      "address": 336026,
+      "before": "018a01ca019801aa01cb01c2001c01a9",
+      "lines": [
+        "ORIGINAL MODE"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336044,
+      "before": "00e500e100f300f9",
+      "lines": [
+        "EASY"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336054,
+      "before": "00ee00ef00f200ed00e100ec",
+      "lines": [
+        "ORMAL"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336068,
+      "before": "00e800e100f200e4",
+      "lines": [
+        "ARD"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336078,
+      "before": "019b018c01a101c301d301ad01cb019901ba019701c301cb",
+      "lines": [
+        "SEGA CHANNEL SPECIAL"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336104,
+      "before": "012a015e01310193001c01aa001c",
+      "lines": [
+        "BONUS CORNER"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
       "address": 1458530,
       "before": "0c4009ae0fbd0fc1",
       "lines": [
