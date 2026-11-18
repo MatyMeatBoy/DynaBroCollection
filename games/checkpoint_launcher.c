@@ -392,7 +392,24 @@ static void paint_manuals(HDC dc,RECT client) {
   RECT right_rect={right_leaf.left+inset,right_leaf.top+inset,right_leaf.right-inset,right_leaf.bottom-inset};
   if(show_translation_text){
    wchar_t wtext[4096];ld_utf8_to_wide(book->pages[right_page].translation,wtext,4096);
-   draw_text(dc,wtext,right_rect,body_font,RGB(42,34,20),DT_LEFT|DT_TOP|DT_WORDBREAK);
+   /* Long translation notes (ad pages, rule tables) can overflow a fixed-size
+    * leaf at the normal body size; shrink the font just enough to make the
+    * whole note fit rather than silently clipping text off the bottom. */
+   HFONT fit_font=body_font;int created=0;
+   for(int size=scale(16);size>=scale(10);size-=scale(1)){
+    HFONT candidate=(size==scale(16))?body_font:CreateFontW(-size,0,0,0,FW_NORMAL,0,0,0,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,0,L"Segoe UI");
+    RECT calc=right_rect;SelectObject(dc,candidate);DrawTextW(dc,wtext,-1,&calc,DT_LEFT|DT_TOP|DT_WORDBREAK|DT_CALCRECT|DT_NOPREFIX);
+    int fits=calc.bottom-calc.top<=right_rect.bottom-right_rect.top;
+    int last=size-scale(1)<scale(10);
+    if(fits||last){
+     if(created)DeleteObject(fit_font);
+     fit_font=candidate;created=candidate!=body_font;
+     break;
+    }
+    if(candidate!=body_font)DeleteObject(candidate);
+   }
+   draw_text(dc,wtext,right_rect,fit_font,RGB(42,34,20),DT_LEFT|DT_TOP|DT_WORDBREAK);
+   if(created)DeleteObject(fit_font);
   } else {
    image_paint(dc,manual_page_image2,right_rect);
   }
