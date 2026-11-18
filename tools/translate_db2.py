@@ -24,13 +24,13 @@ def translate(source: bytes, catalog: dict) -> bytes:
             raise ValueError('Translation edit out of bounds')
         if source[address:address + capacity] != before:
             raise ValueError(f'Original text guard failed at {address:06X}')
-        if len(english) > capacity or any(x < 32 and x != 1 for x in english):
-            raise ValueError('Text exceeds slot or contains unsupported controls')
+        if len(english) != capacity or any(x < 32 and x != 1 for x in english):
+            raise ValueError('Text must exactly fill its guarded slot and contain no unsupported controls')
         positions = set(range(address, address + capacity))
         if positions & used:
             raise ValueError('Overlapping translation edits')
         used |= positions
-        edits.append((address, english.ljust(capacity, b'_')))
+        edits.append((address, english))
     out = bytearray(source)
     for address, payload in edits:
         out[address:address + len(payload)] = payload
