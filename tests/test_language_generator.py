@@ -70,3 +70,8 @@ class LanguageGeneratorTests(unittest.TestCase):
                                   ([b'a', b'b'], '../test')]:
                 with self.assertRaises(ValueError):
                     emit_image(images, name, Path(directory))
+
+    def test_rejects_identical_images(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(ValueError):
+                emit_image([b'aa', b'aa'], 'test', Path(directory))
