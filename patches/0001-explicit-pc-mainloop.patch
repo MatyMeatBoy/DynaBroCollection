@@ -525,7 +525,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..bc5a7d4 100644
+index df30a08..c5acb42 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -1197,11 +1197,13 @@ index df30a08..bc5a7d4 100644
  #if GENESIS_HAS_RECOMP_NET
          /* Process the peer INPUT and emit our CONFIRM before the blocking
           * present, so confirmation delivery overlaps vsync as well. */
-@@ -4628,5 +4944,6 @@ session_begin:;
+@@ -4628,5 +4944,8 @@ session_begin:;
      SDL_Quit();
      free(rom_buf);
      if(replay_path && (genesis_replay_failed() || !genesis_replay_finished()))return 2;
++#if RECOMP_LAUNCHER
 +    if(s_quit_to_desktop)return DYNA_EXIT_CODE_QUIT_TO_DESKTOP;
++#endif
      return runtime_measure_frames && frame_num != runtime_measure_frames ? 2 : 0;
  }
 diff --git a/runner/native_interrupt_frame.h b/runner/native_interrupt_frame.h
