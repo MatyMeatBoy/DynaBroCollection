@@ -32,3 +32,29 @@ class Db1TranslationTests(unittest.TestCase):
             invalid[key] = value
             with self.assertRaises(ValueError):
                 translate(source, invalid)
+
+    def test_credits_tables_use_renderer_font_and_keep_fixed_capacity(self):
+        source, catalog = self.fixture()
+        catalog['credits_tables'] = [dict(address=0x1c000, width=10, count=2,
+            before='00' * 20, lines=['STEGO', 'P CHAN'])]
+        result = translate(source, catalog)
+        self.assertEqual(result[0x1c000:0x1c00a], bytes([0, 0, 30, 31, 16, 18, 26, 0, 0, 0]))
+        self.assertEqual(result[0x1c00a:0x1c014], bytes([0, 0, 27, 0, 14, 19, 12, 25, 0, 0]))
+        self.assertEqual(len(result), len(source))
+
+    def test_credits_reject_guard_overflow_alphabet_and_invalid_layout(self):
+        source, catalog = self.fixture()
+        table = dict(address=0x1c000, width=10, count=1, before='00' * 10, lines=['STEGO'])
+        for change in [dict(before='01' * 10), dict(lines=['TOO LONG NAME']),
+                       dict(lines=['steGo']), dict(address=len(source)-4),
+                       dict(lines=[]), dict(address=0x1b464), dict(width=0)]:
+            invalid = copy.deepcopy(catalog)
+            invalid['credits_tables'] = [dict(table, **change)]
+            with self.assertRaises(ValueError):
+                translate(source, invalid)
+
+    def test_credits_punctuation_matches_loaded_font(self):
+        source, catalog = self.fixture()
+        catalog['credits_tables'] = [dict(address=0x1c000, width=3, count=1,
+            before='000000', lines=['.!?'])]
+        self.assertEqual(translate(source, catalog)[0x1c000:0x1c003], bytes([0x27, 0x29, 0x28]))

@@ -35,5 +35,14 @@ int main(void) {
     span.bytes[0]=jp;image.crc[1]^=1; /* broken target metadata rolls back */
     assert(!dyna_language_apply(rom,4,&image,1,error,sizeof error));
     assert(!memcmp(rom,original,4));
+    const uint8_t older[]={2,3}, older_rom[]={0,2,3,0};
+    span.bytes[3]=older;image.variants=4;image.crc[1]^=1;
+    image.crc[3]=dyna_language_crc(older_rom,4);
+    memcpy(rom,older_rom,4);
+    assert(dyna_language_apply(rom,4,&image,1,error,sizeof error));
+    assert(!memcmp(rom,translated,4));
+    memcpy(rom,older_rom,4);
+    assert(dyna_language_apply(rom,4,&image,0,error,sizeof error));
+    assert(!memcmp(rom,original,4));
     return 0;
 }

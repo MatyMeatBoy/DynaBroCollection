@@ -7,8 +7,8 @@ from tools.rompatch import identity
 
 
 def ranges(images):
-    if not 2 <= len(images) <= 3 or not images[0] or any(len(x) != len(images[0]) for x in images):
-        raise ValueError('Language variants require two or three equal-sized images')
+    if not 2 <= len(images) <= 4 or not images[0] or any(len(x) != len(images[0]) for x in images):
+        raise ValueError('Language variants require two to four equal-sized images')
     changed = [i for i in range(len(images[0])) if any(x[i] != images[0][i] for x in images[1:])]
     spans = []
     for index in changed:

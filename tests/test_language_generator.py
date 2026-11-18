@@ -5,6 +5,18 @@ from tools.generate_language import ranges, emit_image
 
 
 class LanguageGeneratorTests(unittest.TestCase):
+    def test_retains_four_qualified_language_revisions(self):
+        images = [bytes(40), b'\x01' + bytes(39), bytes(39) + b'\x02', bytes(20)+b'\x03'+bytes(19)]
+        with tempfile.TemporaryDirectory() as directory:
+            report = emit_image(images, 'db1', Path(directory))
+            self.assertEqual(report['variants'], 4)
+            for source in images:
+                for target in images:
+                    out = bytearray(source)
+                    for start, end in ranges(images):
+                        out[start:end] = target[start:end]
+                    self.assertEqual(bytes(out), target)
+
     def test_ranges_cover_all_revisions_without_losing_unchanged_bytes(self):
         images = [bytes(40), b'\x01' + bytes(39), bytes(39) + b'\x02']
         spans = ranges(images)

@@ -29,7 +29,8 @@ static const RecompRuntimeUiItem language_items[]={
 #include "translation_identity_db1.h"
 static const GameRomAlias db1_aliases[]={
     {"Japanese original",0x360C1B20u},
-    {"English map-label repairs (partial)",DYNA_DB1_ENGLISH_CRC}
+    {"English text repairs (partial)",DYNA_DB1_ENGLISH_CRC},
+    {"English v0.2 map-label repairs (partial)",0x3BE23E09u}
 };
 #endif
 #ifdef DYNA_HAS_OVERLAY
@@ -177,7 +178,7 @@ const GameSpec g_game_spec={
     .mods=dyna_language_mods,
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
-    .rom_aliases=db1_aliases,.num_rom_aliases=2,
+    .rom_aliases=db1_aliases,.num_rom_aliases=3,
 #elif defined(DYNA_HAS_OVERLAY)
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,
 #endif

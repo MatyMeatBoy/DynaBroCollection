@@ -8,6 +8,8 @@
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
+Development after the closed checkpoint adds guarded English credits names and the hard-ending secret-mode message for DB1. See [the recovered layout, output identity and verification limits](docs/research/db1-credits-translation.md). These changes do not replace the existing v0.1.1 ZIP.
+
 Start `DynaBrothersLauncher.exe` to choose a game from the shared card-based hub. See [v0.1.1 checkpoint notes](docs/releases/v0.1.1-checkpoint.md) for the exact included scope and pending work. Complete translations, true expanded 16:9, Original/Enhanced modes and final 4:3 pixel-aspect treatment remain unfinished.
 
 ![Launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)

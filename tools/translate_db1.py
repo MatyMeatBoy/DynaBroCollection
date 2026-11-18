@@ -1,4 +1,4 @@
-"""Repair the six map/menu labels on top of the qualified DB1 v0.1 patch."""
+"""Repair guarded map and credits text on top of the qualified DB1 v0.1 patch."""
 import argparse
 import hashlib
 import json
@@ -11,6 +11,38 @@ from tools.rompatch import apply_bps, create_bps, identity
 SYMBOLS = 'ACDEGLMNOPRSTUY?'
 FONT_INDEX = {letter: ord(letter) - ord('A') + 10 for letter in SYMBOLS if letter != '?'}
 FONT_INDEX['?'] = 47
+
+
+def credits_edits(source, tables):
+    """The credits renderer writes byte-sized tile indices directly to VRAM."""
+    alphabet = {chr(65+i): 0x0c+i for i in range(26)}
+    alphabet.update({' ': 0, '.': 0x27, '?': 0x28, '!': 0x29, "'": 0x31})
+    edits = []
+    occupied = [(0x18e, 0x190), (0x1b464, 0x1b4d0), (0x1b510, 0x1b538)]
+    for table in tables:
+        address, width, count = table['address'], table['width'], table['count']
+        if (type(address) is not int or type(width) is not int or type(count) is not int
+                or not 1 <= width <= 40 or not 1 <= count <= 100):
+            raise ValueError('Invalid DB1 credits table dimensions')
+        length = width * count
+        if (address < 0x200 or address > len(source)-length
+                or any(address < end and address+length > start for start, end in occupied)):
+            raise ValueError('DB1 credits table is outside ROM or overlaps another edit')
+        before = bytes.fromhex(table['before'])
+        if len(before) != length or source[address:address+length] != before:
+            raise ValueError('DB1 credits table guard mismatch')
+        if len(table['lines']) != count:
+            raise ValueError('DB1 credits line count mismatch')
+        data = bytearray()
+        for line in table['lines']:
+            if len(line) > width or any(char not in alphabet for char in line):
+                raise ValueError('Unsupported credits character or line exceeds fixed width')
+            left = (width-len(line)) // 2
+            text = ' '*left + line + ' '*(width-left-len(line))
+            data.extend(alphabet[char] for char in text)
+        edits.append((address, bytes(data)))
+        occupied.append((address, address+length))
+    return edits
 
 
 def translate(source, catalog):
@@ -33,9 +65,12 @@ def translate(source, catalog):
         words.extend(indices[letter] for letter in label.ljust(9))
     font = [FONT_INDEX[letter] * 32 for letter in SYMBOLS]
     font.extend([0] * (20 - len(font)))
+    edits = credits_edits(source, catalog.get('credits_tables', []))
     out = bytearray(source)
     out[0x1b464:0x1b4d0] = b''.join(x.to_bytes(2, 'big') for x in words)
     out[0x1b510:0x1b538] = b''.join(x.to_bytes(2, 'big') for x in font)
+    for address, data in edits:
+        out[address:address+len(data)] = data
     checksum = sum(int.from_bytes(out[i:i+2], 'big') for i in range(512, len(out), 2)) & 65535
     out[0x18e:0x190] = checksum.to_bytes(2, 'big')
     return bytes(out)
@@ -45,12 +80,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
     parser.add_argument('--catalog', type=Path, default=Path(__file__).resolve().parent.parent / 'translations/db1-en.json')
-    parser.add_argument('--output', type=Path, default=Path('local/roms/db1-en-v02.md'))
-    parser.add_argument('--patch', type=Path, default=Path('local/patches/db1-en-v02-addon.bps'))
+    parser.add_argument('--output', type=Path, help='Defaults to a content-qualified filename under local/roms')
+    parser.add_argument('--patch', type=Path, help='Defaults to a content-qualified add-on filename under local/patches')
     args = parser.parse_args()
     source = args.rom.read_bytes()
     catalog = json.loads(args.catalog.read_text(encoding='utf-8'))
     result = translate(source, catalog)
+    crc = identity(result)['crc32']
+    args.output = args.output or Path(f'local/roms/db1-en-{crc}.md')
+    args.patch = args.patch or Path(f'local/patches/db1-en-{crc}-addon.bps')
     patch = create_bps(source, result)
     if apply_bps(source, patch) != result:
         raise RuntimeError('DB1 BPS roundtrip mismatch')

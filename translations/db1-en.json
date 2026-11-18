@@ -1,6 +1,6 @@
 {
   "source_sha256": "30ba0e06ce6a0704168d191cbb4d45487406908859f5df7aacd484bd42b0e7b7",
-  "scope": "Six map/menu labels repaired; overall translation remains incomplete",
+  "scope": "Six map/menu labels, 18 credits character names and the nine-row post-credits secret-mode message; overall translation remains incomplete",
   "labels_before": "0009000400110015000c0013000300110016000b00060004000d00150001000a00020002000a0013000700150013000300110016000200070005000800140002000200020002000200040004001000000002000200020002000200120014000e0005000f0000000200020002",
   "font_before": "02000260028003400360038003e0042004400460048004a004e0054005a005e0060007c007e00800",
   "labels": [
@@ -11,5 +11,52 @@
     "NO",
     "REALLY?"
   ],
-  "verification": "All six labels visually checked in independent reference and native AOT scenes; see games/db1/scenes/map-labels.input. Campaign and remaining translation inventory are separate."
+  "verification": "Map labels previously verified in reference/native scenes. Credits rows recovered from original data and renderer; see docs/research/db1-credits-translation.md for current evidence and limits.",
+  "credits_tables": [
+    {
+      "address": 169226,
+      "width": 10,
+      "count": 18,
+      "before": "00000092988fb300000000000099ad8eac000000000000987dac9e0000000000000086b0000000000000a0b4879681b200008db3a58db3a59681b2000000008d9dadb2000000000091b381a7ac00000000008bb3b29681b2000000a2b4b0adb2968496000000a1b48da2b4b2000000a2b48ca2b48ca4b20000008bb3888bb38800000000008dacac000000000000008cacacb20000000000a3b3929a8799000000000095a4ac000000000000a1b4adadb2000000",
+      "lines": [
+        "STEGO",
+        "TRICERA",
+        "TYRANNO",
+        "ALLO",
+        "P CHAN",
+        "GUMIGUMI",
+        "KUNERIN",
+        "JAMERA",
+        "GANCHAN",
+        "PERORIN",
+        "PUKUPEN",
+        "PEKIPEKI",
+        "GAUGAU",
+        "KURARA",
+        "KIRARAN",
+        "BOSSNIGHT",
+        "TAMARA",
+        "PURIRIN"
+      ],
+      "context": "Character names in credits. Long names use short romanized display names: Gumigumi-chan, Perorinchicchi and Pekipekiman are shortened to fit ten tiles."
+    },
+    {
+      "address": 171236,
+      "width": 26,
+      "count": 9,
+      "before": "000000000000b5b5b5008aa798b3998800b5b5b5000000000000009f8599b37b008dad86919579869a9595b38e9b7988aca7b29e1b0c1e1e221a1d0f007b008a9189ae9db50000000000000000000088aca7b298b39f79988c9e008c81ac8d9585007b00978b84988eb385a68bb30098b38cae9eb50000000000000000000000000000949ea38b9ba8798b879f9700929584a1008bb300978d849500959e9187008aa48ea7b200a800958d90b286ae8bac7987b0b29a1b0c1e1e221a1d0f7b95a791989db5000000000000000000000088aca7b29e001b0c1e1e221a1d0f009f0018131d1495b3abb500",
+      "lines": [
+        "CONGRATULATIONS!",
+        "YOU CLEARED HARD MODE!",
+        "HERE IS THE SECRET",
+        "PASSWORD FOR ALIEN MODE.",
+        "PLAY AS THE ALIENS!",
+        "TRY OTHER PASSWORDS FOR",
+        "BONUS STAGES MADE BY THE",
+        "DEVELOPMENT TEAM.",
+        "ALIEN MODE PASSWORD MHRI"
+      ],
+      "context": "After hard-mode credits: congratulations, playable aliens, staff-made bonus stages and MHRI password. Original renderer uses nine 26-tile rows."
+    }
+  ]
 }

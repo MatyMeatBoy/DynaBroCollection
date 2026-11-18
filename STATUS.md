@@ -2,6 +2,12 @@
 
 **The requested project is unfinished.** No stable release, full translation, finished launcher, or widescreen mode is being claimed.
 
+## Latest development after the closed checkpoint
+
+The local v0.1.1 checkpoint is closed and verified; see [its exact archive/source identity](docs/releases/v0.1.1-verification.md). Historical entries below retain their original milestone context.
+
+DB1 now has guarded repairs for 18 credits character names and the nine-row hard-ending secret-mode message. Current English CRC32 is `11688440`; JP, supplied v0.1 and previous v0.2 remain accepted by native language switching. Reference captures and a 52,000-frame prepared native ending route show readable credits names and MHRI message. Both games rebuilt; 32 Python tests, five native contracts, both DB1 language/map routes and the DB2 tutorial passed. See [layout, identities, diagnostic limits and remaining inventory](docs/research/db1-credits-translation.md). The closed checkpoint ZIP remains unchanged; this is newer source/development work.
+
 ## Completed work with bounded evidence
 
 | Work | Evidence and limit |
