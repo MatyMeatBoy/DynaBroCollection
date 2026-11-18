@@ -204,12 +204,20 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  if(r){
   const uint8_t *native_terrain=world_is_a?r->plane_a:r->plane_b;
   const uint8_t *native_ui=world_is_a?r->plane_b:r->plane_a;
+  /* A line the guest leaves completely blank (no plane pixel, native image is
+   * pure backdrop across the world span) is blank in the widened view too. */
+  int blank=y>=0&&y<224&&native_valid[y];
+  for(int x=0;blank&&x<216;x++)if(native_terrain[x]||native_ui[x]||native_image[y][x]!=background)blank=0;
+  if(blank)for(int x=0;x<w;x++)terrain[x]=0;
   for(int x=0;x<216;x++){
+   if(blank)break;
    int dx=x+shift;
    uint8_t expected=dx>=0&&dx<w?terrain[dx]:terrain_pixel(&c,x,y);
-   if(expected!=native_terrain[x]){
+   /* Terrain under an opaque high-priority UI pixel is invisible; the native
+    * plane capture may omit it, so it cannot be compared. */
+   if(expected!=native_terrain[x]&&!((native_ui[x]&0x80)&&(native_ui[x]&15))){
     if(trace_enabled&&!rejected){static unsigned n;if(n++%25==0)fprintf(stderr,"[db2-video] terrain mismatch y=%d x=%d expected=%02X native=%02X anchor=%d,%d cell=%d,%d shift=%d\n",y,x,expected,native_terrain[x],camera.anchor_x,camera.anchor_y,(int)camera.cell_x,(int)camera.cell_y,shift);}
-    if(trace_enabled&&!rejected){static unsigned m;if(m++%25==0){unsigned bad=0,nz=0,bgc=0;for(int q=0;q<216;q++){bgc+=(y>=0&&y<224&&native_valid[y]&&native_image[y][q]==background);int dd=q+shift;uint8_t ex=dd>=0&&dd<w?terrain[dd]:terrain_pixel(&c,q,y);if(ex!=native_terrain[q])bad++;if(native_terrain[q])nz++;}fprintf(stderr,"[db2-video]   row y=%d mismatching=%u native_nonzero=%u native_img_bg=%u\n",y,bad,nz,bgc);}}
+    if(trace_enabled&&!rejected){static unsigned m;if(m++%25==0){unsigned bad=0,nz=0,bgc=0;for(int q=0;q<216;q++){bgc+=(y>=0&&y<224&&native_valid[y]&&native_image[y][q]==background);int dd=q+shift;uint8_t ex=dd>=0&&dd<w?terrain[dd]:terrain_pixel(&c,q,y);if(ex!=native_terrain[q])bad++;if(native_terrain[q])nz++;}fprintf(stderr,"[db2-video]   row y=%d mismatching=%u native_nonzero=%u native_img_bg=%u winH=%02X winV=%02X reg0=%02X reg11=%02X vs=%d ui=%02X,%02X,%02X,%02X spr=%02X,%02X,%02X,%02X img=%08X,%08X bg=%08X exp=%02X,%02X\n",y,bad,nz,bgc,snapshot.reg[17],snapshot.reg[18],snapshot.reg[0],snapshot.reg[11],world_is_a,native_ui[0],native_ui[50],native_ui[100],native_ui[200],r->sprite[0],r->sprite[50],r->sprite[100],r->sprite[200],native_image[0][0],native_image[0][100],background,terrain[shift],terrain[shift+100]);}}
     rejected=1;frame_reasons|=16;}
    if(dx>=0&&dx<w)ui[dx]=native_ui[x];
   }
