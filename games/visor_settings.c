@@ -6,6 +6,7 @@
 #include "visor_settings.h"
 #include "../upstream/recomp-ui/src/recomp_launcher.h"
 #include <limits.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +20,8 @@ static int active,requested;
 static char path[2048];
 static void (*apply)(int);
 static RecompLauncherCModProvider base,provider;
-static const char key[]="db1.visor_offset_tiles";
+static const char *key="db1.visor_offset_tiles";
+enum { FILE_LIMIT=1024 };
 static int parse(const char *s,int *out){
  if(!s||!*s)return 0;
  int sign=1,n=0;
@@ -47,26 +49,39 @@ static FILE *openfile(const char *s,int write){return fopen(s,write?"wbx":"rb");
 static void cleanup(const char *s){remove(s);}
 static int replace(const char *from,const char *to){return rename(from,to)==0;}
 #endif
-static int loadvalue(void){
- FILE *f=openfile(path,0);if(!f)return 0;
- char text[1025];size_t n=fread(text,1,sizeof text-1,f);
+/* Read raw bytes every save so edits to other keys are not overwritten.
+ * A missing file is distinct from an unreadable or malformed existing file. */
+static int readtext(char text[FILE_LIMIT+1],size_t *length){
+ errno=0;FILE *f=openfile(path,0);
+ if(!f){if(errno!=ENOENT)return 0;*length=0;text[0]=0;return 1;}
+ size_t n=fread(text,1,FILE_LIMIT,f);
  int extra=fgetc(f),ok=!ferror(f);if(fclose(f))ok=0;
  if(!ok||extra!=EOF||memchr(text,0,n))return 0;
- text[n]=0;int value=0,seen=0;
- char *line=text;
- while(*line){
-  char *next=strchr(line,'\n');if(next)*next++=0;
-  size_t length=strlen(line);if(length&&line[length-1]=='\r')line[length-1]=0;
-  if(!strncmp(line,key,sizeof key-1)&&line[sizeof key-1]=='='){
-   if(seen++||!parse(line+sizeof key,&value))return 0;
+ text[n]=0;*length=n;return 1;
+}
+/* Only exact keys are owned. Prefix-neighbor and unknown lines are opaque. */
+static int ownline(const char *line,size_t length){
+ size_t k=strlen(key);
+ return length>=k&&!memcmp(line,key,k)&&
+        (length==k||line[k]=='='||line[k]==' '||line[k]=='\t'||line[k]=='\r');
+}
+static int loadvalue(void){
+ char text[FILE_LIMIT+1];size_t n;if(!readtext(text,&n))return 0;
+ int value=0,seen=0;
+ for(size_t i=0;i<n;){
+  size_t end=i;while(end<n&&text[end]!='\n')++end;
+  if(ownline(text+i,end-i)){
+   if(seen++)return 0;
+   size_t last=end;if(last>i&&text[last-1]=='\r')--last;
+   text[last]=0;size_t k=strlen(key);
+   if(last-i<=k||text[i+k]!='='||!parse(text+i+k+1,&value))return 0;
   }
-  if(!next)break;
-  line=next;
+  i=end<n?end+1:end;
  }
  return value;
 }
 void dyna_visor_settings_load(const char *settings,unsigned game){
- active=game==1;requested=0;path[0]=0;
+ active=game==1||game==2;key=game==2?"db2.visor_offset_tiles":"db1.visor_offset_tiles";requested=0;path[0]=0;
  if(active&&settings&&*settings){
   const char *a=strrchr(settings,'/'),*b=strrchr(settings,'\\');
   const char *sep=!a?b:!b?a:a>b?a:b;
@@ -81,6 +96,27 @@ void dyna_visor_settings_bind(void (*setter)(int)){
 }
 static int savevalue(int value){
  if(!path[0])return 0;
+ char original[FILE_LIMIT+1],result[FILE_LIMIT+1],replacement[64];size_t n,used=0;
+ if(!readtext(original,&n))return 0;
+ int replacement_length=snprintf(replacement,sizeof replacement,"%s=%d\n",key,value);
+ if(replacement_length<=0||replacement_length>=(int)sizeof replacement)return 0;
+ int inserted=0;
+ for(size_t i=0;i<n;){
+  size_t end=i;while(end<n&&original[end]!='\n')++end;
+  size_t next=end<n?end+1:end;
+  const char *bytes=original+i;size_t count=next-i;
+  if(ownline(bytes,end-i)){
+   if(inserted){i=next;continue;}
+   bytes=replacement;count=(size_t)replacement_length;inserted=1;
+  }
+  if(count>FILE_LIMIT-used)return 0;
+  memcpy(result+used,bytes,count);used+=count;i=next;
+ }
+ if(!inserted){
+  if(used&&result[used-1]!='\n'){if(used==FILE_LIMIT)return 0;result[used++]='\n';}
+  if((size_t)replacement_length>FILE_LIMIT-used)return 0;
+  memcpy(result+used,replacement,(size_t)replacement_length);used+=(size_t)replacement_length;
+ }
  char temp[2140];FILE *f=NULL;
 #ifdef _WIN32
  unsigned long pid=(unsigned long)GetCurrentProcessId();
@@ -93,7 +129,7 @@ static int savevalue(int value){
   f=openfile(temp,1);
  }
  if(!f)return 0;
- int ok=fprintf(f,"%s=%d\n",key,value)>0;
+ int ok=fwrite(result,1,used,f)==used;
  if(fflush(f))ok=0;
 #ifdef _WIN32
  if(ok&&_commit(_fileno(f)))ok=0;

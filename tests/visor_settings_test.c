@@ -85,10 +85,79 @@ int main(void){
  assert(CreateDirectoryW(wdir,NULL));dyna_visor_settings_load(utf8settings,1);
  assert(dyna_visor_runtime_set("db1.visor_offset_tiles",-3)&&last==-3);
  dyna_visor_settings_load(utf8settings,1);assert(last==-3);
+ dyna_visor_settings_load(utf8settings,2);assert(last==0);
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",4)&&last==4);
+ dyna_visor_settings_load(utf8settings,1);assert(last==-3);
+ dyna_visor_settings_load(utf8settings,2);assert(last==4);
  assert(DeleteFileW(wdisplay)&&RemoveDirectoryW(wdir));
 #endif
- int prior=callbacks;dyna_visor_settings_load(settings,2);assert(callbacks==prior&&dyna_visor_mods(&base)==&base);
+ /* Both games share one file, but own only their selected key. */
+ writefile(display,"# unknown\r\ndb1.visor_offset_tiles=+7\r\ndb2.visor_offset_tiles=-3\nextra=unchanged");
+ dyna_visor_settings_load(settings,2);assert(last==-3);
+ assert(dyna_visor_runtime_get("db2.visor_offset_tiles",&value)&&value==-3);
+ assert(dyna_visor_mods(&base)!=&base);
+ assert(!dyna_visor_runtime_set("db1.visor_offset_tiles",4));
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",2)&&last==2);
+ char combined[1200];readfile(display,combined,sizeof combined);
+#ifdef _WIN32
+ char original_both[1200];strcpy(original_both,combined);
+ int callbacks_before_lock=callbacks;
+ HANDLE both_lock=CreateFileA(display,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL);
+ assert(both_lock!=INVALID_HANDLE_VALUE);
+ assert(!dyna_visor_runtime_set("db2.visor_offset_tiles",-8)&&callbacks==callbacks_before_lock&&last==2);
+ assert(CloseHandle(both_lock));readfile(display,combined,sizeof combined);assert(!strcmp(combined,original_both));
+ both_lock=CreateFileA(display,GENERIC_READ,0,NULL,OPEN_EXISTING,0,NULL);assert(both_lock!=INVALID_HANDLE_VALUE);
+ assert(!dyna_visor_runtime_set("db2.visor_offset_tiles",-8)&&callbacks==callbacks_before_lock&&last==2);
+ assert(CloseHandle(both_lock));readfile(display,combined,sizeof combined);assert(!strcmp(combined,original_both));
+#endif
+ assert(!strcmp(combined,"# unknown\r\ndb1.visor_offset_tiles=+7\r\ndb2.visor_offset_tiles=2\nextra=unchanged"));
+ dyna_visor_settings_load(settings,1);assert(last==7);
+ /* External edits made after load survive the immediate set. */
+ writefile(display,"# external\ndb2.visor_offset_tiles=bad\r\ndb1.visor_offset_tiles=4junk\nopaque=\xff\r\n");
+ assert(dyna_visor_runtime_set("db1.visor_offset_tiles",-5));
+ readfile(display,combined,sizeof combined);
+ assert(!strcmp(combined,"# external\ndb2.visor_offset_tiles=bad\r\ndb1.visor_offset_tiles=-5\nopaque=\xff\r\n"));
+ dyna_visor_settings_load(settings,2);assert(last==0);
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",6));
+ dyna_visor_settings_load(settings,1);assert(last==-5);
+ writefile(display,"db1.visor_offset_tiles=bad\r\ndb2.visor_offset_tiles=8\ndb1.visor_offset_tiles=2\nlast");
+ dyna_visor_settings_load(settings,1);assert(last==0);
+ assert(dyna_visor_runtime_set("db1.visor_offset_tiles",3));
+ readfile(display,combined,sizeof combined);
+ assert(!strcmp(combined,"db1.visor_offset_tiles=3\ndb2.visor_offset_tiles=8\nlast"));
+ dyna_visor_settings_load(settings,2);assert(last==8);
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",-64));
+ dyna_visor_settings_load(settings,2);assert(last==-64);
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",64));
+ /* Missing own key appends after a separator without changing old bytes. */
+ writefile(display,"other=literal");
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",1));
+ readfile(display,combined,sizeof combined);assert(!strcmp(combined,"other=literal\ndb2.visor_offset_tiles=1\n"));
+ writefile(display,"db2.visor_offset_tiles =bad\ndb2.visor_offset_tiles_extra=literal\n");
+ dyna_visor_settings_load(settings,2);assert(last==0);
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",1));
+ readfile(display,combined,sizeof combined);
+ assert(!strcmp(combined,"db2.visor_offset_tiles=1\ndb2.visor_offset_tiles_extra=literal\n"));
+ /* Existing NUL, >1024 bytes, and unavailable reads fail closed on save. */
+ char badbytes[1026];memset(badbytes,'x',sizeof badbytes);
+ for(unsigned kind=0;kind<3;kind++){
+  size_t n=kind==0?8:kind==1?1025:1024;
+  memset(badbytes,'x',sizeof badbytes);if(!kind)badbytes[3]=0;
+  FILE *f=fopen(display,"wb");assert(f&&fwrite(badbytes,1,n,f)==n&&!fclose(f));
+  int prior_callbacks=callbacks;
+  assert(!dyna_visor_runtime_set("db2.visor_offset_tiles",2));
+  assert(callbacks==prior_callbacks&&last==1);
+  f=fopen(display,"rb");assert(f);char afterbytes[1026];assert(fread(afterbytes,1,sizeof afterbytes,f)==n&&!fclose(f));
+  assert(!memcmp(afterbytes,badbytes,n));
+ }
+ /* Exactly1024 bytes is readable when replacing its own line keeps bounds. */
+ const char own[]="db2.visor_offset_tiles=1\n";
+ memcpy(badbytes,own,sizeof own-1);memset(badbytes+sizeof own-1,'z',1024-(sizeof own-1));
+ FILE *bounded_file=fopen(display,"wb");assert(bounded_file&&fwrite(badbytes,1,1024,bounded_file)==1024&&!fclose(bounded_file));
+ assert(dyna_visor_runtime_set("db2.visor_offset_tiles",2));
+ readfile(display,combined,sizeof combined);assert(strlen(combined)==1024&&!memcmp(combined+sizeof own-1,badbytes+sizeof own-1,1024-(sizeof own-1)));
+ int prior=callbacks;dyna_visor_settings_load(settings,3);assert(callbacks==prior&&dyna_visor_mods(&base)==&base);
  assert(!dyna_visor_runtime_get("db1.visor_offset_tiles",&value)&&!dyna_visor_runtime_set("db1.visor_offset_tiles",1));
  dyna_visor_settings_bind(NULL);assert(!remove(display)&&!RMDIR(dir));
- puts("Visor strict settings, provider forwarding, persistence and failure rollback passed");
+ puts("Both-game visor strict settings, byte-preserving shared persistence, provider forwarding and rollback passed");
 }
