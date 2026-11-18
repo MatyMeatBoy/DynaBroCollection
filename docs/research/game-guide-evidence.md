@@ -19,9 +19,15 @@ A verifies all five displayed species and their qualitative roles: Stego reprodu
 
 C verifies the six displayed species: Stego breeding, Tricera durability, Allo interception, Tyranno attack, Ptera flight across terrain and P-chan egg eating. It also identifies Tyranno as strongest in attack. No DB1 Ptera entry is shown.
 
-## Statistics: outstanding
+## db1-unit-stat-contracts
 
-Neither game has verified numeric HP, attack damage, defense, speed, incubation time, creation cost, upgrade cost or power output in this change. The unit pages explicitly disclose this. Secondary fan tables were found but not promoted into verified stats: their rating scales, upgrades and Special-version applicability require primary/manual or ROM validation. There is no invented stat table or assumed matching enemy roster. Enemy-unit encyclopedia and per-species numeric tables remain outstanding.
+The post0.1.5 DB1 guide has five species pages. Initial vitality, strict reproduction thresholds, parental vitality costs and the five-by-five opponent-specific combat drain matrix are verified through original routines and species/credits binding in [DB1 unit contracts](db1-unit-stat-contracts.md). The typed reader and every numeric cell pass private original and qualified English image checks. Initial vitality is not maximum HP; parent cost is not player power; per-routine combat drain is not DPS. The two Advanced pages now explain the shared vitality budget and native terrain-route preparation.
+
+The actual Extras pixel compositor was rendered at427x240 for all five unit pages, including scrolling; component bounds tests also cover320x224 and smaller fallback canvases. Captures remain private under local/guide-unit-review. Existing native egg-chooser images illustrate unit selection, not an invented recorded matchup.
+
+## Statistics still outstanding
+
+Universal movement/attack timing, incubation, player creation/upgrade power prices, defense ratings, maximum/current vitality and complete difficulty modifiers remain unqualified. DB2 numeric statistics remain unchanged and unverified while DB2 development is paused.
 
 ## db1-hud
 

@@ -15,3 +15,19 @@ int db1_unit_parameters_read(const uint8_t *rom, size_t rom_size,
     *out = result;
     return 1;
 }
+
+int db1_unit_stats_read(const uint8_t *rom, size_t rom_size,
+                       unsigned species, Db1UnitStats *out) {
+    Db1UnitParameters parameters;
+    Db1UnitStats result;
+    if (!out || !db1_unit_parameters_read(rom, rom_size, species, &parameters)) return 0;
+    result.species = species;
+    result.low_vitality_threshold = parameters.words[0];
+    result.reproduction_threshold = parameters.words[1];
+    result.reproduction_cost = parameters.words[2];
+    result.initial_vitality = parameters.words[3];
+    for (unsigned i = 0; i < DB1_UNIT_SPECIES_COUNT; ++i)
+        result.combat_drain[i] = parameters.words[0x14/2+i];
+    *out = result;
+    return 1;
+}
