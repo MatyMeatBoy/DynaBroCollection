@@ -49,7 +49,7 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(ValueError):close(other,path,root/'releases')
             manifest['version']='0.1.2';manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
             with self.assertRaises(RuntimeError):close(other,path,root/'releases')
-            for name in ['db1-practice','db1-alien','db1-credits']:qa['cases'][name]=dict(passed=True)
+            for name in ['db1-practice','db1-alien','db1-credits','db2-unpause']:qa['cases'][name]=dict(passed=True)
             path.write_text(json.dumps(qa),encoding='utf-8')
             with contextlib.redirect_stdout(io.StringIO()):close(other,path,root/'releases')
             self.assertEqual(digest(first),before)
@@ -90,3 +90,16 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):close(candidate,path,releases)
             self.assertEqual(archive.read_bytes(),b'preserve')
             self.assertEqual(json.loads((candidate/'DynaBrothers/PACKAGE.json').read_text())['status'],'candidate')
+
+    def test_corrected_012_revision_requires_active_db2_gameplay(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);candidate,path,qa=self.fixture(root)
+            manifest_path=candidate/'DynaBrothers/PACKAGE.json'
+            manifest=json.loads(manifest_path.read_text());manifest['version']='0.1.2'
+            manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+            for name in ['db1-practice','db1-alien','db1-credits']:qa['cases'][name]=dict(passed=True)
+            path.write_text(json.dumps(qa),encoding='utf-8')
+            with self.assertRaises(RuntimeError):close(candidate,path,root/'releases',revision=2)
+            qa['cases']['db2-unpause']=dict(passed=True);path.write_text(json.dumps(qa),encoding='utf-8')
+            with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases',revision=2)
+            self.assertTrue((root/'releases/DynaBrothers-v0.1.2-win64-checkpoint-r2.zip').is_file())

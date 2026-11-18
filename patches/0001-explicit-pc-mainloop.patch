@@ -86,10 +86,43 @@ index c57d756..fe64626 100644
  
  int gamepad_player_connected(int player)
 diff --git a/runner/glue.c b/runner/glue.c
-index 9678eef..9648352 100644
+index 9678eef..7db2d0e 100644
 --- a/runner/glue.c
 +++ b/runner/glue.c
-@@ -1089,7 +1089,13 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -25,7 +25,7 @@
+ #include "genesis_runtime.h"
+ #include "native_interrupt_frame.h"
+ #include "native_interruptible.h"
+-static int s_native_pc_scope,s_native_instruction_open,s_native_vblank_completed;
++static int s_native_pc_scope,s_native_instruction_open,s_native_vblank_completed,s_native_full_program;
+ 
+ /* Tier-3 clean-room 68000 interpreter — the runtime correctness floor. On a
+  * dispatch miss the native build used to silently no-op the missed function;
+@@ -851,7 +851,7 @@ static int s_own_hint_latched = 0;
+ 
+ static int latched_vint_unmasked(void)
+ {
+-    return s_own_vint_latched && !s_irq_in_progress && ((g_cpu.SR >> 8) & 7) < 6;
++    return !s_native_full_program && s_own_vint_latched && !s_irq_in_progress && ((g_cpu.SR >> 8) & 7) < 6;
+ }
+ 
+ /* --- STAGE 1: interleaved interrupt delivery (behind GENESIS_INTERLEAVE_IRQ) --
+@@ -1020,6 +1020,14 @@ static void own_run_handler_interleaved(int level, GVDP *vdp)
+ void glue_own_interrupt(int level, GVDP *vdp)
+ {
+     if (!s_game_running) return;
++    /* Continuous explicit-PC programs execute ISR instructions on the same
++     * CPU/fiber as the interrupted program. Never freeze the raster or save
++     * and restore its registers around a host callback in this mode. */
++    if(s_native_full_program) {
++        if(level==6)s_own_vint_latched=1;
++        if(level==4)s_own_hint_latched=1;
++        return;
++    }
+     if(s_native_pc_scope && s_native_instruction_open) {
+         if(level==6)s_own_vint_latched=1;
+         if(level==4)s_own_hint_latched=1;
+@@ -1089,7 +1097,13 @@ void glue_own_interrupt(int level, GVDP *vdp)
          M68KState saved = g_cpu;
          int saved_split_sp_popped = recomp_interrupt_context_enter();
          for (int i = 0; i < 256; i++) save[i] = g_ram[(byteoff + i) & 0xFFFFu];
@@ -104,7 +137,7 @@ index 9678eef..9648352 100644
          s_in_vblank_service = 1;
          /* Same audio-stamp re-base as own_deliver_vint: H-int handler chip
           * writes stamp at the delivery raster, not the parked counter. */
-@@ -1098,6 +1104,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1098,6 +1112,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
          g_rte_pending = 0; g_rte_pending_ptr = &s_rte_dummy; g_rte_pending = 0;
          /* H-int handler cycles owe raster time too (same rule as V-int). */
          uint32_t cyc_before = g_audio_cycle_counter;
@@ -112,7 +145,7 @@ index 9678eef..9648352 100644
          if (genesis_force_interp()) {
              /* Interpret the H-int handler body from the level-4 autovector. */
              m68k_interp_run_handler(m68k_read32(0x70) & 0xFFFFFFu);
-@@ -1109,8 +1116,15 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1109,8 +1124,15 @@ void glue_own_interrupt(int level, GVDP *vdp)
          g_rte_pending_ptr = &s_rte_real; g_rte_pending = 0;
          g_68k_stamp_rebase = saved_rebase;
          s_in_vblank_service = 0;
@@ -129,7 +162,41 @@ index 9678eef..9648352 100644
          recomp_interrupt_context_leave(saved_split_sp_popped);
      }
  }
-@@ -1186,6 +1200,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
+@@ -1122,6 +1144,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
+  * yields exactly one V-int when unmasked, same as hardware/clownmdemu). */
+ int glue_own_vint_service_latched(GVDP *vdp)
+ {
++    if(s_native_full_program)return 0;
+     if (!s_own_vint_latched || !s_game_running) return 0;
+     if(s_native_pc_scope && s_native_instruction_open)return 0;
+     /* Deliver as soon as the mask drops; do NOT hold behind outstanding raster
+@@ -1138,6 +1161,7 @@ int glue_own_vint_service_latched(GVDP *vdp)
+  * Multiple expiries coalesce into the same asserted request. */
+ int glue_own_hint_service_latched(GVDP *vdp)
+ {
++    if(s_native_full_program)return 0;
+     if(s_native_pc_scope && s_native_instruction_open)return 0;
+     if (!s_own_hint_latched || !s_game_running || s_irq_in_progress || s_pending_irq ||
+         !(vdp->reg[0]&16) || ((g_cpu.SR>>8)&7)>=4) return 0;
+@@ -1146,6 +1170,17 @@ int glue_own_hint_service_latched(GVDP *vdp)
+ }
+ int glue_cosim_hint_latched(void) { return s_own_hint_latched; }
+ 
++unsigned genesis_native_pending_interrupt(void)
++{
++    if(!s_native_full_program||!s_game_running)return 0;
++    return native_interrupt_pending_level(s_own_vint_latched,s_own_hint_latched,
++        g_cpu.SR,(g_machine.vdp.reg[0]&16)!=0);
++}
++void genesis_native_ack_interrupt(unsigned level)
++{
++    if(s_native_full_program)native_interrupt_ack_pending(&s_own_vint_latched,&s_own_hint_latched,level);
++}
++
+ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,void *user)
+ {
+     if(s_native_pc_scope || !step)return 0;
+@@ -1186,6 +1221,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
      abort();
  }
  
@@ -138,7 +205,7 @@ index 9678eef..9648352 100644
 +void genesis_native_mainloop(uint32_t entry,GenesisNativeInstruction step,void *user)
 +{
 +    g_cpu.PC=entry&0xFFFFFFu;
-+    s_native_pc_scope=1;
++    s_native_pc_scope=s_native_full_program=1;
 +    for (;;) {
 +        s_native_instruction_open=0;
 +        glue_own_vint_service_latched(&g_machine.vdp);
@@ -160,6 +227,50 @@ index 9678eef..9648352 100644
  /* Non-clearing read of the masked-V-int latch for full-state hashing
   * (glue_own_vint_service_latched() would consume it — must not, during a
   * side-effect-free snapshot). */
+@@ -1634,7 +1693,7 @@ void glue_restart_game_fiber(uint32_t resume_pc)
+ 
+     s_game_running = 0;
+     s_game_yielded_vblank = 0;
+-    s_native_pc_scope=s_native_instruction_open=s_native_vblank_completed=0;
++    s_native_pc_scope=s_native_instruction_open=s_native_vblank_completed=s_native_full_program=0;
+ #if SONIC_REVERSE_DEBUG
+     s_game_yielded_break = 0;
+ #endif
+@@ -2562,7 +2621,7 @@ typedef struct GlueRbSched {
+      * _STATICS probe on Sonic 3 (2026-09-25): omitting it forked the replay
+      * in cpu/sched/ram at step 1 in 5 of 149 probe passes. */
+     int32_t  split_sp_popped;
+-    int32_t  native_pc_scope,native_instruction_open,native_vblank_completed;
++    int32_t  native_pc_scope,native_instruction_open,native_vblank_completed,native_full_program;
+ } GlueRbSched;
+ 
+ size_t glue_rb_sched_save(void *dst, size_t cap)
+@@ -2619,6 +2678,7 @@ size_t glue_rb_sched_save(void *dst, size_t cap)
+     s.native_pc_scope=s_native_pc_scope;
+     s.native_instruction_open=s_native_instruction_open;
+     s.native_vblank_completed=s_native_vblank_completed;
++    s.native_full_program=s_native_full_program;
+     memcpy(dst, &s, sizeof s);
+     return sizeof s;
+ }
+@@ -2630,7 +2690,8 @@ int glue_rb_sched_load(const void *src, size_t len)
+     memcpy(&s, src, sizeof s);
+     if(s.native_pc_scope<0 || s.native_pc_scope>1 ||
+        s.native_instruction_open<0 || s.native_instruction_open>s.native_pc_scope ||
+-       s.native_vblank_completed<0 || s.native_vblank_completed>1)return 0;
++       s.native_vblank_completed<0 || s.native_vblank_completed>1 ||
++       s.native_full_program<0 || s.native_full_program>s.native_pc_scope)return 0;
+     g_frame_count               = s.frame_count;
+     g_cycle_accumulator         = s.cycle_accumulator;
+     g_vblank_threshold          = s.vblank_threshold;
+@@ -2679,6 +2740,7 @@ int glue_rb_sched_load(const void *src, size_t len)
+     s_native_pc_scope=s.native_pc_scope;
+     s_native_instruction_open=s.native_instruction_open;
+     s_native_vblank_completed=s.native_vblank_completed;
++    s_native_full_program=s.native_full_program;
+     return 1;
+ }
+ 
 diff --git a/runner/main.c b/runner/main.c
 index df30a08..db3f7f8 100644
 --- a/runner/main.c
@@ -225,3 +336,41 @@ index df30a08..db3f7f8 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
+diff --git a/runner/native_interrupt_frame.h b/runner/native_interrupt_frame.h
+index 1cb9d42..02f9ae5 100644
+--- a/runner/native_interrupt_frame.h
++++ b/runner/native_interrupt_frame.h
+@@ -2,6 +2,20 @@
+ #define GENESIS_NATIVE_INTERRUPT_FRAME_H
+ #include <stdint.h>
+ 
++/* A pending request remains asserted until the CPU acknowledges that level. */
++static inline unsigned native_interrupt_pending_level(int vint,int hint,uint16_t sr,int hint_enabled)
++{
++    unsigned mask=(sr>>8)&7u;
++    if(vint&&mask<6)return 6;
++    if(hint&&hint_enabled&&mask<4)return 4;
++    return 0;
++}
++static inline void native_interrupt_ack_pending(int *vint,int *hint,unsigned level)
++{
++    if(level==6)*vint=0;
++    else if(level==4)*hint=0;
++}
++
+ /* MC68000 format-0 interrupt frame: SR, then the interrupted PC. Guest
+  * handlers may rewrite either field before RTE. Work RAM wraps at 64 KiB. */
+ static inline void native_interrupt_frame_write(uint8_t ram[65536],uint32_t sp,
+diff --git a/runner/native_interruptible.h b/runner/native_interruptible.h
+index 11c9641..03d3e34 100644
+--- a/runner/native_interruptible.h
++++ b/runner/native_interruptible.h
+@@ -7,4 +7,8 @@
+  * its return PC. The generated caller retains its single guest-stack pop. */
+ typedef int (*GenesisNativeInstruction)(void *user,unsigned *cycles);
+ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction,void *user);
++/* Full-program driver only: query at a completed instruction boundary and
++ * acknowledge through the CPU core's interrupt-ack bus callback. */
++unsigned genesis_native_pending_interrupt(void);
++void genesis_native_ack_interrupt(unsigned level);
+ #endif

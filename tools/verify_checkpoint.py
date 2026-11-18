@@ -24,7 +24,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -33,6 +33,7 @@ def main():
         if replay:command+=['--replay',str(replay)]
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
+        elif irq:env['DYNA_IRQ_VERIFY']='1'
         result=subprocess.run(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         if result.returncode:
             print(result.stdout.decode('utf-8',errors='replace'));raise RuntimeError('Packaged regression failed: '+name)
@@ -50,6 +51,7 @@ def main():
     script=ROOT/'games/db2special/scenes/tutorial.input'
     run('db2-en','DynaBrothers2AOT.exe',db2,10010,script)
     run('db2-ja','DynaBrothers2AOT.exe',english['db2'],10010,script,'ja')
+    run('db2-unpause','DynaBrothers2AOT.exe',db2,18000,ROOT/'games/db2special/scenes/unpause-gameplay.input',irq=True)
     run('replay-record','DynaBrothers2AOT.exe',db2,300)
     run('replay-play','DynaBrothers2AOT.exe',db2,301,replay=args.output/'replay-record/profile/logs/DynaBrothers2AOT-feedback.replay')
     run('hint','DynaBrothers1AOT.exe',db1,60,hint=True)

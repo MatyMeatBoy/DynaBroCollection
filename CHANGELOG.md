@@ -2,6 +2,8 @@
 
 ## 0.1.2 — en desarrollo
 
+- Corregido el bloqueo de DB2 al despausar: interrupciones continuas en el stream AOT, con excepción de 44 ciclos y retorno/contexto del programa original.
+
 - DB1: 18 nombres de créditos y mensaje secreto del final difícil en inglés.
 - DB1: mensajes de completar práctica/modo alienígena y fondos de texto corregidos.
 - Idiomas: se conserva la recuperación de japonés/inglés desde los dumps cualificados y las imágenes inglesas v0.1/v0.2.

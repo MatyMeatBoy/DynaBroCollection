@@ -3,6 +3,12 @@ file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" DYNA_PROJECT_VERSION LIMIT_CO
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
 project(DynaBrothersRecomp VERSION ${DYNA_PROJECT_VERSION} LANGUAGES C CXX)
 enable_testing()
+add_executable(DynaNativeIrqTest tests/native_irq_test.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp/external/m68k-recomp-core/runtime/m68k_step.c")
+target_include_directories(DynaNativeIrqTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp/runner"
+    "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp/external/m68k-recomp-core/runtime")
+target_compile_options(DynaNativeIrqTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME native_interrupt_boundary_contract COMMAND DynaNativeIrqTest)
 add_executable(DynaLanguagePatchTest tests/language_patch_test.c games/language_patch.c)
 target_include_directories(DynaLanguagePatchTest PRIVATE games)
 target_compile_options(DynaLanguagePatchTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)

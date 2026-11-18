@@ -126,6 +126,7 @@ def close(candidate,qa_path,releases,revision=1):
         if digest(payload/name)!=sha:raise RuntimeError('QA belongs to another executable')
     required={'db1-en','db1-ja','db2-en','db2-ja','replay-record','replay-play','hint'}
     if revision >= 2 or tuple(map(int,version.split('.'))) >= (0,1,2):required.update({'db1-practice','db1-alien','db1-credits'})
+    if tuple(map(int,version.split('.'))) >= (0,1,2):required.add('db2-unpause')
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

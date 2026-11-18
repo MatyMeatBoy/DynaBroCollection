@@ -49,14 +49,16 @@ static int cached_lookup=1;
 static M68kStepResult execute_module(M68kStepContext *ctx,const M68kStepModule *module) {
     return cached_lookup?dyna_step_cached(ctx,module):m68k_step_module_execute(ctx,module);
 }
-static uint32_t expected_hint_audio;
 extern const M68kStepEntry dyna_db2_ram_return;
 static M68kStepBusResult read8(void *u,uint32_t a,uint8_t *v) { (void)u;*v=m68k_read8(a);return M68K_BUS_OK; }
 static M68kStepBusResult read16(void *u,uint32_t a,uint16_t *v) { (void)u;*v=m68k_read16(a);return M68K_BUS_OK; }
 static M68kStepBusResult fetch16(void *u,uint32_t a,uint16_t *v) { (void)u;*v=glue_peek16(a);return M68K_BUS_OK; }
 static M68kStepBusResult write8(void *u,uint32_t a,uint8_t v) { (void)u;m68k_write8(a,v);return M68K_BUS_OK; }
 static M68kStepBusResult write16(void *u,uint32_t a,uint16_t v) { (void)u;m68k_write16(a,v);return M68K_BUS_OK; }
-static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16};
+static unsigned ack_interrupt(void *u,unsigned level) {
+    (void)u;genesis_native_ack_interrupt(level);return M68K_STEP_AUTOVECTOR;
+}
+static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16,.ack_interrupt=ack_interrupt};
 
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
@@ -79,6 +81,32 @@ static int retire(void *user,unsigned *cycles) {
     _Static_assert(sizeof(ctx->state.regs)==sizeof(g_cpu),"MC68000 register ABI");
     memcpy(&ctx->state.regs,&g_cpu,sizeof(g_cpu));
     uint64_t before=ctx->state.cycles;
+    if(ctx==&main_cpu) {
+        unsigned level=genesis_native_pending_interrupt();
+        if(level) {
+            uint32_t pc=ctx->state.regs.PC;
+            uint16_t sr=ctx->state.regs.SR;
+            if(!m68k_step_interrupt(ctx,level)) {
+                fprintf(stderr,"[AOT-IRQ] INVALID core entry level=%u fault=%u\n",level,ctx->state.fault);
+                return 0;
+            }
+            if(getenv("DYNA_IRQ_VERIFY")) {
+                static unsigned checked;
+                uint32_t sp=ctx->state.regs.A[7];
+                if(ctx->state.cycles-before!=44 || glue_peek16(sp)!=sr ||
+                   glue_peek32(sp+2u)!=(pc&0xffffffu) ||
+                   ((ctx->state.regs.SR>>8)&7u)!=level) {
+                    fprintf(stderr,"[AOT-IRQ] INVALID instruction-boundary frame/cycles level=%u\n",level);
+                    return 0;
+                }
+                if(!(checked&(1u<<level))) {
+                    checked|=1u<<level;
+                    fprintf(stderr,"[AOT-IRQ] PASS level=%u real exception frame, 44 entry cycles, continuous native execution\n",level);
+                }
+            }
+            memcpy(&g_cpu,&ctx->state.regs,sizeof(g_cpu));
+        }
+    }
     M68kStepResult result=execute_module(ctx,&DYNA_STEP_MODULE);
 #ifdef DYNA_HAS_JP
     if(result==M68K_STEP_MISS)
@@ -97,8 +125,6 @@ static int retire(void *user,unsigned *cycles) {
         return 0;
     }
     *cycles=(unsigned)(ctx->state.cycles-before);
-    if(ctx==&main_cpu && ctx->state.instructions==1 && getenv("DYNA_IRQ_SELFTEST"))
-        expected_hint_audio=g_audio_cycle_counter+*cycles+44u;
     return 1;
 }
 static void entry(void) {
@@ -130,10 +156,6 @@ static void interrupt(uint32_t pc,unsigned level) {
                     level,sp,glue_peek32(sp+2u),g_cpu.PC,g_cpu.SR,saved_sr);
             abort();
         }
-        if(level==4 && !(checked&(1u<<4)) && getenv("DYNA_IRQ_SELFTEST") && g_audio_cycle_counter!=expected_hint_audio) {
-            fprintf(stderr,"[AOT-IRQ] INVALID exception entry cost: actual=%u expected=%u\n",g_audio_cycle_counter,expected_hint_audio);
-            abort();
-        }
         if(!(checked&(1u<<level))) {
             checked|=1u<<level;
             fprintf(stderr,"[AOT-IRQ] PASS level=%u real exception frame\n",level);
@@ -149,7 +171,8 @@ static void interrupt(uint32_t pc,unsigned level) {
         g_cycle_accumulator+=cycles;g_audio_cycle_counter+=cycles;
         if(returning)return;
     }
-    fprintf(stderr,"[AOT] IRQ instruction guard\n");abort();
+    fprintf(stderr,"[AOT] IRQ instruction guard level=%u PC=$%06X opcode=$%04X SP=$%06X frame_sp=$%06X SR=$%04X frame_sr=$%04X frame_pc=$%06X\n",
+        level,g_cpu.PC,glue_peek16(g_cpu.PC),g_cpu.A[7],sp,g_cpu.SR,glue_peek16(sp),glue_peek32(sp+2u));abort();
 }
 static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
