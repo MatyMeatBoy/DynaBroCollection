@@ -1,6 +1,6 @@
-# Dyna Brothers 1 + 2 — v0.1.7 test checkpoint
+# Dyna Brothers 1 + 2 — v0.1.8 test checkpoint
 
-[![Checkpoint 0.1.7](https://img.shields.io/badge/version-0.1.7%20checkpoint-orange)](docs/releases/v0.1.7-checkpoint.md)
+[![Checkpoint 0.1.8](https://img.shields.io/badge/version-0.1.8%20checkpoint-orange)](docs/releases/v0.1.8-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
 [![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
@@ -8,13 +8,13 @@
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
 
-Version0.1.7 integrates native-title Extras, automatic level replay, language-independent progress migration, graphical speech translation and ending punctuation repairs. [Scope and limits](docs/releases/v0.1.7-checkpoint.md). All42 packaged checks pass. DB2 development resumes separately from this frozen DB1 checkpoint.
+Version0.1.8 fixes the six-button peripheral handshake, integrates the actual DB2 plane layout and separate visor preferences, and supplies a private offline development toolkit. [Scope and limits](docs/releases/v0.1.8-checkpoint.md). DB2 can still fall back to the native image during held camera movement. Development stops after this checkpoint at the owner’s request; [continuation handoff](docs/handoff/CONTINUE-ON-ANOTHER-PC.md).
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
 Version 0.1.3 adds an expanded-world DB1 renderer, independent of the original 36-actor drawing buffer, and native 4:3 / enhanced 16:9 presentation. It includes 76 local DB1 goals based on the public RetroAchievements catalog and 99 custom DB2 Special goals, with badges, queued popups and a paused list. [Goal contracts and evaluator limits](docs/db1-achievement-contracts.md). Previous checkpoint archives retain their original bytes.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.7 checkpoint notes](docs/releases/v0.1.7-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification is active. Full campaign/hardware acceptance remains open.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.7 checkpoint notes](docs/releases/v0.1.8-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification remains pending. Full campaign/hardware acceptance remains open.
 
 ![Historical launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -22,10 +22,10 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 
 | Resource | Purpose |
 | --- | --- |
-| [Download v0.1.7](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.7) | Portable Windows x64 test release with its debug script |
-| [v0.1.7 verification](docs/releases/v0.1.7-verification.md) | Closed archive/source identity,42 packaged checks and limits |
+| [Download v0.1.8](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.8) | Portable Windows x64 test release with its debug script |
+| [Historical v0.1.7 verification](docs/releases/v0.1.7-verification.md) | Closed archive/source identity,42 packaged checks and limits |
 | [Historical v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Preserved previous archive/source identity |
-| [Checkpoint notes](docs/releases/v0.1.7-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
+| [Checkpoint notes](docs/releases/v0.1.8-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
 | [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
 | [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |

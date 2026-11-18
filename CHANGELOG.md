@@ -1,3 +1,10 @@
+# v0.1.8 checkpoint
+
+- Correct six-button terminal handshake and guest-clock expiry; real native Normal2 camera fixture.
+- DB2 actual plane layout, fixed command visor, common projection and independent saved visor settings.
+- Private portable development toolkit and offline restore/check commands.
+- Known limitation retained: DB2 held camera pans can use native fallback; translation/campaign/hardware qualification is incomplete.
+
 # Changelog
 
 ## 0.1.7 — checkpoint de prueba
