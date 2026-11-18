@@ -1017,10 +1017,402 @@
       "encoding": "glyph16",
       "align": "left",
       "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "stage-name-5260a",
+      "address": 337418,
+      "capacity": 14,
+      "before": "30313ac1b2bbb8c3b6dcb2b2bccf",
+      "english": "01:CUTE ISLAND",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52619",
+      "address": 337433,
+      "capacity": 10,
+      "before": "30323ac9d8cddeddc4b3",
+      "english": "02:BENTO  ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52624",
+      "address": 337444,
+      "capacity": 13,
+      "before": "30333ab6ddbbb27673b6ddc4b3",
+      "english": "03:WEST-EAST ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52632",
+      "address": 337458,
+      "capacity": 16,
+      "before": "30343a40c4deb7c4deb740d6b3b6dedd",
+      "english": "04:THROB LAVA   ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52643",
+      "address": 337475,
+      "capacity": 13,
+      "before": "30353ab7cbdebcb220bbcadeb8",
+      "english": "05:HARSH SAND",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52651",
+      "address": 337489,
+      "capacity": 14,
+      "before": "30363abcafc1c3de20c7dac1afc1",
+      "english": "06:SOGGY SWAMP",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52660",
+      "address": 337504,
+      "capacity": 15,
+      "before": "30373acadeafc3dd40b2beb740c0b2",
+      "english": "07:X RUIN ZONE ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52670",
+      "address": 337520,
+      "capacity": 17,
+      "before": "30383a40d3d4b240b2beb7c3de40d2b2db",
+      "english": "08:MOAI MAZE     ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-52682",
+      "address": 337538,
+      "capacity": 10,
+      "before": "30393accd5c920b5bcdb",
+      "english": "09:ICEKEEP",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-5268d",
+      "address": 337549,
+      "capacity": 13,
+      "before": "31303ac1adb3b5b320bab3b4dd",
+      "english": "10:CENTRAL PK",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-5269b",
+      "address": 337563,
+      "capacity": 9,
+      "before": "31313ad0ddc5c9cfc1",
+      "english": "11:TOWN  ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526a5",
+      "address": 337573,
+      "capacity": 16,
+      "before": "31323a40cab2c3b820cbded940b6deb2",
+      "english": "12:HITECH CITY  ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526b6",
+      "address": 337590,
+      "capacity": 13,
+      "before": "31333a40b3b7b3b720cadfb0b8",
+      "english": "13:JOY PARK  ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526c4",
+      "address": 337604,
+      "capacity": 11,
+      "before": "31343a40b1bdc3dbb2c4de",
+      "english": "14:ASTEROID",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526d0",
+      "address": 337616,
+      "capacity": 14,
+      "before": "31353ac8b6deb4afc32040cedfdd",
+      "english": "15:FLIP, PON  ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526df",
+      "address": 337631,
+      "capacity": 15,
+      "before": "31363a40c1b4afb840c3de40d2b2c4",
+      "english": "16:CHECKMATE   ",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "stage-name-526ef",
+      "address": 337647,
+      "capacity": 13,
+      "before": "31373abadaca20b4d7ccdec521",
+      "english": "17:DONT PICK!",
+      "verification": "Original-mode stage name table; direct guard; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
   "glyph_text": [
+    {
+      "address": 1458530,
+      "before": "0c4009ae0fbd0fc1",
+      "lines": [
+        "CONTROLS"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458548,
+      "before": "09160882",
+      "lines": [
+        "HIT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458558,
+      "before": "0fe908e6",
+      "lines": [
+        "DEF"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458564,
+      "before": "07ef09160882",
+      "lines": [
+        "SMASH"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458580,
+      "before": "06b30ef2",
+      "lines": [
+        "ROLL"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458626,
+      "before": "0c4009ae0fbd0fc1",
+      "lines": [
+        "CONTROLS"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458644,
+      "before": "09160882",
+      "lines": [
+        "HIT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458654,
+      "before": "0fe908e6",
+      "lines": [
+        "DEF"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458660,
+      "before": "07ef09160882",
+      "lines": [
+        "SMASH"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458676,
+      "before": "06b30ef2",
+      "lines": [
+        "ROLL"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458688,
+      "before": "018f019f0c0a0cb2",
+      "lines": [
+        "SELECT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458724,
+      "before": "00d100f0014e0ae10141000a",
+      "lines": [
+        "1P WINS!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458738,
+      "before": "00d200f0014e0ae10141000a",
+      "lines": [
+        "2P WINS!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458752,
+      "before": "05fa012d0f6c0131000a",
+      "lines": [
+        "DRAW!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 1458764,
+      "before": "0020002a0034003e00460052005c00680074007e008a009400a000ae00ba00c800010001019901a60194",
+      "lines": [
+        "STEGO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458808,
+      "before": "000101a801ca019101c9",
+      "lines": [
+        "TRICERA"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458820,
+      "before": "000101a6018301c901ae",
+      "lines": [
+        "TYRANNO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458832,
+      "before": "00010001018201cd",
+      "lines": [
+        "ALLO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458842,
+      "before": "000101b4001c014101630173",
+      "lines": [
+        "P-CHAN"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458856,
+      "before": "0001000101b701a601c9",
+      "lines": [
+        "PTERA"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458868,
+      "before": "000101aa01c10138016d001c",
+      "lines": [
+        "NAMEJIRO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458882,
+      "before": "0001019301cd01600173012d",
+      "lines": [
+        "KOROMUNKI"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458896,
+      "before": "0001018c0186018c0186",
+      "lines": [
+        "GAUGAU"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458908,
+      "before": "014b0173015d0021012f0173",
+      "lines": [
+        "NINPO KUN"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458922,
+      "before": "000101a60183018201c9",
+      "lines": [
+        "TIARA"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458934,
+      "before": "000101b001a3019f01620173",
+      "lines": [
+        "BATTAMON"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458948,
+      "before": "018d01d3019001a6018301c901ae",
+      "lines": [
+        "KING TYRANNO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458964,
+      "before": "0001019f001c01bc018201cd",
+      "lines": [
+        "TURBO ALLO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458978,
+      "before": "019001cc018401a801aa018401a8",
+      "lines": [
+        "GREAT KNIGHT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
+    {
+      "address": 1458994,
+      "before": "0198018701a301a801aa018401a8",
+      "lines": [
+        "JET KNIGHT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending",
+      "align": "center"
+    },
     {
       "address": 2238072,
       "before": "0004001401550143015501430155014301550143",
