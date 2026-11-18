@@ -128,3 +128,23 @@ This qualifies the five actual disaster submenu entries, not every possible
 local spell, enemy branch, or alternate weather-art state. Rain's world-cell
 policy and local spell handling are separate contracts. Diagnostic power is
 still the only guest-memory fixture; no result claims earned resources.
+
+### Final coherent-build regression
+
+The final camera/title/menu build was copied with its DLLs and assets before
+testing. Its executable SHA-256 is
+`c9ca2bcfe54a6cb717a15e26ddc2be0eda8c722106c76e92a429e6d3c13eca6f`.
+All five actual 2560x1440 SDL/audio probes pass 8500 frames, produce 427x240
+captures, contain non-DC mixer signal, and match every respective guest-state
+and audio-state hash in the table above. Final lightning frame 120 and tsunami
+frame 300 were inspected: their authored effects cover the full view without
+the former HUD rectangle. Final meteor frame 120 preserves its native falling
+projectiles over the expanded battlefield with the HUD natively hidden.
+
+Evidence: `local/evidence/db1-hazards-final/summary.json`, `1440-lightning/`,
+and `1440-{distortion,quake,tsunami,meteor}-r2/`. A disk-full interruption
+prevented the initial distortion report from being written; the four remaining
+probes were rerun into fresh directories after archiving only this agent's
+earlier WAV files. Their archive locations, byte counts and SHA-256 hashes are
+recorded in `local/evidence/db1-hazards-after/audio-archive-manifest.json`.
+No source or guest-input changes were needed for this final regression.
