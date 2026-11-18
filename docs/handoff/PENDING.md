@@ -20,6 +20,8 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 ## Packaging
 9. After merges: `python -m tools.package_checkpoint stage local/candidate-next` (needs clean tree and `DYNA_TOOLCHAIN_BIN`).
 
+## Notes from tracing (renderer coverage)
+- Glyph renderers: 0x5B0FE (ROM strings, hooked at 0x5B174) and 0x5B22E (words >= 0x1E00 use a caller-supplied glyph table, trace tag `[glyph2]` at 0x5B278, not hooked). The Original-mode stage list line `01:ORIGIN 始まりの小島` is NOT drawn through either in the traced route; find its renderer (probably another PC) before translating it. `DYNA_TRACE_GLYPH=1` prints both tags.
 ## Reported by the owner (2026-11-18, from the internal test build)
 10. DB2 "YOU WENT EXTINCT!!" results/game-over screen (HITS/KILLS/ALIENS/TIME/PASSWORD, CONTINUE/SAVE GAME menu): owner says it still needs more translation work ("falta extender esta pantalla aun") — labels shown are already English but something on this screen is incomplete; needs its own capture pass to find what's left (compare against the full screen, not just the menu box).
 11. UI bug (likely DB1 title/hub menu, not DB2): selecting "Extras"/Password stays highlighted yellow instead of turning white like other selections when chosen. Needs repro capture + the native code path for that menu's selection-color state.
