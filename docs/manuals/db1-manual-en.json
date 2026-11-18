@@ -1,0 +1,266 @@
+[
+  {
+    "page": 1,
+    "image": "assets/img/manuals/db1-jp-p01.jpg",
+    "title": "Dyna Brothers",
+    "translation": "Cover page.\nInstruction Manual\nDYNA BROTHERS (TM)\nCRI / CSK Research Institute"
+  },
+  {
+    "page": 2,
+    "image": "assets/img/manuals/db1-jp-p02.jpg",
+    "title": "Table of Contents",
+    "translation": "Thank you very much for purchasing CRI's Mega Drive cartridge, the comical strategy simulation \"Dyna Brothers.\" Please read this instruction manual carefully before starting the game so you can enjoy it even more.\n\nTable of Contents:\nFrom the supervisor, Dr. Rika Kayama - 3\nDyna Brothers Story - 4\nHow to use the Control Pad - 6\nExplanation of the Menu screen - 7\nExplanation of the Options screen - 8\nEntering a Password - 9\nIntroducing the Dyna Brothers characters - 10\nExplanation of the Game screen - 12\nExplanation of terrain - 13\nExplanation of command icons - 16\nHow to use the Guide command - 18\nHow to use the Egg Creation command - 19\nHow to use Disaster Attacks - 20\nExplanation of the Information display screen - 22\nActivating the Finale - 24\nHow the game proceeds - 25\nLet's start the game - 26\nCharacter trait reference table - 31\nCommand power-cost reference table - 32\nQ&A corner - 33\nIntroducing the enemy characters - 34\nDr. Rika Kayama's personality diagnosis - 36\nMaster's winning tips corner - 38\nIntroducing CSK Research Institute products - 41\nPrecautions for use - 42"
+  },
+  {
+    "page": 3,
+    "image": "assets/img/manuals/db1-jp-p03.jpg",
+    "title": "From the supervisor, Dr. Rika Kayama",
+    "translation": "Up until now, it has been said that reality comes in two kinds: the external reality we can actually see with our own eyes, and the internal reality that exists only inside a person's heart. But with the advent of games, another kind of reality was born in the space between the two. I even believe that how humanity chooses to treat this newborn reality holds the key to our future.\n\nThis game, \"Dyna Brothers,\" is packed full of the charm of that \"in-between reality.\" The player gets to move freely through a world of dinosaurs, matching wits with aliens while protecting a precious environment. You will be the first person in the world to experience something like this - and you get to enjoy it while you're at it!\n\nI'm sure that after playing in the dinosaurs' powerful world, you'll come away charged with unpredictable energy!\n\n- Rika Kayama, psychiatrist and game lover"
+  },
+  {
+    "page": 4,
+    "image": "assets/img/manuals/db1-jp-p04.jpg",
+    "title": "Dyna Brothers Story",
+    "translation": "An archaeologist discovered a cave deep in the jungle. Inside, astonishingly, lay buried ancient ruins. The walls of the ruins were covered in murals, and beneath the murals, ancient writing was carved, explaining them. It told the story of a great war from long, long ago.\n\n\"Jurassic Era, Year 1701\nWe, the five dinosaur tribes, helped one another and built a peaceful world in harmony with nature. The reason we were able to flourish was thanks to the blessing of The Egg, said to be the source of life, which first created the eggs.\nOne day, a huge black shadow covered the sky. From it, several great birds took flight and descended upon the land in various places.\""
+  },
+  {
+    "page": 5,
+    "image": "assets/img/manuals/db1-jp-p05.jpg",
+    "title": null,
+    "translation": "What descended on every region were not birds, but spaceships carrying invaders.\nThe aliens that emerged from the ships suddenly attacked us.\n\nWe fought bravely, but against the invaders' overwhelming numbers, there was nothing we could do, and little by little we lost the fight.\nAnd then, when only a single egg remained...\n\nThe Egg let out a dazzling light.\n\nThe Egg awoke, and a miracle happened.】"
+  },
+  {
+    "page": 6,
+    "image": "assets/img/manuals/db1-jp-p06.jpg",
+    "title": "Control Pad Operation",
+    "translation": "Standard layout...... (can be changed on the Options screen)\nA Button............ Switches between \"Icon Control Mode\" and \"Zoomed Screen Control Mode.\" Holding it down switches from the normal \"Icon Control Mode\" to \"Zoomed Screen Control Mode\"; releasing the button returns you to normal.\nB Button............ Cancel\nC Button............ Confirm\nStart Button........ (the game pauses)\nDisplays the \"Status Screen.\"\n(-> P.22)\n\n[Icon Control Mode]\nUse the D-Pad to select a command icon.\nPress the C Button to execute the command.\n\n[Zoomed Screen Control Mode]\nInstead of command icons, the number of herbivores, carnivores, egg-eaters, and eggs for each side (yours and the enemy's) is displayed.\nYou can also scroll the zoomed screen with the D-Pad. Even in this mode, pressing the C Button will execute the currently selected command."
+  },
+  {
+    "page": 7,
+    "image": "assets/img/manuals/db1-jp-p07.jpg",
+    "title": "Menu Screen Explanation",
+    "translation": "Menu Screen\n\nNEW GAME\nStart the game from Stage 1.\n\nCONTINUE\nRestart from the stage where your last game ended.\n\nOPTIONS\nChange the game settings.\n(-> P.8)\n\nPASSWORD\nEnter a password.\n(-> P.9)"
+  },
+  {
+    "page": 8,
+    "image": "assets/img/manuals/db1-jp-p08.jpg",
+    "title": "Options Screen Explanation",
+    "translation": "'Options' Screen\n\n'CONTROL'\nChange the button configuration.\n\n'MUSIC'\nYou can listen to the music used in the game.\n\n'LEVEL'\nSet the game's difficulty.\n'PRACTICE'... 8 practice stages in total\n'NORMAL'...... 20 normal stages in total\n'HARD'........ 20 advanced stages in total\n\n'BACK'\nReturn to the previous menu screen."
+  },
+  {
+    "page": 9,
+    "image": "assets/img/manuals/db1-jp-p09.jpg",
+    "title": "Password Entry",
+    "translation": "Password Entry\n\nIf you know the password for a stage, you can start from that stage.\nMany more stages exist beyond the practice and normal stages.\nTry searching for them!"
+  },
+  {
+    "page": 10,
+    "image": "assets/img/manuals/db1-jp-p10.jpg",
+    "title": "Character Introduction",
+    "translation": "Dyna Brothers Character Introduction\n\nTyranno (Offensive Carnivore)\nAlways a headstrong troublemaker.\nHe charges straight at any enemy and eats whoever he defeats. His one weak point is that he tends to get fixated on whatever's right in front of him.\nHe serves as the main force of your attack, fighting bravely.\n\nAllo (Interceptor Carnivore)\nA cool, swift, and highly skilled hunter.\nNormally calm, but a bit of a fool once he gets worked up and loses himself. He doesn't move around much, instead swiftly catching enemies who come close. He guards the eggs around his own camp.\nThe natural enemy of egg-eaters."
+  },
+  {
+    "page": 11,
+    "image": "assets/img/manuals/db1-jp-p11.jpg",
+    "title": "Character Introduction (continued)",
+    "translation": "Pi-chan (Egg-eater)\nWeak in a fight, but a quick runner and a bit of a clown.\nHe finds enemy eggs and sneaks off with a bite to eat.\nHe's a great runner, and if there's an egg to be had he'll dash all the way into enemy territory. With nimble footwork he dodges enemy carnivores, teasing and toying with them.\n\nTricera (Defensive Herbivore)\nNormally laid-back, but a scary one once angered. He doesn't like conflict, but if attacked he believes in striking back, and when he's serious he can even take down carnivores. He doesn't lay many eggs, so he's hard to breed in large numbers.\n\nStego (Breeding Herbivore)\nQuiet and easygoing. He loves basking in the sun while grazing on grass. He isn't strong, but he lays lots of eggs. Because he breeds easily, he becomes the main power source for The Egg."
+  },
+  {
+    "page": 12,
+    "image": "assets/img/manuals/db1-jp-p12.jpg",
+    "title": "Game Screen Explanation",
+    "translation": "Game Screen Explanation\n\n1. Zoomed Screen\nDisplays the characters and background as they actually appear.\n2. Overview Map\nShows the whole map and the locations of both allies and enemies.\n3. Selected Command\nShows the currently selected command icon.\n4. Power\nShows The Egg's current power value.\n5. Command Icons\nBy executing these commands you can bring about various miracles.\nThe table below shows what is displayed in place of the command icons while in \"Zoomed Screen Display Mode.\"\n\nNumber of allied herbivores / Number of enemy herbivores\nNumber of allied carnivores / Number of enemy carnivores\nNumber of allied egg-eaters / Number of enemy egg-eaters\nNumber of allied eggs / Number of enemy eggs\n\n* When a number lights up red, it means that type of dinosaur has died."
+  },
+  {
+    "page": 13,
+    "image": "assets/img/manuals/db1-jp-p13.jpg",
+    "title": "Terrain Explanation",
+    "translation": "The terrain across which the dinosaurs move of their own will is fixed. If you want to move them onto other terrain, use the Individual Guidance command. However, since stamina consumption varies greatly depending on the terrain, be careful not to overwork your dinosaurs.\n\nGrassland\nStamina consumption when moving is lowest here, and the dinosaurs roam freely. The grass changes through 4 stages depending on how much is growing. It thins out when herbivores eat it, but it grows back over time.\n\nBare Ground\nStamina consumption when moving is high here, so the dinosaurs will not step onto it on their own. If grassland is adjacent, you can make grass grow here by causing rain to fall."
+  },
+  {
+    "page": 14,
+    "image": "assets/img/manuals/db1-jp-p14.jpg",
+    "title": "Terrain Explanation (continued)",
+    "translation": "Wasteland\nStamina consumption is low, but no matter how much rain falls, grass will never grow on this land, so herbivores won't move here on their own. Carnivores and egg-eaters will walk across it.\n\nRiver, Sea\nAnyone other than herbivores uses up a great deal of stamina here. If stamina runs low, they will drown. They won't enter unless guided there. Also, grassland tends to spread more easily near the water's edge.\n\nBottomless Swamp\nAny dinosaur can drown here. The dinosaurs won't enter on their own, but if one lies in the path of Individual Guidance, they will get stuck in it. Guide them carefully."
+  },
+  {
+    "page": 15,
+    "image": "assets/img/manuals/db1-jp-p15.jpg",
+    "title": "Terrain Explanation (continued)",
+    "translation": "Trees (Flammable)\nThis is an obstacle, so it cannot be crossed. Dinosaurs in its path will go around it. However, it will burn and turn into bare ground if hit by the flames from a Meteor.\n\nRocks (Non-flammable)\nThis is an obstacle, so it cannot be crossed. However, unlike trees, it will not burn even from a Meteor's flames.\n\nFire\nWhen a Meteor falls, it starts a fire, which spreads rapidly across grass and trees. Any living creature burns instantly. The fire goes out naturally when it reaches the water's edge, but it can also be put out with rain or a flood.\n\nAs the stages progress, the background will change. Also, when events like a drought wipe out all the grass, every creature will seek out grassland, sometimes moving onto terrain they normally wouldn't enter."
+  },
+  {
+    "page": 16,
+    "image": "assets/img/manuals/db1-jp-p16.jpg",
+    "title": "Command Icon Explanation",
+    "translation": "Rain Command\nWithin the zoomed screen, you can make it rain only around your own dinosaurs. If rain falls on bare ground next to grassland, grass will spread onto it. Rain falling on grassland also speeds up the growth of the grass.\n\nGuidance Command\nThere are two types: Group Guidance, which sets a movement direction for all your herbivores at once, and Individual Guidance, which guides a specific dinosaur to a destination. (-> P.18)\n\nEgg Creation Command\nProduces a dinosaur egg from The Egg. You can choose from 5 species. (-> P.19)\nThis command cannot be used unless there is grassland around The Egg.\n\nEgg Modification Command\nUses radiation to change the species of one of your eggs. The selection method is the same as Egg Creation. Changing the species requires the new species' egg cost plus a 1000-yen handling fee."
+  },
+  {
+    "page": 17,
+    "image": "assets/img/manuals/db1-jp-p17.jpg",
+    "title": "Command Icon Explanation (continued)",
+    "translation": "Disaster Command\nUsing the power gathered from your dinosaurs' life energy, you can trigger various disasters to attack the enemy. (-> P.20)\n\nThe Egg Command\nNo matter where the zoomed screen currently is, selecting this command instantly moves the zoomed screen to The Egg's location.\n\nMarking Command\nMarks a specific unit you want to keep track of, or an enemy UFO. Only one target can be marked at a time. The enemy may also mark your dinosaurs or The Egg.\n\nCatch Command\nInstantly moves the zoomed screen to the character marked with the Marking command.\n(Cannot be used if nothing is currently marked.)"
+  },
+  {
+    "page": 18,
+    "image": "assets/img/manuals/db1-jp-p18.jpg",
+    "title": "How to Use the Guidance Command",
+    "translation": "1. Group Guidance (does not consume Power)\n\nGroup Guidance Icon\n\"Guides all your herbivores.\" When you specify a direction, your herbivores gradually move in that direction, a little at a time. Use it mainly to point them toward where you want grassland to spread.\n\nGroup Guidance Stop Icon\nWhile Group Guidance is active, selecting this stop icon will cancel it.\n\n2. Individual Guidance (consumes 3 yen of Power per turn while guiding)\n\nIndividual Guidance Icon\n\"Select one of your dinosaurs and guide it to a specified destination.\" A dinosaur under Individual Guidance will first move diagonally until it reaches a position where it can head straight toward the destination either vertically/horizontally, then proceed in a straight line. It will push straight through terrain it would not normally cross, such as bare ground or sea. It will avoid obstacles like trees and rocks. Be careful not to let it fall into the sea, a swamp, or similar hazards.\n\nIndividual Guidance Stop Icon\nWhile Individual Guidance is active, selecting this icon will cancel it."
+  },
+  {
+    "page": 19,
+    "image": "assets/img/manuals/db1-jp-p19.jpg",
+    "title": "How to Use the Egg Creation Command",
+    "translation": "Since each species of dinosaur has different abilities, creating the right dinosaur for the situation -- offense, defense, and so on -- is a key part of the game.\n\nStego (300 yen)\nHas high life energy, so making plenty of them early on helps increase The Egg's power.\n\nTricera (300 yen)\nHard to breed, but strong, so it's worth keeping a few around for defense.\n\nTyranno (800 yen)\nOnce created, he'll head straight for the enemy on his own. Make plenty of them in the late game when it's time to settle things.\n\nAllo (800 yen)\nWon't move until he spots an enemy, but is powerful on defense, so keep a few on hand by the midgame, once the enemy starts attacking.\n\nPi-chan (1000 yen)\nHe hunts for enemy eggs to eat, so sending him into enemy territory can give you a big advantage. Watch out for the enemy's Interceptor Carnivores, though."
+  },
+  {
+    "page": 20,
+    "image": "assets/img/manuals/db1-jp-p20.jpg",
+    "title": "How to Use Disaster Attacks",
+    "translation": "These disasters only occur within the zoomed screen. They affect both allies and enemies without distinction, so be careful not to catch your own dinosaurs in them. Also, they are not guaranteed to affect everything on screen.\n\nLightning (1000 yen)\n\"Gathers electrical energy from the atmosphere to generate lightning.\"\nThe electric shock instantly hatches eggs. Use it when you've made lots of eggs and want to hatch them all at once, or when your eggs are about to be eaten.\n\nDrought (2000 yen)\n\"Gathers solar energy from the atmosphere and beams it down.\"\nThe heat of the sun withers plants, instantly turning grassland into bare ground. Use it around an enemy UFO, and the enemy will be unable to create eggs there for a while."
+  },
+  {
+    "page": 21,
+    "image": "assets/img/manuals/db1-jp-p21.jpg",
+    "title": "How to Use Disaster Attacks (continued)",
+    "translation": "Earthquake (2000 yen)\n\"Injects life energy into the earth's crust to trigger an earthquake.\"\nThe earthquake destroys eggs. It's effective when the enemy has made a lot of eggs, or when they're making a carnivore's egg.\n\nFlood (4000 yen)\n\"Gathers moisture from the atmosphere to cause a flood.\"\nThe flood washes creatures away. If the enemy has gathered in large numbers, wipe them all out at once.\n\nMeteor (8000 yen)\n\"Calls down a shooting star from space.\"\nWhere it lands catches fire. Trees and grassland will catch and spread the flames. It will keep burning unless put out with rain or a flood. It extinguishes naturally at the water's edge."
+  },
+  {
+    "page": 22,
+    "image": "assets/img/manuals/db1-jp-p22.jpg",
+    "title": "Status Screen Explanation",
+    "translation": "Pressing the Start button during the game temporarily pauses it and brings up the Status Screen, showing a large view of the overview map. Pressing the A button lets you switch to the screens below.\n\n'TERRAIN DATA'\nShows the types of terrain. You can see the layout of grassland, rocks, bottomless swamps, and so on across the map. Use it as reference for strategy.\n\n'CREATURE MAP'\nShows where your dinosaurs and the enemy aliens are located. Since species can be told apart by color, you can get a sense of the overall balance of power."
+  },
+  {
+    "page": 23,
+    "image": "assets/img/manuals/db1-jp-p23.jpg",
+    "title": "Information Display Screen",
+    "translation": "'Egg Map'\nShows you where eggs are located. Eggs are displayed at different sizes depending on how far along their growth is.\n\n'Surrender'\nSelect this when you want to end the game partway through. Pressing the C Button in this state brings up a confirmation message. Pressing the C Button again will cause you to surrender."
+  },
+  {
+    "page": 24,
+    "image": "assets/img/manuals/db1-jp-p24.jpg",
+    "title": "Activating the Finale",
+    "translation": "If it takes too long to defeat the aliens, their environmental reformation device will activate, triggering the Finale and causing natural disasters to occur. There's no telling what kind of changes will happen, but in any case, conditions will become even harsher for the dinosaurs than before.\nEven after the Finale has been triggered, you can still advance to the next stage by wiping out the aliens, but if at all possible, it's better to defeat the enemy before that happens.\n\nFor example...\n\nRising Sea Levels\nThe sea level gradually rises. Eventually, the dinosaurs will be swallowed up by the sea, land and all.\n\nIce Age\nThe land becomes covered entirely in snow, and grass stops growing. The dinosaurs will die off one after another from cold and starvation.\n\nVarious other kinds of Finales can also occur."
+  },
+  {
+    "page": 25,
+    "image": "assets/img/manuals/db1-jp-p25.jpg",
+    "title": "How the Game Proceeds",
+    "translation": "You play as The Egg, now awakened. Before the environmental reformation devices inside the UFOs stationed around the map can activate, defeat the aliens guarding each UFO and destroy their environmental reformation device.\n\nUse the power you're given at the start to create herbivores and increase their numbers. The Egg automatically absorbs power from the dinosaurs through them. Use the power gained from the growing number of dinosaurs to create carnivores and egg-eaters. Also, use natural disaster attacks to defeat the aliens. Defeating all the aliens is the objective of this game. Once you defeat all the aliens, you can advance to the next stage, which has a different front-line base.\n\nGame End Conditions\nThe game ends when either your dinosaurs or the enemy aliens are completely wiped out.\n1. When you defeat all enemy aliens\n   The stage is cleared and you advance to the next round.\n2. When all your dinosaurs are defeated\n   It's Game Over.\n3. When the player chooses to 'Surrender'\n   It's Game Over."
+  },
+  {
+    "page": 26,
+    "image": "assets/img/manuals/db1-jp-p26.jpg",
+    "title": "Let's Start the Game",
+    "translation": "First, let's start with 'Practice'.\nStages 1-8 of Practice Mode are training stages for learning how to use commands and remembering strategy. Each stage's theme is as follows.\n\nStage 1\nHow to create eggs and use the Rain command\n(Explained on the next page.)\nStage 2\nHow to use Group Guidance\nStage 3\nHow to use 'Lightning'\nStage 4\nHow to use 'Drought'\nStage 5\nHow to use 'Earthquake'\nStage 6\nHow to use 'Flood'\nStage 7\nHow to use 'Meteor'\nStage 8\nHow to use Individual Guidance"
+  },
+  {
+    "page": 27,
+    "image": "assets/img/manuals/db1-jp-p27.jpg",
+    "title": "[Stage 1] How to Make Eggs, How to Make It Rain",
+    "translation": "This stage gives you plenty of power from the start, so feel free to try out various commands.\nNow, let's explain the basic controls and strategic procedure common to all stages, using Stage 1 as an example.\n\n1. Egg Creation (First, create herbivore eggs.)\n- Use the Directional Buttons to move the finger cursor onto the Egg Creation icon and press the C Button; a dinosaur icon will be displayed.\n- Use the finger cursor to choose a herbivore ('Stego' or 'Tricera'), and press the C Button to confirm; an egg will be laid.\n- 'Stego' is weak but multiplies quickly. 'Tricera' is strong but doesn't multiply much. Create them according to the situation."
+  },
+  {
+    "page": 28,
+    "image": "assets/img/manuals/db1-jp-p28.jpg",
+    "title": "Making Eggs, Making Rain (continued)",
+    "translation": "- If you keep holding the C Button, as long as you have power, the same type of egg will keep being laid one after another. Try making about 8 of them here as a test.\n  (You can create as many eggs as there are grassland tiles around The Egg. The maximum you can create at once is 8.)\n- Pressing the B Button returns you to the original selection screen.\nAfter a while, the dinosaurs will hatch from their eggs and begin moving around freely.\n\n2. Making It Rain. (Use the Rain command to expand the grassland.)\n- Hold the A Button and use the Directional Buttons to freely move the zoomed-in view.\n- Use this to follow the dinosaurs around and observe them for a bit.\n- If you spot a dinosaur next to a patch of bare ground, make it rain there.\n- Release the A Button, select the Rain command icon, and press the C Button. It will rain.\n- When rain falls on ground next to grassland, the grass spreads to cover it. Also, making it rain on grassland speeds up the grass's growth. If there isn't enough grass and the herbivores are struggling, make it rain. If left alone, they may starve to death."
+  },
+  {
+    "page": 29,
+    "image": "assets/img/manuals/db1-jp-p29.jpg",
+    "title": "Raising Herbivores, Carnivore Attacks",
+    "translation": "3. Raise herbivores to build up power.\nNormally, from here you would keep making eggs and making it rain to expand the grassland, steadily increasing your herbivores to build up power. In this stage, you already have plenty of power, so once you're tired of raising herbivores, feel free to attack at any time.\n\n4. Attacks by carnivores\nOnce you've secured enough grassland for around 10 herbivores to live freely, try using the Egg Creation command to create a 'Tyranno' egg.\n\n- Once hatched, 'Tyranno' heads straight for the enemy aliens.\n- 'Tyranno' only walks on grassland and wasteland, so when it reaches the edge of the grassland, make it rain to expand the grassland and create a path for it.\n- When launching an all-out assault, keep making eggs as fast as you can build up the power for them."
+  },
+  {
+    "page": 30,
+    "image": "assets/img/manuals/db1-jp-p30.jpg",
+    "title": "Egg-Eater Attacks, Carnivore Defense",
+    "translation": "5. Attacks by egg-eaters\nIf you have power to spare, try making a 'Pi-chan'.\n- 'Pi-chan' doesn't attack the enemy directly, but it eats the aliens' eggs, which holds back their breeding and power growth. It also draws the attention of the aliens' attack-type carnivorous aliens, so it can buy you time as well.\n- Just like with 'Tyranno', make it rain to create a path and guide it toward the eggs.\n\n6. Defense with carnivores\nWhen it looks like enemy carnivorous or egg-eating aliens are about to attack, create 'Allo' early to protect the area around The Egg.\n- 'Allo' attacks and defeats any enemy that comes near. It won't go on the offensive by itself. Ideally, you should keep 1 or 2 of them around The Egg at all times.\n- If an enemy egg-eating alien is about to attack before 'Allo's' egg looks ready to hatch, use the 'Lightning' natural disaster command to hatch the egg."
+  },
+  {
+    "page": 31,
+    "image": "assets/img/manuals/db1-jp-p31.jpg",
+    "title": "Character Trait Reference Table",
+    "translation": "Trait table for Stego, Tricera, Tyranno, Allo, and Pi-chan, covering: Egg, Stamina (HP), Attack Power, Defense Power, Movement Speed, Endurance, Swimming, Breeding Rate, and Power Growth.\nEach trait is rated as follows:\n(double circle) Very high\n(circle) High\n(triangle) Average\n(cross) Low\n\nStego: HP Average, Attack Low, Defense Low, Movement Average, Endurance Low, Swimming Very High, Breeding Very High, Power Growth Very High.\nTricera: HP Average, Attack High, Defense Average, Movement Average, Endurance Low, Swimming High, Breeding High, Power Growth Very High.\nTyranno: HP High, Attack Very High, Defense High, Movement High, Endurance High, Swimming Average, Breeding Average, Power Growth Average.\nAllo: HP Very High, Attack High, Defense Very High, Movement Very High, Endurance High, Swimming Low, Breeding Low, Power Growth Average.\nPi-chan: HP High, Attack Low, Defense Low, Movement Very High, Endurance Very High, Swimming Low, Breeding Average, Power Growth Average."
+  },
+  {
+    "page": 32,
+    "image": "assets/img/manuals/db1-jp-p32.jpg",
+    "title": "Command Power-Cost Table",
+    "translation": "(\"En\" is the unit of power.)\n\nRain command: 30 En\n\nEgg Creation command:\nStego: 300 En\nTricera: 300 En\nTyranno: 800 En\nAllo: 800 En\nPi-chan: 1000 En\n\nGuidance command:\nIndividual Guidance (cost per unit of time): 3 En\n\nEgg Modification command:\nStego: 1300 En\nTricera: 1300 En\nTyranno: 1800 En\nAllo: 1800 En\nPi-chan: 2000 En\n\nNatural Disaster command:\nLightning: 1000 En\nDrought: 2000 En\nEarthquake: 2000 En\nFlood: 4000 En\nMeteor: 8000 En\n\nThe following commands do not consume power:\nGroup Guidance command\nThe Egg command\nMarking command\nCatch command"
+  },
+  {
+    "page": 33,
+    "image": "assets/img/manuals/db1-jp-p33.jpg",
+    "title": "Q&A Corner",
+    "translation": "1. I have power, but I can't create an egg. Why is that?\n-> You need open space around The Egg for an egg to be laid. Either wait for an existing egg to hatch and clear the space, or move whatever creature is occupying it.\n\n2. My own dinosaurs are fighting each other. Why is that?\n-> Carnivores and egg-eaters will attack and eat even their own allies when they get hungry, in order to survive. It's a tough position for them too. Please understand.\n\n3. My power suddenly dropped a lot. Why?\n-> That's because one of your dinosaurs died somewhere. In particular, when a 'Pi-chan' or a carnivore dies, your power drops by a large amount, so be careful.\n\n4. Who's that surfing?\n-> That's the 'Pi-chan' Surfing Team. Don't worry about it too much — just enjoy the music.\n\n5. What's a 'King Tyranno'?\n-> ...You'll have to find out for yourself."
+  },
+  {
+    "page": 34,
+    "image": "assets/img/manuals/db1-jp-p34.jpg",
+    "title": "Enemy Characters",
+    "translation": "The enemy aliens, just like the Dyna Brothers, include herbivorous aliens, carnivorous aliens, and egg-eating aliens. Each species has a mostly similar temperament. New characters appear as you progress through the stages. Let's introduce a few of them here.\n\nPugupen (Breeding-type herbivorous alien)\nA glutton and a coward. Skilled at the 'wiggling-butt dodge.'\n\nGumi Gumi-chan (Breeding-type herbivorous alien)\nAn amoeba-like creature that multiplies rapidly. Its attack power is low, but during battle it can freely reshape its body depending on whether it's attacking or defending.\n\nKunerin (Defense-type herbivorous alien)\nThe guard dog of the alien army. Counterattacks with a biting attack and an eye-beam. Turns vicious when angered."
+  },
+  {
+    "page": 35,
+    "image": "assets/img/manuals/db1-jp-p35.jpg",
+    "title": "Enemy Characters (continued)",
+    "translation": "Jamera (Attack-type carnivorous alien)\nA powerful meathead who unleashes his finishing move, the 'Great Spinning Slap.' Not very bright, so he fights by brute force.\n\nPekipekiman (Defense-type herbivorous alien)\nHas many finishing moves and the makings of a leader, but is timid at heart, so he ends up doing menial work.\n\nLady Kurara (Interception-type carnivorous alien)\nTechnically female. Her graceful walk is charming. Both smart and tough, she has the unreliable alien army wrapped around her finger.\n\nKiraran (Egg-eating-type alien)\nHas the 'Kiraran Attack,' which uses her charming eyes to mesmerize opponents, but it rarely seems to actually work."
+  },
+  {
+    "page": 36,
+    "image": "assets/img/manuals/db1-jp-p36.jpg",
+    "title": "Dr. Rika Kayama's Personality Diagnosis",
+    "translation": "Who's your favorite character in Dyna Brothers? Dr. Rika Kayama will diagnose your personality based on your answer.\n\nTyranno\nYou're the reliable type who believes in taking charge of your own life. But you also have a vulnerable side — you surprisingly worry about what others think of you.\n\nAllo\nWith your iron will, people around you secretly think of you as 'mysterious, but someone to keep an eye on.' The day your true talent blossoms all at once isn't far off. Don't lose your own pace."
+  },
+  {
+    "page": 37,
+    "image": "assets/img/manuals/db1-jp-p37.jpg",
+    "title": "Dr. Rika Kayama's Personality Diagnosis (continued)",
+    "translation": "Pi-chan\nYou're sensitive to information and trends — truly a trendy person who fits right into modern society. You might be told you don't stick with things for long, but hey, having fun is what matters most in life!\n\nTricera\nA type common among lovers of starry skies and plants. You might be misunderstood as difficult to deal with, but really you're very kind. You don't have many friends, but you're the type to stick with the ones you have, through thick and thin.\n\nStego\nDeep down, don't you sometimes think 'I'm no good anyway...'? Others may see you as a good-natured, understanding person, but once in a while, go ahead and stand out a little."
+  },
+  {
+    "page": 38,
+    "image": "assets/img/manuals/db1-jp-p38.jpg",
+    "title": "The Master's Winning Tips",
+    "translation": "First, let the master himself lay out a few key points about the game, so pay close attention and remember them well.\n\n- Keep a close watch on enemy movements. At the start, we recommend marking the UFOs.\n- Which direction you expand the grassland greatly affects later battles. Sometimes it's better not to expand it too much.\n- You need to create herbivores with the size of the grassland in mind. Creating too many in a cramped area just leads to starvation from food shortages.\n- Individual Guidance is the only way to move a dinosaur exactly where you want it. Mastering its use is itself a strategy.\n- Once your herbivores have bred, Egg Modification is effective — it lets you launch surprise carnivore attacks from unexpected places.\n- 'Meteor' isn't just for attacking. It can also change the terrain by burning away trees. However, please be extremely careful with fire.\n- The enemy's thinking ability and attack methods change depending on the stage. Each stage requires its own strategy.\n- The further you progress, the more quick, decisive input becomes the key to not letting the enemy seize the initiative — that, above all, is the ultimate winning strategy."
+  },
+  {
+    "page": 39,
+    "image": "assets/img/manuals/db1-jp-p39.jpg",
+    "title": "The Master's Winning Tips (continued)",
+    "translation": "In Dyna Brothers, only 5 kinds of allied creatures appear, but depending on how you use them, you can fight with all sorts of strategies. Here are a few examples for reference — but I encourage you to research others on your own.\n\nThe Stego Ranch\nNormally, relying only on 'Stego' won't win you the game, but by taking advantage of safe terrain and deliberately breeding large numbers of 'Stego,' which has a high power growth rate, you can stockpile power. After that, it's an all-out counterattack using natural disaster commands.\n\nThe 'Pi-chan' Decoy\nDeliberately guide 'Pi-chan' to a spot far from the battlefield. The enemy's attack-type carnivorous aliens will be drawn to it, buying you time. There's also a dirty trick where you lure enemies that gather around 'Pi-chan' and wipe them all out at once with 'Flood.'\n\nOne-Shot Hatching with 'Lightning'\nWhen an enemy egg-eating alien approaches, lure it right up to 'Allo's' egg, then hatch it with 'Lightning' at just the right moment. This way, the enemy egg-eating alien becomes food for the newly hatched 'Allo.' However, if your timing is off, or if 'Lightning' misfires, you'll be handing the enemy an expensive (1800 En) meal, so aim carefully."
+  },
+  {
+    "page": 40,
+    "image": "assets/img/manuals/db1-jp-p40.jpg",
+    "title": "Winning Tips Continued: Special Edition",
+    "translation": "The Ultimate Defense Corps: The 'Allo' Squad\nIf you keep deploying more and more 'Allo' around The Egg, they'll line up at regular intervals, forming an invincible 'Allo Squad.' It's recommended to regularly supply 'Stego' as food for them. However, even this invincible squad can be wiped out instantly by a natural disaster attack, so don't rely on it too much.\n\nThe 'Drought' Panic\nIf an area surrounded by sea or bottomless swamp is crawling with enemies, it's drought season. If even a little grassland remains, hit it repeatedly. Enemies who suddenly lose their footing panic — jumping into the water, starving to death, and generally causing chaos, which is a lot of fun to watch. But don't overdo it, or people might think you're cruel.\n\nThese are just a few examples of ways to play Dyna Brothers. If you discover new strategies or something amazing, please do send a letter to the Master.\n\nFrom the Mysterious Man from Kansai, Master Nagasato"
+  },
+  {
+    "page": 41,
+    "image": "assets/img/manuals/db1-jp-p41.jpg",
+    "title": "Advertisement: CSK Research Institute Product Showcase",
+    "translation": "Advertisement page for other CSK products.\n\nAfter Burner III — \"Flying combat that tears through the sky!!\" The legendary 3D shooting game 'After Burner' returns, further arranged and upgraded! (Photo shown is the FM-TOWNS version.) Scheduled for release in August. Mega-CD exclusive; an FM-TOWNS version is also planned.\n\nSpeedball 2 — First entry in the Overseas Masterpiece Series! On sale now!! Combines the intensity of American football, the technique of basketball, and the strategy of hockey! Price: 6,800 yen (tax not included).\n\nGalaxy Force II — On sale now!! A space shooting game that unfolds across the vastness of space. Price: 8,400 yen (tax not included)."
+  },
+  {
+    "page": 42,
+    "image": "assets/img/manuals/db1-jp-p42.jpg",
+    "title": "Precautions for Use",
+    "translation": "The cartridge is a precision device, so please pay particular attention to the following:\n\nFirst, Confirm the Power Is OFF!\nAlways make sure the console's power switch is set to OFF before inserting or removing the cartridge. Forcing the cartridge in or out while the power switch is ON may cause malfunction.\n\nThe Cartridge Is Delicate\nDo not subject the cartridge to strong shocks. Do not strike or step on it. Also, never disassemble it.\n\nDo Not Touch the Connector Pins\nTouching the cartridge's connector pins, or getting them wet, may cause malfunction, so please be careful.\n\nDo Not Wipe With Chemicals\nWhen wiping dirt off the cartridge, do not use chemicals such as thinner or benzine."
+  },
+  {
+    "page": 43,
+    "image": "assets/img/manuals/db1-jp-p43.jpg",
+    "title": "Precautions for Use (continued)",
+    "translation": "Be Careful Where You Store It\nWhen storing the cartridge, avoid places that are extremely hot or cold. Avoid locations in direct sunlight, near a heater, or with high humidity, as these are also to be avoided.\n\nWhen Playing the Game\nPlaying games for long periods tires your eyes. For your health, please take a 10-20 minute break every hour while playing. Also, please play at a reasonable distance from the TV screen.\n\nDo not connect the Mega Drive to a projection TV (a screen-projection-type television), as afterimage burn-in may occur on the screen.\n\nMega Drive Cartridge: Dyna Brothers (TM)\n(C)CSK 1992 / CRI 1992\n\nCSK Research Institute Corporation, Amusement Business Division\n2-5-1 Suwa, Tama City, Tokyo 206\nTEL. 0423-75-1345\nFAX. 0423-75-0095\n\nUnauthorized reproduction prohibited"
+  },
+  {
+    "page": 44,
+    "image": "assets/img/manuals/db1-jp-p44.jpg",
+    "title": "Back Cover",
+    "translation": "Mega Drive logo.\nCRI / CSK Research Institute logo.\n\n\"This product is licensed by Sega Enterprises, Ltd. for use with their registered trademark SEGA, for use exclusively on the SEGA MEGA DRIVE.\"\n\nPatents: U.S. Nos. 4,442,486 / 4,454,594 / 4,462,076; Europe No. 80244; Canada No. 1,183,276; Hong Kong No. 88-4302; Singapore No. 88-155; Japan No. 82-205605 (Pending)\n\nT-68033"
+  }
+]
