@@ -109,3 +109,32 @@ Still open: a "Manuals" entry under Settings showing the original Japanese scan 
 
 ## Stage-number RAM write experiment (2026-11-18)
 Writing 0xFF027D (WRITE_RAM8) after the KAIGAN password, before the briefing screenshot, did NOT change the briefing (still STAGE 2 / COAST MEADOW). The stage index is read elsewhere or earlier; next try: locate the briefing's stage-index source (DYNA_TRACE_GLYPH a1 around 0x220FF9..0x2222E2) and write it before the password submit. Remaining briefing texts are already translated in ROM (see scratchpad brief list addresses 0x220FF9-0x2222E2), only on-screen verification is pending.
+
+Second attempt (write 0xFF027D/7E before WAIT 1500, after password submit) also left the briefing at STAGE 2. RAM-write route is dead; remaining route is more password guesses or finding the real stage-index variable via a write watchpoint.
+
+Password ROULET (from tcrf search result) is valid: secret roulette stage loads straight into gameplay (no briefing). YOUKO/ANIME/FIGHT/DASH and HEIGEN/KYOUKO/TAISET/MOAINO/BATTAJ/KAMINA rejected by this script (5-letter words may need different entry).
+
+## Password sweep 2026-11-18 (all public lists)
+Full list verified from GameFAQs/kakusi.jp (Story 1-45, Practice 1-8, Original easy/normal/hard, secret stages). tools/db2_password_script.py now submits words under 6 letters via END (row 3 col 7). Briefings of stages 4,5,7,8,9,19,21,23,27,29,30,33,35,37-44 checked on screen; fixed stage 30 title (FUTURE) and stage 37/43 leftover kana. Secret stages ROULET/CRYSTL/MASIRI/HIMITU/BEEP/DAJO load; SHOKAI shows English character intros. Pending: DB1EN target fails to build in build/dev (s_quit_to_desktop undeclared in upstream runner/main.c after patch 0001 update) - not from this work; view remaining briefings; non-briefing Japanese.
+Update: all 45 Story + Practice 1-6 briefings now verified on screen (CITY needed Y->END fix in the script). Practice screens all show the graphic title "PRACTICE 4" regardless of level (title graphic bug, pending). ANIME (viewer) takes no screenshots in the script - view manually.
+
+## Remaining after 2026-11-18 session (what is genuinely left)
+- DB1EN build fix: patches/0001 guards `s_quit_to_desktop` use in main() with `#if RECOMP_LAUNCHER` (it was declared only under that guard). Verify `cmake --build build/dev` + ctest (54) + unittest after merging.
+- Practice screens: graphic title shows "PRACTICE 4" for every level (title graphic/tile selection), still unverified fix.
+- Japanese outside briefings: results/score screens, Original-mode kanji stage names, Dyna Fight screens, owner build extinct screen, event dialogue in stages not yet played (only password-route cutscenes seen).
+- ANIME / SIFUKU viewers: script takes no screenshots; check manually.
+- Secret stage passwords that loaded (ROULET CRYSTL MASIRI HIMITU BEEP DAJO) have no briefing; untested: CHORO DARUMA DBTWO FAMITS HOSHI JIJII KISSME LOVEME MMD NABEO NOMISO RIERIE YOUKO CSK.
+- Native-speaker review, physical controller test, refreshed packaging candidate (local/candidate-next stale), DB1 manual keyboard test.
+
+## How to work each remaining item (what to look for)
+1. DB1EN build: run `python -m tools.build --target both --jobs 8`, then `cmake --build build/dev --parallel 8`. Success = no `s_quit_to_desktop undeclared`; then `ctest.exe` in build/dev (expect 54 pass) and `python -m unittest discover -s tests -p "test_*.py"`. If the engine checkout and patch drift, `git -C upstream/segagenesisrecomp apply --reverse` the old patch, re-run tools.build.
+2. Practice title "PRACTICE 4": run `python tools/db2_password_script.py TIRANO` (Practice 2), `TORI`, `ARO`, `PUKPUK`... and compare briefing screenshots (`brief.png`). The level number is a title graphic, not text; find which tiles/VRAM write draws it (DYNA_DB2_VIDEO_TRACE=1) and whether the English build patches the wrong tile. Done when each level shows its own number.
+3. Japanese outside briefings: play each mode with scripted input (tools.native_probe --script, SCREENSHOT) and scan screenshots for kana/kanji. Candidates: results/score screens after a stage, Original-mode stage names (kanji), Dyna Fight, owner build "YOU WENT EXTINCT". For each, run with DYNA_TRACE_GLYPH=1 --language en, use tools/glyph_trace_report.py on the log to list untranslated glyph strings (TODO rows), then add `glyph_text`/`ram_text` entries in translations/db2special-en.json.
+4. Stage event dialogue: password routes (tools/db2_password_script.py) only reach the intro cutscene; play deeper (scripted gameplay or save states) with DYNA_TRACE_GLYPH=1 and rebuild strings with the ramstr2-style reconstruction from `[glyph-ram]` log lines; add `ram_text` entries (6-word prefix must be unique).
+5. Animation viewers ANIME/SIFUKU: enter the password manually in the launcher build and check labels are English; script cannot capture them because the post-password flow differs (no briefing screen).
+6. Untested secret stages: run `python tools/db2_password_script.py <WORD>` for each listed word; the result is gameplay directly, so check `brief.png` shows a loaded map and the HUD has no Japanese.
+7. Native-speaker review: send the English strings in translations/db2special-en.json (grep "english") to a reviewer; look for wording, truncation at box edges, line breaks.
+8. Controller test: connect a physical pad, run each build, verify menu navigation, password entry (A/C/START) and in-game commands.
+9. Packaging: rebuild the candidate package from current `work/dynabrothers` (local/candidate-next is stale) after items 1-3.
+
+- (fixed) db1_title_menu_art_test now passes the new modal argument.

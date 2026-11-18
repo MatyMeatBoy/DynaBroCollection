@@ -3681,6 +3681,38 @@
       "before": "b7b7dd20b7ddb7ddb7ddb7b7b7b7dd20202020202020202020202020b7b7dd",
       "english": "DING DING DING DING            ",
       "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c42",
+      "address": 2235458,
+      "capacity": 6,
+      "before": "20d0d7b2b7c1",
+      "english": "FUTURE",
+      "verification": "stage briefing half-width text; guard exact; Stage 30 title found by password sweep"
+    },
+    {
+      "id": "briefing-221f74",
+      "address": 2236276,
+      "capacity": 5,
+      "before": "c5c9c0de2e",
+      "english": "     ",
+      "verification": "stage briefing half-width text; guard exact; Stage 37 leftover end-of-sentence kana blanked"
+    },
+    {
+      "id": "briefing-221ffd",
+      "address": 2236413,
+      "capacity": 6,
+      "before": "b1dcc3d9c521",
+      "english": "CALM!!",
+      "verification": "stage briefing half-width text; guard exact; Stage 39 line \"do not panic\""
+    },
+    {
+      "id": "briefing-222152",
+      "address": 2236754,
+      "capacity": 5,
+      "before": "c0debcc02e",
+      "english": "     ",
+      "verification": "stage briefing half-width text; guard exact; Stage 43 leftover end-of-sentence kana blanked"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
