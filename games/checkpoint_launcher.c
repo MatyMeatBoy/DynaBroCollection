@@ -69,6 +69,7 @@ static unsigned settings_visits[2];
 static DynaHubLayout home_layout;
 static int ui_scale_milli=1000;
 static DynaHubNavigation hub_navigation;
+static DynaMenuControls manuals_controls;
 static wchar_t exe_dir[LD_PATH_CAP],profile_dir[LD_PATH_CAP],cached_rom[2][LD_PATH_CAP],selected_rom[2][LD_PATH_CAP];
 static wchar_t config_path[LD_PATH_CAP],cache_path[2][LD_PATH_CAP];
 static ld_inventory discovered;
@@ -245,6 +246,7 @@ static void manuals_set_page(HWND window,int page) {
 }
 static void manuals_open(HWND window,int game) {
  if(game<0||game>1)return;
+ memset(&manuals_controls,0,sizeof manuals_controls);
  if(!manual_books_loaded[game]){
   wchar_t directory[2048];DWORD n=GetModuleFileNameW(NULL,directory,2048);
   if(n&&n<2048){
@@ -545,6 +547,13 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
                     SetFocus(row[hub_navigation.focus/2][hub_navigation.focus%2]);
                 }
                 if(command)SendMessageW(window,WM_COMMAND,(WPARAM)command,0);
+            }
+            if(!settings_open&&manuals_game>=0&&GetForegroundWindow()==window){
+                int action=dyna_menu_controls_tick(&manuals_controls,dyna_hub_controls_poll(),1,SDL_GetTicks64());
+                if(action==DYNA_MENU_LEFT)manuals_set_page(window,manuals_prev_spread(manuals_page));
+                else if(action==DYNA_MENU_RIGHT)manuals_set_page(window,manuals_next_spread(manuals_page));
+                else if(action==DYNA_MENU_ACCEPT){manuals_show_translation=!manuals_show_translation;InvalidateRect(window,NULL,TRUE);}
+                else if(action==DYNA_MENU_BACK)manuals_close(window);
             }
             for(int i=0;i<2;i++){
                 int hovered=GetFocus()==cards[i];double target=hovered?1.0:0.0;double before=card_reveal[i];
