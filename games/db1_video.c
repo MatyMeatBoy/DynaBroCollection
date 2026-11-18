@@ -220,8 +220,13 @@ static int prepare_actors(const GVDP *vdp,const uint8_t *ram,int w) {
     center_supported=1;
     for(unsigned i=0;i<count;i++) {
         const uint8_t *record=ram+0x5f34+actors[i].id*16;
+        /* An actor mid-transition (e.g. the frame(s) it dies on) can briefly
+         * fail db1_world_actor_frame; valid[i]=0 already makes the per-actor
+         * draw loop below skip exactly that actor. Previously this also
+         * dropped center_supported for the WHOLE frame, which fell all the
+         * way back to centered-native rendering (a visible snap to 4:3) just
+         * because one actor's record was transiently unreadable. */
         valid[i]=(uint8_t)db1_world_actor_frame(&c,record,actors[i].id,&frames[i]);
-        if(record[0]&&!valid[i])center_supported=0;
     }
     return center_supported;
 }
