@@ -138,7 +138,8 @@ static int retire(void *user,unsigned *cycles) {
         }
     }
     if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e ||
-       g_cpu.PC==0xf794 || g_cpu.PC==0xf728)db2_video_observe(g_cpu.PC);
+       g_cpu.PC==0xf794 || g_cpu.PC==0xf728 ||
+       g_cpu.PC==0x146c0 || g_cpu.PC==0x15220)db2_video_observe(g_cpu.PC);
     if(g_cpu.PC==0x5b278){static int trace2=-1;if(trace2<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace2=t&&t[0]=='1';}
         if(trace2){unsigned a1=g_cpu.A[1]&0xffffffu,w=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
             unsigned word=a1<0x400000u?(((unsigned)g_rom[a1]<<8)|g_rom[a1+1]):(((unsigned)g_ram[a1&0xffff]<<8)|g_ram[(a1+1)&0xffff]);
