@@ -8,7 +8,7 @@ DB1 now has a read-only expanded-world compositor with right-anchored HUD, origi
 
 DB1's public catalog has 76 independently implemented local goal contracts and 152 official badges. DB2 Special has 93 stage goals, six cumulative completion milestones and 198 original badges. The paused list, FIFO notifications, atomic local profiles and diagnostic/replay exclusion have tests. The integrated SDL list test held CPU/RAM/VDP unchanged across six presentations and closed through a real SDL Back event. No account synchronization or exact official evaluator equivalence is claimed. [DB1 contracts](docs/db1-achievement-contracts.md); [checkpoint scope](docs/releases/v0.1.3-checkpoint.md).
 
-The v0.1.3 package must be closed against clean source and exact packaged QA before its release identity is recorded. Historical entries below retain the scope and measurements of their own checkpoints.
+The v0.1.3 r1 package is closed from clean source `a314a74ea03de0bb62008830413df94f9ec2869b`, with 20 packaged checks passing. ZIP SHA256: `0da16abc82098b394d5ea2525eb287be26c5868a7ddc03f74b7f5726255e386d`. The exact extraction also passed its portable debug script. [Public test release and verification](docs/releases/v0.1.3-verification.md). Historical entries below retain the scope and measurements of their own checkpoints.
 
 ## Latest development after the closed checkpoint
 

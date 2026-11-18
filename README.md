@@ -20,6 +20,8 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 
 | Resource | Purpose |
 | --- | --- |
+| [Download v0.1.3](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.3) | Portable Windows x64 test release with its debug script |
+| [v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Closed archive/source identity, 20 packaged checks and limits |
 | [Checkpoint notes](docs/releases/v0.1.3-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
 | [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
