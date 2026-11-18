@@ -26,7 +26,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -40,6 +40,7 @@ def main():
         if window_size:command+=['--window-size',window_size]
         if visor is not None:command+=['--visor-offset-tiles',str(visor)]
         if overlays:command+=['--host-overlays']
+        if profile_name:command+=['--profile-name',profile_name]
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         env.pop('DYNA_DB1_SAVE_TEST',None)
         if save_test:env['DYNA_DB1_SAVE_TEST']='save'
@@ -156,9 +157,10 @@ def main():
         source=(ROOT/'games/db1/scenes/progress-save-diagnostic.input').read_text(encoding='utf-8')
         source='\n'.join(line for line in source.splitlines() if not line.startswith('SCREENSHOT'))
         unicode_script.write_text(source+'\nPRESS DOWN 12\nWAIT 30\nPRESS A 12\nWAIT 120\n',encoding='utf-8')
-        unicode_name='db1-save-\u4fdd\u5b58'
-        run(unicode_name,'DynaBrothers1AOT.exe',db1,12500,unicode_script,widescreen='16:9')
-        saves=list((args.output/unicode_name/'profile').glob('dyna1-progress-*.bin'))
+        unicode_name='db1-save-unicode'
+        unicode_profile='profile-\u4fdd\u5b58'
+        run(unicode_name,'DynaBrothers1AOT.exe',db1,12500,unicode_script,widescreen='16:9',profile_name=unicode_profile)
+        saves=list((args.output/unicode_name/unicode_profile).glob('dyna1-progress-*.bin'))
         if len(saves)!=1:raise RuntimeError('Unicode profile native Save did not create its progress file')
         data=saves[0].read_bytes()
         if len(data)!=105 or data[:8]!=b'DYNAPRG1' or int.from_bytes(data[101:105],'big')!=0x1becc:
