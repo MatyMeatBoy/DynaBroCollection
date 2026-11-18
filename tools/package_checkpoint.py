@@ -83,6 +83,10 @@ def stage(candidate):
                 if not target.exists():shutil.copy2(dependency,target)
                 queue.append(target)
             else:system.add(name)
+    # Diagnostics live one directory below the games. Windows does not search
+    # the parent directory for their DLLs; keep each test independently runnable.
+    for dependency in payload.glob('*.dll'):
+        shutil.copy2(dependency,payload/'debug'/dependency.name)
     embedded={}
     portable_env=portable_windows_env(env)
     for target in ['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']:
