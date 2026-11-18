@@ -3193,6 +3193,110 @@
       "before": "badac3de20bbb2badec0de2040b6deddcaded8d4402e",
       "english": "THE LAST. GOOD LUCK!  ",
       "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051f22",
+      "address": 335650,
+      "capacity": 27,
+      "before": "40b9deb0d1bdc0b0c4402020202020202020202020202020202020",
+      "english": "GAME START                 ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051f3e",
+      "address": 335678,
+      "capacity": 25,
+      "before": "beddbab3202020202020203170202020202032702020202020",
+      "english": "FIRST      1p     2p     ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051f58",
+      "address": 335704,
+      "capacity": 27,
+      "before": "317040c0b2d1402020202020202020202020202020202020202020",
+      "english": "1p TIME                    ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051f74",
+      "address": 335732,
+      "capacity": 27,
+      "before": "327040c0b2d1402020202020202020202020202020202020202020",
+      "english": "2p TIME                    ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051f90",
+      "address": 335760,
+      "capacity": 27,
+      "before": "317040cfafccdf402020202020bededdc0b22020d0b6c02020c5bc",
+      "english": "1p MAP     ALL    OWN  OFF ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051fac",
+      "address": 335788,
+      "capacity": 27,
+      "before": "327040cfafccdf402020202020bededdc0b22020d0b6c02020c5bc",
+      "english": "2p MAP     ALL    OWN  OFF ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051fc8",
+      "address": 335816,
+      "capacity": 25,
+      "before": "b6ded2ddb7d8b6b4202020b1d82020202020c5bc2020202020",
+      "english": "SCR SWAP   ON     OFF    ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-051fe2",
+      "address": 335842,
+      "capacity": 27,
+      "before": "40b6b3ddc040cbaeb3bcde2020b1d82020202020c5bc2020202020",
+      "english": "COUNTER     ON     OFF     ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-052004",
+      "address": 335876,
+      "capacity": 19,
+      "before": "c5d2bcdedbb020202876657279206561737929",
+      "english": "NAMEJIRO(very easy)",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-052018",
+      "address": 335896,
+      "capacity": 19,
+      "before": "40badb40d1ddb7202020286561737929202020",
+      "english": "KOROMUNKI(easy)    ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-05202c",
+      "address": 335916,
+      "capacity": 19,
+      "before": "40c3a8b1d74020202020286e6f726d616c2920",
+      "english": "TIARA   (normal)   ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-052040",
+      "address": 335936,
+      "capacity": 19,
+      "before": "b6deb3b6deb320202868617264292020202020",
+      "english": "GAUGAU  (hard)     ",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
+    },
+    {
+      "id": "versus-052054",
+      "address": 335956,
+      "capacity": 19,
+      "before": "cab6be20202020202876657279206861726429",
+      "english": "DOC     (very hard)",
+      "verification": "Custom Versus settings row; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
