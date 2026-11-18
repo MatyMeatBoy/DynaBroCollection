@@ -1,3 +1,7 @@
+## Final v0.1.8 delivery — STOP
+
+The new version is published, its45 packaged checks passed and the public download was verified. The private personal runtime and complete offline continuation toolkit are separate from public assets. [Closed verification](docs/releases/v0.1.8-verification.md) · [Handoff](docs/handoff/CONTINUE-ON-ANOTHER-PC.md). No further feature development is active.
+
 > Closure override — 2026-11-18: the owner requested the next checkpoint and then STOP. v0.1.8 source passed52 native contracts and70 Python tests; packaged qualification is recorded with the release. No background agent work remains authorized. Earlier “active” entries below are historical. Continue from [the portable development handoff](docs/handoff/CONTINUE-ON-ANOTHER-PC.md). DB2 held-pan widescreen fallback and incomplete translation remain explicit pending work.
 
 # Work board — 2026-11-18

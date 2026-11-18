@@ -59,13 +59,13 @@ def translate(source: bytes, catalog: dict) -> bytes:
             edits.append((address, payload))
             continue
         english = entry['english'].encode('ascii')
-        if len(english) > capacity or any(x < 32 and x != 1 for x in english):
-            raise ValueError('Text exceeds slot or contains unsupported controls')
+        if len(english) != capacity or any(x < 32 and x != 1 for x in english):
+            raise ValueError('Text must exactly fill its guarded slot and contain no unsupported controls')
         positions = set(range(address, address + capacity))
         if positions & used:
             raise ValueError('Overlapping translation edits')
         used |= positions
-        edits.append((address, english.ljust(capacity, b'_')))
+        edits.append((address, english))
     for entry in catalog.get('glyph_text', []):
         address, before = entry['address'], bytes.fromhex(entry['before'])
         if address < 512 or len(before) & 1 or address + len(before) + 2 > len(source):

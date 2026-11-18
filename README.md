@@ -23,6 +23,7 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 | Resource | Purpose |
 | --- | --- |
 | [Download v0.1.8](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.8) | Portable Windows x64 test release with its debug script |
+| [v0.1.8 verification](docs/releases/v0.1.8-verification.md) | Closed source/archive identity,45 packaged checks and offline continuation |
 | [Historical v0.1.7 verification](docs/releases/v0.1.7-verification.md) | Closed archive/source identity,42 packaged checks and limits |
 | [Historical v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Preserved previous archive/source identity |
 | [Checkpoint notes](docs/releases/v0.1.8-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
