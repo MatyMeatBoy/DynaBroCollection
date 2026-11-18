@@ -40,7 +40,10 @@ try {
             $audio = [regex]::Match($log, '"audio_state_fnv1a64"\s*:\s*"([A-Fa-f0-9]+)"').Groups[1].Value
             if (-not $state -or -not $audio) { throw 'Missing native state evidence.' }
             $states += "$state/$audio"
-            if (-not (Test-Path -LiteralPath 'expanded-world.png')) { throw 'Missing scene capture.' }
+            # The runner uses its isolated profile as the working directory.
+            if (-not (Test-Path -LiteralPath (Join-Path $env:GENESIS_USER_DIR 'expanded-world.png'))) {
+                throw 'Missing scene capture.'
+            }
         } finally { Pop-Location }
     }
     if ($states[0] -ne $states[1]) { throw 'Original/Enhanced guest state mismatch.' }

@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -85,6 +86,19 @@ def main():
                     if not data.startswith(b'\x89PNG\r\n\x1a\n') or int.from_bytes(data[16:20],'big')!=64 or int.from_bytes(data[20:24],'big')!=64:
                         raise RuntimeError('Invalid packaged badge: '+str(path))
         cases['achievement-assets']=dict(passed=True,db1_goals=76,db2_goals=99,badges=350)
+        # Exercise the user's exact no-Python entry point from a path with
+        # spaces, without altering the staged package's immutable inventory.
+        portable_copy=args.output.resolve()/'portable debug test'
+        shutil.copytree(payload,portable_copy)
+        powershell=Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
+        process=subprocess.run([str(powershell),'-NoProfile','-ExecutionPolicy','Bypass','-File',
+            str(portable_copy/'debug/Test-DB1-16x9.ps1'),'-RomPath',str(db1),'-CompareOnly'],
+            env=portable_windows_env(dict(os.environ)),stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        (args.output/'portable-debug-script.log').write_bytes(process.stdout)
+        results=list((portable_copy/'debug').glob('results-*/RESULT.txt'))
+        if process.returncode or len(results)!=1 or not results[0].read_text(encoding='utf-8-sig').startswith('PASS:'):
+            raise RuntimeError('Portable PowerShell debug entry point failed; inspect portable-debug-script.log')
+        cases['portable-debug-script']=dict(passed=True,windows_powershell=True,development_path_excluded=True)
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

@@ -136,7 +136,7 @@ def close(candidate,qa_path,releases,revision=1):
     if tuple(map(int,version.split('.'))) >= (0,1,3):required.update({
         'db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
         'db1-achievements-ui','db2-achievements-ui','achievement-assets',
-        'DynaDb1VideoTest','DynaDb1visibleTest'})
+        'DynaDb1VideoTest','DynaDb1visibleTest','portable-debug-script'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

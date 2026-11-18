@@ -117,7 +117,7 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):close(candidate,path,root/'releases')
             for name in ['db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
                          'db1-achievements-ui','db2-achievements-ui','achievement-assets',
-                         'DynaDb1VideoTest','DynaDb1visibleTest']:
+                         'DynaDb1VideoTest','DynaDb1visibleTest','portable-debug-script']:
                 qa['cases'][name]=dict(passed=True)
             path.write_text(json.dumps(qa),encoding='utf-8')
             with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases')
