@@ -1,7 +1,39 @@
 {
   "source_sha256": "1d3f08e235fa8e51b9656820fabfb5b703acaf36bc34d5378a3f9613d453bb76",
-  "scope": "Initial gameplay prompts only; incomplete translation",
+  "scope": "Gameplay prompts plus direct-reference inventory strings; biographies remain untranslated",
   "entries": [
+    {
+      "id": "inventory-00226",
+      "address": 550,
+      "capacity": 27,
+      "before": "40bcbdc3d1b4d7b04240c3debd2040d8beafc440bcc3b8c0debbb2",
+      "english": "SYSTEM ERROR B PLEASE RESET",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-00268",
+      "address": 616,
+      "capacity": 27,
+      "before": "40bcbdc3d1b4d7b06140c3debd2040d8beafc440bcc3b8c0debbb2",
+      "english": "SYSTEM ERROR a PLEASE RESET",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-002aa",
+      "address": 682,
+      "capacity": 27,
+      "before": "40bcbdc3d1b4d7b07540c3debd2040d8beafc440bcc3b8c0debbb2",
+      "english": "SYSTEM ERROR u PLEASE RESET",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-002ec",
+      "address": 748,
+      "capacity": 27,
+      "before": "40bcbdc3d1b4d7b03040c3debd2040d8beafc440bcc3b8c0debbb2",
+      "english": "SYSTEM ERROR 0 PLEASE RESET",
+      "verification": "direct-reference guard; scene capture pending"
+    },
     {
       "id": "upgrade_egg",
       "address": 32846,
@@ -171,12 +203,260 @@
       "verification": "binary-only; scene-pending"
     },
     {
+      "id": "inventory-09a72",
+      "address": 39538,
+      "capacity": 14,
+      "before": "40cfb0b840b6de01c2b2c3cfbedd",
+      "english": "NO MARK\u0001ON IT_",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
       "id": "press_start",
       "address": 64308,
       "before": "40bdc0b0c4cedec0dd40a65fb5bcc3c8",
       "english": "PRESS_START_____",
       "capacity": 16,
       "verification": "scene-pending"
+    },
+    {
+      "id": "inventory-301a6",
+      "address": 197030,
+      "capacity": 26,
+      "before": "2020202020205f40b5d7b040215fc4deb7d4b6deda215f202020",
+      "english": "      _ OUTTA MY WAY! _   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-301c2",
+      "address": 197058,
+      "capacity": 26,
+      "before": "20205f40b8debddeb8debdde40bcc3ddbcdeacb0c8b4215f2020",
+      "english": "  _   STOP DAWDLING!   _  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-3096e",
+      "address": 199022,
+      "capacity": 24,
+      "before": "20202020205fd0ddc55fb2b8dbb0b0af215f202020202020",
+      "english": "     _ALL GO NOW!_      ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-30988",
+      "address": 199048,
+      "capacity": 26,
+      "before": "202020205f40bdc3ba40dea65fcfd3d9ddd7b0b0af215f202020",
+      "english": "    _ PROTECT STEGO!  _   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-309a4",
+      "address": 199076,
+      "capacity": 24,
+      "before": "202020205fb5b0b0b0b0b0b0b0b0b0b0b0b0af21215f2020",
+      "english": "    _  OOOOOOOOOH!!  _  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31b4e",
+      "address": 203598,
+      "capacity": 24,
+      "before": "205fc0cfbadea6c2b8afc3b7aeb3d8adb3a6ccd4bfb35f20",
+      "english": " _HATCH EGGS FOR DINOS_ ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31b67",
+      "address": 203623,
+      "capacity": 24,
+      "before": "2020205fb1d2a6ccd7bec3b8bba6bfc0dec3d6b35f202020",
+      "english": "   _RAIN GROWS GRASS_   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31b80",
+      "address": 203648,
+      "capacity": 24,
+      "before": "205fb8bbb6dec0cddedac5b2c4bcddc3debccfb3d6b05f20",
+      "english": " _NO GRASS? THEY DIE! _ ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31bb2",
+      "address": 203698,
+      "capacity": 24,
+      "before": "20205fb1d2cad0b6c0c9cfdcd8c6bcb6ccd7c5b2d65f2020",
+      "english": "  _RAIN ONLY NEAR YOU_  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31bcb",
+      "address": 203723,
+      "capacity": 24,
+      "before": "205fccd7bebdb7ded9c4bcafc1c6c5afc3bccfb3d6215f20",
+      "english": " _TOO MUCH RAIN: SWAMP_ ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31be4",
+      "address": 203748,
+      "capacity": 26,
+      "before": "202020205f40cadfdcb040b6dec0d8c5b2d621215f2020202020",
+      "english": "    _  LOW POWER!!  _     ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31bff",
+      "address": 203775,
+      "capacity": 28,
+      "before": "40cadfdcb040b6de31323030a6bab4c02140c3a8d7c940a6c2b8dbb3",
+      "english": "POWER OVER 1200! MAKE TYRANO",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31c1c",
+      "address": 203804,
+      "capacity": 28,
+      "before": "5f40c3a8d7c940c0de21bcddb9deb740d3b0c4de40c6b7d8b6b4d6b3",
+      "english": "_TYRANO! USE ADVANCE MODE   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31c54",
+      "address": 203860,
+      "capacity": 24,
+      "before": "205fd7b8d7b2c3dec0cfbadea6b6b4bfb321b2bfb9de215f",
+      "english": " _HATCH EGGS W/ BOLTS! _",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31c86",
+      "address": 203910,
+      "capacity": 24,
+      "before": "205fb6deddcadeda21d3b3bdb8de38cbdfb7c0de5f202020",
+      "english": " _ GO ON! ALMOST 8! _   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31cb8",
+      "address": 203960,
+      "capacity": 26,
+      "before": "205fcbc0ded8c9ceb3c640b4d8b140a6cbdbb9ded6b35f202020",
+      "english": " _  EXPAND AREA LEFT  _   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31cd3",
+      "address": 203987,
+      "capacity": 26,
+      "before": "202020205fbcdab240bacfddc4de40a6c2b6b5b35f2020202020",
+      "english": "    _ USE ORDER CMD _     ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-31cee",
+      "address": 204014,
+      "capacity": 24,
+      "before": "202020205fc4c5d8c9bccfc65fdcc0d7bed6b35f20202020",
+      "english": "    _TO NEXT ISLAND_    ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58f7e",
+      "address": 364414,
+      "capacity": 13,
+      "before": "b7aeb3d8adb3bbdd20c9b6c121",
+      "english": "DINOS WIN!   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58f8c",
+      "address": 364428,
+      "capacity": 14,
+      "before": "b3c1adb3bcdeddbbdd20c9b6c121",
+      "english": "ALIENS WIN!   ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58f9c",
+      "address": 364444,
+      "capacity": 13,
+      "before": "bcdeb6dd2030303a30303a3030",
+      "english": "TIME 00:00:00",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58faa",
+      "address": 364458,
+      "capacity": 18,
+      "before": "b7aeb3d8adb320badeb3b9b220202030cbb7",
+      "english": "DINOS TOTAL    0  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58fbe",
+      "address": 364478,
+      "capacity": 18,
+      "before": "b3c1adb3bcdeddbadeb3b9b220202030cbb7",
+      "english": "ALIEN TOTAL    0  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58fd2",
+      "address": 364498,
+      "capacity": 13,
+      "before": "bcddc0deb6bdde20202030cbb7",
+      "english": "DEATHS    0  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-58fe0",
+      "address": 364512,
+      "capacity": 13,
+      "before": "c0b5bcc0b6bdde20202030cbb7",
+      "english": "KILLS     0  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-5ac60",
+      "address": 371808,
+      "capacity": 13,
+      "before": "b1b7504347b6ded0c2b6d7c5b2",
+      "english": "NO FREE PCG  ",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-5f008",
+      "address": 389128,
+      "capacity": 21,
+      "before": "c1adb3bcbccfbdb63f2020202a73cab22020b2b2b4",
+      "english": "QUIT GAME  *sYES   NO",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-5f01e",
+      "address": 389150,
+      "capacity": 21,
+      "before": "c1adb3bcbccfbdb63f20202020cab2202a73b2b2b4",
+      "english": "QUIT GAME    YES *sNO",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-611c8",
+      "address": 397768,
+      "capacity": 21,
+      "before": "c0b2bedda6c2c2deb9d93f202a73cab22020b2b2b4",
+      "english": "PLAY AGAIN?*sYES   NO",
+      "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "inventory-611de",
+      "address": 397790,
+      "capacity": 21,
+      "before": "c0b2bedda6c2c2deb9d93f2020cab2202a73b2b2b4",
+      "english": "PLAY AGAIN?  YES *sNO",
+      "verification": "direct-reference guard; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused."

@@ -112,6 +112,14 @@ static int ui_kind(unsigned attr,unsigned size,int x,int y){
  }
  return 0;
 }
+static int sprite_transparent(unsigned attr,unsigned size){
+ unsigned tiles=(((size>>2)&3)+1)*((size&3)+1);
+ for(unsigned t=0;t<tiles;t++){
+  const uint8_t *p=snapshot.vram+((((attr&2047)+t)&2047)*32);
+  for(unsigned i=0;i<32;i++)if(p[i])return 0;
+ }
+ return 1;
+}
 static void classify_sprites(void){
  Db2ActorsContext ac={g_rom,2621440,ram,sizeof ram};
  unsigned base=((unsigned)snapshot.reg[5]&127)<<9,link=0;uint8_t seen[80]={0};
@@ -126,8 +134,14 @@ static void classify_sprites(void){
   if(!attr)kind=1;
   if(db2_actor_native_sat_body(&ac,attr)||db2_effects_is_marker((uint16_t)attr))kind=3;
   for(size_t i=0;i<effect_count;i++)if(effects[i].sat_index==link)kind=3;
+  /* An unattributed entry whose every referenced pattern is fully transparent
+   * contributes no pixel in either the native or widened raster (seen as a
+   * parked 32x32 pattern-0 body at x=-32 during Normal2 play). Ownership is
+   * irrelevant for it; any non-zero pattern byte still rejects the frame. */
+  if(!kind&&sprite_transparent(attr,size))kind=3;
   if(!kind){
    if(trace_enabled&&!(trace_seen&8)){
+    trace_seen|=8;
     fprintf(stderr,"[db2-video] unknown SAT=%u attr=%04X size=%02X xy=%d,%d pc=%06X cache_head=%04X\n",link,attr,size,x,y,g_cpu.PC,word(ram+0x20b2));
     for(unsigned slot=0;slot<40;slot++){
      const uint8_t *p=ram+0x1bb2+32*slot;
