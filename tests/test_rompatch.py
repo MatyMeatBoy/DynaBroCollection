@@ -3,7 +3,7 @@ import os
 import struct
 import unittest
 import zlib
-from tools.rompatch import apply_bps, apply_ips, PatchError
+from tools.rompatch import apply_bps, apply_ips, PatchError, LIMIT
 
 
 class PatchTests(unittest.TestCase):
@@ -41,6 +41,37 @@ class PatchTests(unittest.TestCase):
     def test_corrupt_bps(self):
         with self.assertRaises(PatchError):
             apply_bps(b'', b'BPS1' + bytes(20))
+
+    @staticmethod
+    def varint(value):
+        out = bytearray()
+        while True:
+            byte = value & 127
+            value >>= 7
+            if not value:
+                out.append(byte | 128)
+                return bytes(out)
+            out.append(byte)
+            value -= 1
+
+    def test_bps_rejects_truncated_integer_and_plain_source_size_mismatch(self):
+        v = self.varint
+        padding = v(300000)  # multi-byte, fully terminated; just pads the body length
+        truncated_body = b'BPS1' + padding + bytes([0, 0, 0])  # 3 non-terminating bytes, then nothing
+        truncated_body += struct.pack('<II', zlib.crc32(b''), 0)
+        truncated = truncated_body + struct.pack('<I', zlib.crc32(truncated_body))
+
+        mismatch_body = b'BPS1' + v(5) + v(0) + v(0)
+        mismatch_body += struct.pack('<II', zlib.crc32(b''), 0)
+        mismatch = mismatch_body + struct.pack('<I', zlib.crc32(mismatch_body))
+
+        for name, patch in [('truncated_integer', truncated), ('source_size_mismatch', mismatch)]:
+            with self.subTest(case=name), self.assertRaises(PatchError):
+                apply_bps(b'', patch)
+
+    def test_ips_rejects_source_over_the_limit(self):
+        with self.assertRaises(PatchError):
+            apply_ips(bytes(LIMIT + 1), b'PATCHEOF')
 
     def test_ips_literal_rle_and_truncation(self):
         patch = b'PATCH\x00\x00\x01\x00\x02AB\x00\x00\x04\x00\x00\x00\x03ZEOF'
