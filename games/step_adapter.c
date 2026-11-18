@@ -12,6 +12,7 @@
 #include "m68k_step.h"
 #include "app_config.h"
 #include "input_map.h"
+#include "gamepad.h"
 #include "language_settings.h"
 #include "db2_bio_overlay.h"
 #include "db2_glyph_text.h"
@@ -428,9 +429,23 @@ static int game_ui_action(const char *key) {
  if(dyna_progress_runtime_action(key))return 1;
  return dyna_achievement_session_action(key);
 }
+/* The engine maps only arrows/Return/Space/Escape to host-menu actions. Add the
+ * keyboard keys bound to pad A/C (accept) and B (back) so the Extras menu can
+ * be driven with the same keys as the game (default Z/C and X). */
+static uint32_t keyboard_menu_bits(void){
+ int count=0;const Uint8 *keys=SDL_GetKeyboardState(&count);
+ const PlayerInput *p=&g_input_map.p[0];
+ uint32_t bits=0;
+ if(!keys||!(p->device&INPUT_DEV_KEYBOARD))return 0;
+#define HELD(b) (p->key[b]>0&&p->key[b]<count&&keys[p->key[b]])
+ if(HELD(GB_A)||HELD(GB_C))bits|=GP_OVERLAY_A;
+ if(HELD(GB_B))bits|=GP_OVERLAY_B;
+#undef HELD
+ return bits;
+}
 static int menu_tick(uint32_t mask,int open,uint64_t now,int *blocked) {
  static DynaMenuControls state;
- int action=dyna_menu_controls_tick(&state,mask,open,now);
+ int action=dyna_menu_controls_tick(&state,mask|keyboard_menu_bits(),open,now);
  *blocked=dyna_menu_controls_blocks(&state,open);return action;
 }
 const GameSpec g_game_spec={
