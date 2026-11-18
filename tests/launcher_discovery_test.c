@@ -55,6 +55,3 @@ int main(void){
 #endif
  free(v);puts("launcher discovery tests passed");return 0;
 }
-
-
-
