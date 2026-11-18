@@ -26,6 +26,8 @@ class EnginePinTests(unittest.TestCase):
             patch.write_bytes(git('diff', '--binary', 'HEAD', '--'))
             try:
                 verify_engine_checkout(root, sha, patch)
+                with self.assertRaises(RuntimeError):
+                    verify_engine_checkout(root, '0' * 40, patch)
                 (root / 'other.c').write_text('unapproved\n')
                 with self.assertRaises(RuntimeError):
                     verify_engine_checkout(root, sha, patch)
