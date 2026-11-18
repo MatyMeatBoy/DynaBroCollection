@@ -95,7 +95,7 @@ def main():
     ui_applied = subprocess.run(['git','apply','--reverse','--check',str(ui_patch)],cwd=ui,capture_output=True).returncode == 0
     if not ui_applied:
         run('check-ui-adapter',['git','apply','--check',ui_patch],cwd=ui)
-        run('apply-ui-adapter',['git','apply',ui_patch],cwd=ui)
+        run('apply-ui-adapter',['git','apply','--index',ui_patch],cwd=ui)
     verify_engine_checkout(ui,UI_SHA,ui_patch)
     controllers = ROOT / 'upstream/controller-db'
     if not controllers.exists():
