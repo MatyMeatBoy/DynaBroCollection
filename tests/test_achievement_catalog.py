@@ -96,3 +96,12 @@ class AchievementCatalogTests(unittest.TestCase):
         self.assertEqual(len(entries), len(kinds))
         stage_keys = [(entry['mode'], entry['stage']) for entry in entries if entry['kind'] == 'stage']
         self.assertEqual(len(stage_keys), len(set(stage_keys)))
+    def test_db2_has_no_orphaned_badge_files(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        referenced = set()
+        for entry in catalog['achievements']:
+            referenced.add(entry['badge_file_locked'])
+            referenced.add(entry['badge_file_unlocked'])
+        actual = {f'db2/{path.name}' for path in (source / 'db2').glob('*.png')}
+        self.assertEqual(actual, referenced)
