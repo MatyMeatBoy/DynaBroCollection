@@ -7,7 +7,7 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 ## Translation (DB2 Special)
 1. Find and translate more 16x16 glyph strings: run an input script with `DYNA_TRACE_GLYPH=1`, then `python -m tools.glyph_trace_report run.log <rom> out.png`; every `TODO` becomes a `glyph_text` entry (see `docs/handoff/HANDOFF-2026-11-18.md`, "Overlay de cadenas de glifos"). Scenes not yet traced: story stages after the intro, Original mode play, Sega Channel stages, endings, practice results, password screen.
    - Checked: the title-screen OPTIONS menu (おんがく/こうかおん/ぼたんはいち/A・B・C labels, main menu row 6) produces **zero** `[glyph]` hits at PC `0x5B174` when traced (confirmed twice, two separate input scripts/navigation paths). It is not driven by either known glyph mechanism (glyph16 or glyph_text) — it needs a new renderer PC to be found (disassemble around the options-menu draw call) before it can be translated; `glyph_trace_report` alone won't find it.
-2. Kanji stage names of Original mode (`01:ORIGIN 始まりの小島` etc.) and `パスワード入力`.
+2. Kanji stage names of Original mode (`01:ORIGIN 始まりの小島` etc.): not seen by `glyph_trace_report`, find how they are drawn. `パスワード入力` is done (ENTER PASSWORD).
 3. Graphical stage briefings ("STAGE n" text): tile text, not ROM glyph strings; needs a host overlay like `games/db2_bio_overlay.c`.
 4. Capture-verify unverified strings: STEGO biography, VS/Dyna Fight screens (character select, controls, results), 2P setup (`6 BUTTON PAD`), special stage names, QUIT/rematch dialogs (`*s`), result screens.
 5. Have a Japanese speaker review stage/character names (readings in `translations/db2special-en.json` are best effort).
