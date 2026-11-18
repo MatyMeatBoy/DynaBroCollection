@@ -39,6 +39,12 @@ def verify_engine_checkout(engine: Path, expected_sha: str, patch: Path):
         raise RuntimeError('Engine submodule contains local changes; existing work was preserved')
 
 
+def default_input_root(root=ROOT):
+    """Prefer the private input folder inside the project; retain legacy layout."""
+    preferred = root / 'Dynabrothers'
+    return preferred if preferred.is_dir() else root.parent / 'Dynabrothers'
+
+
 def find_by_hash(root, digest, extensions):
     for path in root.rglob('*'):
         if path.is_file() and path.suffix.lower() in extensions and hashlib.sha256(path.read_bytes()).hexdigest() == digest:
@@ -48,7 +54,7 @@ def find_by_hash(root, digest, extensions):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--inputs', type=Path, default=ROOT.parent / 'Dynabrothers')
+    parser.add_argument('--inputs', type=Path, default=default_input_root())
     parser.add_argument('--target', choices=['db1', 'db2', 'both'], default='both')
     parser.add_argument('--jobs', type=int, default=6)
     args = parser.parse_args()

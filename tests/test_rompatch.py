@@ -26,7 +26,8 @@ class PatchTests(unittest.TestCase):
                 apply_bps(source, self.bps(source, target, stream))
 
     def test_real_db1_crc_and_wrong_source(self):
-        root = pathlib.Path(os.environ.get('DYNA_TEST_INPUTS', r'D:\01Claude\Dynabrothers'))
+        from tools.build import default_input_root
+        root = pathlib.Path(os.environ.get('DYNA_TEST_INPUTS', str(default_input_root())))
         if not root.exists():
             self.skipTest('Private cartridge fixture unavailable; public CI uses synthetic fixtures')
         from tools.build import find_by_hash, DB1_SHA, PATCH_SHA

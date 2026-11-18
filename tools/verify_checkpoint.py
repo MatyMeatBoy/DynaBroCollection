@@ -10,14 +10,14 @@ import sys
 
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
-from tools.build import find_by_hash, DB1_SHA, DB2_SHA
+from tools.build import find_by_hash, DB1_SHA, DB2_SHA, default_input_root
 from tools.windows_environment import portable_windows_env
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('candidate',type=Path);parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--inputs',type=Path,default=Path('D:/01Claude/Dynabrothers'))
+    parser.add_argument('--inputs',type=Path,default=default_input_root())
     args=parser.parse_args();payload=args.candidate.resolve()/'DynaBrothers'
     args.output.mkdir(parents=True,exist_ok=False)
     db1=find_by_hash(args.inputs,DB1_SHA,{'.md','.bin'});db2=find_by_hash(args.inputs,DB2_SHA,{'.md','.bin'})
