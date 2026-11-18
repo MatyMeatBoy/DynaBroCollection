@@ -1,4 +1,4 @@
-# v0.2.0 checkpoint
+# v0.2.0 alpha
 
 - DB2 Special translation grows from 454 to 582 catalog entries: title OPTIONS menu and sound-test names, Custom Versus settings and COM difficulty names, Practice briefings 2-6, stage-2 RAM cutscene dialogue, and a centering fix for the 3-line gameplay prompt boxes.
 - DB1 native rendering: a single actor with a transiently unreadable RAM record (e.g. the frame it dies on) no longer drops the whole frame to centered-native/4:3 presentation — only that actor's own sprite is skipped, with a dedicated regression test (`manual_data_contract`/`db1_video_layers_contract`). Likely fixes the owner-reported "4:3 flash on unit death" and "glitch right after issuing an order".
