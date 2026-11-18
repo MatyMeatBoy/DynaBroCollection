@@ -29,3 +29,25 @@ class TranslationTests(unittest.TestCase):
         self.catalog['entries'][0]['english'] = 'HELLO'
         with self.assertRaises(ValueError):
             translate(self.source, self.catalog)
+
+    def test_rejects_out_of_bounds_guard_and_control_char_entries(self):
+        cases = [
+            dict(address=500, capacity=7, before=b'JP_TEXT'.hex(), english='HELLO__'),
+            dict(address=600, capacity=5, before=b'JP_TEXT'.hex(), english='HELLO'),
+            dict(address=1020, capacity=7, before=b'JP_TEXT'.hex(), english='HELLO__'),
+            dict(address=600, capacity=7, before=b'WRONG__'.hex(), english='HELLO__'),
+            dict(address=600, capacity=7, before=b'JP_TEXT'.hex(), english='HELLO\n_'),
+        ]
+        for entry in cases:
+            with self.subTest(entry=entry):
+                catalog = dict(source_sha256=self.catalog['source_sha256'], entries=[entry])
+                with self.assertRaises(ValueError):
+                    translate(self.source, catalog)
+
+    def test_rejects_overlapping_edits(self):
+        source = bytes(600) + b'JP_TEXTJP_TEXT' + bytes(410)
+        catalog = dict(source_sha256=hashlib.sha256(source).hexdigest(), entries=[
+            dict(address=600, capacity=10, before=source[600:610].hex(), english='A' * 10),
+            dict(address=605, capacity=9, before=source[605:614].hex(), english='B' * 9)])
+        with self.assertRaises(ValueError):
+            translate(source, catalog)
