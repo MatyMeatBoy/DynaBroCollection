@@ -53,6 +53,8 @@ def stage(candidate):
         if git('-C',str(ROOT/'upstream'/name),'rev-parse','HEAD')!=expected or git('-C',str(ROOT/'upstream'/name),'status','--porcelain'):
             raise RuntimeError('Unqualified package dependency: '+name)
     revision=git('rev-parse','HEAD');version=project_version()
+    readme=ROOT/f'docs/releases/v{version}-checkpoint.md'
+    if not readme.is_file():raise RuntimeError('Missing checkpoint readme: '+str(readme))
     env=dict(os.environ);env['PATH']=str(BIN)+';'+env.get('PATH','')
     subprocess.run([str(BIN/'cmake.exe'),'--build',str(ROOT/'build/dev'),'--target',
         'DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT',
@@ -110,7 +112,7 @@ def stage(candidate):
     }
     for name,source in sources.items():shutil.copy2(source,licenses/name)
     shutil.copy2(ROOT/'THIRD_PARTY_NOTICES.md',licenses/'DynaBrothers-notices.md')
-    shutil.copy2(ROOT/f'docs/releases/v{version}-checkpoint.md',payload/'READ-ME.md')
+    shutil.copy2(readme,payload/'READ-ME.md')
     manifest=dict(version=version,channel='checkpoint',status='candidate',source_commit=revision,
         engine_commit=git('-C',str(ROOT/'upstream/segagenesisrecomp'),'rev-parse','HEAD'),
         engine_patch_sha256=digest(ROOT/'patches/0001-explicit-pc-mainloop.patch'),
