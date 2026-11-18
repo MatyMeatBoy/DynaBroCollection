@@ -2937,6 +2937,262 @@
       "before": "40bdc3ba40dea6ccd4bcc32040cadfdc40b0b6dec0cfafc0d7",
       "english": "GROW STEGOS, AND WHEN    ",
       "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2222fc",
+      "address": 2237180,
+      "capacity": 12,
+      "before": "40c3a8d7c940a6c2b8dbb32e",
+      "english": "MAKE TYRANNO",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222309",
+      "address": 2237193,
+      "capacity": 21,
+      "before": "b7aeb3d8adb3c0c1ca20b1dac1a6b1d9b6c5b2b6d7",
+      "english": "DINOS AVOID WASTELAND",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22231f",
+      "address": 2237215,
+      "capacity": 18,
+      "before": "b1d2a6ccd7bcc320c4ded2ddc6b6b4d6b32e",
+      "english": "SO RAIN TO FIX IT.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22233c",
+      "address": 2237244,
+      "capacity": 23,
+      "before": "40c3a8d7c940c3de20c3b7a620bededdd2c2bbbed6b321",
+      "english": "TYRANNO: WIPE THEM OUT!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222354",
+      "address": 2237268,
+      "capacity": 21,
+      "before": "baddc4deca20c6b8bcaeb8c920c3b7d3b2d9c9c3de",
+      "english": "THIS TIME CARNIVORES ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22236a",
+      "address": 2237290,
+      "capacity": 8,
+      "before": "c1adb3b2bcd6b32e",
+      "english": "BEWARE. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222373",
+      "address": 2237299,
+      "capacity": 25,
+      "before": "40c4d8b9d740ca2040bdc3ba40ded6d820c0cfbadea620b3d0",
+      "english": "TRICERA LAY EGGS LESS    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22238d",
+      "address": 2237325,
+      "capacity": 21,
+      "before": "c6b8b2b9c4de20c2d6b8c3bcdeaeb3ccdec0ded62e",
+      "english": "THAN STEGO BUT TOUGH ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2223ae",
+      "address": 2237358,
+      "capacity": 14,
+      "before": "c0cfbadea620c0cddebbbed6b321",
+      "english": "FEED EGGS!    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2223bd",
+      "address": 2237373,
+      "capacity": 21,
+      "before": "cbdfb0c1acddca20b1dac1ca20b1d9b6c5b2c9c3de",
+      "english": "P-CHAN AVOIDS WASTES,",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2223d3",
+      "address": 2237395,
+      "capacity": 20,
+      "before": "b1d2a620ccd7bec320c4b5d8d0c1a620c2b8afc3",
+      "english": "RAIN TO MAKE A PATH ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2223e8",
+      "address": 2237416,
+      "capacity": 21,
+      "before": "b1b9ded6b32e20c0cfbadeb6d7b6b4afc020c3b7ca",
+      "english": "FOR IT. EGG-BORN FOES",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2223fe",
+      "address": 2237438,
+      "capacity": 17,
+      "before": "40c3a8d7c940c3de20bededdd2c2c0de2e",
+      "english": "FALL TO TYRANNO. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22241a",
+      "address": 2237466,
+      "capacity": 18,
+      "before": "b6d0c5d8c3de20c0cfbadea620b6b4bfb321",
+      "english": "BOLT HATCHES EGGS!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22242d",
+      "address": 2237485,
+      "capacity": 21,
+      "before": "d7ddbcaeb8c9c3b7b6de20bdb8dec620d4afc3b8d9",
+      "english": "EGG EATERS COME FAST ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222443",
+      "address": 2237507,
+      "capacity": 23,
+      "before": "bfde2e20b6d0c5d8c920c3deddb740bcaeafb840c6d6d8",
+      "english": "LIGHTNING SHOCK CAN    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22245b",
+      "address": 2237531,
+      "capacity": 21,
+      "before": "b2afbcadddc3de20c0cfbadea620ccb6bbbed6b32e",
+      "english": "HATCH EGGS INSTANTLY.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22247c",
+      "address": 2237564,
+      "capacity": 23,
+      "before": "bcdab240bacfddc440dec3de20bcddb9deb7ceb3bab3a6",
+      "english": "ORDER CMD CHANGES THE  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222494",
+      "address": 2237588,
+      "capacity": 7,
+      "before": "b7d8b6b4d6b32e",
+      "english": "ATTACK.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22249c",
+      "address": 2237596,
+      "capacity": 23,
+      "before": "cbc0ded8b6dedcc9c4c1c62040b4d8b140a6cbdbb9ded9",
+      "english": "EXPAND THE AREA ON THE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2224b4",
+      "address": 2237620,
+      "capacity": 21,
+      "before": "c420d5b3d8c0ded62e20cbdbb6deafc0d720bededd",
+      "english": "LEFT HELPS. ONCE WIDE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2224ca",
+      "address": 2237642,
+      "capacity": 20,
+      "before": "ceb3bab3c920bcddb9deb7c620b7d8b6b4d6b32e",
+      "english": "SWITCH TO ASSAULT.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2224ea",
+      "address": 2237674,
+      "capacity": 23,
+      "before": "d0c1cbdeb740bacfddc4de40c3de20d0b6c0c920b7aeb3",
+      "english": "GUIDE CMD: RIDE AN ALLY",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222502",
+      "address": 2237698,
+      "capacity": 23,
+      "before": "d8adb3c620c9d8b3c2dbb32e2040baddc4dbb0d7b040c9",
+      "english": "DINO AND CONTROL IT.   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22251a",
+      "address": 2237722,
+      "capacity": 23,
+      "before": "bfb3bbc3de20b1d4c2dad9bfde2e202040c3a8d7c940d4",
+      "english": "WITH PAD. TYRANNO AND  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222532",
+      "address": 2237746,
+      "capacity": 22,
+      "before": "40b1db40a620d5b3c4deb3bcc320c4c5d8c920bccfc6",
+      "english": "ALLO CAN BE LED TO THE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222549",
+      "address": 2237769,
+      "capacity": 7,
+      "before": "dcc0d7bed6b32e",
+      "english": "ISLAND.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22255c",
+      "address": 2237788,
+      "capacity": 21,
+      "before": "caddbcaeb840d3b0c4de40c3de2040bdc3bade40a6",
+      "english": "BREEDING MODE: GROW  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222572",
+      "address": 2237810,
+      "capacity": 20,
+      "before": "ccd4bfb3212040cadfdcb040b6de20c0cfafc0d7",
+      "english": "STEGOS! ONCE POWER  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222587",
+      "address": 2237831,
+      "capacity": 25,
+      "before": "40c3a8d7c940a620c2b8afc320bcddb9deb740d3b0c4de40c6",
+      "english": "IS FULL, MAKE TYRANNO,   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2225a1",
+      "address": 2237857,
+      "capacity": 7,
+      "before": "b7d8b6b4d6b32e",
+      "english": "ATTACK!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2225a9",
+      "address": 2237865,
+      "capacity": 22,
+      "before": "badac3de20bbb2badec0de2040b6deddcaded8d4402e",
+      "english": "THE LAST. GOOD LUCK!  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",

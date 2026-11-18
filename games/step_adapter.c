@@ -146,7 +146,8 @@ static int retire(void *user,unsigned *cycles) {
             fprintf(stderr,"[glyph2] a1=%06X word=%04X width=%u a0=%08X\n",a1,word,w,g_cpu.A[0]);}}
     if(g_cpu.PC==0x5b174){static int trace=-1;if(trace<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace=t&&t[0]=='1';}
         if(trace){unsigned a1=g_cpu.A[1]&0xffffffu,w=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
-            fprintf(stderr,"[glyph] a1=%06X word=%04X width=%u a0=%08X\n",a1,a1<0x400000u?(((unsigned)g_rom[a1]<<8)|g_rom[a1+1]):(((unsigned)g_ram[a1&0xffff]<<8)|g_ram[(a1+1)&0xffff]),w,g_cpu.A[0]);}}
+            fprintf(stderr,"[glyph] a1=%06X word=%04X width=%u a0=%08X\n",a1,a1<0x400000u?(((unsigned)g_rom[a1]<<8)|g_rom[a1+1]):(((unsigned)g_ram[a1&0xffff]<<8)|g_ram[(a1+1)&0xffff]),w,g_cpu.A[0]);
+            if(a1>=0xff0000u){static unsigned last;if(((a1&0xffffu)>>5)!=last){last=(a1&0xffffu)>>5;fprintf(stderr,"[glyph-ram] a1=%06X words:",a1);for(unsigned k=0;k<200;k++){unsigned o=(a1&0xffffu)+2*k;if(o>=0xfffe)break;fprintf(stderr," %02X%02X",g_ram[o],g_ram[o+1]);}fputc(10,stderr);}}}}
     {static int no_host_text=-1;if(no_host_text<0){const char *e=getenv("DYNA_DB2_NO_HOST_TEXT");no_host_text=e&&e[0]=='1';}
     /* Debug switch: disable the DB2 host text overlays to compare guest/audio state hashes. */
     if(!no_host_text){
