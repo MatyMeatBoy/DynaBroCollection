@@ -52,6 +52,8 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--audio', action='store_true')
+    parser.add_argument('--visor-offset-tiles', type=int, help='Seed DB1 visor position in whole tiles (-64..64); actual borders clamp it')
+    parser.add_argument('--host-overlays', action='store_true', help='Include game-owned overlays on a private screenshot copy; raw capture remains the default')
     parser.add_argument('--require-audio-signal', action='store_true', help='Require sustained non-DC mixer output (implies --audio)')
     parser.add_argument('--pacing', choices=['default','accurate','fiber'], default='default')
     parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
@@ -76,9 +78,14 @@ def main():
     profile.mkdir()
     if args.language:
         (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
+    if args.visor_offset_tiles is not None:
+        if not -64 <= args.visor_offset_tiles <= 64: parser.error('Visor offset must be between -64 and 64 tiles')
+        (profile/'dynabrothers-display.ini').write_text('db1.visor_offset_tiles='+str(args.visor_offset_tiles)+'\n',encoding='utf-8')
     env = dict(os.environ)
     env.pop('DYNA_ACHIEVEMENT_UI_TEST', None)
     env.pop('GENESIS_HOST_SETTINGS_TEST', None)
+    env.pop('GENESIS_SCREENSHOT_HOST_UI', None)
+    if args.host_overlays: env['GENESIS_SCREENSHOT_HOST_UI']='1'
     if args.achievement_ui_test:
         args.audio = True
         env['DYNA_ACHIEVEMENT_UI_TEST'] = str(output / 'achievements.bmp')
@@ -173,7 +180,7 @@ def main():
     report = dict(passed=complete, returncode=code, failures=failures, elapsed_seconds=time.monotonic() - start,
                   binary_sha256=hashlib.sha256(args.binary.read_bytes()).hexdigest(),
                   rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest(), frames=args.frames,
-                  language_request=args.language or 'default',
+                  language_request=args.language or 'default', host_overlays_request=args.host_overlays, visor_offset_tiles_request=args.visor_offset_tiles,
                   lookup_request=args.lookup or 'default',
                   cpu_core=args.cpu_core,
                   replay_executions=int(matched[-1]) if matched else None,

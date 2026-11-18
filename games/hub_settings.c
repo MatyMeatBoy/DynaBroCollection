@@ -1,5 +1,6 @@
 /* Same game settings/model used by the green hub and native executable. */
 #include "hub_settings.h"
+#include "visor_settings.h"
 #include "hub_mod_inventory.h"
 #include "app_config.h"
 #include "input_map.h"
@@ -29,6 +30,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  if(!window||!renderer||!config||!cache||!picked||capacity<2||(game!=1&&game!=2))return 2;
  app_config_set_video_default("16:9");app_config_defaults();input_map_init_defaults();dyna_controller_defaults();
  g_app_config.integer_scale=1;app_config_load(config);dyna_controllers_load(config);dyna_language_settings_load(config);
+ dyna_visor_settings_bind(NULL);dyna_visor_settings_load(config,game);
  gamepad_init_players(2);
  RecompLauncherCSettings s={0};
  s.output_method=0;s.window_scale=g_app_config.window_scale;s.fullscreen=g_app_config.fullscreen;
@@ -57,11 +59,11 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  gi.input_binding_snapshot=bindings;
  gi.host_sdl_window=window;gi.host_sdl_renderer=renderer;
  char brand[1400],art[1400],assets[1400];char *base=SDL_GetBasePath();
- snprintf(brand,sizeof brand,"%sassets/img/dyna-logo-v1.png",base?base:"");
+ snprintf(brand,sizeof brand,"%sassets/img/dyna-logo-1plus2-v1.png",base?base:"");
  snprintf(art,sizeof art,"%sassets/img/db%u-gameplay.png",base?base:"",game);
  snprintf(assets,sizeof assets,"%sassets",base?base:"");SDL_free(base);
  gi.brand_logo_path=brand;gi.boxart_path=art;
- gi.mods=dyna_hub_mod_inventory(dyna_language_mods(app_config_video_mods(&video,config)),inventory);
+ gi.mods=dyna_hub_mod_inventory(dyna_visor_mods(dyna_language_mods(app_config_video_mods(&video,config))),inventory);
  int result=recomp_launcher_run_window(gi.name,&s,&gi,assets,initial,picked,capacity);
  if(result==0||result==1){
   app_config_reload_preserving_mods(config);

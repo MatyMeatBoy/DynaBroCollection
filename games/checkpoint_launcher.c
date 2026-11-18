@@ -9,6 +9,7 @@
 #include "launcher_discovery.h"
 #include "hub_settings.h"
 #include "hub_navigation.h"
+#include "hub_layout.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,7 @@ static void images_init(void) {
  if(!start||!image_load||!graphics_create||!graphics_delete||!image_draw||!image_dispose||!image_shutdown||start(&image_token,&input,NULL))return;
  wchar_t directory[2048],path[2200];DWORD n=GetModuleFileNameW(NULL,directory,2048);if(!n||n>=2048)return;
  wchar_t *slash=wcsrchr(directory,L'\\');if(!slash)return;slash[1]=0;
- swprintf(path,2200,L"%lsassets\\img\\dyna-logo-v1.png",directory);image_load(path,&logo);
+ swprintf(path,2200,L"%lsassets\\img\\dyna-logo-1plus2-v1.png",directory);image_load(path,&logo);
  for(int i=0;i<2;i++){swprintf(path,2200,L"%lsassets\\img\\db%d-gameplay.png",directory,i+1);image_load(path,&game_art[i]);}
 }
 static void image_paint(HDC dc,void *image,RECT r) {
@@ -50,6 +51,9 @@ static void image_paint(HDC dc,void *image,RECT r) {
 }
 static HWND cards[2],settings_buttons[2],status;
 static int settings_open,closing_hub;
+static unsigned settings_visits[2];
+static DynaHubLayout home_layout;
+static int ui_scale_milli=1000;
 static DynaHubNavigation hub_navigation;
 static wchar_t exe_dir[LD_PATH_CAP],profile_dir[LD_PATH_CAP],cached_rom[2][LD_PATH_CAP],selected_rom[2][LD_PATH_CAP];
 static wchar_t config_path[LD_PATH_CAP],cache_path[2][LD_PATH_CAP];
@@ -63,7 +67,7 @@ static HANDLE game_process;
 static DynaLauncherOptions options;
 static int direct_launch;
 static UINT dpi=96;
-static int scale(int x){return MulDiv(x,(int)dpi,96);}
+static int scale(int x){return MulDiv(x,ui_scale_milli,1000);}
 static COLORREF background=RGB(16,47,40),text_color=RGB(255,249,214),muted=RGB(191,219,174);
 static const wchar_t *game_names[]={L"Dyna Brothers",L"Dyna Brothers 2 Special"};
 static void frame_colors(HWND window) {
@@ -79,13 +83,34 @@ static void fonts(void) {
     card_font=CreateFontW(-scale(25),0,0,0,FW_SEMIBOLD,0,0,0,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,0,L"Segoe UI");
     body_font=CreateFontW(-scale(16),0,0,0,FW_NORMAL,0,0,0,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,0,L"Segoe UI");
 }
+static DynaHubRect work_area(HWND window) {
+ MONITORINFO mi={sizeof mi};
+ HMONITOR monitor=window?MonitorFromWindow(window,MONITOR_DEFAULTTONEAREST):
+                         MonitorFromPoint((POINT){0,0},MONITOR_DEFAULTTOPRIMARY);
+ if(!GetMonitorInfoW(monitor,&mi))SystemParametersInfoW(SPI_GETWORKAREA,0,&mi.rcWork,0);
+ return (DynaHubRect){mi.rcWork.left,mi.rcWork.top,mi.rcWork.right-mi.rcWork.left,mi.rcWork.bottom-mi.rcWork.top};
+}
+static void frame_extents(unsigned density,int *w,int *h) {
+ RECT r={0,0,0,0};AdjustWindowRectExForDpi(&r,WS_OVERLAPPEDWINDOW,FALSE,0,density?density:96);
+ *w=r.right-r.left;*h=r.bottom-r.top;
+}
+static RECT native_rect(DynaHubRect r){return (RECT){r.x,r.y,r.x+r.w,r.y+r.h};}
+static void move_control(HWND control,DynaHubRect r) {
+ if(control)MoveWindow(control,r.x,r.y,r.w,r.h,TRUE);
+}
 static void layout(HWND window) {
-    RECT r;GetClientRect(window,&r);int margin=scale(28),gap=scale(20),width=(r.right-margin*2-gap)/2;
-    MoveWindow(cards[0],margin,scale(238),width,scale(310),TRUE);
-    MoveWindow(cards[1],margin+width+gap,scale(238),width,scale(310),TRUE);
-    for(int i=0;i<2;i++)MoveWindow(settings_buttons[i],margin+i*(width+gap)+width-scale(150),scale(499),scale(125),scale(37),TRUE);
-    MoveWindow(status,margin,r.bottom-scale(45),r.right-margin*2,scale(25),TRUE);
-    SendMessageW(status,WM_SETFONT,(WPARAM)body_font,TRUE);InvalidateRect(window,NULL,TRUE);
+ RECT r;GetClientRect(window,&r);
+ dyna_hub_layout(r.right,r.bottom,dpi,&home_layout);
+ if(home_layout.ui_scale_milli>0 && home_layout.ui_scale_milli!=ui_scale_milli){
+  ui_scale_milli=home_layout.ui_scale_milli;fonts();
+ }
+ for(int i=0;i<2;i++){
+  move_control(cards[i],home_layout.cards[i]);move_control(settings_buttons[i],home_layout.settings[i]);
+  if(settings_buttons[i])SetWindowPos(settings_buttons[i],HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+ }
+ move_control(status,home_layout.status);
+ if(status)SendMessageW(status,WM_SETFONT,(WPARAM)body_font,TRUE);
+ InvalidateRect(window,NULL,TRUE);
 }
 static void draw_text(HDC dc,const wchar_t *text,RECT r,HFONT font,COLORREF color,UINT flags) {
     SelectObject(dc,font);SetTextColor(dc,color);SetBkMode(dc,TRANSPARENT);DrawTextW(dc,text,-1,&r,flags|DT_NOPREFIX);
@@ -102,6 +127,7 @@ static void find_files(HWND window) {
  if(status)SetWindowTextW(status,message);if(window)InvalidateRect(window,NULL,TRUE);
 }
 static int configure_game(HWND window,int index) {
+ settings_visits[index]++;
  char config[8192],cache[8192],initial[8192],picked[8192];
  if(!ld_wide_to_utf8(config_path,config,sizeof config)||!ld_wide_to_utf8(cache_path[index],cache,sizeof cache))return 2;
  if(!ld_wide_to_utf8(selected_rom[index],initial,sizeof initial))initial[0]=0;
@@ -157,6 +183,64 @@ static void launch(HWND window,int index) {
     EnableWindow(cards[0],FALSE);EnableWindow(cards[1],FALSE);
     SetWindowTextW(status,L"Game running. Close its window to return here.");SetTimer(window,1,250,NULL);
 }
+static void paint_home(HDC dc) {
+ RECT banner=native_rect(home_layout.banner);
+ if(logo)image_paint(dc,logo,banner);else draw_text(dc,L"Dyna Brothers 1 + 2",banner,title_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ RECT version=native_rect(home_layout.version);
+ draw_text(dc,L"Checkpoint v" DYNA_WIDEN(DYNA_VERSION),version,body_font,RGB(90,205,245),DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ RECT note=native_rect(home_layout.note);
+ draw_text(dc,L"English is enabled by default. Language and controls are in Settings.\nTranslations are in progress. Use your own Japanese game dumps.",note,body_font,muted,DT_CENTER|DT_WORDBREAK);
+}
+static void home_capture(HWND window) {
+ const char *path=getenv("DYNA_HUB_HOME_CAPTURE");if(!path||!*path)return;
+ RECT r;GetClientRect(window,&r);HDC dc=GetDC(window),memory=CreateCompatibleDC(dc);
+ BITMAPINFO info={0};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+ info.bmiHeader.biWidth=r.right;info.bmiHeader.biHeight=-r.bottom;info.bmiHeader.biPlanes=1;
+ info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
+ void *bits=NULL;HBITMAP bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&bits,NULL,0);
+ if(!memory||!bitmap||!bits)abort();HGDIOBJ previous=SelectObject(memory,bitmap);
+ /* PrintWindow may report success without painting a hidden HWND. Explicit
+  * WM_PRINT omits PRF_CHECKVISIBLE and asks these same native controls to draw. */
+ FillRect(memory,&r,background_brush);paint_home(memory);
+ HWND children[]={cards[0],cards[1],settings_buttons[0],settings_buttons[1],status};
+ for(unsigned i=0;i<sizeof children/sizeof children[0];i++){
+  HWND child=children[i];if(!(GetWindowLongW(child,GWL_STYLE)&WS_VISIBLE))continue;
+  RECT bounds;GetWindowRect(child,&bounds);MapWindowPoints(NULL,window,(POINT *)&bounds,2);
+  int saved=SaveDC(memory);SetViewportOrgEx(memory,bounds.left,bounds.top,NULL);
+  IntersectClipRect(memory,0,0,bounds.right-bounds.left,bounds.bottom-bounds.top);
+  SendMessageW(child,WM_PRINT,(WPARAM)memory,PRF_CLIENT|PRF_ERASEBKGND);
+  RestoreDC(memory,saved);
+ }
+ wchar_t wide[8192];if(!ld_utf8_to_wide(path,wide,8192))abort();FILE *file=_wfopen(wide,L"wb");if(!file)abort();
+ DWORD size=(DWORD)r.right*(DWORD)r.bottom*4;
+ BITMAPFILEHEADER header={0};header.bfType=0x4d42;header.bfOffBits=sizeof header+sizeof(BITMAPINFOHEADER);header.bfSize=header.bfOffBits+size;
+ int ok=fwrite(&header,sizeof header,1,file)==1&&fwrite(&info.bmiHeader,sizeof(BITMAPINFOHEADER),1,file)==1&&fwrite(bits,size,1,file)==1;
+ if(fclose(file)||!ok)abort();SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(window,dc);
+ fprintf(stderr,"[hub-home-test] captured own native GDI client%ldx%ld\n",r.right,r.bottom);
+}
+/* Native opt-in regression: hit-test actual child windows before activating
+ * them. Direct WM_COMMAND tests cannot detect an obscured Settings button. */
+static void home_selftest(HWND window) {
+ HWND original=window;
+ home_capture(window);
+ SDL_setenv("DYNA_HUB_SELFTEST","1",1);
+ if(!getenv("LNG_SCRIPT"))SDL_setenv("LNG_SCRIPT","wait:3;quit",1);
+ for(int i=0;i<2;i++){
+  RECT button;GetWindowRect(settings_buttons[i],&button);
+  POINT center={(button.left+button.right)/2,(button.top+button.bottom)/2};ScreenToClient(window,&center);
+  HWND hit=ChildWindowFromPointEx(window,center,CWP_SKIPDISABLED|CWP_SKIPINVISIBLE);
+  if(hit!=settings_buttons[i]){fprintf(stderr,"[hub-home-test] FAIL Settings%d hit control%d\n",i+1,GetDlgCtrlID(hit));abort();}
+  unsigned before=settings_visits[i];
+  SendMessageW(hit,BM_CLICK,0,0);
+  if(!IsWindow(original)||settings_open||closing_hub||settings_visits[i]!=before+1||GetParent(settings_buttons[i])!=original){
+   fprintf(stderr,"[hub-home-test] FAIL Settings%d did not return to same home HWND\n",i+1);abort();
+  }
+  fprintf(stderr,"[hub-home-test] PASS Settings%d native hit-test/BM_CLICK/inline return HWND\n",i+1);
+ }
+ RECT client,outer;GetClientRect(window,&client);GetWindowRect(window,&outer);
+ fprintf(stderr,"[hub-home-test] PASS dpi%u client%ldx%ld outer%ldx%ld HWND preserved\n",dpi,client.right,client.bottom,outer.right-outer.left,outer.bottom-outer.top);
+ DestroyWindow(window);
+}
 static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
     switch(message) {
     case WM_CREATE:
@@ -169,14 +253,22 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         status=CreateWindowW(L"STATIC",L"Choose a game",WS_CHILD|WS_VISIBLE,0,0,0,0,window,NULL,GetModuleHandleW(NULL),NULL);
         char settings_utf8[8192];if(ld_wide_to_utf8(config_path,settings_utf8,sizeof settings_utf8))dyna_hub_controls_start(settings_utf8);
         layout(window);find_files(window);SetTimer(window,2,16,NULL);SetFocus(cards[0]);return 0;
+    case WM_APP+9:home_selftest(window);return 0;
     case WM_CLOSE:
         if(settings_open){SDL_Event quit;SDL_zero(quit);quit.type=SDL_QUIT;closing_hub=1;SDL_PushEvent(&quit);return 0;}
         DestroyWindow(window);return 0;
     case WM_SIZE:layout(window);return 0;
     case WM_GETMINMAXINFO:
-        ((MINMAXINFO *)l)->ptMinTrackSize.x=scale(800);((MINMAXINFO *)l)->ptMinTrackSize.y=scale(700);return 0;
+        {int fw,fh;DynaHubRect bounds;unsigned density=GetDpiForWindow(window);if(!density)density=dpi;
+         frame_extents(density,&fw,&fh);dyna_hub_window_bounds(work_area(window),density,fw,fh,1,&bounds);
+         ((MINMAXINFO *)l)->ptMinTrackSize.x=bounds.w;((MINMAXINFO *)l)->ptMinTrackSize.y=bounds.h;return 0;}
     case WM_DPICHANGED:
-        dpi=HIWORD(w);fonts();{RECT *r=(RECT *)l;SetWindowPos(window,NULL,r->left,r->top,r->right-r->left,r->bottom-r->top,SWP_NOZORDER|SWP_NOACTIVATE);}layout(window);return 0;
+        dpi=HIWORD(w);{RECT r=*(RECT *)l;DynaHubRect area=work_area(window);
+         int width=r.right-r.left,height=r.bottom-r.top;if(width>area.w)width=area.w;if(height>area.h)height=area.h;
+         if(r.left<area.x)r.left=area.x;if(r.top<area.y)r.top=area.y;
+         if(r.left+width>area.x+area.w)r.left=area.x+area.w-width;
+         if(r.top+height>area.y+area.h)r.top=area.y+area.h-height;
+         SetWindowPos(window,NULL,r.left,r.top,width,height,SWP_NOZORDER|SWP_NOACTIVATE);}layout(window);return 0;
     case WM_COMMAND:
         if(LOWORD(w)==201||LOWORD(w)==202){int game=LOWORD(w)-201;if(configure_game(window,game)==0){options.setup=0;launch(window,game);}return 0;}
         if(LOWORD(w)==101||LOWORD(w)==102){launch(window,LOWORD(w)-101);return 0;}break;
@@ -201,7 +293,7 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
     case WM_DRAWITEM: {
         DRAWITEMSTRUCT *item=(DRAWITEMSTRUCT *)l;
         if(item->CtlID==201 || item->CtlID==202){
-            RECT box=item->rcItem;HBRUSH fill=CreateSolidBrush(RGB(48,100,65));HPEN edge=CreatePen(PS_SOLID,scale(1),RGB(238,213,100));
+            RECT box=item->rcItem;FillRect(item->hDC,&box,background_brush);int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;HBRUSH fill=CreateSolidBrush(RGB(48,100,65));HPEN edge=CreatePen(PS_SOLID,scale(selected?2:1),RGB(238,213,100));
             HGDIOBJ oldb=SelectObject(item->hDC,fill),oldp=SelectObject(item->hDC,edge);RoundRect(item->hDC,box.left,box.top,box.right,box.bottom,scale(18),scale(18));
             SelectObject(item->hDC,oldb);SelectObject(item->hDC,oldp);DeleteObject(fill);DeleteObject(edge);
             draw_text(item->hDC,L"Settings",box,body_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;
@@ -214,22 +306,22 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
         HGDIOBJ old_brush=SelectObject(item->hDC,brush),old_pen=SelectObject(item->hDC,pen);
         RoundRect(item->hDC,r.left+2,r.top+2,r.right-2,r.bottom-2,scale(30),scale(30));
         SelectObject(item->hDC,old_brush);SelectObject(item->hDC,old_pen);DeleteObject(brush);DeleteObject(pen);
-        RECT art={scale(18),scale(18),r.right-scale(18),scale(183)};image_paint(item->hDC,game_art[index],art);
-        r.left+=scale(24);r.right-=scale(20);r.top=scale(197);r.bottom=r.top+scale(60);
-        draw_text(item->hDC,index?L"Dyna Brothers 2\nSpecial":L"Dyna Brothers",r,card_font,text_color,DT_LEFT|DT_WORDBREAK);
+        int height=r.bottom;
+        RECT art={scale(14),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
+        r.left+=scale(20);r.right-=scale(20);r.top=height-scale(80);r.bottom=height-scale(28);
+        draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
 
-        r.top=scale(270);r.bottom=scale(298);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_LEFT);return TRUE;
+        r.top=height-scale(26);r.bottom=height-scale(5);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_LEFT);return TRUE;
     }
     case WM_CTLCOLORSTATIC:SetTextColor((HDC)w,muted);SetBkColor((HDC)w,background);return (LRESULT)background_brush;
     case WM_ERASEBKGND:if(settings_open)return 1;{RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);return 1;}
+    case WM_PRINTCLIENT: {
+        if(!settings_open){RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);paint_home((HDC)w);}return 0;
+    }
     case WM_PAINT: {
         if(settings_open){ValidateRect(window,NULL);return 0;}
-        PAINTSTRUCT p;HDC dc=BeginPaint(window,&p);RECT r;GetClientRect(window,&r);r.left=scale(28);r.top=scale(24);r.bottom=scale(75);
-        RECT banner={scale(160),scale(12),r.right-scale(160),scale(202)};
-        if(logo)image_paint(dc,logo,banner);else draw_text(dc,L"Dyna Brothers",r,title_font,text_color,DT_LEFT);
-        r.top=scale(204);r.bottom=scale(229);draw_text(dc,L"Checkpoint v" DYNA_WIDEN(DYNA_VERSION),r,body_font,RGB(90,205,245),DT_LEFT);
-        r.top=scale(568);r.bottom=scale(627);r.right-=scale(28);
-        draw_text(dc,L"English is enabled by default. Language and controls are in each game's settings.\nTranslations are still in progress. Use your own Japanese game dumps.",r,body_font,muted,DT_LEFT|DT_WORDBREAK);
+        PAINTSTRUCT p;HDC dc=BeginPaint(window,&p);
+        paint_home(dc);
         EndPaint(window,&p);return 0;
     }
     case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
@@ -265,10 +357,13 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     type.hCursor=LoadCursorW(NULL,IDC_ARROW);type.lpszClassName=L"DynaBrothersCheckpoint";
     if(!RegisterClassW(&type))return 1;
     dpi=GetDpiForSystem();
+    int fw,fh;DynaHubRect bounds;frame_extents(dpi,&fw,&fh);
+    dyna_hub_window_bounds(work_area(NULL),dpi,fw,fh,0,&bounds);
     HWND window=CreateWindowW(type.lpszClassName,L"Dyna Brothers - v" DYNA_WIDEN(DYNA_VERSION),WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT,CW_USEDEFAULT,scale(960),scale(740),NULL,NULL,instance,NULL);if(!window)return 1;
+        bounds.x,bounds.y,bounds.w,bounds.h,NULL,NULL,instance,NULL);if(!window)return 1;
     if(direct_launch){launch(window,options.game-1);if(!game_process){DestroyWindow(window);LocalFree(argv);return 1;}}
-    else {ShowWindow(window,show);UpdateWindow(window);}
+    else {if(!getenv("LNG_TEST_HIDDEN"))ShowWindow(window,show);UpdateWindow(window);}
+    if(getenv("DYNA_HUB_HOME_SELFTEST")&&!direct_launch)PostMessageW(window,WM_APP+9,0,0);
     MSG message;while(GetMessageW(&message,NULL,0,0)>0){
         if(!settings_open&&message.message==WM_KEYDOWN&&message.wParam==VK_RETURN){
             int id=GetDlgCtrlID(GetFocus());if(id==101||id==102||id==201||id==202){SendMessageW(window,WM_COMMAND,id,0);continue;}

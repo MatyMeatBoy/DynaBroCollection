@@ -349,3 +349,48 @@ add_executable(DynaHubModInventoryTest tests/hub_mod_inventory_test.c games/hub_
 target_include_directories(DynaHubModInventoryTest PRIVATE games "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src")
 target_compile_options(DynaHubModInventoryTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME hub_mod_inventory_contract COMMAND DynaHubModInventoryTest)
+
+
+foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
+ target_sources(${_game} PRIVATE games/progress_ui.c)
+endforeach()
+add_executable(DynaProgressUiTest tests/progress_ui_test.c games/progress_ui.c)
+target_include_directories(DynaProgressUiTest PRIVATE games)
+target_compile_options(DynaProgressUiTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME progress_ui_contract COMMAND DynaProgressUiTest)
+
+
+if(TARGET DynaBrothersLauncher)
+ target_sources(DynaBrothersLauncher PRIVATE games/hub_layout.c)
+endif()
+add_executable(DynaHubLayoutTest tests/hub_layout_test.c games/hub_layout.c)
+target_include_directories(DynaHubLayoutTest PRIVATE games)
+target_compile_options(DynaHubLayoutTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME hub_layout_contract COMMAND DynaHubLayoutTest)
+
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_intro_fade.c)
+target_sources(DynaDb1VideoTest PRIVATE games/db1_intro_fade.c)
+add_executable(DynaDb1IntroFadeTest tests/db1_intro_fade_test.c games/db1_intro_fade.c)
+target_include_directories(DynaDb1IntroFadeTest PRIVATE games)
+target_compile_options(DynaDb1IntroFadeTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_intro_fade_contract COMMAND DynaDb1IntroFadeTest)
+
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_visor.c)
+target_sources(DynaDb1VideoTest PRIVATE games/db1_visor.c)
+add_executable(DynaDb1VisorTest tests/db1_visor_test.c games/db1_visor.c)
+target_include_directories(DynaDb1VisorTest PRIVATE games)
+target_compile_options(DynaDb1VisorTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_visor_contract COMMAND DynaDb1VisorTest)
+foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
+ target_sources(${_game} PRIVATE games/visor_settings.c)
+ target_include_directories(${_game} PRIVATE "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src")
+endforeach()
+if(TARGET DynaBrothersLauncher)
+ target_sources(DynaBrothersLauncher PRIVATE games/visor_settings.c)
+endif()
+add_executable(DynaVisorSettingsTest tests/visor_settings_test.c games/visor_settings.c)
+target_include_directories(DynaVisorSettingsTest PRIVATE games "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src")
+target_compile_options(DynaVisorSettingsTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME visor_settings_contract COMMAND DynaVisorSettingsTest)

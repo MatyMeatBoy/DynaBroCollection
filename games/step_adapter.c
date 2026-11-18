@@ -1,4 +1,5 @@
 #include "progress_runtime.h"
+#include "visor_settings.h"
 #include "extras_ui.h"
 #include <SDL.h>
 #include "menu_controls.h"
@@ -83,7 +84,7 @@ static int retire(void *user,unsigned *cycles) {
 #ifdef DYNA_HAS_JP
     switch(g_cpu.PC){
     case 0x1c40:case 0x1c44:case 0x19980:case 0x1b040:
-    case 0x1c5a4:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
+    case 0x1c5a4:case 0x1c7d0:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
     case 0x1e024:case 0x1d7b6:case 0x1b42:case 0x1b38:case 0x1c04:case 0x1950:case 0x1bc04:
     case 0x5ff6:case 0x62fc:case 0x132d8:case 0x13630:
     case 0x12fe6:case 0x13286:case 0x14070:case 0x1429e:case 0x1429c:case 0x144f6:
@@ -218,6 +219,12 @@ static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
 static void settings(const char *path){
     dyna_language_settings_load(path);
+#ifdef DYNA_HAS_JP
+    dyna_visor_settings_bind(db1_video_set_visor_offset_tiles);
+#else
+    dyna_visor_settings_bind(NULL);
+#endif
+    dyna_visor_settings_load(path,DYNA_ENTRY==0x738u?2:1);
     dyna_progress_runtime_settings(path);
     dyna_achievement_session_init(path,DYNA_ENTRY==0x738u);
     {
@@ -235,14 +242,28 @@ static void settings(const char *path){
     app_config_load(path);
     dyna_controllers_load(path);
 }
+static int game_runtime_get(const char *key,int *value){
+ return dyna_visor_runtime_get(key,value)||dyna_language_runtime_get(key,value);
+}
+static int game_runtime_set(const char *key,int value){
+ return dyna_visor_runtime_set(key,value)||dyna_language_runtime_set(key,value);
+}
+static const struct RecompLauncherCModProvider *game_mods(const struct RecompLauncherCModProvider *base){
+ return dyna_visor_mods(dyna_language_mods(base));
+}
 static const char *snapshot_reason(void){return "Mid-battle save states and rewind are unavailable. Save Game stores native progress codes.";}
 static int game_ui_open(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_is_open();}
-static int game_ui_active(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_active();}
+static int game_ui_active(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_active() || dyna_progress_runtime_prompt(NULL,NULL);}
 static void game_ui_input(int action,int down,int repeat) {
  if(dyna_extras_ui_is_open())dyna_extras_ui_input(action,down,repeat);
  else dyna_achievement_ui_input(action,down,repeat);
 }
 static void game_ui_render(uint32_t *pixels,int w,int h,int pitch) {
+ unsigned selected;const char *feedback;
+ if(dyna_progress_runtime_prompt(&selected,&feedback)){
+  if(dyna_progress_runtime_prompt_kind()==2)dyna_extras_ui_ending_save_prompt(pixels,w,h,pitch,feedback);
+  else dyna_extras_ui_progress_prompt(pixels,w,h,pitch,selected,feedback);
+ }
  dyna_achievement_smoke_render(pixels,w,h,pitch);
  dyna_extras_ui_render(pixels,w,h,pitch);
 }
@@ -265,7 +286,7 @@ const GameSpec g_game_spec={
     .region_label="NTSC-J (Japan)",
 #if RECOMP_LAUNCHER
     .runtime_menu_items=language_items,.runtime_menu_item_count=7,
-    .runtime_menu_get=dyna_language_runtime_get,.runtime_menu_set=dyna_language_runtime_set,
+    .runtime_menu_get=game_runtime_get,.runtime_menu_set=game_runtime_set,
     .runtime_menu_action=game_ui_action,
 #endif
     .host_ui_open=game_ui_open,.host_ui_active=game_ui_active,
@@ -278,7 +299,7 @@ const GameSpec g_game_spec={
     .call_entry_point=entry,.call_vblank=vint,.call_hblank=hint,
     .tier3_floor_default=0,
     .load_settings=settings,
-    .mods=dyna_language_mods,
+    .mods=game_mods,
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
     .video=&db1_video,.video_default="16:9",

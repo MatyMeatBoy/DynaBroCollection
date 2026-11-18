@@ -14,17 +14,23 @@
 typedef struct {unsigned char *rgba;unsigned char *map;int w,h;} Art;
 static Art bands,logo;
 static int loaded;
-/* Reference title CRAM from title-vdp.bin, little-endian words at 65536.
- * Duplicate entries resolve to the first index, never to a guessed cycle. */
+static int background_shift;
+void db1_title_art_geometry(int height,int top,int native_height){
+ background_shift=native_height==224&&height>=224&&height<=480&&top>=0&&top+224<=height?height-top-224:0;
+}
+int db1_title_art_background_line(int line){return line-background_shift;}
+/* Background reference: title-vdp.bin CRAM words at65536. Logo bank1 is the
+ * stable native palette reconstructed from pattern-index/native-JA pixel
+ * correlation; that dump's white-fade floor is unsuitable for logo ink. */
 static const uint16_t reference[64]={
 1092,3822,2730,1638,1254,1220,1156,1124,1092,1092,1102,3822,1096,1092,1092,1092,
-1092,3822,2730,1638,1254,1220,1156,1124,1092,1092,1102,1262,1096,1092,1092,1092,
+0x000,0xeee,0xaaa,0x666,0x4e6,0x4c4,0x282,0x0e0,0x020,0x000,0x02e,0x0ee,0x008,0x444,0x222,0x000,
 1092,3822,2730,1638,1254,1220,1156,1124,1092,1092,1102,3822,1096,1092,1092,1092,
 1092,1126,1092,1092,1092,1156,1124,1092,2628,2116,1604,1126,1092,1096,1094,2184};
 static unsigned word(const GVDP *v,unsigned a){return v->vram[a&65535]*256u+v->vram[(a+1)&65535];}
 static int wrap(int n,int p){int r=n%p;return r<0?r+p:r;}
 int db1_title_art_band_offset(int w,int h,int sx,int sy){
- if(w<512||w>4096||h<288||h>4096||abs(w*288-h*512)>h*6||sy< -32||sy>=256||(sy>=0&&sy<224))return -1;
+ if(w<512||w>4096||h<288||h>4096||abs(w*288-h*512)>h*6||sy< -32||sy>=0)return -1;
  return (((sy+32)*h/288)*w+wrap(sx,512)*w/512)*4;
 }
 unsigned db1_title_art_nearest(uint32_t rgb,const uint16_t p[64],unsigned first,unsigned count){
@@ -35,6 +41,12 @@ unsigned db1_title_art_nearest(uint32_t rgb,const uint16_t p[64],unsigned first,
   uint32_t c=genesis_dac_cram_to_argb(p[i],(int)level);int dr=(int)((rgb>>16)&255)-(int)((c>>16)&255),dg=(int)((rgb>>8)&255)-(int)((c>>8)&255),db=(int)(rgb&255)-(int)(c&255);unsigned d=(unsigned)(dr*dr+dg*dg+db*db);
   if(d<dist){dist=d;best=i+level*64;}
  }return best;
+}
+unsigned db1_title_art_logo_nearest(uint32_t rgb){
+ unsigned index=db1_title_art_nearest(rgb,reference,17,15);
+ /* Original opaque outline uses nibble15, not unused palette slot0 or the
+  * duplicate volcanic black. Preserve its semantic live fade ownership. */
+ return reference[index]==0?31:index;
 }
 uint32_t db1_title_art_alpha(uint32_t d,uint32_t s,unsigned a){
  if(a>255)a=255;uint32_t r=0xff000000u;for(unsigned shift=0;shift<24;shift+=8)r|=((((s>>shift)&255)*a+((d>>shift)&255)*(255-a)+127)/255)<<shift;return r;
@@ -47,13 +59,13 @@ static void load(Art *a,const char *base,const char *name,unsigned first,unsigne
  int source_w=a->w,source_h=a->h;a->w=target_w;a->h=target_h;
  a->rgba=calloc((size_t)a->w*a->h,4);if(!a->rgba){stbi_image_free(source);return;}
  for(int y=0;y<a->h;y++)for(int x=0;x<a->w;x++){
-  if(first==48&&y>=32&&y<256)continue;
+  if(first==48&&y>=32)continue;
   unsigned char *p=source+((y*source_h/a->h)*source_w+x*source_w/a->w)*4;
   memcpy(a->rgba+(y*a->w+x)*4,p,4);
  }
  stbi_image_free(source);
  a->map=malloc((size_t)a->w*a->h);if(!a->map){stbi_image_free(a->rgba);a->rgba=NULL;return;}
- for(int i=0;i<a->w*a->h;i++){unsigned char *p=a->rgba+i*4;a->map[i]=p[3]?(unsigned char)db1_title_art_nearest((uint32_t)p[0]<<16|(uint32_t)p[1]<<8|p[2],reference,first,count):0;}
+ for(int i=0;i<a->w*a->h;i++){unsigned char *p=a->rgba+i*4;uint32_t rgb=(uint32_t)p[0]<<16|(uint32_t)p[1]<<8|p[2];a->map[i]=p[3]?(unsigned char)(first==16?db1_title_art_logo_nearest(rgb):db1_title_art_nearest(rgb,reference,first,count)):0;}
 }
 static void ensure(void){if(loaded)return;loaded=1;char *base=SDL_GetBasePath();if(!base)return;load(&bands,base,"db1-title-background-512x288.png",48,16,512,288);load(&logo,base,"dyna-logo-v1.png",16,16,224,120);SDL_free(base);}
 int db1_title_art_identified(const GVDP *v){
@@ -67,20 +79,48 @@ static int a_coordinates(const GVDP *v,int x,int y,int *sx,int *sy){
  int col=x/16;if(x<0&&x%16)--col;if(col<0)col=0;if(col>19)col=19;
  *sx=x-(int)(word(v,((v->reg[13]&63)<<10)+hi*4)&1023);*sy=y+(v->vsram[(v->reg[11]&4)?col*2:0]&1023);return 1;
 }
+static unsigned pattern_pixel(const GVDP *v,unsigned attr,int tx,int ty){
+ if(attr&2048)tx=7-tx;if(attr&4096)ty=7-ty;
+ unsigned bits=v->vram[((attr&2047)*32+ty*4+tx/2)&65535];return (bits>>(tx&1?0:4))&15;
+}
+static void sprite_mask(const GVDP *v,int line,int width,int left,unsigned char *mask){
+ unsigned base=(v->reg[5]&0x7f)<<9,index=0;
+ for(unsigned guard=0;guard<80;guard++){
+  unsigned a=base+index*8,y=word(v,a)&511,size=v->vram[(a+2)&65535],attr=word(v,a+4);
+  int sx=(int)(word(v,a+6)&511)-128,sy=(int)y-128,wt=(int)((size>>2)&3)+1,ht=(int)(size&3)+1;
+  int row=line-sy;
+  if(row>=0&&row<ht*8){
+   if(attr&4096)row=ht*8-1-row;
+   for(int x=0;x<wt*8;x++){
+    int dx=sx+x+left;if(dx<0||dx>=width)continue;
+    int col=(attr&2048)?wt*8-1-x:x;unsigned tile=((attr&2047)+(unsigned)(col/8*ht+row/8))&2047;
+    if(pattern_pixel(v,tile,col&7,row&7))mask[dx]=1;
+   }
+  }
+  index=v->vram[(a+3)&65535]&127;if(!index)break;
+ }
+}
+static uint32_t title_background(const GVDP *v,int x,int line){
+ int shifted=db1_title_art_background_line(line),sx,sy;
+ if(db1_scenes_plane_b_coordinates(v,x,shifted,&sx,&sy)&&sy<0){
+  if(bands.rgba){int off=db1_title_art_band_offset(bands.w,bands.h,sx,sy< -32?-32:sy);if(off>=0)return mapped(v,&bands,off/4);}
+  /* Missing optional sky falls back to the authored first sky raster. */
+  return db1_scenes_background(v,x,0);
+ }
+ return db1_scenes_background(v,x,shifted);
+}
 void db1_title_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,int english){
- if(!out||width<=0||!db1_title_art_identified(v))return;ensure();
+ if(!out||width<=0||width>768||!db1_title_art_identified(v))return;ensure();
+ unsigned char sprites[768]={0};sprite_mask(v,line,width,left,sprites);
  for(int dx=0;dx<width;dx++){
   int x=dx-left,sx,sy;
-  if(bands.rgba&&db1_scenes_plane_b_coordinates(v,x,line,&sx,&sy)){
-   int off=db1_title_art_band_offset(bands.w,bands.h,sx,sy);
-   /* Never paint over native foreground, even when scrolling reveals a band. */
-   if(off>=0&&(line<0||line>=224||x<0||x>=320))out[dx]=mapped(v,&bands,off/4);
-  }
-  if(!english||!logo.rgba)continue;
   a_coordinates(v,x,line,&sx,&sy);int px=wrap(sx,512),py=wrap(sy,256);
-  if(px<48||px>=272||py<24||py>=144)continue;
   unsigned attr=word(v,((v->reg[2]&56)<<10)+2*((py/8)*64+px/8)),tile=attr&2047;
-  if(tile>=0x102&&tile<=0x262){int tx=px&7,ty=py&7;if(attr&2048)tx=7-tx;if(attr&4096)ty=7-ty;unsigned bits=v->vram[(tile*32+ty*4+tx/2)&65535],n=(bits>>(tx&1?0:4))&15;if(n)out[dx]=db1_scenes_background(v,x,line);}
+  unsigned opaque=pattern_pixel(v,attr,px&7,py&7);
+  if(!opaque&&!sprites[dx])out[dx]=title_background(v,x,line);
+  if(!english||!logo.rgba)continue;
+  if(px<48||px>=272||py<24||py>=144)continue;
+  if(tile>=0x102&&tile<=0x262&&opaque&&!sprites[dx])out[dx]=title_background(v,x,line);
   int i=((py-24)*logo.h/120)*logo.w+(px-48)*logo.w/224;out[dx]=db1_title_art_alpha(out[dx],mapped(v,&logo,i),logo.rgba[i*4+3]);
  }
 }

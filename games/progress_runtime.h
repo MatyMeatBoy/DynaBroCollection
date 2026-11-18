@@ -6,5 +6,10 @@ int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size);
 void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t d[8],const uint32_t a[8]);
 int dyna_progress_runtime_action(const char *key);
 const char *dyna_progress_runtime_status(void);
+/* Result-only inline prompt; visibility does not pause guest execution.
+ * Optional outputs: selected0 Continue/1 Save; feedback empty/saved/failed/continuing. */
+int dyna_progress_runtime_prompt(unsigned *selected,const char **feedback);
+/* 0 hidden,1 ordinary result,2 timed hard-ending Save-only prompt. */
+int dyna_progress_runtime_prompt_kind(void);
 
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask);

@@ -1,0 +1,21 @@
+# Diagnostic prepared-win route with descriptor type1 (native password result), not a campaign playthrough.
+# Guest ROM and instructions stay unchanged.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 300
+WAIT 1200
+WRITE_RAM16 0xFF0034 0x0014
+WRITE_RAM8 0xFFB3A8 1
+WRITE_RAM8 0xFF0168 1
+WRITE_RAM16 0xFF5D32 0x0800
+WRITE_RAM32 0xFF7BEC 0
+WRITE_RAM8 0xFF003D 1
+WAIT 3500
+SCREENSHOT progress-save-native-result.png
+# DYNA_DB1_SAVE_TEST=save saves only an actual observed native 1BECC candidate.
+WAIT 500
+SCREENSHOT progress-save-result.png

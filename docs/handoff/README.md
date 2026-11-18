@@ -105,3 +105,18 @@ Post-release source is ahead of0.1.5 and is NOT in its binaries. Root owns CMake
 Unit guide now has five DB1 species pages with verified initial vitality, strict reproduction threshold/parent vitality cost and opponent-specific per-routine drain. This is not maximum HP, player power cost or DPS. Two-page Advanced tutorial now uses verified economy/route mechanics. Typed decoder and guide/Extras tests pass. Native guide visual qualification and a coherent source commit remain to do. DB2 content/development stays paused.
 
 Remaining priorities: finish composed Save prompt acceptance, qualify hard-ending/other code-display lifecycle before claiming every-code Save coverage, add Extras naturally to native title/menu flow, complete level-selection navigation/initial-level UX, identify P-chan graphical Japanese bubble and any remaining English branches, finish broader achievement/scene acceptance. Physical controller/audio-device confirmation is distinct from automated evidence.
+
+
+## Current verified development checkpoint — 2026-11-18 overnight
+
+This section supersedes older pending items above. User authorizes autonomous decisions and continued work while asleep. Complete DB1 first, then apply verified learnings to DB2; DB2 is paused until DB1 readiness, not permanently blocked.
+
+- Green hub Settings now passes actual native child hit-testing and BM_CLICK for both games, returns to the same HWND, and persists settings in an existing isolated profile. Default client is1100x620 DIP with smaller-workarea fallback. Combined approved1+2 logo is launcher-only; DB1 title retains its single-game logo.
+- Original-size208x208 visor and192x192 command area are restored. Default427-wide view has equal64-pixel visible gaps. Signed settings move world/visor projection in8px tiles with whole-tile clamps; HUD remains right. Nine native probes/94captures verify actor visibility and original guest/audio hashes. Rain target crop matches native192x192 exactly; lightning retains authored320-wide visuals and native192x192 damage scope. See research/db1-visor.md and visor-settings.md.
+- Ordinary result Save/Continue and timed hard-ending Save-only prompts are native-qualified, including held START, transitions, real persistence/reload and locked-file failure. Hard ending retains its original timer. See research/db1-progress-native-qualification.md. Native title-menu Extras and full level-selection navigation remain open.
+- Title black outline and bottom-anchored original background are qualified. Only sky is extended above; generated ground is no longer sampled. White/black fades and Japanese mode retain original behavior.
+- Story-only16px side fade is qualified over all224rows including lower text. Center288pixels, external margins and all three logo screens are unchanged; guest/audio hashes match baseline. See research/db1-intro-side-fade.md.
+- Unit numeric guide is verified and committed206aeeb; five pages rendered and inspected. Unknown costs/speeds are not presented as verified.
+- Integrated suites pass42/42 CTests and45/45 Python tests. OptiPort canonical main remains a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1.
+
+These changes are development source, not the immutable public/personal0.1.5 archives. Next delivery must use a new version and exact packaged qualification. Remaining priorities: native Extras/title integration, complete level-selection UX, remaining English branches (including graphical P-chan bubble), broader campaign/achievement acceptance, portable checkpoint. Physical M30 and reporter-PC audio acceptance remain distinct from automated checks.

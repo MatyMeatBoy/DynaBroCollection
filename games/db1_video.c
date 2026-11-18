@@ -4,6 +4,8 @@
 #include "db1_title_art.h"
 #include "db1_menu_layout.h"
 #include "db1_hazard_effects.h"
+#include "db1_intro_fade.h"
+#include "db1_visor.h"
 #include "viewport.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
@@ -14,6 +16,9 @@
 static int battle,map_overlay,frame_map_overlay,spell_effect,frame_spell,fullplane_effect,frame_fullplane;
 static int bottom_spell,bottom_fullplane,title_english;
 static Db1HazardEffects hazards;
+static int visor_offset_tiles;
+static Db1VisorLayout frame_visor;
+void db1_video_set_visor_offset_tiles(int tiles){visor_offset_tiles=tiles;}
 void db1_video_set_english(int enabled){title_english=!!enabled;}
 static DynaViewport viewport=DYNA_VIEWPORT_DEFAULT;
 static Db1VisibleActor actors[256];
@@ -37,7 +42,7 @@ static int canvas_geometry(int dw,int dh,int nw,int nh,int *w,int *h) {
     int scale=game_video_integer_canvas(dw,dh,base,nh,w,h);
     if(!scale || *w>768 || *h>480)return 0;
     if(canvas_height!=*h)actor_cache_valid=0;
-    canvas_height=*h;canvas_top=(*h-nh)/2;return scale;
+    canvas_height=*h;canvas_top=(*h-nh)/2;db1_title_art_geometry(*h,canvas_top,nh);return scale;
 }
 static int configure(const char *mode) {
     return dyna_viewport_configure(&viewport,mode);
@@ -47,9 +52,9 @@ static int width(int dw,int dh,int nw,int nh){
     (void)nw;
     return dyna_viewport_width(&viewport,dw,dh,nh);
 }
-void db1_video_reset(void){battle=map_overlay=frame_map_overlay=spell_effect=fullplane_effect=0;count=0;center_supported=0;frame_world=intro_spawn=frame_spawn=bottom_spawn=0;bottom_valid=actor_cache_valid=0;canvas_height=224;canvas_top=0;db1_scenes_reset();db1_hazard_effects_reset(&hazards);}
+void db1_video_reset(void){battle=map_overlay=frame_map_overlay=spell_effect=fullplane_effect=0;count=0;center_supported=0;frame_world=intro_spawn=frame_spawn=bottom_spawn=0;bottom_valid=actor_cache_valid=0;canvas_height=224;canvas_top=0;db1_visor_layout(320,visor_offset_tiles,&frame_visor);db1_scenes_reset();db1_intro_fade_reset();db1_hazard_effects_reset(&hazards);}
 void db1_video_observe(unsigned pc) {
-    db1_scenes_observe(pc);
+    db1_scenes_observe(pc);db1_intro_fade_observe(pc);
     if(pc==0x1b38 || pc==0x1b42)intro_spawn=1;
     else if(pc==0x1c04 || pc==0x1950 || pc==0x1c40)intro_spawn=0;
     if(pc==0x1c40)battle=1;
@@ -120,6 +125,9 @@ static uint8_t authored_plane_a(const GVDP *v,int x,int y) {
 /* 6372/65F2 cull these absolute weather cells to a six-by-six native mask.
  * Read the complete bounded lists instead; do not extend the mask by repeating it. */
 static uint8_t weather_plane(const GVDP *v,const uint8_t *ram,int x,int y) {
+    /* Native65F2 builds only a6x6 display mask. Its world list remains
+     * authoritative, but clouds do not gain a larger display footprint. */
+    if(x<16 || x>=208 || y<16 || y>=208)return 0;
     int dx=x-16,dy=y-16;
     int cx=ram[0x7bd4]+dx/32-(dx<0 && dx%32!=0);
     int cy=ram[0x7bd5]+dy/32-(dy<0 && dy%32!=0);
@@ -144,7 +152,7 @@ static uint8_t weather_plane(const GVDP *v,const uint8_t *ram,int x,int y) {
 }
 /* Presentation-only SAT walk: preserve linked first-wins order and masking,
  * but do not clip effect geometry at raster column320 or run VDP evaluation. */
-static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spawn,
+static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spawn,int world_shift,
                           uint8_t *sprite,uint8_t *opaque,uint8_t *high,
                           uint8_t *shadow,uint8_t *hilite) {
     uint8_t claimed[768]={0},seen[128]={0};unsigned link=0,on_line=0;
@@ -162,7 +170,7 @@ static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spa
             if(!actor_owner(v,link+1,spawn) && !embedded_marker(tile) && !hud_sprite(v,link+1,tile,spell)) {
                 unsigned py=(unsigned)(line-yy);if(attr&0x1000)py=(unsigned)height-1-py;
                 for(int px=0;px<width;px++) {
-                    int x=xx+px;if(x<0 || x>=w || claimed[x])continue;
+                    int x=xx+px+world_shift;if(x<0 || x>=w || claimed[x])continue;
                     unsigned ix=(unsigned)px;if(attr&0x800)ix=(unsigned)width-1-ix;
                     unsigned t=(tile+(ix/8)*vcells+py/8)&2047;
                     unsigned bits=v->vram[(t*32+(py&7)*4+(ix&7)/2)&65535];
@@ -200,7 +208,8 @@ static int prepare_actors(const GVDP *vdp,const uint8_t *ram,int w) {
     memcpy(actor_ram,ram,sizeof actor_ram);
     actor_cache_valid=1;actor_cache_width=w;
     Db1WorldContext c={g_rom,1048576,ram,65536,vdp->vram,sizeof vdp->vram};
-    count=db1_visible_actors_rect(&c,-64,-canvas_top-64,w+64,canvas_height-canvas_top+64,actors);
+    count=db1_visible_actors_rect(&c,-frame_visor.world_shift_x-64,-canvas_top-64,
+                                  w-frame_visor.world_shift_x+64,canvas_height-canvas_top+64,actors);
     center_supported=1;
     for(unsigned i=0;i<count;i++) {
         const uint8_t *record=ram+0x5f34+actors[i].id*16;
@@ -218,7 +227,7 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
     uint8_t a[768]={0},b[768]={0},sprite[768]={0},opaque[768]={0},high[768]={0};
     uint8_t shadow[768]={0},hilite[768]={0},pixels[768];
     Db1WorldContext c={g_rom,1048576,ram,65536,frame_vdp.vram,sizeof frame_vdp.vram};
-    int edge=w-112,sx=word(ram+0x204),sy=word(ram+0x206);
+    int shift=frame_visor.world_shift_x,sx=word(ram+0x204),sy=word(ram+0x206);
     int shake_x=0,shake_y=0;
     /* 5CCC/61DA temporarily displace B without changing the camera fields.
      * Continue that same raster displacement instead of exposing a rectangle. */
@@ -231,35 +240,37 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
     }
     int wy=line-16-sy+32*ram[0x7bd5]+shake_y;
     for(int x=0;x<w;x++) {
-        int wx=x-16-sx+32*ram[0x7bd4]-shake_x;uint8_t p;
+        int wx=x-shift-16-sx+32*ram[0x7bd4]-shake_x;uint8_t p;
         if(wx>=0 && wy>=0 && db1_world_terrain_plane(&c,(unsigned)wx/32,(unsigned)wy/32,
                                                     (unsigned)wx%32,(unsigned)wy%32,&p))b[x]=p;
     }
+    /* Preserve authored native geometry. World/cursors share one integer
+     * translation; the HUD alone remains anchored at the canvas right. */
+    if(raster)for(int source=0;source<216;source++) {
+        int x=source+shift;if(x>=0&&x<w)b[x]=raster->plane_b[source];
+    }
     if(fullplane) {
-        if(raster)memcpy(b,raster->plane_b,208);
-        for(int x=0;x<w;x++)a[x]=authored_plane_a(vdp,x,line);
+        /* Lightning/tsunami replace the original320px screen, including its
+         * HUD, but do not acquire extra clouds/waves from the larger canvas. */
+        if(line>=0 && line<224)for(int source=0;source<320;source++) {
+            int x=source+shift;if(x>=0&&x<w)a[x]=authored_plane_a(vdp,source,line);
+        }
     }else if(raster && intro) {
-        /* STAGE nn START is one screen-centered foreground. There is no HUD
-         * at this phase: splitting at old column208 tears its final letters. */
-        memcpy(b,raster->plane_b,320);
+        /* STAGE nn START remains one screen-centered foreground. */
         memcpy(a+(w-320)/2,raster->plane_a,320);
     }else if(raster) {
-        /* Keep authentic center planes, but never reuse the wrapped B plane
-         * at old HUD coordinates. Only A carries the relocated HUD and frame. */
-        memcpy(b,raster->plane_b,208);
-        memcpy(a,raster->plane_a,208);
-        for(unsigned x=208;x<768;x++)if((int)x>=edge && (int)x<w)
-            a[x]=raster->plane_a[208+x-(unsigned)edge];
-        if(line<16 || line>=208)
-            for(int x=208;x<edge;x++)a[x]=raster->plane_a[16+(x-208)%192];
+        for(int source=0;source<216;source++) {
+            int x=source+shift;if(x>=0&&x<w)a[x]=raster->plane_a[source];
+        }
+        for(int source=216;source<320;source++)a[source+w-320]=raster->plane_a[source];
     }
-    for(int x=0;x<w;x++)if(!fullplane && (!raster || x>=208)) {
-        uint8_t cloud=weather_plane(vdp,ram,x,line);
+    if(!fullplane)for(int x=0;x<w;x++) {
+        uint8_t cloud=weather_plane(vdp,ram,x-shift,line);
         if((cloud&64) && !(a[x]&64))a[x]=cloud;
     }
     /* Full host list, independent of the 36-entry guest drawing cache. */
     for(unsigned remaining=spawn?0:count;remaining;) {unsigned i=--remaining;
-      int actor_x=actors[i].x+shake_x,actor_y=actors[i].y-shake_y;
+      int actor_x=actors[i].x+shift+shake_x,actor_y=actors[i].y-shake_y;
       if(valid[i] && line>=actor_y && line<actor_y+32) {
         for(int px=0;px<32;px++) {
             int x=actor_x+px;uint8_t p;
@@ -288,12 +299,13 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
             marker(vdp,line,mx,my,0x2e3,w,sprite,opaque,high,shadow,hilite);
       }
     }
-    effect_sprites(vdp,line,w,spell||intro,raster?raster->shadow_mode:((vdp->reg[12]&8)!=0),spawn,
+    effect_sprites(vdp,line,w,spell||intro,raster?raster->shadow_mode:((vdp->reg[12]&8)!=0),spawn,shift,
                    sprite,opaque,high,shadow,hilite);
     if(raster)for(int source=0;source<320;source++) {
         unsigned owner=raster->sprite_owner[source];
         if(!owner || actor_owner(vdp,owner,spawn) || embedded_marker(owner_tile(vdp,owner)))continue;
-        int x=hud_sprite(vdp,owner,owner_tile(vdp,owner),spell||intro)?source+(w-320):source;
+        int x=hud_sprite(vdp,owner,owner_tile(vdp,owner),spell||intro)?source+(w-320):source+shift;
+        if(x<0||x>=w)continue;
         sprite[x]=raster->sprite[source];opaque[x]=raster->opaque[source];high[x]=raster->high[source];
         shadow[x]=raster->shadow_op[source];hilite[x]=raster->hilite_op[source];
     }
@@ -335,6 +347,7 @@ static void scanline(const GVDP *vdp,int line,int nw,uint32_t *out,int w,
         memcpy(frame_vdp.reg,vdp->reg,sizeof frame_vdp.reg);
         memcpy(frame_vdp.vsram,vdp->vsram,sizeof frame_vdp.vsram);
         if(supported) {
+            db1_visor_layout(w,visor_offset_tiles,&frame_visor);
             memcpy(frame_ram,g_ram,sizeof frame_ram);
             reconcile_camera(frame_ram,&frame_vdp);
             actor_cache_valid=0;
@@ -351,7 +364,8 @@ static void scanline(const GVDP *vdp,int line,int nw,uint32_t *out,int w,
         }
         if(db1_scenes_row(vdp,line,native,nw,out,w)){
             db1_menu_layout_row(db1_scenes_kind(),line,native,out,w);
-            db1_title_art_row(vdp,line,out,w,(w-320)/2,title_english);return;
+            db1_title_art_row(vdp,line,out,w,(w-320)/2,title_english);
+            db1_intro_fade_row(out,w,nw,line,viewport.enabled,db1_intro_fade_active(),background);return;
         }
         for(int x=0;x<w;x++)out[x]=background;
         int offset=(w-nw)/2;if(offset>=0)memcpy(out+offset,native,(size_t)nw*sizeof *out);

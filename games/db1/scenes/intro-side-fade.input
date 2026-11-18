@@ -1,0 +1,17 @@
+# Unmodified controller flow. Capture logos, mural before text, and lower story text.
+WAIT 240
+SCREENSHOT intro-sega-fade.png
+WAIT 120
+SCREENSHOT intro-cri-white.png
+WAIT 120
+SCREENSHOT intro-logo-black.png
+WAIT 120
+SCREENSHOT intro-mural-fade.png
+WAIT 120
+SCREENSHOT intro-mural.png
+WAIT 480
+SCREENSHOT intro-story-text.png
+WAIT 800
+PRESS START 12
+WAIT 300
+SCREENSHOT intro-title.png

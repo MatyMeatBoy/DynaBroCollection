@@ -19,6 +19,13 @@ void dyna_extras_ui_notice(const char *text);
 int dyna_extras_ui_is_open(void);
 void dyna_extras_ui_input(int semantic,int down,int repeat);
 void dyna_extras_ui_render(uint32_t *,int width,int height,int pitch_bytes);
+/* Draw only the original DB1 result prompt area; does not open/pause Extras.
+ * Coordinates use the centered native320x224 viewport. selected is0/1. */
+void dyna_extras_ui_progress_prompt(uint32_t *,int width,int height,int pitch_bytes,
+                                   unsigned selected,const char *feedback);
+/* Timed hard-ending variant: Save only, below the original message/code box. */
+void dyna_extras_ui_ending_save_prompt(uint32_t *,int width,int height,int pitch_bytes,
+                                      const char *feedback);
 /* Read-only navigation snapshot; screen: 0 home,1 levels,2 guide sections,3 page. */
 typedef struct DynaExtrasUiState {unsigned screen,selected,section,page,scroll;int image;} DynaExtrasUiState;
 DynaExtrasUiState dyna_extras_ui_state(void);

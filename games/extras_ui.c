@@ -2,6 +2,7 @@
 #include "extras_ui.h"
 #include "guide_content.h"
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #define STB_IMAGE_STATIC
@@ -178,4 +179,51 @@ void dyna_extras_ui_render(uint32_t *pixels,int w,int h,int pitch_bytes){
  }
  if(state.screen==1&&provider.item){DynaExtrasLevel item={0};if(provider.item(provider.userdata,game_id,state.selected,&item))wrapped(&c,x+15,bottom-44,width-30,2,item.detail,0,INK);}
  text(&c,x+13,bottom-17,width-26,"UP/DOWN SELECT  A OPEN  BACK",GOLD);
+}
+
+static uint32_t prompt_tint(uint32_t color,unsigned fade){
+ return 0xff000000u|((((color>>16)&255)*fade/255)<<16)|
+        ((((color>>8)&255)*fade/255)<<8)|((color&255)*fade/255);
+}
+/* Result screen extension: framebuffer only, native viewport anchored. */
+void dyna_extras_ui_progress_prompt(uint32_t *pixels,int w,int h,int pitch_bytes,
+                                    unsigned selected,const char *feedback){
+ if(!pixels||w<320||h<224||w>8192||h>8192||pitch_bytes<0||pitch_bytes%4||
+    pitch_bytes/4<w||pitch_bytes>INT_MAX/h)return;
+ Canvas c={pixels,w,h,pitch_bytes/4};int x=(w-320)/2+80,y=(h-224)/2+176;
+ /* Sample the original prompt before replacing it. Its white text/border
+  * follows the native result fade, so the host panel must fade with it. */
+ unsigned fade=0;
+ for(int py=y+9;py<y+25;py++)for(int px=x+4;px<x+158;px++){
+  uint32_t value=c.p[py*c.stride+px];
+  for(unsigned shift=0;shift<24;shift+=8){unsigned channel=(value>>shift)&255;if(channel>fade)fade=channel;}
+ }
+ const uint32_t cyan=prompt_tint(0xff66ffffu,fade),ink=prompt_tint(INK,fade);
+ rect(&c,x,y,160,45,ink);rect(&c,x+1,y+1,158,43,BLACK);
+ rect(&c,x+3,y+3,154,39,cyan);rect(&c,x+4,y+4,152,37,BLACK);
+ selected=selected==1?1:0;
+ for(int row=0;row<7;row++){
+  int distance=row>3?row-3:3-row;
+  for(int column=0;column<=3-distance;column++)pixel(&c,x+10+column,y+8+(int)selected*10+row,cyan);
+ }
+ text(&c,x+23,y+8,128,"CONTINUE",selected==0?cyan:ink);
+ text(&c,x+23,y+18,128,"SAVE GAME",selected==1?cyan:ink);
+ if(feedback&&*feedback)text(&c,x+13,y+30,134,feedback,ink);
+}
+
+void dyna_extras_ui_ending_save_prompt(uint32_t *pixels,int w,int h,int pitch_bytes,
+                                      const char *feedback){
+ if(!pixels||w<320||h<224||w>8192||h>8192||pitch_bytes<0||pitch_bytes%4||
+    pitch_bytes/4<w||pitch_bytes>INT_MAX/h)return;
+ Canvas c={pixels,w,h,pitch_bytes/4};int x=(w-320)/2+80,y=(h-224)/2+201;
+ const uint32_t cyan=0xff66ffffu;
+ rect(&c,x,y,160,22,INK);rect(&c,x+1,y+1,158,20,BLACK);
+ rect(&c,x+3,y+3,154,16,cyan);rect(&c,x+4,y+4,152,14,BLACK);
+ for(int row=0;row<7;row++){
+  int distance=row>3?row-3:3-row;
+  for(int column=0;column<=3-distance;column++)pixel(&c,x+9+column,y+7+row,cyan);
+ }
+ const char *label=feedback&&*feedback?feedback:"SAVE GAME";
+ if(!strcmp(label,"SAVE FAILED"))label="SAVE FAILED - RETRY";
+ text(&c,x+22,y+7,130,label,INK);
 }

@@ -5,4 +5,6 @@ extern const GameVideo db1_video;
 void db1_video_observe(unsigned pc);
 void db1_video_reset(void);
 void db1_video_set_english(int enabled);
+/* Requested signed8px tile offset; actual layout clamps to native border/HUD gaps. */
+void db1_video_set_visor_offset_tiles(int tiles);
 #endif
