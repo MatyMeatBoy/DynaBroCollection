@@ -3361,6 +3361,326 @@
       "before": "bcdeaeb3ceb3cbaeb3bcde",
       "english": "INFO VIEW  ",
       "verification": "title OPTIONS menu half-width; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f64b",
+      "address": 325195,
+      "capacity": 5,
+      "before": "b7ddbab0dd",
+      "english": "DING!",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f652",
+      "address": 325202,
+      "capacity": 3,
+      "before": "ccdeb0",
+      "english": "BOO",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f657",
+      "address": 325207,
+      "capacity": 3,
+      "before": "cedfdd",
+      "english": "POP",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f65c",
+      "address": 325212,
+      "capacity": 4,
+      "before": "bbdeb1af",
+      "english": "WASH",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f662",
+      "address": 325218,
+      "capacity": 7,
+      "before": "ced6ced6ced6dd",
+      "english": "WOBBLE ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f66b",
+      "address": 325227,
+      "capacity": 7,
+      "before": "ccd6ccd6ccd6dd",
+      "english": "FLOAT  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f674",
+      "address": 325236,
+      "capacity": 5,
+      "before": "cedfdbd8dd",
+      "english": "PLINK",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f67b",
+      "address": 325243,
+      "capacity": 3,
+      "before": "b7d7dd",
+      "english": "ZAP",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f680",
+      "address": 325248,
+      "capacity": 4,
+      "before": "cbdfaf21",
+      "english": "BEEP",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f686",
+      "address": 325254,
+      "capacity": 5,
+      "before": "cedfb0dd21",
+      "english": "BOING",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f68d",
+      "address": 325261,
+      "capacity": 10,
+      "before": "40cadfc1accadfc1ac40",
+      "english": "CLAP CLAP ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f699",
+      "address": 325273,
+      "capacity": 9,
+      "before": "c3ded4c3ded4c3ded4",
+      "english": "HA HA HA ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6a4",
+      "address": 325284,
+      "capacity": 10,
+      "before": "c1acd7d7c1acd7d7d7dd",
+      "english": "JINGLE    ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6b0",
+      "address": 325296,
+      "capacity": 5,
+      "before": "ced4d4d4dd",
+      "english": "RELAX",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6b7",
+      "address": 325303,
+      "capacity": 9,
+      "before": "bcadb3b4ddc0de2121",
+      "english": "THE END!!",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6c2",
+      "address": 325314,
+      "capacity": 9,
+      "before": "cab8decab8decab8de",
+      "english": "NOM NOM  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6cd",
+      "address": 325325,
+      "capacity": 3,
+      "before": "cedfdd",
+      "english": "POP",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6d2",
+      "address": 325330,
+      "capacity": 5,
+      "before": "bdded9d8dd",
+      "english": "SLIDE",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6d9",
+      "address": 325337,
+      "capacity": 5,
+      "before": "cedfc1acdd",
+      "english": "PLOP ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6e0",
+      "address": 325344,
+      "capacity": 12,
+      "before": "40cedfafc1accedfafc1ac40",
+      "english": "PLOP PLOP   ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6ee",
+      "address": 325358,
+      "capacity": 8,
+      "before": "40cedcddcedcdd40",
+      "english": "WHOOM   ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6f8",
+      "address": 325368,
+      "capacity": 3,
+      "before": "cedeaf",
+      "english": "BOP",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f6fd",
+      "address": 325373,
+      "capacity": 4,
+      "before": "cedfbadd",
+      "english": "BONK",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f70c",
+      "address": 325388,
+      "capacity": 7,
+      "before": "40cadfafb8dd40",
+      "english": "CHOMP  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f715",
+      "address": 325397,
+      "capacity": 10,
+      "before": "40cbdfc1accbdfc1ac40",
+      "english": "SPLASH    ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f721",
+      "address": 325409,
+      "capacity": 4,
+      "before": "cedfbaaf",
+      "english": "BOP ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f727",
+      "address": 325415,
+      "capacity": 6,
+      "before": "40b9debcaf40",
+      "english": "KICK  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f72f",
+      "address": 325423,
+      "capacity": 6,
+      "before": "40cedeb6af40",
+      "english": "BASH  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f737",
+      "address": 325431,
+      "capacity": 6,
+      "before": "40c4deb6af40",
+      "english": "THUD  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f73f",
+      "address": 325439,
+      "capacity": 32,
+      "before": "40badedbbadedbbadedb402020202020202020b5c5b6c9b5c4bcdeacc5b2c9d6",
+      "english": "RUMBLE RUMBLE   NOT MY TUMMY    ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f761",
+      "address": 325473,
+      "capacity": 10,
+      "before": "40c4decbdfbcacb0dd40",
+      "english": "SPLAT!    ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f76d",
+      "address": 325485,
+      "capacity": 12,
+      "before": "40cbacb3b320cbadb3b3b340",
+      "english": "WHOOSH      ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f77b",
+      "address": 325499,
+      "capacity": 6,
+      "before": "40cbadb0dd40",
+      "english": "ZOOM  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f783",
+      "address": 325507,
+      "capacity": 10,
+      "before": "40c4deb6c4deababdd40",
+      "english": "KABOOM    ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f78f",
+      "address": 325519,
+      "capacity": 9,
+      "before": "40c4de20cbadb0dd40",
+      "english": "WHIZ BANG",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f79a",
+      "address": 325530,
+      "capacity": 10,
+      "before": "40c4deabababababdd40",
+      "english": "BOOOOOM   ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f7a6",
+      "address": 325542,
+      "capacity": 19,
+      "before": "40cedfdcabddcedfdcabddcedfdcabdda5a5a5",
+      "english": "WHOOM WHOOM WHOOM  ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f7bb",
+      "address": 325563,
+      "capacity": 6,
+      "before": "40b7d7d8dd40",
+      "english": "GLINT ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f7c3",
+      "address": 325571,
+      "capacity": 10,
+      "before": "c4debcdeaca7a7a7a7a7",
+      "english": "SPLOOOOSH ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
+    },
+    {
+      "id": "sfxname-04f7cf",
+      "address": 325583,
+      "capacity": 31,
+      "before": "b7b7dd20b7ddb7ddb7ddb7b7b7b7dd20202020202020202020202020b7b7dd",
+      "english": "DING DING DING DING            ",
+      "verification": "OPTIONS sound-test name; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
