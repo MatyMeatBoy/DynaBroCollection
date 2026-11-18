@@ -28,46 +28,46 @@ static void setup(void){
 }
 int main(void){
  setup();before=v;
- assert(db1_title_menu_art_row(&v,200,out+1,320,0,0,bg));
+ assert(db1_title_menu_art_row(&v,200,out+1,320,0,0,0,bg));
  assert(out[1+136]==genesis_dac_cram_to_argb(v.cram[1],0));
  assert(out[1+143]==genesis_dac_cram_to_argb(v.cram[2],0));
  for(unsigned i=0;i<6;i++)assert(out[1+136+8*i]==genesis_dac_cram_to_argb(v.cram[i+1],0));
  assert(out[1+137]==0xff123456u&&out[0]==0xff123456u&&out[321]==0xff123456u);
  assert(!memcmp(&before,&v,sizeof v)&&!backgrounds);
- fill();assert(db1_title_menu_art_row(&v,200,out+1,427,53,4,bg));
+ fill();assert(db1_title_menu_art_row(&v,200,out+1,427,53,4,0,bg));
  assert(out[1+53+136]==genesis_dac_cram_to_argb(v.cram[17],0));
  assert(out[1+53+143]==genesis_dac_cram_to_argb(v.cram[18],0));
  for(unsigned i=0;i<6;i++)assert(out[1+53+136+8*i]==genesis_dac_cram_to_argb(v.cram[17+i],0));
  assert(out[0]==0xff123456u&&out[428]==0xff123456u);
  assert(out[1+53+116]==genesis_dac_cram_to_argb(v.cram[2],0)); /* Native shadow palette. */
- fill();assert(db1_title_menu_art_row(&v,199,out+1,320,0,4,bg));
+ fill();assert(db1_title_menu_art_row(&v,199,out+1,320,0,4,0,bg));
  assert(out[1+116]==genesis_dac_cram_to_argb(v.cram[17],0));
  assert(out[1+202]==genesis_dac_cram_to_argb(v.cram[17],0)); /* SAT right H flip. */
  assert(out[1+195]==0xff123456u);
- fill();assert(db1_title_menu_art_row(&v,151,out+1,320,0,4,bg));
+ fill();assert(db1_title_menu_art_row(&v,151,out+1,320,0,4,0,bg));
  assert(out[1+116]==(0xff100000u|(116u<<8)|151u));
  assert(out[1+202]==(0xff100000u|(202u<<8)|151u));
  assert(backgrounds==2&&out[1+117]==0xff123456u); /* Never erase rectangles. */
  assert(!memcmp(&before,&v,sizeof v));
  fill();memcpy(saved,out,sizeof out);
- assert(!db1_title_menu_art_row(&v,151,out+1,320,0,0,bg));assert(!memcmp(saved,out,sizeof out));
+ assert(!db1_title_menu_art_row(&v,151,out+1,320,0,0,0,bg));assert(!memcmp(saved,out,sizeof out));
  setup();sprite(4,116,151,0x350,0);pix(0x350,0,0,4);
- assert(db1_title_menu_art_row(&v,151,out+1,320,0,4,bg));assert(out[1+116]==0xff123456u&&backgrounds==1);
+ assert(db1_title_menu_art_row(&v,151,out+1,320,0,4,0,bg));assert(out[1+116]==0xff123456u&&backgrounds==1);
  setup();sprite(4,136,200,0x350,0);pix(0x350,0,0,4);
- assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,bg));assert(out[1+136]==0xff123456u);
+ assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,0,bg));assert(out[1+136]==0xff123456u);
  assert(out[1+143]==genesis_dac_cram_to_argb(v.cram[18],0));
  setup();word(0xc000+2*(25*64+17),0x360);pix(0x360,0,0,5);
- assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,bg));assert(out[1+136]==0xff123456u); /* Opaque plane A. */
+ assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,0,bg));assert(out[1+136]==0xff123456u); /* Opaque plane A. */
  setup();pix(0x32c,0,1,1);
- assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,bg));assert(out[1+116]==genesis_dac_cram_to_argb(v.cram[17],0)); /* Lower SAT index wins. */
+ assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,0,bg));assert(out[1+116]==genesis_dac_cram_to_argb(v.cram[17],0)); /* Lower SAT index wins. */
  setup();memset(v.cram,0,sizeof v.cram);
- assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,bg));assert(out[1+136]==0xff000000u&&out[1+137]==0xff123456u);
- setup();assert(db1_title_menu_art_row(&v,200,out+1,80,-120,4,bg));
+ assert(db1_title_menu_art_row(&v,200,out+1,320,0,4,0,bg));assert(out[1+136]==0xff000000u&&out[1+137]==0xff123456u);
+ setup();assert(db1_title_menu_art_row(&v,200,out+1,80,-120,4,0,bg));
  assert(out[1+16]==genesis_dac_cram_to_argb(v.cram[17],0)&&out[0]==0xff123456u&&out[81]==0xff123456u);
  setup();memcpy(saved,out,sizeof out);
- assert(db1_title_menu_art_row(&v,200,out+1,80,INT_MAX,4,bg));assert(!memcmp(saved,out,sizeof out));
- assert(!db1_title_menu_art_row(&v,200,out+1,320,0,5,bg));
- assert(!db1_title_menu_art_row(&v,200,out+1,320,0,4,NULL));
- word(0xf000+4,0x232b);assert(!db1_title_menu_art_row(&v,200,out+1,320,0,4,bg));assert(!memcmp(saved,out,sizeof out));
+ assert(db1_title_menu_art_row(&v,200,out+1,80,INT_MAX,4,0,bg));assert(!memcmp(saved,out,sizeof out));
+ assert(!db1_title_menu_art_row(&v,200,out+1,320,0,5,0,bg));
+ assert(!db1_title_menu_art_row(&v,200,out+1,320,0,4,0,NULL));
+ word(0xf000+4,0x232b);assert(!db1_title_menu_art_row(&v,200,out+1,320,0,4,0,bg));assert(!memcmp(saved,out,sizeof out));
  puts("Native title Extras glyphs, SAT cursor masks, flips, live fades, protected foreground and clipping passed");
 }
