@@ -457,6 +457,566 @@
       "before": "c0b2bedda6c2c2deb9d93f2020cab2202a73b2b2b4",
       "english": "PLAY AGAIN?  YES *sNO",
       "verification": "direct-reference guard; scene capture pending"
+    },
+    {
+      "id": "glyph-20c784",
+      "address": 2148228,
+      "capacity": 18,
+      "before": "000100010001014e016a0159017301480126",
+      "english": "BENTO BOX",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c798",
+      "address": 2148248,
+      "capacity": 24,
+      "before": "012b017301350124000100f600f30001012b017301480126",
+      "english": "WEST VS EAST",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c7b2",
+      "address": 2148274,
+      "capacity": 20,
+      "before": "0001000101a9018d01a9018d0168001c012c0173",
+      "english": "LAVA BEAT",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c7c8",
+      "address": 2148296,
+      "capacity": 20,
+      "before": "00010001012d015301370124000101350150012f",
+      "english": "HARSH SAND",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c7de",
+      "address": 2148318,
+      "capacity": 22,
+      "before": "000101370143014101470001014c016c014101430141",
+      "english": "SOGGY SWAMP",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c7f6",
+      "address": 2148342,
+      "capacity": 22,
+      "before": "0001000101500143014601730184019b018d013f0124",
+      "english": "RUIN ZONE",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c80e",
+      "address": 2148366,
+      "capacity": 24,
+      "before": "000101c201c401840124013b012d0147000101610124016d",
+      "english": "MOAI MAZE",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c828",
+      "address": 2148392,
+      "capacity": 20,
+      "before": "00010001000101550166014e0001012a0137016d",
+      "english": "ICE CASTLE",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c83e",
+      "address": 2148414,
+      "capacity": 22,
+      "before": "0001014101650126012a012600010133012601280173",
+      "english": "CITY PARK",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c856",
+      "address": 2148438,
+      "capacity": 18,
+      "before": "000100010001015f0173014a014e015e0141",
+      "english": "OUR TOWN",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c86a",
+      "address": 2148458,
+      "capacity": 20,
+      "before": "0001000101af018401a6018f01b301cb012c0124",
+      "english": "TECH CITY",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c880",
+      "address": 2148480,
+      "capacity": 20,
+      "before": "0001000100010126012d0126012d01b1001c018f",
+      "english": "JOY PARK",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c896",
+      "address": 2148502,
+      "capacity": 18,
+      "before": "0001000100010182019901a601cd018401a9",
+      "english": "ASTEROID",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c8aa",
+      "address": 2148522,
+      "capacity": 20,
+      "before": "000100010001014d012c01280143014601bd01d3",
+      "english": "FLIP PON",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c8c0",
+      "address": 2148544,
+      "capacity": 20,
+      "before": "0001000101a1018701a3018f014701c1018401a8",
+      "english": "CHECKMATE",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c8d6",
+      "address": 2148566,
+      "capacity": 18,
+      "before": "0001000100e500e100f300f901c2001c01a9",
+      "english": "EASY",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c8ea",
+      "address": 2148586,
+      "capacity": 20,
+      "before": "000100ee00ef00f200ed00e100ec01c2001c01a9",
+      "english": "NORMAL",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c900",
+      "address": 2148608,
+      "capacity": 18,
+      "before": "0001000100e800e100f200e401c2001c01a9",
+      "english": "HARD",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c914",
+      "address": 2148628,
+      "capacity": 24,
+      "before": "019b018c01a101c301d301ad01cb019901ba019701c301cb",
+      "english": "SEGA CHANNEL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c92e",
+      "address": 2148654,
+      "capacity": 36,
+      "before": "00f300e500e700e1000100e300e800e100ee00ee00e500ec0001019901ba019701c301cb",
+      "english": "SEGA CH SPECIAL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c954",
+      "address": 2148692,
+      "capacity": 18,
+      "before": "01a0018401aa01b601c90196001c019a00d2",
+      "english": "DYNA BROS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c968",
+      "address": 2148712,
+      "capacity": 24,
+      "before": "019b018c01a101c301d301ad01cb019901ba019701c301cb",
+      "english": "SEGA CHANNEL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20c9d0",
+      "address": 2148816,
+      "capacity": 20,
+      "before": "01a701c2000600e100e901b701cd019001c901c0",
+      "english": "AI DEMO",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cb76",
+      "address": 2149238,
+      "capacity": 14,
+      "before": "01600173012d001c01c901d301a9",
+      "english": "MUNKI",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cb86",
+      "address": 2149254,
+      "capacity": 12,
+      "before": "015f0173014a014e015e0141",
+      "english": "TOWN",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cba2",
+      "address": 2149282,
+      "capacity": 12,
+      "before": "01af018b019b014e01b301cb",
+      "english": "LAB",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cbee",
+      "address": 2149358,
+      "capacity": 14,
+      "before": "01af01a3019901cb019f01cf001c",
+      "english": "HUSTLE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cc2e",
+      "address": 2149422,
+      "capacity": 14,
+      "before": "019901a6019401b50181018401a8",
+      "english": "STEGO",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cd42",
+      "address": 2149698,
+      "capacity": 16,
+      "before": "016f012c015e015e014a012b012b0148",
+      "english": "WILLFUL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cd60",
+      "address": 2149728,
+      "capacity": 16,
+      "before": "014d012f014d012f01ad018f019f0184",
+      "english": "NECKTIE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cd72",
+      "address": 2149746,
+      "capacity": 12,
+      "before": "016a01730134016a01730134",
+      "english": "APPLES",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cdc2",
+      "address": 2149826,
+      "capacity": 16,
+      "before": "01b701c901ad01a301a801b1001c018f",
+      "english": "PLANET",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cde4",
+      "address": 2149860,
+      "capacity": 10,
+      "before": "01a001bc018900eb00ef",
+      "english": "DABO",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20ce0c",
+      "address": 2149900,
+      "capacity": 12,
+      "before": "0157016a015e0159001c0169",
+      "english": "PRIMA",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20ce46",
+      "address": 2149958,
+      "capacity": 14,
+      "before": "019801900196019001c901d301a9",
+      "english": "ZIGZAG",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20ceca",
+      "address": 2150090,
+      "capacity": 16,
+      "before": "0199018b013f015e00e300e900f400f9",
+      "english": "EGG CITY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf06",
+      "address": 2150150,
+      "capacity": 14,
+      "before": "019901a6001c019801ca019901a8",
+      "english": "STAGES",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf26",
+      "address": 2150182,
+      "capacity": 14,
+      "before": "012a015e01310193001c01aa001c",
+      "english": "EXTRAS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf36",
+      "address": 2150198,
+      "capacity": 16,
+      "before": "019901a8001c01ca001c01c2001c01a9",
+      "english": "STORY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf48",
+      "address": 2150216,
+      "capacity": 24,
+      "before": "019b018c01a101c301d301ad01cb019901ba019701c301cb",
+      "english": "SEGA CHANNEL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf62",
+      "address": 2150242,
+      "capacity": 20,
+      "before": "018a01ca019801aa01cb000100e500e100f300f9",
+      "english": "ORIG. EASY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf78",
+      "address": 2150264,
+      "capacity": 24,
+      "before": "018a01ca019801aa01cb000100ee00ef00f200ed00e100ec",
+      "english": "ORIG. NORMAL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cf92",
+      "address": 2150290,
+      "capacity": 20,
+      "before": "018a01ca019801aa01cb000100e800e100f200e4",
+      "english": "ORIG. HARD",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20cfa8",
+      "address": 2150312,
+      "capacity": 16,
+      "before": "016c017301370165012601c2001c01a9",
+      "english": "PRACTICE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d10e",
+      "address": 2150670,
+      "capacity": 10,
+      "before": "018f01ca0199019f01cb",
+      "english": "GEMS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d186",
+      "address": 2150790,
+      "capacity": 16,
+      "before": "019b018c01a101c301d301ad01cb00d1",
+      "english": "SEGA CH1",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d198",
+      "address": 2150808,
+      "capacity": 16,
+      "before": "019b018c01a101c301d301ad01cb00d2",
+      "english": "SEGA CH2",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d1b6",
+      "address": 2150838,
+      "capacity": 12,
+      "before": "019501cb014700e700ef000a",
+      "english": "GO APE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d1d8",
+      "address": 2150872,
+      "capacity": 10,
+      "before": "018a01be019100d200d6",
+      "english": "EX 26",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d1e4",
+      "address": 2150884,
+      "capacity": 10,
+      "before": "018a01be019100d200d7",
+      "english": "EX 27",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d1f0",
+      "address": 2150896,
+      "capacity": 10,
+      "before": "018a01be019100d200d8",
+      "english": "EX 28",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d1fc",
+      "address": 2150908,
+      "capacity": 10,
+      "before": "018a01be019100d200d9",
+      "english": "EX 29",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d208",
+      "address": 2150920,
+      "capacity": 10,
+      "before": "018a01be019100d300d0",
+      "english": "EX 30",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d214",
+      "address": 2150932,
+      "capacity": 12,
+      "before": "018201ab01c101c2001c01a9",
+      "english": "ANIME",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "menu string; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d222",
+      "address": 2150946,
+      "capacity": 14,
+      "before": "01a0018401aa01b50181018401a8",
+      "english": "FIGHT",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
+    },
+    {
+      "id": "glyph-20d232",
+      "address": 2150962,
+      "capacity": 16,
+      "before": "01a0018401aa01b50181018401a80027",
+      "english": "FIGHT 2",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "special stage name; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused."

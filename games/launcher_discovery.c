@@ -5,7 +5,7 @@
 static const ld_revision revisions[] = {
  {1048576,0x360C1B20,1},{1048576,0x950A8FC3,1},
  {1048576,0xC1E5C0DA,1},{1048576,0x3BE23E09,1},{1048576,0x38B20F8F,1},{1048576,0x2740C64E,1},
- {2621440,0xBA3554BC,2},{2621440,0xDAC9BAFC,2},{2621440,0x07FEA88F,2}
+ {2621440,0xBA3554BC,2},{2621440,0xDAC9BAFC,2},{2621440,0x07FEA88F,2},{2621440,0x03F4EA8E,2}
 };
 uint32_t ld_crc32(uint32_t prior,const void *data,size_t n) {
  const unsigned char *p=(const unsigned char*)data; uint32_t c=~prior; size_t i; int j;
