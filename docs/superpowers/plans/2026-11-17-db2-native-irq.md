@@ -11,4 +11,6 @@
 - [x] Implement full-program-only pending request consumption and cycle accounting; update exact engine patch.
 - [x] Reproduce successful actual gameplay after unpause, inspect captures and compare a reference route.
 - [x] Run sibling DB1 IRQ/language/scenes, DB2 audio and replay controls; obtain read-only review.
-- [ ] Qualify a new delivery identity. The closed 0.1.2 r1 stays immutable and gains a known-issue supplement.
+- [x] Qualify a new delivery identity. The closed 0.1.2 r1 stays immutable and gains a known-issue supplement.
+
+Closed r2: eleven packaged cases, full 18,000-execution gameplay replay, ZIP integrity/member hashes and extracted DB1 map/DB2 gameplay routes pass. Source `c7fbc84b5fc38be23b4d085c6202b5266f6e8b99`; delivery identity and scope are in `docs/releases/v0.1.2-r2-verification.md`.

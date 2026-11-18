@@ -20,7 +20,8 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 | Resource | Purpose |
 | --- | --- |
 | [Checkpoint notes](docs/releases/v0.1.2-checkpoint.md) | Install, controls, included work and limitations |
-| [Closed checkpoint verification](docs/releases/v0.1.2-verification.md) | Compiled revision, archive identity and bounded regression results |
+| [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
+| [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |
 | [Historical v0.1.1 verification](docs/releases/v0.1.1-verification.md) | Preserved original delivery identity |
 | [Changelog](CHANGELOG.md) | Changes in v0.1.1 |
 | [Work board](STATUS.md) | Evidence and outstanding work |
