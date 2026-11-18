@@ -1,3 +1,11 @@
+# v0.1.9 checkpoint
+
+- DB2 Special English translation expanded from 22 to 454 catalog strings: Original/Versus/Sega Channel/Password/2P-setup menus, story-mode dialogue and stage briefings, VS character/control screens.
+- New host biography overlay (`games/db2_bio_overlay.c`): creature name/stats/flavor text renders in English, decoded live from the ROM's own 8x8 menu font.
+- Fixed title-menu bug: selecting Extras stayed hover-yellow after its panel opened instead of returning to the unselected white other rows use.
+- Diagnostic-only groundwork for a documented DB2 widescreen SAT coherence fix (producer-epoch tracking; behavior unchanged).
+- Known remaining DB2 gaps: in-game Options menu text, Original mode's kanji stage names and graphical "STAGE n" briefing cards (suspected tile graphics, not ROM text).
+
 # v0.1.8 checkpoint
 
 - Correct six-button terminal handshake and guest-clock expiry; real native Normal2 camera fixture.

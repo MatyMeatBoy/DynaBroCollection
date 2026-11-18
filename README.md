@@ -1,20 +1,37 @@
-# Dyna Brothers 1 + 2 — v0.1.8 test checkpoint
+# Dyna Brothers 1 + 2 — v0.1.9 test checkpoint
 
-[![Checkpoint 0.1.8](https://img.shields.io/badge/version-0.1.8%20checkpoint-orange)](docs/releases/v0.1.8-checkpoint.md)
+[![Checkpoint 0.1.9](https://img.shields.io/badge/version-0.1.9%20checkpoint-orange)](docs/releases/v0.1.9-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
+[![DB2 strings translated](https://img.shields.io/badge/DB2%20strings-454%20translated-5c9b73)](translations/db2special-en.json)
+[![DB2 biographies](https://img.shields.io/badge/DB2-biographies%20translated-5c9b73)](games/db2_bio_overlay.c)
 [![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
-[![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
+[![Source checks](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml)
 [![Target Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.1.1-checkpoint.md)
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
 
-Version0.1.8 fixes the six-button peripheral handshake, integrates the actual DB2 plane layout and separate visor preferences, and supplies a private offline development toolkit. [Scope and limits](docs/releases/v0.1.8-checkpoint.md). DB2 can still fall back to the native image during held camera movement. Development stops after this checkpoint at the owner’s request; [continuation handoff](docs/handoff/CONTINUE-ON-ANOTHER-PC.md).
+![DB2 Special native title screen](docs/images/db2-title-v0.1.9.png)
+
+Native capture, not designed art; [image/executable provenance](docs/images/db2-title-v0.1.9.json).
+
+Version 0.1.9 adds the DB2 Special host biography overlay (creature name/stats/flavor text in English), translates the Original/Versus mode menus, story-mode stage briefings and dialogue, and fixes a title-menu highlight staying yellow after opening Extras. [Scope and limits](docs/releases/v0.1.9-checkpoint.md). Previous checkpoint: [v0.1.8](docs/releases/v0.1.8-checkpoint.md) fixed the six-button peripheral handshake and the actual DB2 plane layout. DB2 can still fall back to the native image during held camera movement; some menus (in-game Options, a few Original-mode kanji stage names) remain untranslated — see [STATUS.md](STATUS.md).
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
+## DB2 Special, now in English
+
+| | |
+| --- | --- |
+| ![DB2 creature biography, translated](docs/images/db2-biography-v0.1.9.png) | ![DB2 Original mode menu, translated](docs/images/db2-original-mode-v0.1.9.png) |
+| Creature biography overlay (name, stats, flavor text) | Original mode: difficulty, Sega Channel Special, Bonus Corner |
+| ![DB2 story briefing, translated](docs/images/db2-story-briefing-v0.1.9.png) | ![DB2 Versus stage list, translated](docs/images/db2-versus-stages-v0.1.9.png) |
+| Story mode stage briefing | Versus mode stage-select list |
+
+Native captures from the v0.1.9 development build; [provenance for each image](docs/images/) sits beside it as a matching `.json` file. Campaign/full-game acceptance is separate from any single capture.
+
 Version 0.1.3 adds an expanded-world DB1 renderer, independent of the original 36-actor drawing buffer, and native 4:3 / enhanced 16:9 presentation. It includes 76 local DB1 goals based on the public RetroAchievements catalog and 99 custom DB2 Special goals, with badges, queued popups and a paused list. [Goal contracts and evaluator limits](docs/db1-achievement-contracts.md). Previous checkpoint archives retain their original bytes.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.7 checkpoint notes](docs/releases/v0.1.8-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification remains pending. Full campaign/hardware acceptance remains open.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.9 checkpoint notes](docs/releases/v0.1.9-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification remains pending. Full campaign/hardware acceptance remains open.
 
 ![Historical launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -22,11 +39,12 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 
 | Resource | Purpose |
 | --- | --- |
-| [Download v0.1.8](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.8) | Portable Windows x64 test release with its debug script |
-| [v0.1.8 verification](docs/releases/v0.1.8-verification.md) | Closed source/archive identity,45 packaged checks and offline continuation |
+| [Download v0.1.9](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.1.9) | Portable Windows x64 test release with its debug script |
+| [v0.1.9 verification](docs/releases/v0.1.9-verification.md) | Closed source/archive identity, packaged checks and offline continuation |
+| [Historical v0.1.8 verification](docs/releases/v0.1.8-verification.md) | Closed source/archive identity, 45 packaged checks and offline continuation |
 | [Historical v0.1.7 verification](docs/releases/v0.1.7-verification.md) | Closed archive/source identity,42 packaged checks and limits |
 | [Historical v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Preserved previous archive/source identity |
-| [Checkpoint notes](docs/releases/v0.1.8-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
+| [Checkpoint notes](docs/releases/v0.1.9-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
 | [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
 | [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |
@@ -41,7 +59,7 @@ The supplied Japanese dumps remain untouched in the private, ignored `Dynabrothe
 ## What currently exists
 
 - Hash-qualified BPS/IPS tooling, the supplied English DB1 v0.1 and six additional repaired map/surrender labels.
-- A new **partial** Dyna Brothers 2 Special English BPS patch: 22 gameplay prompts. The supplied retail IPS must not be applied to Special.
+- A new **partial** Dyna Brothers 2 Special English translation: 454 catalog strings (gameplay prompts, menus, story-mode dialogue and stage briefings) plus a host biography overlay for creature stats/flavor text. The supplied retail IPS must not be applied to Special.
 - Windows x64 development runners that execute statically emitted 68000 C operations with current-byte validation. No 68000 interpreter fallback is enabled in these AOT targets. The Z80 sound CPU still uses the engine's interpreter.
 - Original Japanese and patched English DB1 share one AOT executable. DB2 accepts its original Japanese image and the exact scoped English image.
 - Six-button pad protocol by default; explicit saved three-button settings are retained. Physical controller acceptance remains pending.
