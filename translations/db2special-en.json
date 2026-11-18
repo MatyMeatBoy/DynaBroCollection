@@ -1158,6 +1158,62 @@
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
   "glyph_text": [
     {
+      "address": 312136,
+      "before": "00d200f00bdf0d6a",
+      "lines": [
+        "2P SETUP"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 312146,
+      "before": "00d601bc019f01d301b101a301a9014b",
+      "lines": [
+        "6 BUTTON PAD"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 312164,
+      "before": "01370146014d000a",
+      "lines": [
+        "PLEASE!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 335976,
+      "before": "0c90088801c2001c01a9",
+      "lines": [
+        "VERSUS"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 335988,
+      "before": "01ae001c01be01cb0c900bef",
+      "lines": [
+        "NORMAL MATCH"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336002,
+      "before": "0cc30b6d0c900bef",
+      "lines": [
+        "EXPERT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 336012,
+      "before": "018b0199019f01c00c900bef",
+      "lines": [
+        "CUSTOM MATCH"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
       "address": 1458530,
       "before": "0c4009ae0fbd0fc1",
       "lines": [
