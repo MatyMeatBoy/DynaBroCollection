@@ -19,3 +19,8 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 
 ## Packaging
 9. After merges: `python -m tools.package_checkpoint stage local/candidate-next` (needs clean tree and `DYNA_TOOLCHAIN_BIN`).
+
+## Reported by the owner (2026-11-18, from the internal test build)
+10. DB2 "YOU WENT EXTINCT!!" results/game-over screen (HITS/KILLS/ALIENS/TIME/PASSWORD, CONTINUE/SAVE GAME menu): owner says it still needs more translation work ("falta extender esta pantalla aun") — labels shown are already English but something on this screen is incomplete; needs its own capture pass to find what's left (compare against the full screen, not just the menu box).
+11. UI bug (likely DB1 title/hub menu, not DB2): selecting "Extras"/Password stays highlighted yellow instead of turning white like other selections when chosen. Needs repro capture + the native code path for that menu's selection-color state.
+12. Input bug, same Extras menu: keyboard A/B/C keys don't navigate/control it (owner: "controles de teclado de a b c no dejan manejar el menu ese de extras"). Check the keyboard-to-pad binding path for whatever control scheme that menu expects.
