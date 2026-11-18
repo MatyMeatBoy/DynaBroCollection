@@ -67,7 +67,7 @@ The helper checks exact input hashes, the pinned engine commit, its approved pat
 To prepare the current scoped Special patch independently:
 
 ```powershell
-python tools/translate_db2.py 'D:\01Claude\Dynabrothers\Dyna Brothers dumped\Dyna Brothers 2 Special (Japan) (Virtual Console).md' --output local/roms/db2special-en-v02.md --patch local/patches/db2special-en-v02.bps
+python tools/translate_db2.py 'Dynabrothers/Dyna Brothers dumped/Dyna Brothers 2 Special (Japan) (Virtual Console).md' --output local/roms/db2special-en-v02.md --patch local/patches/db2special-en-v02.bps
 ```
 
 That command creates new files exclusively. Existing outputs must be preserved under another name, or the command must use a new destination.
@@ -76,8 +76,8 @@ That command creates new files exclusively. Existing outputs must be preserved u
 
 ```powershell
 $env:PATH = 'C:\msys64\ucrt64\bin;' + $env:PATH
-build/dev/DynaBrothers1AOT.exe 'D:\01Claude\Dynabrothers1+2\local\roms\db1-en-v01.md' --pacing accurate --no-launcher
-build/dev/DynaBrothers2AOT.exe 'D:\01Claude\Dynabrothers1+2\local\roms\db2special-en-v02.md' --pacing accurate --no-launcher
+build/dev/DynaBrothers1AOT.exe 'local/roms/db1-en-v01.md' --pacing accurate --no-launcher
+build/dev/DynaBrothers2AOT.exe 'local/roms/db2special-en-v02.md' --pacing accurate --no-launcher
 ```
 
 English is enabled by default with either qualified input language. In **Mods > Language**, disable **English translation** for Japanese on the next start. The original files on disk remain untouched. The restart-required in-session item is connected, but its visual interaction still needs verification.
