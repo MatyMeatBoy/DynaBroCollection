@@ -14,6 +14,7 @@
 #include "input_map.h"
 #include "language_settings.h"
 #include "db2_bio_overlay.h"
+#include "db2_glyph_text.h"
 #include "language_patch.h"
 #include "controller_profiles.h"
 #include "step_lookup.h"
@@ -136,8 +137,10 @@ static int retire(void *user,unsigned *cycles) {
     }
     if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e ||
        g_cpu.PC==0xf794 || g_cpu.PC==0xf728)db2_video_observe(g_cpu.PC);
-    if(g_cpu.PC==0x5b0fe){static int trace=-1;if(trace<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace=t&&t[0]=='1';}
-        if(trace){fprintf(stderr,"[glyph] D0=%08X D1=%08X D2=%08X D3=%08X A0=%08X A1=%08X A2=%08X A3=%08X A6=%08X\n",g_cpu.D[0],g_cpu.D[1],g_cpu.D[2],g_cpu.D[3],g_cpu.A[0],g_cpu.A[1],g_cpu.A[2],g_cpu.A[3],g_cpu.A[6]);}}
+    if(g_cpu.PC==0x5b174){static int trace=-1;if(trace<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace=t&&t[0]=='1';}
+        if(trace){unsigned a1=g_cpu.A[1]&0xffffffu,w=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
+            fprintf(stderr,"[glyph] a1=%06X word=%04X width=%u a0=%08X\n",a1,((unsigned)g_rom[a1]<<8)|g_rom[a1+1],w,g_cpu.A[0]);}}
+    if(g_cpu.PC==0x5b174 && dyna_language_english())db2_glyph_text_observe(g_cpu.PC);
     if(dyna_language_english() && (g_cpu.PC==0x5d3d4 || g_cpu.PC==0x5d57a ||
        g_cpu.PC==0x5d674 || g_cpu.PC==0x5d722))db2_bio_overlay_observe(g_cpu.PC);
 #endif

@@ -18,3 +18,6 @@ void db2_bio_overlay_scanline(const GVDP *v,int line,uint32_t *out,int width);
 int db2_bio_overlay_load_font(const uint8_t *rom,size_t size);
 void db2_bio_overlay_set_glyph(unsigned ch,const uint8_t rows[8]);
 void db2_bio_overlay_force(int record);
+/* Native 8x8 menu-font glyph rows (bit7 = leftmost). Loads the font from the
+ * guest ROM on first use; returns 0 when unavailable. */
+int db2_bio_overlay_font8(unsigned ch,uint8_t rows[8]);

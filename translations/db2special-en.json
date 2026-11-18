@@ -1019,5 +1019,486 @@
       "verification": "special stage name; guard exact; scene capture pending"
     }
   ],
-  "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused."
+  "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
+  "glyph_text": [
+    {
+      "address": 2238072,
+      "before": "0004001401550143015501430155014301550143",
+      "lines": [
+        "HEH HEH HEH HEH"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238094,
+      "before": "01cf0197012c01af018b019b0140",
+      "lines": [
+        "I AM THE DOC"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238110,
+      "before": "00040014015b001c015b0143015b0143015b0143",
+      "lines": [
+        "HO HO HO HO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238132,
+      "before": "0133014e0bb101720a6a014b0e3e016c016b013f0161014a01690001000100010001067f014701620a6a0da10126016f0168",
+      "lines": [
+        "FOR THIS PLANET I WILL",
+        "HELP WITH ALL!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238184,
+      "before": "0004000c018c0186001c000a",
+      "lines": [
+        "GRRR!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238198,
+      "before": "019801c301be014a07f210f501490162014f00010001000100010001000100010001018a01cc10ad012c015f0173014a0f920f35013101460164016b",
+      "lines": [
+        "THOSE PESKY DINOSAURS?",
+        "I WILL CLEAN THEM ALL UP!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238260,
+      "before": "00020155014f014f014f014f014f0005000500050005",
+      "lines": [
+        "HAHAHAHAHA..."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238284,
+      "before": "0002014f001c014f0143014f0143014f0143",
+      "lines": [
+        "HAHAHAHAHA!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238304,
+      "before": "06070d080b6d08530ce4012c0ca007b101370146012b0169",
+      "lines": [
+        "THE ALIEN ARMY RETREATED"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238330,
+      "before": "067f0e4f0162014e088e0e3c012c10ee016c013f0024",
+      "lines": [
+        "AND YEARS WENT BY..."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238354,
+      "before": "019801c501c90bb1014b0148016a09e40135016c013f",
+      "lines": [
+        "LEFT BEHIND ON JURA,"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238378,
+      "before": "01af018b019b014f00020b57013f014a06070d080b6d",
+      "lines": [
+        "THE PROFESSOR SEARCHED"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238402,
+      "before": "0f540ca201720144012f016b013f016100020bb8012d",
+      "lines": [
+        "FOR SURVIVORS TO FORM"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238426,
+      "before": "09e40143013f0d07075601720cd5013701400137013f0003",
+      "lines": [
+        "A NEW ALIEN SQUAD."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238452,
+      "before": "01af018b019b013f0141014f0f781040014e014a0124",
+      "lines": [
+        "ON THIS UNCIVILIZED"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238476,
+      "before": "0133014e0bb10147000200f500e600ef014e09e406dc0172",
+      "lines": [
+        "PLANET THEY GATHERED UFO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238502,
+      "before": "012b012d0a980161014608a607c60aca0172",
+      "lines": [
+        "WRECKAGE AND BUILT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238522,
+      "before": "0144012f0143013f0003",
+      "lines": [
+        "A LAB."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238534,
+      "before": "013d01330147014f00020d0707560148014a016b",
+      "lines": [
+        "THERE, THEY WERE"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238556,
+      "before": "0a6f0c7201720144012f016a01400139013f0161",
+      "lines": [
+        "SPLICING GENES TO"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238578,
+      "before": "05e40da109f209470bae014e0a4208b3012c",
+      "lines": [
+        "CREATE NEW ALLIES."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2238598,
+      "before": "0934016f016c01460124013f0003",
+      "lines": [
+        ""
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477460,
+      "before": "0b4f10ec0a54013f01410148014e00010bef01240162000100010001000100010a8a0ed70172087e0128016801260148013701460124013f000500050005",
+      "lines": [
+        "THE BATTLE WITH",
+        "THE INVADERS WAS",
+        "NEARING ITS END",
+        "..."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477524,
+      "before": "013d016c012b0169000100010001067f0e4f0162014e088e0e3c012c10ee016c013f",
+      "lines": [
+        "THEN MANY YEARS WENT BY..."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477560,
+      "before": "0002012a001c013700010001000100010001000100010001000100010001000100010001018c01d3018c01d30124012f013e000a",
+      "lines": [
+        "OK, HERE WE GO!",
+        "FULL SPEED!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477614,
+      "before": "0002016201260aef01370140012100010001000100010001000100010001000100010001012c01730150016d0129",
+      "lines": [
+        "ALMOST THERE!",
+        "HANG IN!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477662,
+      "before": "000209630db90133013d00010001000100010001000100010001000100010001000100010d8801620a8a016f016a0140014d",
+      "lines": [
+        "THIS TIME FOR SURE,",
+        "ENEMY IS DONE!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477714,
+      "before": "000400300173000a000900010001000100010001000100010001000100010001000100010001067f012b012f016b013e",
+      "lines": [
+        "HUH?!",
+        "INCOMING!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477764,
+      "before": "0126016f0121002100210021",
+      "lines": [
+        "WAAAH!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477778,
+      "before": "0004003801410124014300010001000100010001000100010001000100010001000100010001098708e5014e05ad0122012c012d012b000a",
+      "lines": [
+        "TSK!",
+        "LAST STAND?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477836,
+      "before": "015e0140012b001c000a000900010001000100010001000100010001000100010001015e0140018b019f014f0144012b0173014e012b000a0009",
+      "lines": [
+        "STILL NOT OVER YET?!",
+        "WHEN WILL IT END?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477896,
+      "before": "0002016201260aef01370140000a000100010001000100010001000100010001000100010a1d01410133013f01280146012f016c0001015f0173014a",
+      "lines": [
+        "ALMOST THERE!",
+        "HOLD ON, EVERYONE!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2477958,
+      "before": "0014004c0062008a009200b000da00e400f401160c94014600010001000100010001000100010001000100010001000100010001000101490126013701460de80132016b014e01400143000a",
+      "lines": [
+        "HEY, WAIT!",
+        "WHY RUN AWAY?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478036,
+      "before": "00f500e600ef014a0169015e014009ae016c016b013e",
+      "lines": [
+        "WE CAN STILL MAKE UFOS"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478060,
+      "before": "0122001c0001000100010001000100010001000100010001000100010001000100010c9401460143",
+      "lines": [
+        "AAH!",
+        "WAIT!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478102,
+      "before": "012a01240143000a",
+      "lines": [
+        "HEY!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478112,
+      "before": "01cf0197014e068a06f8110f01720b4e10b1013b0173014e012b0143000a",
+      "lines": [
+        "DO YOU DOUBT MY SCIENCE?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478144,
+      "before": "015b0129001c00010001000100010001000100010001000100010001000100010001013d0126012b0024",
+      "lines": [
+        "OHHH?",
+        "I SEE..."
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478188,
+      "before": "014a016901500143000a",
+      "lines": [
+        "SO BE IT!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478200,
+      "before": "01cf0197014f0b2801690173013e000a",
+      "lines": [
+        "I WILL NOT GO!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478218,
+      "before": "013c01270021002100210021002100210021002100210021002100210143013f0124",
+      "lines": [
+        "ABSOLUTELY NOT!!!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478254,
+      "before": "0133013301720df0012b0173000a",
+      "lines": [
+        "NOT MOVING!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478270,
+      "before": "00080010003c004801580143000a0009",
+      "lines": [
+        "HAH?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478288,
+      "before": "012a012401430001000100010001000100010001000100010001000100010001000106cb0131016d0143000a",
+      "lines": [
+        "HEY!",
+        "OPEN UP!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478334,
+      "before": "06cb0131014a0124012b000a",
+      "lines": [
+        "OPEN IT!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478348,
+      "before": "013301690143000a000100010001000100010001000100010001000100010001000101cf019701720cf6012401460124012f0784012b000a",
+      "lines": [
+        "HEY!",
+        "ARE YOU LEAVING ME?!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478406,
+      "before": "0004000a0126016f0121",
+      "lines": [
+        "WAAH!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478418,
+      "before": "0126012a002100210021002100210021002100210021002100210143000a000a000a",
+      "lines": [
+        "WOOOOOOOOOOAAH!!!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478454,
+      "before": "0008003000420072014f012100240001014f012100240001000100010001000100010001000100010001012f013d0143",
+      "lines": [
+        "PANT... PANT...",
+        "DAMN!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478504,
+      "before": "0133014e01b0018b01620173012c0121000a",
+      "lines": [
+        "YOU FOOL!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478524,
+      "before": "012a0c100169014a0173013e00010001000100010001000100010001000100010001012a014a016901b7001c0140000a",
+      "lines": [
+        "YOU LOT ARE",
+        "TRASH!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478574,
+      "before": "0126012e01630143000a",
+      "lines": [
+        "YEEOW!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478586,
+      "before": "000a0034004e007c00b2014000010ca70b260f3701470139012b00010001000100010001000100010001000101af018b019b000a",
+      "lines": [
+        "ARE YOU ALL RIGHT?",
+        "DOC!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478640,
+      "before": "012a0c100162015e014009e401430146012a0143013f014e012b",
+      "lines": [
+        "YOU ARE STILL HERE TOO?"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478668,
+      "before": "0122001c01220001000100010001000100010001000100010001000100010001000109340143014101630143013f",
+      "lines": [
+        "AWW...",
+        "THEY LEFT"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478716,
+      "before": "01330126014a0143013f016909e40143013f0a54014806a6001901400131014700010133014e0bb101720a6a014b0e3e016c016b013e",
+      "lines": [
+        "NOW IT IS ONLY US LEFT,",
+        "WE TAKE THIS PLANET!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
+      "address": 2478772,
+      "before": "06b50135016c013f00f500e600ef014e0f540f2a01480001000100010001000100010bb8012d09e40143013f0d0707560172012b012d0a980161016b014e0140",
+      "lines": [
+        "WE GATHER UFO PARTS AND",
+        "SURVIVING COMRADES!"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    }
+  ]
 }

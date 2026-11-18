@@ -170,3 +170,13 @@ void db2_bio_overlay_scanline(const GVDP *v,int line,uint32_t *out,int width)
  if(width>=320)db2_bio_overlay_row(v,line,out,width,(width-320)/2);
  else db2_bio_overlay_row(v,line,out,width,0);
 }
+
+int db2_bio_overlay_font8(unsigned ch,uint8_t rows[8])
+{
+ if(!font_ready&&!db2_bio_overlay_load_font(g_rom,0x280000u))return 0;
+ if(ch>=128)return 0;
+ if(ch==' '){memset(rows,0,8);return 1;}
+ if(ch>='a'&&ch<='z')ch-=32;
+ if(!glyph_present[ch])return 0;
+ memcpy(rows,glyph[ch],8);return 1;
+}

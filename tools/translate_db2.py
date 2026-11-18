@@ -66,6 +66,18 @@ def translate(source: bytes, catalog: dict) -> bytes:
             raise ValueError('Overlapping translation edits')
         used |= positions
         edits.append((address, english.ljust(capacity, b'_')))
+    for entry in catalog.get('glyph_text', []):
+        address, before = entry['address'], bytes.fromhex(entry['before'])
+        if address < 512 or len(before) & 1 or address + len(before) + 2 > len(source):
+            raise ValueError('glyph_text edit out of bounds')
+        if source[address:address + len(before)] != before or source[address + len(before):address + len(before) + 2] != bytes(2):
+            raise ValueError(f'glyph_text guard failed at {address:06X}')
+        positions = set(range(address, address + len(before)))
+        if positions & used:
+            raise ValueError('Overlapping translation edits')
+        used |= positions
+        words = [int.from_bytes(before[i:i + 2], 'big') for i in range(0, len(before), 2)]
+        edits.append((address, b''.join((2 if w == 1 else w).to_bytes(2, 'big') for w in words)))
     out = bytearray(source)
     for address, payload in edits:
         out[address:address + len(payload)] = payload
