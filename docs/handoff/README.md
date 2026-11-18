@@ -69,3 +69,26 @@ Still required before publication: clean-source rebuild, package qualification (
 ## Published delivery â€” current authoritative status
 
 v0.1.4 r1 is public and closed. Compiled source c3a5bdd9414c390483c8fd04f9b72f8e0ac818ad; archive SHA2563ee6dae01d3c1f0240e5c9aa0b642eb591a767f93176435be2c62f7d45423bba. See docs/releases/v0.1.4-verification.md. Final24 packaged cases pass, inventory unchanged, uploaded files downloaded anonymously and verified. Original0.1.3 archive unchanged. All helper tasks have ended; DB2 is paused. Earlier candidate-integration notes above are historical; use this section and verification document for delivery status. Remaining feature limits remain open, especially native title-menu Extras insertion, complete level-selection UX, unit numeric stats, full translations and physical hardware acceptance.
+
+
+## Current integration — green hub and DB1 continuity (2026-11-18)
+
+This section supersedes the historical ownership rows above. Public v0.1.4 remains immutable; the following work is a development candidate, not a released build.
+
+- Root owns launcher/CMake/step adapter/SDK/runner/patches and delivery. DB2 game development remains paused by user instruction.
+- Camera provider ownership returned to root. Native 1440p captures qualify frame-coherent terrain/actors and early stage intro; guest/audio hashes remain unchanged. See research/db1-camera-continuity.md. The measured defect was actor Y phase jumps, not disappearance of whole bodies.
+- Submenu helper owns final native qualification only; sources returned. Verified authored checker is 16x16. Options/password repeat 128x256 with the original rolling glyph phase, live scroll and CRAM. Map and panel content retained pixel-for-pixel in previous native comparison; final corrected backgrounds are being qualified.
+- Title art includes the approved English logo and generated missing bands only. Original center remains native. Full white/black fades verified; Japanese toggle preserves original logo. See research/db1-title-art.md.
+- Five native disaster routes qualified at 1440p before the final camera change; rerun relevant integration evidence before release. See research/db1-hazard-contracts.md.
+- Green launcher now embeds settings in its original HWND and renderer, with game art and controller navigation. Dyna theme removes CRT effects in startup and in-game settings. Real 125% DPI surface self-test passed. Exact SDK/engine patches refreshed; clean reconstruction remains a delivery requirement.
+- Discovery validates ROM size/CRC, scans bounded conventional/configured paths, and inventories BPS/IPS. Arbitrary patches cannot be silently executed by static AOT. Visible patch inventory integration is in progress.
+- Fresh integration tests: 36/36 native contracts, 43/43 Python tests. These checks do not replace native scene acceptance or physical M30/other-PC audio confirmation.
+
+Still open: native title-menu Extras insertion, complete save/level-replay UX and qualification, verified user-facing numeric unit stats, missing English translations, complete achievement campaign acceptance, final portable release reconstruction and qualification. Do not report these as complete.
+
+OptiPort freshness checked against canonical main a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1 on 2026-11-18.
+
+
+### Integration closure before next release
+
+37 native contracts are now registered. Final submenu captures qualify options/password and six map states at actual2560x1440; native content and guest/audio hashes match baselines. Native password replay loads Normal stage2; queued cancel and timeout release input. Save persistence and real Extras selection acceptance remain open. Read-only launcher review found explicit-ROM substitution and optional/platform target guards; both corrected. Three actual invalid explicit-ROM CLI cases return1 without launching another image; UI-OFF fresh configure passes. The patch inventory is informational, collapsed by default, and points to the built-in language setting; it never applies arbitrary external ROM patches. See docs/hub-mod-inventory.md.

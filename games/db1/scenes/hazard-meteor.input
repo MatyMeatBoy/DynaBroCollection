@@ -1,0 +1,37 @@
+# Diagnostic power fixture, not an unmodified campaign or earned resources.
+# All menus and spell dispatch use original guest controller flow; no PC jump.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 300
+WAIT 1200
+WRITE_RAM32 0xFF7BD6 0x00999999
+WAIT 60
+SCREENSHOT hazard-before.png
+# Initial command cursor is (2,0). Select skull/disasters at (0,1).
+PRESS LEFT 12
+WAIT 30
+PRESS LEFT 12
+WAIT 30
+PRESS DOWN 12
+WAIT 30
+PRESS C 12
+WAIT 90
+SCREENSHOT hazard-menu.png
+PRESS DOWN 12
+WAIT 30
+SCREENSHOT hazard-selected.png
+PRESS C 12
+WAIT 20
+SCREENSHOT hazard-020.png
+WAIT 100
+SCREENSHOT hazard-120.png
+WAIT 180
+SCREENSHOT hazard-300.png
+WAIT 240
+SCREENSHOT hazard-540.png
+WAIT 800
+SCREENSHOT hazard-after.png

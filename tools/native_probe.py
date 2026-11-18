@@ -55,6 +55,7 @@ def main():
     parser.add_argument('--require-audio-signal', action='store_true', help='Require sustained non-DC mixer output (implies --audio)')
     parser.add_argument('--pacing', choices=['default','accurate','fiber'], default='default')
     parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
+    parser.add_argument('--window-size', help='Request a real WIDTHxHEIGHT SDL window for canvas/raster tests (implies audio runtime)')
     parser.add_argument('--widescreen', help='Explicit game presentation mode (off, fit, stage or W:H)')
     parser.add_argument('--host-settings-test', action='store_true', help='Open embedded settings and intentionally Quit Game after captures')
     parser.add_argument('--achievement-ui-test', action='store_true', help='Exercise the paused achievement list with real SDL events')
@@ -64,7 +65,7 @@ def main():
     parser.add_argument('--portable-env', action='store_true', help='Exclude development DLL directories from the child environment')
     parser.add_argument('--timeout', type=int, default=180)
     args = parser.parse_args()
-    if args.require_audio_signal or args.host_settings_test: args.audio = True
+    if args.require_audio_signal or args.host_settings_test or args.window_size: args.audio = True
     if args.replay and args.script:
         parser.error('Replay supplies its own inputs; do not combine with a scene script')
     output = args.output.resolve()
@@ -92,6 +93,7 @@ def main():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
     argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher']
     if args.pacing != 'default': argv += ['--pacing', args.pacing]
+    if args.window_size: argv += ['--window-size',args.window_size]
     if args.widescreen:
         argv += ['--widescreen', args.widescreen]
     if args.replay:

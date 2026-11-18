@@ -1,0 +1,8 @@
+# Requires DYNA_DB1_REPLAY_TEST_INDEX=21 and DYNA_DB1_REPLAY_TEST_QUEUE_TITLE=1.
+# Wait at native title for queued request timeout; no guest memory writes.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 2400
+SCREENSHOT progress-timeout-title.png

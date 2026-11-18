@@ -4,4 +4,5 @@
 extern const GameVideo db1_video;
 void db1_video_observe(unsigned pc);
 void db1_video_reset(void);
+void db1_video_set_english(int enabled);
 #endif

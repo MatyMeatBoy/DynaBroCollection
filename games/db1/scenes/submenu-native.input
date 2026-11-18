@@ -1,0 +1,30 @@
+# Ordinary controller route. Allow map initializer/fade to finish before A cycles.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 488
+PRESS A 12
+WAIT 2376
+PRESS START 12
+WAIT 3288
+SCREENSHOT submenu-creatures.png
+PRESS A 12
+WAIT 240
+SCREENSHOT submenu-land.png
+PRESS A 12
+WAIT 240
+SCREENSHOT submenu-eggs.png
+PRESS A 12
+WAIT 240
+SCREENSHOT submenu-surrender.png
+PRESS C 12
+WAIT 240
+SCREENSHOT submenu-confirmation.png
+PRESS C 12
+WAIT 240
+SCREENSHOT submenu-confirmation-2.png
+PRESS START 12
+WAIT 240
+SCREENSHOT submenu-return.png
+

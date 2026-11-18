@@ -1,0 +1,51 @@
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 1500
+HOLD A
+HOLD LEFT
+WAIT 18
+SCREENSHOT camera-left-18.png
+WAIT 1
+SCREENSHOT camera-left-19.png
+WAIT 1
+SCREENSHOT camera-left-20.png
+WAIT 1
+SCREENSHOT camera-left-21.png
+WAIT 1
+SCREENSHOT camera-left-22.png
+WAIT 1
+SCREENSHOT camera-left-23.png
+WAIT 1
+SCREENSHOT camera-left-24.png
+WAIT 1
+SCREENSHOT camera-left-25.png
+WAIT 1
+SCREENSHOT camera-left-26.png
+WAIT 1
+RELEASE LEFT
+HOLD UP
+WAIT 12
+SCREENSHOT camera-up-12.png
+WAIT 1
+SCREENSHOT camera-up-13.png
+WAIT 1
+SCREENSHOT camera-up-14.png
+WAIT 1
+SCREENSHOT camera-up-15.png
+WAIT 1
+SCREENSHOT camera-up-16.png
+WAIT 1
+SCREENSHOT camera-up-17.png
+WAIT 1
+SCREENSHOT camera-up-18.png
+WAIT 1
+SCREENSHOT camera-up-19.png
+WAIT 1
+SCREENSHOT camera-up-20.png
+WAIT 1
+RELEASE
+WAIT 30

@@ -81,10 +81,16 @@ static int retire(void *user,unsigned *cycles) {
     if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e)db2_video_observe(g_cpu.PC);
 #endif
 #ifdef DYNA_HAS_JP
-    if(g_cpu.PC==0x1c40 || g_cpu.PC==0x1c44 || g_cpu.PC==0x19980 || g_cpu.PC==0x1b040
-       || g_cpu.PC==0x1c5a4 || g_cpu.PC==0x1c9ce || g_cpu.PC==0x1caf6 || g_cpu.PC==0x1cb0c
-       || g_cpu.PC==0x1e024 || g_cpu.PC==0x1d7b6 || g_cpu.PC==0x1b42 || g_cpu.PC==0x1950 || g_cpu.PC==0x1bc04 || g_cpu.PC==0x5ff6 || g_cpu.PC==0x62fc || g_cpu.PC==0x132d8 || g_cpu.PC==0x13630)
-        db1_video_observe(g_cpu.PC);
+    switch(g_cpu.PC){
+    case 0x1c40:case 0x1c44:case 0x19980:case 0x1b040:
+    case 0x1c5a4:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
+    case 0x1e024:case 0x1d7b6:case 0x1b42:case 0x1b38:case 0x1c04:case 0x1950:case 0x1bc04:
+    case 0x5ff6:case 0x62fc:case 0x132d8:case 0x13630:
+    case 0x12fe6:case 0x13286:case 0x14070:case 0x1429e:case 0x1429c:case 0x144f6:
+    case 0x15d2c:case 0x15e52:case 0x5650:case 0x5d62:
+        db1_video_observe(g_cpu.PC);break;
+    default:break;
+    }
 #endif
     if(DYNA_ENTRY==0x200u && g_cpu.PC==0x9828u && getenv("DYNA_LZ_TRACE")) {
         uint32_t dst=glue_peek32(g_cpu.A[7]+4u);
@@ -165,6 +171,9 @@ static void entry(void) {
     if(!dyna_language_apply(g_rom,DYNA_SIZE,&DYNA_LANGUAGE_IMAGE,dyna_language_english(),error,sizeof error)) {
         fprintf(stderr,"[language] %s\n",error);abort();
     }
+#ifdef DYNA_HAS_JP
+    db1_video_set_english(dyna_language_english());
+#endif
     dyna_progress_runtime_start(DYNA_ENTRY==0x738u?2:1,g_rom,DYNA_SIZE);
     dyna_language_started();
     fprintf(stderr,"[language] %s (translation remains partial)\n",dyna_language_english()?"English":"Japanese original");

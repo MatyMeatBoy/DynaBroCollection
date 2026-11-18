@@ -1,0 +1,18 @@
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 322
+SCREENSHOT stage-label.png
+WAIT 40
+SCREENSHOT stage-terrain-fade.png
+WAIT 20
+SCREENSHOT stage-egg-drop.png
+WAIT 10
+SCREENSHOT stage-egg-near-ground.png
+WAIT 10
+SCREENSHOT stage-egg-landed.png
+WAIT 40
+SCREENSHOT stage-battle.png

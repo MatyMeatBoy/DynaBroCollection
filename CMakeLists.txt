@@ -178,9 +178,9 @@ foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
 endforeach()
 
 option(DYNA_LAUNCHER_UI "Build the shared launcher and in-game settings" ON)
-if(WIN32)
+if(WIN32 AND DYNA_LAUNCHER_UI)
     enable_language(RC)
-    add_executable(DynaBrothersLauncher WIN32 games/checkpoint_launcher.c games/launcher_options.c games/checkpoint.rc)
+    add_executable(DynaBrothersLauncher WIN32 games/checkpoint_launcher.c games/launcher_options.c games/checkpoint_manifest.rc)
     target_compile_definitions(DynaBrothersLauncher PRIVATE DYNA_VERSION="${PROJECT_VERSION}")
     target_include_directories(DynaBrothersLauncher PRIVATE games)
     target_link_libraries(DynaBrothersLauncher PRIVATE gdi32 user32 shell32)
@@ -280,8 +280,72 @@ target_include_directories(DynaDb2VideoTest PRIVATE games "${RUNNER_ROOT}" "${RU
 target_compile_options(DynaDb2VideoTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME db2_video_contract COMMAND DynaDb2VideoTest)
 
-add_custom_command(TARGET DynaBrothersLauncher POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets/img" "$<TARGET_FILE_DIR:DynaBrothersLauncher>/assets/img")
 
-foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
- add_custom_command(TARGET ${_game} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets/guide" "$<TARGET_FILE_DIR:${_game}>/assets/guide")
+
+
+
+if(WIN32 AND DYNA_LAUNCHER_UI)
+ target_sources(DynaBrothersLauncher PRIVATE games/hub_settings.c games/launcher_discovery.c
+  games/controller_profiles.c games/language_settings.c "${RUNNER_ROOT}/app_config.c"
+  "${RUNNER_ROOT}/gamepad.c" "${RUNNER_ROOT}/input_map.c")
+ target_include_directories(DynaBrothersLauncher PRIVATE "${RUNNER_ROOT}" "${RUNNER_ROOT}/include"
+  "${RUNNER_ROOT}/video" "${RUNNER_ROOT}/external/clowncommon")
+ target_compile_definitions(DynaBrothersLauncher PRIVATE RECOMP_LAUNCHER=1 OWN_BACKEND=1 SDL_MAIN_HANDLED)
+ target_link_libraries(DynaBrothersLauncher PRIVATE SDL2::SDL2)
+ recomp_target_launcher_ui(DynaBrothersLauncher CONSOLE genesis)
+ get_target_property(_hub_links DynaBrothersLauncher LINK_LIBRARIES)
+ list(REMOVE_ITEM _hub_links SDL2::SDL2main)
+ set_property(TARGET DynaBrothersLauncher PROPERTY LINK_LIBRARIES "${_hub_links}")
+endif()
+add_executable(DynaLauncherDiscoveryTest tests/launcher_discovery_test.c games/launcher_discovery.c)
+target_include_directories(DynaLauncherDiscoveryTest PRIVATE games)
+target_compile_options(DynaLauncherDiscoveryTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME launcher_discovery_contract COMMAND DynaLauncherDiscoveryTest)
+if(TARGET DynaBrothersLauncher)
+ target_include_directories(DynaBrothersLauncher PRIVATE "${RUNNER_ROOT}/external/superzazu")
+endif()
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_title_art.c games/db1_menu_layout.c games/db1_hazard_effects.c)
+target_sources(DynaDb1VideoTest PRIVATE games/db1_title_art.c games/db1_menu_layout.c games/db1_hazard_effects.c)
+target_link_libraries(DynaDb1VideoTest PRIVATE SDL2::SDL2)
+foreach(_contract IN ITEMS title_art menu_layout hazard_effects unit_stats)
+ add_executable(DynaDb1${_contract}Test tests/db1_${_contract}_test.c games/db1_${_contract}.c)
+ target_include_directories(DynaDb1${_contract}Test PRIVATE games "${RUNNER_ROOT}")
+ target_compile_options(DynaDb1${_contract}Test PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+ add_test(NAME db1_${_contract}_contract COMMAND DynaDb1${_contract}Test)
 endforeach()
+target_sources(DynaDb1title_artTest PRIVATE games/db1_scenes.c)
+target_link_libraries(DynaDb1title_artTest PRIVATE SDL2::SDL2)
+
+
+# One writer for shared game assets. Parallel links must not overwrite the same PNGs.
+add_custom_target(DynaGameAssets
+ COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets/img" "${CMAKE_BINARY_DIR}/assets/img"
+ COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/assets/guide" "${CMAKE_BINARY_DIR}/assets/guide")
+foreach(_target IN ITEMS DynaBrothersLauncher DynaBrothers1AOT DynaBrothers2AOT)
+ if(TARGET ${_target})
+  add_dependencies(${_target} DynaGameAssets)
+ endif()
+endforeach()
+
+if(TARGET DynaBrothersLauncher)
+ target_sources(DynaBrothersLauncher PRIVATE games/hub_navigation.c games/menu_controls.c)
+endif()
+add_executable(DynaHubNavigationTest tests/hub_navigation_test.c games/hub_navigation.c games/menu_controls.c)
+target_include_directories(DynaHubNavigationTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/external/clowncommon")
+target_compile_options(DynaHubNavigationTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME hub_navigation_contract COMMAND DynaHubNavigationTest)
+
+add_executable(DynaDb1MenuBackgroundTest tests/db1_menu_background_test.c games/db1_scenes.c)
+target_include_directories(DynaDb1MenuBackgroundTest PRIVATE games "${RUNNER_ROOT}")
+target_compile_options(DynaDb1MenuBackgroundTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_menu_background_contract COMMAND DynaDb1MenuBackgroundTest)
+
+
+if(TARGET DynaBrothersLauncher)
+ target_sources(DynaBrothersLauncher PRIVATE games/hub_mod_inventory.c)
+endif()
+add_executable(DynaHubModInventoryTest tests/hub_mod_inventory_test.c games/hub_mod_inventory.c)
+target_include_directories(DynaHubModInventoryTest PRIVATE games "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src")
+target_compile_options(DynaHubModInventoryTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME hub_mod_inventory_contract COMMAND DynaHubModInventoryTest)

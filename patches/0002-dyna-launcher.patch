@@ -103,7 +103,7 @@ index 3502c4f..09f3c13 100644
          # console-agnostic launcher core (C) — src/common/
          ${RUI_SRC}/common/launcher_model.c
 diff --git a/src/common/backends/imgui/launcher_imgui.cpp b/src/common/backends/imgui/launcher_imgui.cpp
-index 602438d..6246adc 100644
+index 602438d..578977f 100644
 --- a/src/common/backends/imgui/launcher_imgui.cpp
 +++ b/src/common/backends/imgui/launcher_imgui.cpp
 @@ -47,12 +47,14 @@
@@ -140,7 +140,31 @@ index 602438d..6246adc 100644
  
      ImGuiStyle style; ImGui::StyleColorsDark(&style);
      style.WindowRounding = th.radius_lg; style.ChildRounding = th.radius_lg;
-@@ -3401,6 +3411,10 @@ void draw_source_selectables(LauncherModel* m, int p) {
+@@ -1613,6 +1623,7 @@ void draw_crt_background(ImVec2 origin, ImVec2 size) {
+     const LauncherTheme& th = *g_th;
+     ImDrawList* bg = ImGui::GetBackgroundDrawList();
+     ImU32 ink = imcol(th.background), lift = imcol(th.background2);
++    if (th.flat) { bg->AddRectFilled(origin, ImVec2(origin.x + size.x, origin.y + size.y), ink); return; }
+     float midY = origin.y + size.y * 0.42f;
+     // top: ink -> lift, bottom: lift -> ink  (soft horizontal glow band)
+     bg->AddRectFilledMultiColor(origin, ImVec2(origin.x + size.x, midY),
+@@ -1637,6 +1648,7 @@ void draw_crt_background(ImVec2 origin, ImVec2 size) {
+ // Neon glow: concentric rounded rects fading outward behind [min,max].
+ void glow_rect(ImDrawList* dl, ImVec2 mn, ImVec2 mx, float rounding,
+                const LngColor& c, float intensity, int layers = 5) {
++    if (g_th && g_th->flat) return;
+     for (int i = layers; i >= 1; --i) {
+         float grow = px(2.0f) * i;
+         float a = intensity * (0.10f) * (float)(layers - i + 1) / layers;
+@@ -1649,6 +1661,7 @@ void glow_rect(ImDrawList* dl, ImVec2 mn, ImVec2 mx, float rounding,
+ // Filled rounded rect with a vertical gradient (top -> bottom).
+ void grad_rect(ImDrawList* dl, ImVec2 mn, ImVec2 mx, float rounding,
+                const LngColor& top, const LngColor& bot) {
++    if (g_th && g_th->flat) { dl->AddRectFilled(mn, mx, imcol(top), rounding); return; }
+     dl->AddRectFilled(mn, mx, imcol(bot), rounding);   // base (rounded)
+     // overlay a gradient clipped to the rounded rect via a slightly-inset fill
+     dl->PushClipRect(mn, mx, true);
+@@ -3401,6 +3414,10 @@ void draw_source_selectables(LauncherModel* m, int p) {
                             !strcmp(src_prof->id, "snes");
      const bool n64_prof = src_prof && src_prof->id &&
                            !strcmp(src_prof->id, "n64");
@@ -151,7 +175,7 @@ index 602438d..6246adc 100644
      if (ImGui::Selectable(ui_text("None"), m->s.player_src[p] == 0)) {
          launcher_model_set_source(m, p, 0, 0, nullptr, nullptr);
          if (psx) launcher_binds_refresh(m);
-@@ -3691,6 +3705,8 @@ void draw_player_panel(LauncherModel* m, const LauncherTheme& th, int p, float w
+@@ -3691,6 +3708,8 @@ void draw_player_panel(LauncherModel* m, const LauncherTheme& th, int p, float w
          draw_source_selectables(m, p);
          ImGui::EndCombo();
      }
@@ -160,7 +184,7 @@ index 602438d..6246adc 100644
      ImGui::Dummy(ImVec2(0, px(4)));
      // Configure + connection status share ONE half/half row (Configure left,
      // status right) so the card stays short — that keeps the memory cards below
-@@ -5811,11 +5827,14 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
+@@ -5811,11 +5830,14 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
          ImGui::PushStyleColor(ImGuiCol_Text, col(th.accent2));
          ImGui::Text("%s %d", ui_text("CONTROLLER - PLAYER"), p + 1); ImGui::PopStyleColor(); ImGui::Spacing();
          row_label("Input source", th);
@@ -176,7 +200,7 @@ index 602438d..6246adc 100644
          /* SNES: Save / Rename / Delete for the selected controller.
           *
           * Same three actions PSX offers, writing into this console's own
-@@ -6602,7 +6621,8 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
+@@ -6602,7 +6624,8 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
          // earlier version did, and because that question was N64-only, a SNES
          // player on a controller was shown the KEYBOARD row and Auto Map
          // listened for keys, so pressing the controller did nothing at all.
@@ -186,7 +210,94 @@ index 602438d..6246adc 100644
  
          // Heading uses accent2 so each console's title tints in ITS logo colour
          // (N64 blue; single-accent consoles set accent2 == accent).
-@@ -15176,7 +15196,11 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -12477,20 +12500,27 @@ static void draw_mod_catalog_diagnostics(LauncherModel* m,
+ 
+     char heading[128];
+     std::snprintf(heading, sizeof(heading),
+-                  count == 1 ? ui_text("%d mod package could not be loaded")
+-                             : ui_text("%d mod packages could not be loaded"),
++                  count == 1 ? ui_text("%d mod catalog notice")
++                             : ui_text("%d mod catalog notices"),
+                   count);
+-    if (ImGui::CollapsingHeader(heading, ImGuiTreeNodeFlags_DefaultOpen)) {
++    bool attention = false;
++    for (int index = 0; index < count; ++index) {
++        RecompLauncherCModDiagnostic diagnostic{};
++        if (mods->catalog_diagnostic_get(mods->ctx, index, &diagnostic) &&
++            diagnostic.severity != RECOMP_MOD_DIAGNOSTIC_INFO) attention = true;
++    }
++    if (ImGui::CollapsingHeader(heading, attention ? ImGuiTreeNodeFlags_DefaultOpen : 0)) {
+         ImGui::TextColored(
+             col(th.text_muted), "%s",
+-            ui_text("These are not installed. Fix the manifest and restart, "
+-                    "or run: psxmod validate <path>"));
++            ui_text("Review the status of each detected file or package below."));
+         for (int index = 0; index < count; ++index) {
+             RecompLauncherCModDiagnostic diagnostic{};
+             if (!mods->catalog_diagnostic_get(mods->ctx, index, &diagnostic))
+                 continue;
+             ImGui::PushID(index);
+-            ImGui::TextColored(col(th.warn), "%s", diagnostic.message);
++            ImGui::PushStyleColor(ImGuiCol_Text, col(diagnostic.severity == RECOMP_MOD_DIAGNOSTIC_INFO ? th.text_muted : th.warn));
++            ImGui::TextWrapped("%s", diagnostic.message);
++            ImGui::PopStyleColor();
+             if (diagnostic.resource[0])
+                 ImGui::TextWrapped("%s", diagnostic.resource);
+             ImGui::PopID();
+@@ -13042,8 +13072,8 @@ void draw_footer(LauncherModel* m, const LauncherTheme& th, float footer_h) {
+     // divider at the very top of the band
+     ImGui::GetWindowDrawList()->AddRectFilledMultiColor(
+         origin, ImVec2(origin.x + fullw, origin.y + px(1.5f)),
+-        imcol(th.border, 0.2f), imcol(th.accent2, 0.7f),
+-        imcol(th.accent2, 0.7f), imcol(th.border, 0.2f));
++        imcol(th.border, th.flat ? 1.0f : 0.2f), imcol(th.flat ? th.border : th.accent2, th.flat ? 1.0f : 0.7f),
++        imcol(th.flat ? th.border : th.accent2, th.flat ? 1.0f : 0.7f), imcol(th.border, th.flat ? 1.0f : 0.2f));
+ 
+     // CTA centred in the remaining band height (glow clears the rule on both sides)
+     const float band_y = origin.y + px(1.5f);
+@@ -14598,12 +14628,14 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+     // HEIGHT with proportional width so the logo reads clearly.
+     if (g_brand.id && g_brand.w > 0) {
+         const SystemProfile* hprof = (const SystemProfile*)m->profile;
+-        const bool own_brand = hprof && hprof->brand && hprof->brand[0];
++        const bool own_brand = (m->brand_logo_path && m->brand_logo_path[0]) ||
++                               (hprof && hprof->brand && hprof->brand[0]);
+         float brand_w = 44.0f, brand_h = 33.0f;
+         if (own_brand && g_brand.h > 0) {
+-            brand_h = 32.0f;
++            brand_h = m->brand_logo_path ? 62.0f : 32.0f;
+             brand_w = brand_h * (float)g_brand.w / (float)g_brand.h;   // preserve aspect
+-            if (brand_w > 130.0f) brand_w = 130.0f;                    // sane upper bound
++            if (brand_w > (m->brand_logo_path ? 180.0f : 130.0f))
++                brand_w = m->brand_logo_path ? 180.0f : 130.0f;                    // sane upper bound
+         }
+         // Vertically center against the two-line title block (game title at
+         // 1.55x + platform at 1.0x), from the fitted height.
+@@ -14627,10 +14659,10 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+         ImGui::SetWindowFontScale(1.0f);
+         // Platform lockup: the wordmark image when a host supplied one
+         // (SystemProfile.wordmark_image), else the plain platform text.
+-        if (g_wordmark.id && g_wordmark.w > 0) {
++        if (!m->brand_logo_path && g_wordmark.id && g_wordmark.w > 0) {
+             ImGui::Dummy(ImVec2(0, px(2)));
+             image_fit(g_wordmark, 240, 20);
+-        } else if (m->platform && m->platform[0]) {
++        } else if (!m->brand_logo_path && m->platform && m->platform[0]) {
+             ImGui::PushStyleColor(ImGuiCol_Text, col(th.text_muted));
+             ImGui::TextUnformatted(m->platform);
+             ImGui::PopStyleColor();
+@@ -14723,8 +14755,8 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+         float fw = ImGui::GetContentRegionAvail().x;
+         ImDrawList* dl = ImGui::GetWindowDrawList();
+         dl->AddRectFilledMultiColor(u, ImVec2(u.x + fw, u.y + px(2.0f)),
+-            imcol(th.accent2, 0.9f), imcol(th.accent2, 0.15f),
+-            imcol(th.accent2, 0.15f), imcol(th.accent2, 0.9f));
++            imcol(th.accent2, th.flat ? 1.0f : 0.9f), imcol(th.accent2, th.flat ? 1.0f : 0.15f),
++            imcol(th.accent2, th.flat ? 1.0f : 0.15f), imcol(th.accent2, th.flat ? 1.0f : 0.9f));
+         glow_rect(dl, u, ImVec2(u.x + fw*0.5f, u.y + px(2.0f)), 0, th.accent2, 0.5f, 3);
+     }
+     ImGui::Dummy(ImVec2(0, px(12.0f)));
+@@ -15176,7 +15208,11 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      } commit_binding(launch_commit);
      launcher_boot_timing_mark("rui:backend_run:begin");
      IMGUI_CHECKVERSION();
@@ -199,7 +310,7 @@ index 602438d..6246adc 100644
      s_mod_binding_capture = {};
      ImGuiIO& io = ImGui::GetIO();
      io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-@@ -15210,12 +15234,20 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15210,12 +15246,20 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      std::atomic_signal_fence(std::memory_order_seq_cst);
  #endif
      g_th = th;
@@ -220,7 +331,28 @@ index 602438d..6246adc 100644
      launcher_boot_timing_mark("rui:imgui_gl_ready");
  
      // Box art: per-game path from the ABI when given (multi-variant repos
-@@ -15436,6 +15468,7 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15261,16 +15305,17 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+         // opts out of a corner emblem entirely (N64 leads with its wordmark).
+         // Only load when there's an actual filename.
+         // A game's own mark (recomp_target_launcher_ui BRAND) wins over all of it.
+-        g_brand = launcher_texture_load(asset("assets/img/brand_game.tga").c_str());
++        const bool game_brand = m->brand_logo_path && m->brand_logo_path[0];
++        g_brand = launcher_texture_load(asset(game_brand ? m->brand_logo_path : "assets/img/brand_game.tga").c_str());
+         const char* brand_file = bprof && bprof->brand
+                                    ? bprof->brand : "brand_mark.tga";
+-        if (!g_brand.id && brand_file && brand_file[0])
++        if (!game_brand && !g_brand.id && brand_file && brand_file[0])
+             g_brand = launcher_texture_load(
+                 asset((std::string("assets/img/") + brand_file).c_str()).c_str());
+         // Optional platform wordmark: loads only if the profile names one AND
+         // the file is present (recomp-ui ships none — a console wordmark may be
+         // a third-party trademark). Missing file => header falls back to text.
+-        if (bprof && bprof->wordmark_image && bprof->wordmark_image[0])
++        if (!game_brand && bprof && bprof->wordmark_image && bprof->wordmark_image[0])
+             g_wordmark = launcher_texture_load(
+                 asset((std::string("assets/img/") + bprof->wordmark_image).c_str()).c_str());
+     }
+@@ -15436,6 +15481,7 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
              // PSX: keep Input source labels on concrete pad names (live SDL name
              // or saved [gamepads] registry), never the generic "Gamepad" placeholder.
              launcher_binds_sync_psx_pad_sources(m, g_pads, g_pad_count);
@@ -228,7 +360,7 @@ index 602438d..6246adc 100644
  
              // SNES: same purpose, from this console's own profile store. Run every
              // frame so a pad plugged in after start-up picks up its label too.
-@@ -15491,6 +15524,10 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15491,6 +15537,10 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
  
          }
  
@@ -239,7 +371,7 @@ index 602438d..6246adc 100644
          ImGui_ImplOpenGL3_NewFrame();
          /* Suspend ImGui's GAMEPAD navigation while a bind capture is open.
           *
-@@ -15548,11 +15585,21 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15548,11 +15598,32 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
              launch_commit.job.start();
          }
  
@@ -253,7 +385,18 @@ index 602438d..6246adc 100644
 +            SDL_SetRenderDrawColor(p->renderer, (Uint8)(bg.r*255), (Uint8)(bg.g*255),
 +                                    (Uint8)(bg.b*255), (Uint8)(bg.a*255));
 +            SDL_RenderClear(p->renderer);
++            // SDL geometry consumes renderer coordinates directly. Unlike GL,
++            // this backend does not multiply vertices by FramebufferScale;
++            // let SDL scale both geometry and logical clip rectangles together.
++            float saved_x = 1.0f, saved_y = 1.0f;
++            SDL_RenderGetScale(p->renderer, &saved_x, &saved_y);
++            const ImDrawData* data = ImGui::GetDrawData();
++            if (data->DisplaySize.x > 0 && data->DisplaySize.y > 0)
++                SDL_RenderSetScale(p->renderer,
++                    (float)p->pixel_w / data->DisplaySize.x,
++                    (float)p->pixel_h / data->DisplaySize.y);
 +            ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), p->renderer);
++            SDL_RenderSetScale(p->renderer, saved_x, saved_y);
 +        } else
 +#endif
 +        {
@@ -265,7 +408,7 @@ index 602438d..6246adc 100644
          if (launch_commit.job.pending()) {
              if (launcher_debug_step_pending(p)) launch_commit.close_requested = true;
          } else if (m->setup_preparing) {
-@@ -15590,9 +15637,16 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15590,9 +15661,16 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      launcher_texture_free(&g_wordmark);
      for (int i = 0; i < 5; ++i) launcher_texture_free(&g_cart[i]);
      launcher_texture_free(&g_tpak);
@@ -454,7 +597,7 @@ index 2215b80..0c756a6 100644
  // Load an image file into a freshly created GL texture (linear filtered,
  // clamped). Returns a texture with id==0 on failure. Requires a current GL
 diff --git a/src/common/launcher_model.c b/src/common/launcher_model.c
-index f2c1c9f..f71c37c 100644
+index f2c1c9f..d9ba87b 100644
 --- a/src/common/launcher_model.c
 +++ b/src/common/launcher_model.c
 @@ -423,6 +423,7 @@ void launcher_model_init(LauncherModel* m,
@@ -465,7 +608,27 @@ index f2c1c9f..f71c37c 100644
          m->pad_mode_selectable  = game->pad_mode_selectable != 0;
          m->locked_pad_mode      = clampi(game->locked_pad_mode, 0, 2);
          m->lock_device          = game->lock_device != 0;
-@@ -4791,7 +4792,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
+@@ -556,6 +557,7 @@ void launcher_model_init(LauncherModel* m,
+         m->pgo_success_status   = game->pgo_success_status;
+         m->fmv_timing_busy_status = game->fmv_timing_busy_status;
+         m->fmv_timing_success_status = game->fmv_timing_success_status;
++        m->brand_logo_path      = game->brand_logo_path;
+         m->boxart_path          = game->boxart_path;      // NULL => default boxart.tga
+         m->aspect_labels        = game->aspect_labels;    // NULL => built-in 4:3/16:9/21:9
+         m->num_aspect_labels    = game->num_aspect_labels;
+@@ -970,6 +972,11 @@ void launcher_model_init(LauncherModel* m,
+     lm_inspect_memcard(m, 1);
+ 
+     m->view      = LNG_VIEW_DASHBOARD;
++    if (game && game->initial_page) {
++        if (!strcmp(game->initial_page, "settings")) m->view = LNG_VIEW_SETTINGS;
++        else if (!strcmp(game->initial_page, "controller")) m->view = LNG_VIEW_CONTROLLER;
++        else if (!strcmp(game->initial_page, "mods")) m->view = LNG_VIEW_MODS;
++    }
+     m->action    = LNG_ACTION_NONE;
+     m->cfg_player = 0;
+     m->setup_wizard_open = false;
+@@ -4791,7 +4798,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
  
  void launcher_model_cycle_player_src(LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -476,7 +639,7 @@ index f2c1c9f..f71c37c 100644
      apply_default_pad_mode_for_source(m, player);
  }
  
-@@ -4809,7 +4812,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
+@@ -4809,7 +4818,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
                                 uint32_t pad_id, const char* pad_name,
                                 const char* pad_guid) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -487,7 +650,7 @@ index f2c1c9f..f71c37c 100644
      if (kind == 2) {
          m->player_pad_id[player] = pad_id;
          m->s.player_gamepad_instance[player] = pad_id + 1;
-@@ -5051,6 +5056,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
+@@ -5051,6 +5062,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
  
  const char* launcher_model_player_src_label(const LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -501,7 +664,7 @@ index f2c1c9f..f71c37c 100644
      int src = clampi(m->s.player_src[player], 0, 2);
      if (src == 2) {
          // Never show the generic "Gamepad" placeholder when we have a concrete
-@@ -5068,6 +5080,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
+@@ -5068,6 +5086,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
      return kSrcNames[src];
  }
  
@@ -528,7 +691,7 @@ index f2c1c9f..f71c37c 100644
      if (b < 0 || b >= LNG_BTN_COUNT) return "?";
      return kButtonNames[b];
 diff --git a/src/common/launcher_model.h b/src/common/launcher_model.h
-index de53037..7df2c5b 100644
+index de53037..4fb660e 100644
 --- a/src/common/launcher_model.h
 +++ b/src/common/launcher_model.h
 @@ -20,6 +20,7 @@
@@ -539,7 +702,15 @@ index de53037..7df2c5b 100644
  
  #include <stdbool.h>
  #include <stddef.h>
-@@ -411,6 +412,8 @@ typedef struct {
+@@ -317,6 +318,7 @@ typedef struct {
+     // Box-art path relative to the assets dir (GameInfo.boxart_path);
+     // NULL => the default "assets/img/boxart.tga".
+     const char* boxart_path;
++    const char* brand_logo_path;
+ 
+     // ---- N64 Transfer Pak --------------------------------------------------
+     // Per-slot facts refreshed via tpak_inspect_cb (the HOST's cartridge
+@@ -411,6 +413,8 @@ typedef struct {
      const char* assist_tools_note;
      bool has_virtual_stylus;
      bool settings_bindings;
@@ -548,7 +719,7 @@ index de53037..7df2c5b 100644
      const char* const* assist_binding_labels;
      int assist_binding_count;
      int assist_direct_pad_bind_action;
-@@ -1326,6 +1329,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
+@@ -1326,6 +1330,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
  const char* launcher_model_scale_label(const LauncherModel* m);        // "3x"
  const char* launcher_model_freq_label(const LauncherModel* m);         // "44100 Hz"
  const char* launcher_model_player_src_label(const LauncherModel* m, int player);
@@ -699,6 +870,68 @@ index 2595ce3..3965e24 100644
      if (p->gl)     { SDL_GL_DeleteContext(p->gl); p->gl = NULL; }
      if (p->window) { SDL_DestroyWindow(p->window); p->window = NULL; }
      SDL_GL_ResetAttributes();   // leave a clean slate for the game's SDL usage
+diff --git a/src/common/launcher_theme.h b/src/common/launcher_theme.h
+index 87d2cfd..57fb6ae 100644
+--- a/src/common/launcher_theme.h
++++ b/src/common/launcher_theme.h
+@@ -9,6 +9,8 @@
+ #ifndef LAUNCHER_NG_THEME_H
+ #define LAUNCHER_NG_THEME_H
+ 
++#include <string.h>
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+@@ -43,6 +45,7 @@ typedef struct {
+     float row_height;
+     float font_body, font_title, font_small;
+     float focus_ring_width;
++    int   flat;           // omit gradients, glow and vignette for game-branded flat themes
+     int   scanlines;      // 1 = draw the CRT scanline overlay, 0 = flat (e.g. PSX)
+ } LauncherTheme;
+ 
+@@ -81,6 +84,7 @@ static inline LauncherTheme launcher_theme_default(void) {
+     t.row_height = 44.0f;                      // large rows: Steam Deck friendly
+     t.font_body  = 18.0f; t.font_title = 34.0f; t.font_small = 13.0f;
+     t.focus_ring_width = 2.5f;
++    t.flat       = 0;
+     t.scanlines  = 1;                          // CRT look: scanlines ON
+     return t;
+ }
+@@ -303,7 +307,32 @@ static inline LauncherTheme launcher_theme_cdi(void) {
+     return t;
+ }
+ 
++// Dyna Brothers: the same forest-green, cream and warm yellow as the host hub.
++static inline LauncherTheme launcher_theme_dyna(void) {
++    LauncherTheme t = launcher_theme_default();
++    t.background = lng_rgba(16/255.f,47/255.f,40/255.f,1);
++    t.background2 = t.background;
++    t.panel = lng_rgba(26/255.f,66/255.f,50/255.f,1);
++    t.panel_hovered = lng_rgba(42/255.f,91/255.f,65/255.f,1);
++    t.control = lng_rgba(34/255.f,78/255.f,57/255.f,1);
++    t.control_hovered = t.panel_hovered;
++    t.border = lng_rgba(90/255.f,141/255.f,89/255.f,1);
++    t.accent = lng_rgba(255/255.f,221/255.f,94/255.f,1);
++    t.accent_dim = t.accent;
++    t.accent_text = t.background;
++    t.accent2 = t.accent;
++    t.text = lng_rgba(255/255.f,249/255.f,214/255.f,1);
++    t.text_muted = lng_rgba(191/255.f,219/255.f,174/255.f,1);
++    t.good = t.text_muted;
++    t.warn = t.accent;
++    t.focus_ring = t.accent;
++    t.radius_sm = 10; t.radius_lg = 18;
++    t.flat = 1; t.scanlines = 0;
++    return t;
++}
++
+ static inline LauncherTheme launcher_theme_by_name(const char* name) {
++    if (name && strcmp(name, "dyna") == 0) return launcher_theme_dyna();
+     if (name && (name[0]=='c' || name[0]=='C') &&
+         (name[1]=='d' || name[1]=='D') && (name[2]=='i' || name[2]=='I') && !name[3])
+         return launcher_theme_cdi();
 diff --git a/src/consoles/genesis/genesis_binds.c b/src/consoles/genesis/genesis_binds.c
 index eb4d422..a3a6661 100644
 --- a/src/consoles/genesis/genesis_binds.c
@@ -752,7 +985,7 @@ index 68aa362..550f96f 100644
  // Current keyboard binding (SDL_Scancode as int; 0 = unbound) for player
  // (0..3), rebind-spec button b. Auto-initializes from `path` on first use.
 diff --git a/src/recomp_launcher.h b/src/recomp_launcher.h
-index bc60540..cac392e 100644
+index bc60540..818e4a2 100644
 --- a/src/recomp_launcher.h
 +++ b/src/recomp_launcher.h
 @@ -1275,7 +1275,7 @@ struct RecompLauncherCSettings {
@@ -764,7 +997,7 @@ index bc60540..cac392e 100644
      int  deadzone[RECOMP_LAUNCHER_MAX_PLAYERS];    // 0..100
      int  skip_launcher;     // bool: boot straight to the game next time
      int  msu1_enabled;      // bool
-@@ -2502,7 +2502,26 @@ typedef struct RecompLauncherCGameInfo {
+@@ -2502,7 +2502,34 @@ typedef struct RecompLauncherCGameInfo {
                      char* error, size_t error_size);
      void (*rom_read_free)(void* ctx, uint8_t* bytes);
      void* rom_read_ctx;
@@ -784,7 +1017,15 @@ index bc60540..cac392e 100644
 +     * RESULT_UNAVAILABLE. Never pass SDL3 objects to this SDL2-only contract. */
 +    void* host_sdl_window;
 +    void* host_sdl_renderer;
++    /* Optional host game logo (PNG/TGA/JPEG), resolved through the asset root.
++     * Borrowed for the run. Replaces console branding; NULL preserves defaults. */
++    const char* brand_logo_path;
++    /* Optional first page: "dashboard", "settings", "controller", or "mods".
++     * NULL/unknown values preserve the dashboard default. */
++    const char* initial_page;
  } RecompLauncherCGameInfo;
++#define RECOMP_LAUNCHER_HAS_INITIAL_PAGE 1
++#define RECOMP_LAUNCHER_HAS_BRAND_LOGO_PATH 1
 +#define RECOMP_LAUNCHER_HAS_HOST_SDL2_RENDERER_SURFACE 1
 +#define RECOMP_LAUNCHER_HAS_INPUT_BINDING_SNAPSHOT 1
 +#define RECOMP_LAUNCHER_HAS_GENESIS_AUTO_SOURCE 1
@@ -942,10 +1183,10 @@ index 0000000..45d7f2e
 +}
 diff --git a/tests/host_surface_ui_test.cpp b/tests/host_surface_ui_test.cpp
 new file mode 100644
-index 0000000..b977d5e
+index 0000000..7e34b68
 --- /dev/null
 +++ b/tests/host_surface_ui_test.cpp
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,79 @@
 +#ifndef SDL_MAIN_HANDLED
 +#define SDL_MAIN_HANDLED
 +#endif
@@ -954,12 +1195,33 @@ index 0000000..b977d5e
 +#include "imgui.h"
 +#include <SDL.h>
 +#include <cstdio>
++#include <cstdlib>
++#if defined(_WIN32)
++#include <windows.h>
++#endif
 +
 +#define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"FAIL line %d: %s\n",__LINE__,SDL_GetError());return 1;} } while(0)
-+int main() {
-+    SDL_SetHint(SDL_HINT_VIDEODRIVER,"dummy");
++int main(int argc, char**) {
++    const bool native = argc > 1;
++    if (!native) SDL_SetHint(SDL_HINT_VIDEODRIVER,"dummy");
++#if defined(_WIN32)
++    _putenv_s("LNG_FORCE_SCALE", "1.25");
++#else
++    setenv("LNG_FORCE_SCALE", "1.25", 1);
++#endif
 +    CHECK(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER)==0);
-+    SDL_Window* window=SDL_CreateWindow("Host game",0,0,1100,880,SDL_WINDOW_HIDDEN);
++    SDL_Window* window = nullptr;
++#if defined(_WIN32)
++    HWND hwnd = nullptr;
++    if (native) {
++        hwnd = CreateWindowExW(0, L"STATIC", L"Borrowed native DPI fixture",
++                              WS_OVERLAPPEDWINDOW, 100, 100, 1400, 1000,
++                              nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
++        CHECK(hwnd);
++        window = SDL_CreateWindowFrom(hwnd);
++    }
++#endif
++    if (!native) window=SDL_CreateWindow("Host game",0,0,1100,880,SDL_WINDOW_HIDDEN);
 +    CHECK(window);
 +    Uint32 id=SDL_GetWindowID(window);
 +    SDL_Renderer* renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
@@ -970,7 +1232,7 @@ index 0000000..b977d5e
 +    settings.player_src[0]=3;settings.pad_mode[0]=1;
 +    RecompLauncherCGameInfo game={};
 +    launcher_profile_apply_genesis(&game);
-+    game.name="Borrowed host settings test";
++    game.name="Borrowed host settings test";game.theme="dyna";game.initial_page="settings";
 +    game.in_session=1;game.num_players=2;
 +    game.config_path="host_surface_ui_fixture.ini";
 +    game.keybinds_path="host_surface_ui_fixture.ini";
@@ -979,6 +1241,16 @@ index 0000000..b977d5e
 +    char rom[1024]={};
 +    int result=recomp_launcher_run_window("Same window",&settings,&game,nullptr,nullptr,rom,sizeof rom);
 +    CHECK(result==RECOMP_LAUNCHER_RESULT_QUIT);
++    // The full-window green theme outline must reach the output's right edge.
++    // Without renderer vertex scaling the logical root stops at 80% at 125% DPI.
++    int output_w=0, output_h=0;
++    CHECK(SDL_GetRendererOutputSize(renderer,&output_w,&output_h)==0);
++    SDL_Rect edge={output_w-4,output_h/2,4,1};
++    Uint32 pixels[4]={};
++    CHECK(SDL_RenderReadPixels(renderer,&edge,SDL_PIXELFORMAT_ARGB8888,pixels,sizeof pixels)==0);
++    bool reached_edge=false;
++    for (Uint32 color:pixels) if (((color>>8)&255)>90) reached_edge=true;
++    if (!native) CHECK(reached_edge); // native backbuffers may be invalid after Present
 +    CHECK(ImGui::GetCurrentContext()==host_context);
 +    CHECK(SDL_GetWindowFromID(id)==window && SDL_GetRenderer(window)==renderer);
 +    int w,h;SDL_RenderGetLogicalSize(renderer,&w,&h);CHECK(w==320 && h==224);
@@ -987,7 +1259,29 @@ index 0000000..b977d5e
 +    SDL_DestroyWindow(next);
 +    ImGui::DestroyContext(host_context);
 +    SDL_DestroyRenderer(renderer);SDL_DestroyWindow(window);SDL_Quit();
++#if defined(_WIN32)
++    if (hwnd) { CHECK(IsWindow(hwnd)); DestroyWindow(hwnd); }
++#endif
 +    std::remove("host_surface_ui_fixture.ini");
 +    std::puts("ok: full settings/controller/dashboard rendered in borrowed window; no extra window");
 +    return 0;
 +}
+diff --git a/tests/launcher_in_session_test.c b/tests/launcher_in_session_test.c
+index 31d3676..ee8f13f 100644
+--- a/tests/launcher_in_session_test.c
++++ b/tests/launcher_in_session_test.c
+@@ -48,6 +48,14 @@ int main(void) {
+     check(strcmp(launcher_hotkey_name(LNG_HK_OPEN_LAUNCHER), "Open launcher") == 0,
+           "the OpenLauncher row is labelled \"Open launcher\"");
+ 
++    const char* pages[] = {NULL, "dashboard", "settings", "controller", "mods", "unknown"};
++    const int views[] = {LNG_VIEW_DASHBOARD, LNG_VIEW_DASHBOARD, LNG_VIEW_SETTINGS,
++                            LNG_VIEW_CONTROLLER, LNG_VIEW_MODS, LNG_VIEW_DASHBOARD};
++    for (int i = 0; i < 6; ++i) {
++        game.initial_page = pages[i];
++        launcher_model_init(&model, &settings, &game, NULL);
++        check(model.view == views[i], "initial_page selects only supported landing pages");
++    }
+     if (fails) return 1;
+     printf("ok: in-session launcher model contract\n");
+     return 0;

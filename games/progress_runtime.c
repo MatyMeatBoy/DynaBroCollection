@@ -6,6 +6,7 @@
 #include "extras_ui.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <bcrypt.h>
@@ -15,6 +16,28 @@ static DynaProgressSession session;
 static DynaProgressReplay replay;
 static char folder[1800],path[2048],status[128];
 static int ready;
+/* Dormant unless explicitly requested by a native qualification run. */
+static int test_index=-1,test_queued,test_queue_title;
+static unsigned test_cancel_after;
+static void test_setup(unsigned game) {
+ const char *v=getenv("DYNA_DB1_REPLAY_TEST_INDEX");char *end;
+ test_index=-1;test_queued=0;test_cancel_after=0;test_queue_title=0;
+ if(game!=1 || !v || !*v || *v<'0' || *v>'9')return;
+ unsigned long i=strtoul(v,&end,10);
+ if(*end || i>96 || (i>=8 && i<20))return;
+ test_index=(int)i;
+ v=getenv("DYNA_DB1_REPLAY_TEST_QUEUE_TITLE");
+ test_queue_title=v && !strcmp(v,"1");
+ v=getenv("DYNA_DB1_REPLAY_TEST_CANCEL_AFTER");
+ if(v && *v>='0' && *v<='9'){
+  unsigned long n=strtoul(v,&end,10);
+  if(!*end && n<=1800)test_cancel_after=(unsigned)n;
+ }
+}
+static void test_log(uint32_t pc) {
+ fprintf(stderr,"[progress-test] pc=%06X status=%u elapsed=%u pulse=%u\n",
+  pc,(unsigned)replay.status,replay.elapsed,replay.pulse_frame);
+}
 void dyna_progress_runtime_settings(const char *settings) {
  ready=0;folder[0]=path[0]=0;
  if(!settings || strlen(settings)>=sizeof folder)return;
@@ -58,6 +81,7 @@ static int launch(void *u,unsigned game,size_t i) {
  return 0; /* Keep the guidance visible until the user closes Extras. */
 }
 int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size) {
+ test_setup(game);
  char hash[65];ready=0;snprintf(status,sizeof status,"SAVE UNAVAILABLE");
  if(!folder[0] || !rom || !identity(rom,size,hash) || !dyna_progress_init(&store,game,hash))return 0;
  if(snprintf(path,sizeof path,"%sdyna%u-progress-%.16s.bin",folder,game,hash)>=(int)sizeof path)return 0;
@@ -77,8 +101,25 @@ void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t 
  }
  if(ready){
   DynaProgressReplayStatus before=replay.status;
+  if(test_index>=0 && !test_queued && pc==(test_queue_title?0x1c5a4u:0x1d7b6u)){
+   unsigned i=(unsigned)test_index;size_t offset=0x1e87e + i*4;
+   DynaProgressCode c={0};c.mode=(uint16_t)(i>=80?4:i/20);
+   c.stage=(uint16_t)(i>=80?i-79:i<8?i+1:i%20+1);c.length=4;
+   test_queued=1;
+   if(offset+4<=replay.rom_size){
+    memcpy(c.code,replay.rom+offset,4);dyna_progress_replay_request(&replay,&c);
+   }
+   test_log(pc);
+  }
   dyna_progress_session_before(&session,pc,ram,size,a);dyna_progress_replay_before(&replay,pc,ram,size,d,a);
-  if(replay.status!=before)dyna_extras_ui_notice(dyna_progress_replay_status_text(&replay));
+  if(replay.status!=before){
+   dyna_extras_ui_notice(dyna_progress_replay_status_text(&replay));
+   if(test_index>=0 && size>=0x3a){
+    test_log(pc);
+    fprintf(stderr,"[progress-test] stage=%02X%02X ptr=%02X%02X%02X%02X d4=%08X code=%02X%02X%02X%02X\n",
+     ram[0x34],ram[0x35],ram[0x2e],ram[0x2f],ram[0x30],ram[0x31],d[4],ram[0x36],ram[0x37],ram[0x38],ram[0x39]);
+   }
+  }
  }
 }
 int dyna_progress_runtime_action(const char *key) {
@@ -94,7 +135,14 @@ const char *dyna_progress_runtime_status(void){return status;}
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask) {
  if(!ready || player)return mask;
  int replace=0;unsigned buttons=0;
+ DynaProgressReplayStatus before=replay.status;
+ if(test_index>=0 && test_queued && test_cancel_after && replay.elapsed>=test_cancel_after &&
+    replay.status>=DYNA_REPLAY_WAIT_PASSWORD && replay.status<=DYNA_REPLAY_ACCEPTED)
+  dyna_progress_replay_cancel(&replay);
  dyna_progress_replay_frame(&replay,&replace,&buttons);
+ if(test_index>=0 && (replace || replay.status!=before)){
+  test_log(0);fprintf(stderr,"[progress-test] override=%d buttons=%u\n",replace,buttons);
+ }
  if(!replace)return mask;
  return (buttons&DYNA_REPLAY_PAD_A?GPAD_A:0) |
         (buttons&DYNA_REPLAY_PAD_B?GPAD_B:0) |

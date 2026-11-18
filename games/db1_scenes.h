@@ -11,6 +11,15 @@ Db1Scene db1_scenes_kind(void);
 /* Presentation only: signed native-screen coordinates, immutable VDP snapshot.
  * Returns packed color[5:0], opaque[6], priority[7] from authored plane B. */
 uint8_t db1_scenes_plane_b(const GVDP *, int x, int y);
+/* Options/password backdrop writer emits a 16-glyph sequence across39
+ * columns, then a blank row; phase advances7 glyphs per pair of rows.
+ * Repeat that authored128x256 pattern from untouched rows0/1, excluding
+ * the later panel fill. Uses live scroll, patterns, palette and flips. */
+uint8_t db1_scenes_menu_background_b(const GVDP *, int x, int y);
+/* Unwrapped authored plane coordinates before name-table wrap. Uses the same
+ * nearest native raster/column scroll contract as the plane sampler. */
+int db1_scenes_plane_b_coordinates(const GVDP *, int x, int y,
+                                  int *source_x, int *source_y);
 uint32_t db1_scenes_background(const GVDP *, int x, int y);
 uint32_t db1_scenes_background_for(Db1Scene, const GVDP *, int x, int y);
 /* Extend only the background; copy the native foreground and center unchanged. */

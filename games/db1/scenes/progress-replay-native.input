@@ -1,0 +1,19 @@
+# Requires DYNA_DB1_REPLAY_TEST_INDEX=21; queue uses actual effective ROM bytes.
+# Only native title navigation; no guest state writes or PC changes.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS DOWN 12
+WAIT 60
+PRESS DOWN 12
+WAIT 60
+PRESS DOWN 12
+WAIT 60
+PRESS A 12
+WAIT 900
+SCREENSHOT progress-replay-native.png
+ASSERT_RAM16 FF0034 0015
+ASSERT_RAM16 FF002E 00FF
+ASSERT_RAM16 FF0030 B3F0
