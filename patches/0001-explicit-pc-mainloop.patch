@@ -525,7 +525,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..f49665e 100644
+index df30a08..2d6b6e6 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -533,7 +533,19 @@ index df30a08..f49665e 100644
  #include "video/genesis_frame_pixels.h"
  #include "video/genesis_hd_gpu.h"
  #include "video/genesis_raster_jobs.h"
-@@ -389,7 +390,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
+@@ -52,6 +53,11 @@ static GenesisLoadHold s_load_hold;
+ static SDL_Keycode s_load_key;
+ static int s_load_hold_focused;
+ static SDL_Texture *s_load_hold_texture;
++/* Gameplay here is controller/keyboard-only; hide the mouse pointer after
++ * 1s idle in fullscreen or borderless so it never sits over the image.
++ * SDL_MOUSEMOTION above resets the timer and restores it immediately. */
++static Uint32 s_cursor_idle_since;
++static int s_cursor_hidden;
+ 
+ static void cancel_load_hold(void)
+ {
+@@ -389,7 +395,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
      else if (!strcmp(i->key,"video.internal_resolution")) {
          *out=0;for(int n=0;n<7;++n)if(s_hd_scales[n]==g_app_config.internal_scale)*out=n;
      }
@@ -542,7 +554,7 @@ index df30a08..f49665e 100644
  }
  static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
      RuntimeUiContext *c = (RuntimeUiContext *)p;
-@@ -438,15 +439,17 @@ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
+@@ -438,15 +444,17 @@ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
              s_frame_texture_filtered = mode != SDL_ScaleModeNearest;
      } else if (!strcmp(i->key, RECOMP_RUNTIME_UI_KEY_VOLUME)) {
          g_app_config.volume = v; audio_set_master_volume(v);
@@ -561,7 +573,7 @@ index df30a08..f49665e 100644
      if (!strcmp(i->key, RECOMP_RUNTIME_UI_KEY_RESUME)) { recomp_runtime_ui_close(c->ui); return 1; }
      if (g_game_spec.state_size && (!strcmp(i->key,"states.save") || !strcmp(i->key,"states.load"))) {
          char path[32]; snprintf(path,sizeof path,"native_save_%d.bin",s_quickstate_slot);
-@@ -454,6 +457,9 @@ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
+@@ -454,6 +462,9 @@ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
          if (ok) recomp_runtime_ui_close(c->ui);
          return ok;
      }
@@ -571,7 +583,7 @@ index df30a08..f49665e 100644
      return 0;
  }
  static int runtime_ui_key(SDL_Keycode k) {
-@@ -461,6 +467,74 @@ static int runtime_ui_key(SDL_Keycode k) {
+@@ -461,6 +472,74 @@ static int runtime_ui_key(SDL_Keycode k) {
      case SDLK_LEFT:return RECOMP_RUNTIME_UI_INPUT_LEFT; case SDLK_RIGHT:return RECOMP_RUNTIME_UI_INPUT_RIGHT;
      case SDLK_RETURN:case SDLK_SPACE:return RECOMP_RUNTIME_UI_INPUT_ACCEPT; case SDLK_ESCAPE:return RECOMP_RUNTIME_UI_INPUT_BACK; default:return -1; }
  }
@@ -646,7 +658,7 @@ index df30a08..f49665e 100644
  #endif
  
  static void widescreen_setup(void)
-@@ -573,6 +647,13 @@ static void set_interlace_display_mode(const char *value)
+@@ -573,6 +652,13 @@ static void set_interlace_display_mode(const char *value)
  
  static int display_logical_height(void)
  {
@@ -660,7 +672,7 @@ index df30a08..f49665e 100644
      if (netplay_peer_view_active())
          return s_screen_height / 2;
      if (s_screen_height > 240 && s_interlace_display_mode == INTERLACE_DISPLAY_TV)
-@@ -595,6 +676,14 @@ static void update_render_logical_size(SDL_Renderer *renderer)
+@@ -595,6 +681,14 @@ static void update_render_logical_size(SDL_Renderer *renderer)
      static int s_last_h = 0;
      static int s_trace_w = 0, s_trace_h = 0;
      static int s_last_integer = -1;
@@ -675,7 +687,7 @@ index df30a08..f49665e 100644
      int w;
      int h;
  
-@@ -613,7 +702,8 @@ static void update_render_logical_size(SDL_Renderer *renderer)
+@@ -613,7 +707,8 @@ static void update_render_logical_size(SDL_Renderer *renderer)
  
      /* The custom renderer sizes its canvas from the window, so it keeps the
       * fractional fill. */
@@ -685,7 +697,7 @@ index df30a08..f49665e 100644
      if (renderer != s_last_renderer || w != s_last_w || h != s_last_h || integer != s_last_integer) {
          /* SDL never scales below 1x, so a window smaller than the frame
           * would crop it; integer mode keeps the window at least 1x. */
-@@ -708,7 +798,9 @@ static void own_scanline_sink(void *u, int line, const uint32_t *argb, int width
+@@ -708,7 +803,9 @@ static void own_scanline_sink(void *u, int line, const uint32_t *argb, int width
  {
      (void)u;
      if (line < 0 || line >= MAX_SCREEN_HEIGHT) return;
@@ -696,7 +708,7 @@ index df30a08..f49665e 100644
      s_screen_width = game_video_draw_row(&s_video_frame, &g_machine.vdp, line,
          width, row, MAX_SCREEN_WIDTH, provided_native_row, (void *)argb);
  }
-@@ -753,7 +845,9 @@ static void own_custom_row(void *user, const GVDP *vdp, int line, int native_w,
+@@ -753,7 +850,9 @@ static void own_custom_row(void *user, const GVDP *vdp, int line, int native_w,
      (void)user;
      if (line < 0 || line >= MAX_SCREEN_HEIGHT) return;
      /* The machine supplies actual H32/H40/margin/canvas row geometry. */
@@ -707,7 +719,7 @@ index df30a08..f49665e 100644
      s_screen_width = game_video_draw_presented_row(&s_video_frame, vdp, line, native_w,
          row, MAX_SCREEN_WIDTH, native_row, native_ctx, raster);
      const GameVideo *adapter=s_video_frame.adapter;
-@@ -773,6 +867,11 @@ static void custom_video_prepare(void)
+@@ -773,6 +872,11 @@ static void custom_video_prepare(void)
          SDL_GetRendererOutputSize(s_video_renderer, &dw, &dh);
      genesis_replay_viewport(&dw,&dh);
      s_video_frame = game_video_prepare_frame(g_game_spec.video, dw, dh, 320, 224);
@@ -719,7 +731,7 @@ index df30a08..f49665e 100644
      if (!s_video_renderer || !s_video_frame.owner) {
          game_video_native_fallback(&s_video_frame);
          return;
-@@ -786,7 +885,8 @@ static void custom_video_prepare(void)
+@@ -786,7 +890,8 @@ static void custom_video_prepare(void)
       * Never invoke one at a smaller local width: preserve its logical request
       * and use exact native presentation when this host cannot fit it. */
      if (SDL_GetRendererInfo(s_video_renderer, &info) == 0 && info.max_texture_width > 0 &&
@@ -729,7 +741,7 @@ index df30a08..f49665e 100644
          game_video_native_fallback(&s_video_frame);
          return;
      }
-@@ -1116,7 +1216,7 @@ static void collect_sim_input(GenesisSimInput *in)
+@@ -1116,7 +1221,7 @@ static void collect_sim_input(GenesisSimInput *in)
              pad_mask |= input_current_mask(port) &
                          (GPAD_X | GPAD_Y | GPAD_Z | GPAD_MODE);
  #endif
@@ -738,7 +750,7 @@ index df30a08..f49665e 100644
      }
      for (int p = 2; p < GENESIS_SIM_MAX_PLAYERS; p++)
          if (!input_gameplay_blocked())
-@@ -1713,9 +1813,27 @@ int runner_write_screenshot_file(const char *path)
+@@ -1713,9 +1818,27 @@ int runner_write_screenshot_file(const char *path)
  {
      char full_path[512];
      const char *resolved = resolve_runner_path(path, full_path, sizeof(full_path));
@@ -767,7 +779,7 @@ index df30a08..f49665e 100644
      if (ok)
          fprintf(stderr, "[SCREENSHOT] wrote %s\n", resolved);
      else
-@@ -2153,6 +2271,17 @@ static int live_post_drain(void *ctx)
+@@ -2153,6 +2276,17 @@ static int live_post_drain(void *ctx)
   * soft return to a netplay waiting room (soft_return = 1). Returns the
   * launcher's result: 0 PLAY, 1 closed, 2 unavailable. On PLAY a netplay launch
   * is folded into *netplay_config_v (a GenesisNetplayConfig). */
@@ -785,7 +797,7 @@ index df30a08..f49665e 100644
  static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char *picked,
                                 size_t picked_cap, const char **rom_path_io,
                                 const char *settings_ini, const char *rom_cfg_path,
-@@ -2189,6 +2318,9 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2189,6 +2323,9 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          for (int p = 0; p < INPUT_MAX_PLAYERS; p++) {
              int dev = g_input_map.p[p].device;
              ls.player_src[p] = (dev == INPUT_DEV_NONE)    ? 0
@@ -795,7 +807,7 @@ index df30a08..f49665e 100644
                               : (dev & INPUT_DEV_KEYBOARD) ? 1 : 2;
              ls.pad_mode[p]   = (g_input_map.p[p].pad_type == PAD_6BUTTON) ? 1 : 0;
              ls.deadzone[p]   = g_input_map.p[p].deadzone_pct;
-@@ -2197,7 +2329,19 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2197,7 +2334,19 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          RecompLauncherCGameInfo gi;
          memset(&gi, 0, sizeof gi);
          gi.name                 = g_game_spec.display_name;
@@ -816,7 +828,7 @@ index df30a08..f49665e 100644
          gi.expected_crc         = g_game_spec.expected_rom_crc32;
          gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
  #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
-@@ -2237,7 +2381,12 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2237,7 +2386,12 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          gi.num_players = g_game_spec.logical_players ? (int)g_game_spec.logical_players : 2;
          if (gi.num_players > INPUT_MAX_PLAYERS) gi.num_players = INPUT_MAX_PLAYERS;
          gi.platform             = "SEGA GENESIS";  /* infers the genesis profile */
@@ -830,7 +842,7 @@ index df30a08..f49665e 100644
          gi.rom_noun             = "ROM";
  #ifdef RECOMP_LAUNCHER_HAS_ROM_PATTERNS
          /* Steam's unheadered Mega Drive images use .68K. The picker only
-@@ -2259,6 +2408,8 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2259,6 +2413,8 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          /* Point the launcher's bind bridge at the engine's OWN
           * settings.ini (not a separate keybinds.ini) so key/pad
           * rebinds land where app_config_load() reads them. */
@@ -839,7 +851,7 @@ index df30a08..f49665e 100644
          gi.keybinds_path        = settings_ini;
          /* SRAM panel: the engine names its battery file
           * <rom-basename>.srm next to the exe (runner_sram_init_and_load,
-@@ -2338,12 +2489,11 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2338,12 +2494,11 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
  #endif
              for (int p = 0; p < gi.num_players; p++) {
                  int src = ls.player_src[p];
@@ -857,7 +869,7 @@ index df30a08..f49665e 100644
                                                  : (src == 2) ? INPUT_DEV_GAMEPAD
                                                  : INPUT_DEV_NONE;
                  g_input_map.p[p].pad_type     = (ls.pad_mode[p] == 1) ? PAD_6BUTTON : PAD_3BUTTON;
-@@ -2484,6 +2634,9 @@ static void replay_view(GenesisReplayView *v,int apply)
+@@ -2484,6 +2639,9 @@ static void replay_view(GenesisReplayView *v,int apply)
  
  int main(int argc, char *argv[])
  {
@@ -867,7 +879,7 @@ index df30a08..f49665e 100644
      cmd_server_owner_review_init(getenv("GENESIS_OWNER_REVIEW"));
      init_exe_dir(argv[0]);
      const char *user_dir=getenv("GENESIS_USER_DIR");
-@@ -2524,6 +2677,8 @@ int main(int argc, char *argv[])
+@@ -2524,6 +2682,8 @@ int main(int argc, char *argv[])
       * set), --no-launcher / GENESIS_NO_LAUNCHER forces it off (headless). */
      int force_launcher = 0;
      int no_launcher    = 0;
@@ -876,7 +888,7 @@ index df30a08..f49665e 100644
      const char *custom_video_cli = NULL;
  
      /* --- Paced-native spike (option 2) ---
-@@ -2612,6 +2767,17 @@ int main(int argc, char *argv[])
+@@ -2612,6 +2772,17 @@ int main(int argc, char *argv[])
              force_launcher = 1;
          } else if (strcmp(argv[i], "--replay-diagnostic") == 0 && i+1<argc) {
              replay_path=argv[++i];no_launcher=1;
@@ -894,7 +906,7 @@ index df30a08..f49665e 100644
          } else if (strcmp(argv[i], "--no-launcher") == 0) {
              no_launcher = 1;
          } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
-@@ -2724,6 +2890,7 @@ int main(int argc, char *argv[])
+@@ -2724,6 +2895,7 @@ int main(int argc, char *argv[])
      app_config_defaults();
      app_config_load(settings_ini);   /* also seeds g_input_map controller bindings */
      if (g_game_spec.load_settings) g_game_spec.load_settings(settings_ini);
@@ -902,7 +914,7 @@ index df30a08..f49665e 100644
  #if GENESIS_HAS_RECOMP_NET && RECOMP_LAUNCHER
      {
          /* Content identity for the lobby: the ROM's SHA-256, when a ROM is
-@@ -3055,14 +3222,17 @@ int main(int argc, char *argv[])
+@@ -3055,14 +3227,17 @@ int main(int argc, char *argv[])
       * Adaptive mode then has a 16:9 window to follow on the first frame. */
      int win_scale = g_app_config.window_scale;
      if (win_scale < 1) win_scale = 1; else if (win_scale > 8) win_scale = 8;
@@ -921,7 +933,7 @@ index df30a08..f49665e 100644
      /* Scripted launcher tests must stay hidden after the handoff to gameplay. */
      int test_hidden = getenv("LNG_SCRIPT") && getenv("LNG_TEST_HIDDEN");
      Uint32 win_flags = ((benchmark_frames || test_hidden) ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN)
-@@ -3190,7 +3360,7 @@ int main(int argc, char *argv[])
+@@ -3190,7 +3365,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -930,7 +942,7 @@ index df30a08..f49665e 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3371,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3376,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }
@@ -945,7 +957,7 @@ index df30a08..f49665e 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
-@@ -3317,13 +3495,17 @@ int main(int argc, char *argv[])
+@@ -3317,13 +3500,17 @@ int main(int argc, char *argv[])
      /* --target-fps wins over debug.ini, which wins over default 59.94. */
      double target_fps = (target_fps_cli > 0.0)     ? target_fps_cli :
                          (target_fps_from_ini > 0.0) ? target_fps_from_ini :
@@ -964,7 +976,7 @@ index df30a08..f49665e 100644
  
  #ifdef GENESIS_COSIM
      /* Differential co-simulation: bring up the lockstep TCP server + checkpoint
-@@ -3345,7 +3527,7 @@ int main(int argc, char *argv[])
+@@ -3345,7 +3532,7 @@ int main(int argc, char *argv[])
       * tables fix made the per-instruction cycle counts exact). */
      {
          const char *chosen = pacing_cli ? pacing_cli :
@@ -973,7 +985,7 @@ index df30a08..f49665e 100644
          if (chosen) {
              if (strcmp(chosen, "accurate") == 0)
                  g_pacing_mode = GLUE_PACING_CYCLE_ACCURATE;
-@@ -3540,6 +3722,10 @@ session_begin:;
+@@ -3540,6 +3727,10 @@ session_begin:;
      const Uint64 perf_frequency = SDL_GetPerformanceFrequency();
      FramePacer frame_pacer;
      frame_pacer_init(&frame_pacer, perf_frequency, target_fps);
@@ -984,7 +996,18 @@ index df30a08..f49665e 100644
      PresentationClock presentation_clock={0};
      uint32_t *interpolation_image=NULL;size_t interpolation_capacity=0;
      uint64_t presentation_count=0,interpolation_count=0;
-@@ -3621,6 +3807,24 @@ session_begin:;
+@@ -3613,6 +3804,10 @@ session_begin:;
+                 genesis_hd_gpu_destroy(hd_gpu);hd_gpu=NULL;hd_checked=0;
+                 SDL_DestroyTexture(s_load_hold_texture);s_load_hold_texture=NULL;
+             }
++            if (ev.type == SDL_MOUSEMOTION) {
++                if (s_cursor_hidden) { SDL_ShowCursor(SDL_ENABLE); s_cursor_hidden = 0; }
++                s_cursor_idle_since = SDL_GetTicks();
++            }
+             load_hold_event(&ev, window);
+ #if RECOMP_LAUNCHER
+             if (recomp_runtime_ui_is_open(s_runtime_ui.ui))
+@@ -3621,6 +3816,24 @@ session_begin:;
                  cancel_load_hold();
                  recomp_runtime_ui_open(s_runtime_ui.ui); continue;
              }
@@ -1009,7 +1032,23 @@ index df30a08..f49665e 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3735,7 +3939,46 @@ session_begin:;
+@@ -3708,6 +3921,15 @@ session_begin:;
+         }
+ 
+         if (!running) break; /* Close must not execute another game/render tick. */
++        {
++            Uint32 fs = SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
++            if (!fs) {
++                if (s_cursor_hidden) { SDL_ShowCursor(SDL_ENABLE); s_cursor_hidden = 0; }
++                s_cursor_idle_since = SDL_GetTicks();
++            } else if (!s_cursor_hidden && SDL_GetTicks() - s_cursor_idle_since >= 1000) {
++                SDL_ShowCursor(SDL_DISABLE); s_cursor_hidden = 1;
++            }
++        }
+         {
+             uint32_t pad = gamepad_overlay_mask();
+             uint32_t menu = GP_OVERLAY_BACK | GP_OVERLAY_RB;
+@@ -3735,7 +3957,46 @@ session_begin:;
          }
  
  #if RECOMP_LAUNCHER
@@ -1057,7 +1096,7 @@ index df30a08..f49665e 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -3898,6 +4141,13 @@ session_begin:;
+@@ -3898,6 +4159,13 @@ session_begin:;
             * the existing interlace display modes (tv squash / raw) take over
             * from here, same as the clownmdemu path. */
            s_screen_height = gvdp_output_height(&g_machine.vdp);
@@ -1071,7 +1110,7 @@ index df30a08..f49665e 100644
            if (!completed) {                        /* reverse-debug quit */
                fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
                    "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
-@@ -4180,6 +4430,7 @@ session_begin:;
+@@ -4180,6 +4448,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -1079,7 +1118,7 @@ index df30a08..f49665e 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4439,7 @@ session_begin:;
+@@ -4188,7 +4457,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -1088,7 +1127,7 @@ index df30a08..f49665e 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4450,14 @@ session_begin:;
+@@ -4199,12 +4468,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -1104,7 +1143,7 @@ index df30a08..f49665e 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
-@@ -4288,7 +4541,14 @@ session_begin:;
+@@ -4288,7 +4559,14 @@ session_begin:;
              }
              peer_view_was_active = peer_view_is_active;
          }
