@@ -48,3 +48,7 @@ class CodecTests(unittest.TestCase):
         ]:
             with self.subTest(packed=packed), self.assertRaises(CodecError):
                 decode_dictionary(packed)
+    def test_dictionary_rejects_invalid_backreference(self):
+        packed = bytes.fromhex('00010001014100018000')
+        with self.assertRaises(CodecError):
+            decode_dictionary(packed)
