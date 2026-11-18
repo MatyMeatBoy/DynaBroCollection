@@ -27,3 +27,8 @@ class CodecTests(unittest.TestCase):
         for packed in [b'', b'\x00\x01\x00', b'\x00\x01\x00\x80\x00', b'\x00\x01\x00\x01AB']:
             with self.subTest(packed=packed), self.assertRaises(CodecError):
                 decode(packed)
+
+    def test_dictionary_rejects_invalid_backreference(self):
+        packed = bytes.fromhex('00010001014100018000')
+        with self.assertRaises(CodecError):
+            decode_dictionary(packed)
