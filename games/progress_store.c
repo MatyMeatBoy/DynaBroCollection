@@ -8,6 +8,49 @@
 #else
 #include <unistd.h>
 #endif
+/* Public paths are UTF-8, including Windows profiles outside the ANSI codepage. */
+#ifdef _WIN32
+static wchar_t *wide_path(const char *path) {
+    if(!path||!*path||strlen(path)>30064)return NULL;
+    int count=MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,path,-1,NULL,0);
+    if(!count)return NULL;
+    wchar_t *wide=malloc((size_t)count*sizeof *wide);
+    if(!wide)return NULL;
+    if(!MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,path,-1,wide,count)){
+        free(wide);return NULL;
+    }
+    return wide;
+}
+static FILE *open_file(const char *path,int writing) {
+    wchar_t *wide=wide_path(path);if(!wide)return NULL;
+    FILE *f=_wfopen(wide,writing?L"wbx":L"rb");free(wide);return f;
+}
+static int replace_file(const char *from,const char *to) {
+    wchar_t *a=wide_path(from),*b=wide_path(to);
+    int ok=a&&b&&MoveFileExW(a,b,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
+    free(a);free(b);return ok;
+}
+static void remove_file(const char *path) {
+    wchar_t *wide=wide_path(path);if(wide)DeleteFileW(wide);free(wide);
+}
+int dyna_progress_file_exists(const char *path) {
+    wchar_t *wide=wide_path(path);if(!wide)return 1;
+    DWORD attrs=GetFileAttributesW(wide),error=GetLastError();free(wide);
+    /* Unknown/access errors fail closed: never silently replace unreadable saves. */
+    return attrs!=INVALID_FILE_ATTRIBUTES ||
+           (error!=ERROR_FILE_NOT_FOUND && error!=ERROR_PATH_NOT_FOUND);
+}
+#else
+#include <errno.h>
+#include <sys/stat.h>
+static FILE *open_file(const char *path,int writing){return fopen(path,writing?"wbx":"rb");}
+static int replace_file(const char *from,const char *to){return rename(from,to)==0;}
+static void remove_file(const char *path){remove(path);}
+int dyna_progress_file_exists(const char *path){
+    struct stat info;if(!path||!*path)return 1;
+    return stat(path,&info)==0 || (errno!=ENOENT && errno!=ENOTDIR);
+}
+#endif
 #define HEADER 88u
 #define RECORD 17u
 static int hexhash(const char *s) {
@@ -68,7 +111,7 @@ static size_t encode(const DynaProgressStore *s,uint8_t *p) {
 }
 int dyna_progress_load(DynaProgressStore *s,const char *path) {
     if(!valid(s)||!path)return 0;
-    FILE *f=fopen(path,"rb");if(!f)return 0;
+    FILE *f=open_file(path,0);if(!f)return 0;
     uint8_t bytes[HEADER+RECORD*DYNA_PROGRESS_LIMIT];
     size_t n=fread(bytes,1,sizeof bytes,f);int extra=fgetc(f),ok=!ferror(f);
     if(fclose(f))ok=0;
@@ -101,7 +144,7 @@ int dyna_progress_save(const DynaProgressStore *s,const char *path) {
 #else
         snprintf(temp,plen+64,"%s.tmp.%lu.%u",path,(unsigned long)getpid(),attempt);
 #endif
-        f=fopen(temp,"wbx");
+        f=open_file(temp,1);
     }
     if(!f){free(temp);return 0;}
     int ok=fwrite(bytes,1,n,f)==n;
@@ -113,12 +156,8 @@ int dyna_progress_save(const DynaProgressStore *s,const char *path) {
 #endif
     if(fclose(f))ok=0;
     if(ok) {
-#ifdef _WIN32
-        ok=MoveFileExA(temp,path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)!=0;
-#else
-        ok=rename(temp,path)==0;
-#endif
+        ok=replace_file(temp,path);
     }
-    if(!ok)remove(temp);
+    if(!ok)remove_file(temp);
     free(temp);return ok;
 }

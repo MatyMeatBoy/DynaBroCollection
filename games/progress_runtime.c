@@ -98,7 +98,7 @@ int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size) {
  char hash[65];ready=0;snprintf(status,sizeof status,"SAVE UNAVAILABLE");
  if(!folder[0] || !rom || !identity(rom,size,hash) || !dyna_progress_init(&store,game,hash))return 0;
  if(snprintf(path,sizeof path,"%sdyna%u-progress-%.16s.bin",folder,game,hash)>=(int)sizeof path)return 0;
- FILE *f=fopen(path,"rb");if(f){fclose(f);if(!dyna_progress_load(&store,path)){snprintf(status,sizeof status,"SAVE FILE COULD NOT BE READ");path[0]=0;return 0;}}
+ if(dyna_progress_file_exists(path) && !dyna_progress_load(&store,path)){snprintf(status,sizeof status,"SAVE FILE COULD NOT BE READ");path[0]=0;return 0;}
  ready=dyna_progress_session_init(&session,&store,rom,size);
  dyna_progress_replay_init(&replay,game,rom,size);
  DynaExtrasLevelProvider provider={NULL,count,item,launch};dyna_extras_ui_set_level_provider(&provider);

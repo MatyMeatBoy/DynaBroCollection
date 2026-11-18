@@ -20,6 +20,8 @@ int dyna_progress_init(DynaProgressStore *,unsigned game,const char *sha256);
 int dyna_progress_add(DynaProgressStore *,const DynaProgressCode *);
 /* On failure, destination is unchanged. A mismatched game/ROM is rejected. */
 int dyna_progress_load(DynaProgressStore *,const char *path);
+/* UTF-8 path. Absence returns0; access/encoding errors return1 to fail closed. */
+int dyna_progress_file_exists(const char *path);
 /* Same-directory exclusive temporary, flush, then atomic replacement.
  * A failed write/replacement never pre-deletes the prior valid file. */
 int dyna_progress_save(const DynaProgressStore *,const char *path);

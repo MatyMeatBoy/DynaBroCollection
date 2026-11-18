@@ -481,3 +481,10 @@ renderer1BECC and the separately qualified timed hard-ending MHRI source28F1A.
 Manual accepted-password1DD90 remains excluded from result prompts. Unknown
 literal/graphic code displays still require discovery; this does not turn the
 bounded static inventory into an exhaustive all-secret-screen claim.
+
+
+## UTF-8 Windows progress paths
+
+A focused native probe reproduced a misleading success: narrow fopen/MoveFileExA returned success for UTF-8保存.bin, but GetFileAttributesW could not find the intended filename. A regression asserted the intended Unicode filename and failed before the fix. Progress storage now converts validated UTF-8 to UTF-16 for open, exclusive temporary creation, atomic replacement and cleanup. Existence checks use the same encoding and fail closed on access/encoding errors, so runtime startup does not ignore an unreadable existing save.
+
+The fixed regression passes Unicode save/load, the exact intended name, locked replacement preserving prior data, deletion/absence and malformed-UTF-8 rejection. Existing identity/corruption/ASCII replacement checks remain passing. This is Windows storage evidence, not physical device or campaign acceptance.

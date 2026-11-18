@@ -30,6 +30,25 @@ int main(int argc,char **argv) {
     assert(dyna_progress_save(&s,path));assert(dyna_progress_load(&loaded,path));
     assert(loaded.count==2);
 #endif
+#ifdef _WIN32
+    { /* A successful UTF-8 save must exist under the intended Unicode name. */
+        const char *utf8="progress-\xe4\xbf\x9d\xe5\xad\x98-test.bin";
+        const wchar_t *wide=L"progress-\x4fdd\x5b58-test.bin";
+        assert(dyna_progress_save(&s,utf8));
+        assert(GetFileAttributesW(wide)!=INVALID_FILE_ATTRIBUTES);
+        assert(dyna_progress_file_exists(utf8));
+        assert(dyna_progress_init(&loaded,1,hash));
+        assert(dyna_progress_load(&loaded,utf8));assert(loaded.count==s.count);
+        HANDLE held=CreateFileW(wide,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,0,NULL);
+        assert(held!=INVALID_HANDLE_VALUE);
+        assert(!dyna_progress_save(&s,utf8));CloseHandle(held);
+        assert(dyna_progress_load(&loaded,utf8));assert(loaded.count==s.count);
+        assert(DeleteFileW(wide));
+        assert(!dyna_progress_file_exists(utf8));
+        assert(dyna_progress_file_exists("invalid-\xff.bin"));
+        assert(!dyna_progress_save(&s,"invalid-\xff.bin"));
+    }
+#endif
     before=s;c.length=9;assert(!dyna_progress_add(&s,&c));assert(!memcmp(&before,&s,sizeof s));
     s.codes[0].length=9;assert(!dyna_progress_save(&s,path));
     assert(dyna_progress_init(&loaded,1,hash));assert(dyna_progress_load(&loaded,path));
