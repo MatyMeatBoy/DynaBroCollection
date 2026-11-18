@@ -10,6 +10,7 @@ import sys
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
 from tools.build import find_by_hash, DB1_SHA, DB2_SHA
+from tools.windows_environment import portable_windows_env
 
 
 def main():
@@ -24,13 +25,15 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
         if script:command+=['--script',str(script)]
         if language:command+=['--language',language]
         if replay:command+=['--replay',str(replay)]
+        if widescreen:command+=['--widescreen',widescreen]
+        if ui:command+=['--achievement-ui-test']
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
         elif irq:env['DYNA_IRQ_VERIFY']='1'
@@ -58,7 +61,31 @@ def main():
     run('db1-practice','DynaBrothers1AOT.exe',db1,9600,ROOT/'games/db1/scenes/practice-completion-diagnostic.input')
     run('db1-alien','DynaBrothers1AOT.exe',db1,9600,ROOT/'games/db1/scenes/alien-completion-diagnostic.input')
     run('db1-credits','DynaBrothers1AOT.exe',db1,52000,ROOT/'games/db1/scenes/credits-diagnostic.input')
-    binaries={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.glob('*.exe')}
+    version=json.loads((payload/'PACKAGE.json').read_text(encoding='utf-8'))['version']
+    if tuple(map(int,version.split('.'))) >= (0,1,3):
+        run('db1-wide-original','DynaBrothers1AOT.exe',db1,6100,payload/'debug/db1-16x9.input',widescreen='off')
+        run('db1-wide-expanded','DynaBrothers1AOT.exe',db1,6100,payload/'debug/db1-16x9.input',widescreen='16:9')
+        original,expanded=cases['db1-wide-original'],cases['db1-wide-expanded']
+        if any(original[key]!=expanded[key] for key in ['state_fnv1a64','audio_state_fnv1a64']):
+            raise RuntimeError('DB1 expanded presentation changed canonical game/audio state')
+        cases['db1-wide-state-equality']=dict(passed=True,frames=6100,state_fnv1a64=original['state_fnv1a64'],audio_state_fnv1a64=original['audio_state_fnv1a64'])
+        run('db1-achievements-ui','DynaBrothers1AOT.exe',db1,120,ui=True)
+        run('db2-achievements-ui','DynaBrothers2AOT.exe',db2,120,ui=True)
+        for name in ['DynaDb1VideoTest','DynaDb1visibleTest']:
+            subprocess.run([str(payload/'debug'/(name+'.exe'))],env=portable_windows_env(dict(os.environ)),check=True)
+            cases[name]=dict(passed=True)
+        for game,count,points in [('db1',76,470),('db2',99,1025)]:
+            catalog=json.loads((payload/f'assets/achievements/{game}.json').read_text(encoding='utf-8'))['achievements']
+            if len(catalog)!=count or sum(x['points'] for x in catalog)!=points:
+                raise RuntimeError('Incorrect packaged achievement catalog: '+game)
+            for entry in catalog:
+                for key in ['badge_file_locked','badge_file_unlocked']:
+                    path=payload/'assets/achievements'/entry[key]
+                    data=path.read_bytes()
+                    if not data.startswith(b'\x89PNG\r\n\x1a\n') or int.from_bytes(data[16:20],'big')!=64 or int.from_bytes(data[20:24],'big')!=64:
+                        raise RuntimeError('Invalid packaged badge: '+str(path))
+        cases['achievement-assets']=dict(passed=True,db1_goals=76,db2_goals=99,badges=350)
+    binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',
         scope='Finite native scene/replay/IRQ contracts; physical controllers/audio and complete campaigns remain unverified')

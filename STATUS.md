@@ -1,6 +1,14 @@
 # Work board — 2026-11-17
 
-**The requested project is unfinished.** No stable release, full translation, finished launcher, or widescreen mode is being claimed.
+**The overall project remains in development.** v0.1.3 adds experimental DB1 world expansion and local achievements; full translations, DB2 expansion and full campaign/hardware acceptance remain open.
+
+## v0.1.3 implementation
+
+DB1 now has a read-only expanded-world compositor with right-anchored HUD, original-scene fallback, native 4:3 and default enhanced 16:9 integer presentation. It reads all valid visible actor IDs independently of the fixed 36-entry drawing buffer, preserving native plane and UI sprite priorities. Synthetic tests cover all 253 valid IDs, expanded-only actors, duplicate references, sentinels, ordering and immutable inputs. A native 6,100-frame comparison has equal game/audio state and identical original-area/HUD pixels in the sampled scene. Full campaigns and every effect remain unqualified.
+
+DB1's public catalog has 76 independently implemented local goal contracts and 152 official badges. DB2 Special has 93 stage goals, six cumulative completion milestones and 198 original badges. The paused list, FIFO notifications, atomic local profiles and diagnostic/replay exclusion have tests. The integrated SDL list test held CPU/RAM/VDP unchanged across six presentations and closed through a real SDL Back event. No account synchronization or exact official evaluator equivalence is claimed. [DB1 contracts](docs/db1-achievement-contracts.md); [checkpoint scope](docs/releases/v0.1.3-checkpoint.md).
+
+The v0.1.3 package must be closed against clean source and exact packaged QA before its release identity is recorded. Historical entries below retain the scope and measurements of their own checkpoints.
 
 ## Latest development after the closed checkpoint
 

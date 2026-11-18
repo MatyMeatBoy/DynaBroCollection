@@ -1,0 +1,920 @@
+{
+  "game_id": 5362,
+  "source_url": "https://retroachievements.org/game/5362",
+  "author": "Tybis",
+  "retrieved_utc": "2026-11-18T01:55:33.124277+00:00",
+  "files": [
+    {
+      "path": "203670.png",
+      "sha256": "838d14274225f7121317cb570a65486062ea7e19e52b7d44dd2a0610fa9afa7b",
+      "bytes": 3574,
+      "source_url": "https://media.retroachievements.org/Badge/203670.png"
+    },
+    {
+      "path": "203670_lock.png",
+      "sha256": "a82b8f9095dcb6016f025b02711b52ed2f17ec227482c0e6eea5ee6fe62f927f",
+      "bytes": 4326,
+      "source_url": "https://media.retroachievements.org/Badge/203670_lock.png"
+    },
+    {
+      "path": "203671.png",
+      "sha256": "4df8e50e56fc4199a9b956bae2a00be695b54d8cc9a8069207006c1094101144",
+      "bytes": 2600,
+      "source_url": "https://media.retroachievements.org/Badge/203671.png"
+    },
+    {
+      "path": "203671_lock.png",
+      "sha256": "acdbd8a78685599013b037e799cb6ac01a50b700983c39d0a607a8ea3ecca0a1",
+      "bytes": 3473,
+      "source_url": "https://media.retroachievements.org/Badge/203671_lock.png"
+    },
+    {
+      "path": "203672.png",
+      "sha256": "34e6a4eecad47230b140a840eb33c08d006d9308d20f314e7e9731628a612ac5",
+      "bytes": 3056,
+      "source_url": "https://media.retroachievements.org/Badge/203672.png"
+    },
+    {
+      "path": "203672_lock.png",
+      "sha256": "5c5e6191ffee2b5438698f38e0d9d164dda90d55252fa91c1a860ccdf5e78781",
+      "bytes": 3751,
+      "source_url": "https://media.retroachievements.org/Badge/203672_lock.png"
+    },
+    {
+      "path": "203673.png",
+      "sha256": "876d0e2e3e7b1536bdfacf9e0cdc60c1a05dd1af317a28144bdc61c071a03b1d",
+      "bytes": 3002,
+      "source_url": "https://media.retroachievements.org/Badge/203673.png"
+    },
+    {
+      "path": "203673_lock.png",
+      "sha256": "6f863a840b41e8d806936a19b946c3e46c847c3291d20e5a920a26be49418c0b",
+      "bytes": 3873,
+      "source_url": "https://media.retroachievements.org/Badge/203673_lock.png"
+    },
+    {
+      "path": "203674.png",
+      "sha256": "25d4c2185317f2f740bec71db8bf794b869c1fa1d0459a8da6891cbdd765d906",
+      "bytes": 3378,
+      "source_url": "https://media.retroachievements.org/Badge/203674.png"
+    },
+    {
+      "path": "203674_lock.png",
+      "sha256": "7a34977598982356075c6917a1b3a34ba2d6f26091ca1f0ab3f03557a5e40053",
+      "bytes": 4495,
+      "source_url": "https://media.retroachievements.org/Badge/203674_lock.png"
+    },
+    {
+      "path": "203675.png",
+      "sha256": "117304de489b882d43572675df9d50bf11c2383d540e215a013248dc3ad4543b",
+      "bytes": 2898,
+      "source_url": "https://media.retroachievements.org/Badge/203675.png"
+    },
+    {
+      "path": "203675_lock.png",
+      "sha256": "e30afb4199ec17f40ee8528eb2079af65c725bd959727b8e0b88aa3f3b5eb952",
+      "bytes": 3706,
+      "source_url": "https://media.retroachievements.org/Badge/203675_lock.png"
+    },
+    {
+      "path": "203676.png",
+      "sha256": "bc6af19ac0911de1f28db34130ddf52fff1ea9e7e2b5507891a207b7ed79d471",
+      "bytes": 3559,
+      "source_url": "https://media.retroachievements.org/Badge/203676.png"
+    },
+    {
+      "path": "203676_lock.png",
+      "sha256": "8731b852b928c3a3aea8e35b1086b306c9512502c11b36f7757df177d8a49cbd",
+      "bytes": 4287,
+      "source_url": "https://media.retroachievements.org/Badge/203676_lock.png"
+    },
+    {
+      "path": "203677.png",
+      "sha256": "63bd99fd8cc71d8491b7364e231ed01d1c85936a0849e793a267ce6df43d10f1",
+      "bytes": 2700,
+      "source_url": "https://media.retroachievements.org/Badge/203677.png"
+    },
+    {
+      "path": "203677_lock.png",
+      "sha256": "e83f514ff1acb29e943467c320abfce65412be89b5bb5c637bc72dd6f612fb91",
+      "bytes": 3706,
+      "source_url": "https://media.retroachievements.org/Badge/203677_lock.png"
+    },
+    {
+      "path": "214459.png",
+      "sha256": "2ab76c5d815c68e262a82ab0af20f4555ea998624aea8e46190d0e89dec3433b",
+      "bytes": 3672,
+      "source_url": "https://media.retroachievements.org/Badge/214459.png"
+    },
+    {
+      "path": "214459_lock.png",
+      "sha256": "035fafa1427f9db3abee41c99dfe3b4f0aab42880d46d1bdf680ec132d215959",
+      "bytes": 4734,
+      "source_url": "https://media.retroachievements.org/Badge/214459_lock.png"
+    },
+    {
+      "path": "214460.png",
+      "sha256": "2a21f130cd42941b680f876393735c23f5ce518c3f8edce78bbf144e2ed3f3d6",
+      "bytes": 3387,
+      "source_url": "https://media.retroachievements.org/Badge/214460.png"
+    },
+    {
+      "path": "214460_lock.png",
+      "sha256": "781c63763c25679c212be02a24090bab1ca1293266ec802d40e09bbb21d851d0",
+      "bytes": 4927,
+      "source_url": "https://media.retroachievements.org/Badge/214460_lock.png"
+    },
+    {
+      "path": "214461.png",
+      "sha256": "3fe1f3bb0aa0c13d8ba77cf970e200560b25cdb43fed6965d72c70645c50546e",
+      "bytes": 2935,
+      "source_url": "https://media.retroachievements.org/Badge/214461.png"
+    },
+    {
+      "path": "214461_lock.png",
+      "sha256": "fba74e407681b5f43227e5b9b64ddc4bbf967fcf0b058affdcc570953d6af592",
+      "bytes": 4767,
+      "source_url": "https://media.retroachievements.org/Badge/214461_lock.png"
+    },
+    {
+      "path": "214462.png",
+      "sha256": "a6bd62e0c8d5e0c15ada2aa27d23f8c4a1f97966707b6ef4a7fd7cedf65646f0",
+      "bytes": 2590,
+      "source_url": "https://media.retroachievements.org/Badge/214462.png"
+    },
+    {
+      "path": "214462_lock.png",
+      "sha256": "20b91ddf376278ac9802a5c5422dda908b1cb599bb9d6ff41badd526fdf766eb",
+      "bytes": 4395,
+      "source_url": "https://media.retroachievements.org/Badge/214462_lock.png"
+    },
+    {
+      "path": "214463.png",
+      "sha256": "ec3d4d56e50015cc95d5bda26ab515b53a1b49c06cbbdf57319b0f131c5e80dd",
+      "bytes": 2431,
+      "source_url": "https://media.retroachievements.org/Badge/214463.png"
+    },
+    {
+      "path": "214463_lock.png",
+      "sha256": "a3086cdfee67bcb4d31371ba39d9a4aa0de68c0bf2d307b103e328208308c1af",
+      "bytes": 4434,
+      "source_url": "https://media.retroachievements.org/Badge/214463_lock.png"
+    },
+    {
+      "path": "226989.png",
+      "sha256": "3cc2c47883b9382d00139b173914d94a53c8d73d26f0a38038cb254ed14ae683",
+      "bytes": 2988,
+      "source_url": "https://media.retroachievements.org/Badge/226989.png"
+    },
+    {
+      "path": "226989_lock.png",
+      "sha256": "8b877b9705dfe26eaaec3975e4193ab4995c231464ace097933da554f83a8ba3",
+      "bytes": 4234,
+      "source_url": "https://media.retroachievements.org/Badge/226989_lock.png"
+    },
+    {
+      "path": "226990.png",
+      "sha256": "138c8daf555bfda6629a4e24d985662b76f25bc2c253839dff503f6db9bed45a",
+      "bytes": 3135,
+      "source_url": "https://media.retroachievements.org/Badge/226990.png"
+    },
+    {
+      "path": "226990_lock.png",
+      "sha256": "cf34aef9cf8e1de64838449fc18ee5e01296d82a60f46fdd70a87dc20ae9f23b",
+      "bytes": 4353,
+      "source_url": "https://media.retroachievements.org/Badge/226990_lock.png"
+    },
+    {
+      "path": "226991.png",
+      "sha256": "b9426c950e8ce8297179c29a2b399bea35c98070b8f04985fd6f5ec6d95fac6b",
+      "bytes": 3021,
+      "source_url": "https://media.retroachievements.org/Badge/226991.png"
+    },
+    {
+      "path": "226991_lock.png",
+      "sha256": "37d3a9b58a139fb7f52eb9a1774a2bad5f782b6de60ae6c5d3e61dd3ff017d52",
+      "bytes": 4287,
+      "source_url": "https://media.retroachievements.org/Badge/226991_lock.png"
+    },
+    {
+      "path": "226992.png",
+      "sha256": "0d1a9934fd8eed486fe572fe1eafddd18ba690e6ca3a29f90e0cf1afbf8959df",
+      "bytes": 2939,
+      "source_url": "https://media.retroachievements.org/Badge/226992.png"
+    },
+    {
+      "path": "226992_lock.png",
+      "sha256": "990b6577d65c0b7c5a4f0d6699eb6de2ab1b99a95038b5336e9e43d41a90a67f",
+      "bytes": 4222,
+      "source_url": "https://media.retroachievements.org/Badge/226992_lock.png"
+    },
+    {
+      "path": "226993.png",
+      "sha256": "ffaca77d680ea5ba8ee07cb903d8b53637be2e533d9531610d0b05fa9c0b5c84",
+      "bytes": 2746,
+      "source_url": "https://media.retroachievements.org/Badge/226993.png"
+    },
+    {
+      "path": "226993_lock.png",
+      "sha256": "9d732da7de32f20c406d6cc95fb602ff5ee657c91dadb1b96b0712c26557d28a",
+      "bytes": 4344,
+      "source_url": "https://media.retroachievements.org/Badge/226993_lock.png"
+    },
+    {
+      "path": "226994.png",
+      "sha256": "9a36b528ad9c9d3d0b54fd7dc5a947c20b2a57126e4c554a60d82c59c7b2755c",
+      "bytes": 2699,
+      "source_url": "https://media.retroachievements.org/Badge/226994.png"
+    },
+    {
+      "path": "226994_lock.png",
+      "sha256": "edd91dca22b31e62b9ba49a2f47362d88581e6dfced3b3cb9d5daa21c0e6d9ac",
+      "bytes": 4317,
+      "source_url": "https://media.retroachievements.org/Badge/226994_lock.png"
+    },
+    {
+      "path": "226995.png",
+      "sha256": "38f4fc65ab8706d4d6c44f50c363d063f4ad8b3ca4714a4e88b90d464d52b7b0",
+      "bytes": 2840,
+      "source_url": "https://media.retroachievements.org/Badge/226995.png"
+    },
+    {
+      "path": "226995_lock.png",
+      "sha256": "f14efe724fc317faa099e3e5c47dd36b9588cdf926da4b0239049e39c6b23a1e",
+      "bytes": 4432,
+      "source_url": "https://media.retroachievements.org/Badge/226995_lock.png"
+    },
+    {
+      "path": "226996.png",
+      "sha256": "7b83f1f508d7f94cd39087836ef69511355dde652e9d878c53633f74ebd86ebf",
+      "bytes": 2279,
+      "source_url": "https://media.retroachievements.org/Badge/226996.png"
+    },
+    {
+      "path": "226996_lock.png",
+      "sha256": "34bb470b4de7b7750b7e7e7166cb6d2b66a70142fcbeb6c3856909012034b187",
+      "bytes": 3763,
+      "source_url": "https://media.retroachievements.org/Badge/226996_lock.png"
+    },
+    {
+      "path": "226997.png",
+      "sha256": "01d7c003109021b1f71cf07379ad326c7455ebb6eedbe9dd5515aa3e674a4a29",
+      "bytes": 2224,
+      "source_url": "https://media.retroachievements.org/Badge/226997.png"
+    },
+    {
+      "path": "226997_lock.png",
+      "sha256": "74604358db3710a33e13640e2a434aef92be6dbd4a0e7d99cb8733d0d010b926",
+      "bytes": 3590,
+      "source_url": "https://media.retroachievements.org/Badge/226997_lock.png"
+    },
+    {
+      "path": "226998.png",
+      "sha256": "b6bb4c7b7e5bdc3ed8b56ca45a552cc5bc9bc44a34d5f0426d5224911efd1a0f",
+      "bytes": 2216,
+      "source_url": "https://media.retroachievements.org/Badge/226998.png"
+    },
+    {
+      "path": "226998_lock.png",
+      "sha256": "089b4863b09ef5f9fdee8ff654ec2d95151185004e507ce0595f1154c29e7ad5",
+      "bytes": 3575,
+      "source_url": "https://media.retroachievements.org/Badge/226998_lock.png"
+    },
+    {
+      "path": "226999.png",
+      "sha256": "8476a25b1e355ec56326d97fa9b4731b1f2c468371d87e8bf1e1bb3b807ce785",
+      "bytes": 2319,
+      "source_url": "https://media.retroachievements.org/Badge/226999.png"
+    },
+    {
+      "path": "226999_lock.png",
+      "sha256": "0839bcf60598ec04646baf347558e12cb4ade99854cf2d7b419ff471bbfc8870",
+      "bytes": 3565,
+      "source_url": "https://media.retroachievements.org/Badge/226999_lock.png"
+    },
+    {
+      "path": "227000.png",
+      "sha256": "6da9e022d28d7942db86dd5f7c6b79be97cdf50332032500859acfc4fce5c928",
+      "bytes": 3047,
+      "source_url": "https://media.retroachievements.org/Badge/227000.png"
+    },
+    {
+      "path": "227000_lock.png",
+      "sha256": "4c6ce8d63948ecb985a0eb8eca0aa829dd88ef49966ca6f411677cd79cc11e76",
+      "bytes": 4291,
+      "source_url": "https://media.retroachievements.org/Badge/227000_lock.png"
+    },
+    {
+      "path": "227001.png",
+      "sha256": "a3192cffa2c94863082a255532d70e32b41c758d4e1839bb20549e01c78ef4a5",
+      "bytes": 2959,
+      "source_url": "https://media.retroachievements.org/Badge/227001.png"
+    },
+    {
+      "path": "227001_lock.png",
+      "sha256": "9504dc3beba2a81bba49c564cb55d8ea76649ae8c64c5a438cc09f108f2ee9d2",
+      "bytes": 4280,
+      "source_url": "https://media.retroachievements.org/Badge/227001_lock.png"
+    },
+    {
+      "path": "227002.png",
+      "sha256": "78c5b42b510df7abdcc8363ec5b1b8f6b2819850a5c5ad1c9f403a951defa259",
+      "bytes": 2926,
+      "source_url": "https://media.retroachievements.org/Badge/227002.png"
+    },
+    {
+      "path": "227002_lock.png",
+      "sha256": "7868270ffe063c1ac2e5b9d17ff8e6b37b03389f73e8fea704b2dabca9355ba8",
+      "bytes": 4124,
+      "source_url": "https://media.retroachievements.org/Badge/227002_lock.png"
+    },
+    {
+      "path": "227003.png",
+      "sha256": "7922fd77967f6ec2809954e1206cf62af71bb3ca5cbf446ed24dd26e808639a1",
+      "bytes": 2058,
+      "source_url": "https://media.retroachievements.org/Badge/227003.png"
+    },
+    {
+      "path": "227003_lock.png",
+      "sha256": "3d104ad55ba13c371071a44cde8195c72b552cd3974b946974b168d0ba5719dc",
+      "bytes": 3595,
+      "source_url": "https://media.retroachievements.org/Badge/227003_lock.png"
+    },
+    {
+      "path": "227004.png",
+      "sha256": "690f2ce49e2ff3328fef78b222faf7ad898f37c35dc87058cac008677e0bf372",
+      "bytes": 2085,
+      "source_url": "https://media.retroachievements.org/Badge/227004.png"
+    },
+    {
+      "path": "227004_lock.png",
+      "sha256": "c69b3535ae72614d1fcdfed7a2ab93d0a864d3dbfee3f1b31bbabad7232bf8c6",
+      "bytes": 3621,
+      "source_url": "https://media.retroachievements.org/Badge/227004_lock.png"
+    },
+    {
+      "path": "227005.png",
+      "sha256": "e839b7e637717fff0c19e20a0e83e37d1c67134556060de6f2ed21bf5ecd80cf",
+      "bytes": 2169,
+      "source_url": "https://media.retroachievements.org/Badge/227005.png"
+    },
+    {
+      "path": "227005_lock.png",
+      "sha256": "eca3a07f4505e23d3baccfda0cbf7ee01b62b557a9f942f92db43f3cd20f4cec",
+      "bytes": 3730,
+      "source_url": "https://media.retroachievements.org/Badge/227005_lock.png"
+    },
+    {
+      "path": "227006.png",
+      "sha256": "a02730c4c202650881400754b7d57c4d026d6f92a897fc69a77d9442c323b4c0",
+      "bytes": 1585,
+      "source_url": "https://media.retroachievements.org/Badge/227006.png"
+    },
+    {
+      "path": "227006_lock.png",
+      "sha256": "9cffec1272c492f6c80b8902244c9a1657a88486c89cbf811aa67422faa1ba24",
+      "bytes": 3016,
+      "source_url": "https://media.retroachievements.org/Badge/227006_lock.png"
+    },
+    {
+      "path": "227007.png",
+      "sha256": "f60fd86b919ca59c1edba776c15923ef4f78167cd91efa98b6dd8098c04417c4",
+      "bytes": 1513,
+      "source_url": "https://media.retroachievements.org/Badge/227007.png"
+    },
+    {
+      "path": "227007_lock.png",
+      "sha256": "5df33571f4d6d5f1bd9eb510c03c1089bc77925e07ced32119a9ffbba0698f7d",
+      "bytes": 2864,
+      "source_url": "https://media.retroachievements.org/Badge/227007_lock.png"
+    },
+    {
+      "path": "227008.png",
+      "sha256": "bc609ea3a0944e9b294c20c65d5bca4e4f5c41ef4446540bf06ad36aeb373ec0",
+      "bytes": 1543,
+      "source_url": "https://media.retroachievements.org/Badge/227008.png"
+    },
+    {
+      "path": "227008_lock.png",
+      "sha256": "8f47a021210255701de311b9cda5d6cfe3dda5af1041e8b0e453df4524b7c299",
+      "bytes": 2926,
+      "source_url": "https://media.retroachievements.org/Badge/227008_lock.png"
+    },
+    {
+      "path": "227009.png",
+      "sha256": "b30d999ec0aaf9323bdf222f0aa9c23c2451a50d537408571f3e1d8bfd81e419",
+      "bytes": 3047,
+      "source_url": "https://media.retroachievements.org/Badge/227009.png"
+    },
+    {
+      "path": "227009_lock.png",
+      "sha256": "a3692e5a4967e365f5e1f01f4d3dea8b8ffaee3c2718dd5ad287233dcd743878",
+      "bytes": 4299,
+      "source_url": "https://media.retroachievements.org/Badge/227009_lock.png"
+    },
+    {
+      "path": "227010.png",
+      "sha256": "031080a5b4e948c4a945ad4cbd5e25f396417d11e01167d0595d6f0f12811610",
+      "bytes": 3182,
+      "source_url": "https://media.retroachievements.org/Badge/227010.png"
+    },
+    {
+      "path": "227010_lock.png",
+      "sha256": "2a39e36f2ed8ea90f30aca1a3e717568da117ca2635b69f7a246ca9caedd9186",
+      "bytes": 4400,
+      "source_url": "https://media.retroachievements.org/Badge/227010_lock.png"
+    },
+    {
+      "path": "227011.png",
+      "sha256": "70a8606e1d630598b1de5241b267e42d79014bd1202be57352d3e81b6c2939c0",
+      "bytes": 3059,
+      "source_url": "https://media.retroachievements.org/Badge/227011.png"
+    },
+    {
+      "path": "227011_lock.png",
+      "sha256": "68d1138187a873d284910b49ace712dc6a2bd1b1fd3cb7a6a7cdbe6aa6a1c374",
+      "bytes": 4330,
+      "source_url": "https://media.retroachievements.org/Badge/227011_lock.png"
+    },
+    {
+      "path": "227012.png",
+      "sha256": "5063eed5c284328bd62d5e577355c87421954daba1c34e1e47ff32e254b2061f",
+      "bytes": 2972,
+      "source_url": "https://media.retroachievements.org/Badge/227012.png"
+    },
+    {
+      "path": "227012_lock.png",
+      "sha256": "f9ceab9cb6e35f1400b087053632eaf928633114fd3e8bb59772c8ff441e0154",
+      "bytes": 4262,
+      "source_url": "https://media.retroachievements.org/Badge/227012_lock.png"
+    },
+    {
+      "path": "227013.png",
+      "sha256": "ed6a1b39d561c8a9aa56a9c34fb8dbe22a69cf11f5f67a4c2ec2fefb0c8759a1",
+      "bytes": 2777,
+      "source_url": "https://media.retroachievements.org/Badge/227013.png"
+    },
+    {
+      "path": "227013_lock.png",
+      "sha256": "86c9f7386f423f25cd12a63983af5c77fbebed343f75d4745fc880a7e77e8eb9",
+      "bytes": 4401,
+      "source_url": "https://media.retroachievements.org/Badge/227013_lock.png"
+    },
+    {
+      "path": "227014.png",
+      "sha256": "cf4aebd94b745cb4f8ccebc08a56265dc7dd771ab0f241049e8f36a2a5d71d18",
+      "bytes": 2738,
+      "source_url": "https://media.retroachievements.org/Badge/227014.png"
+    },
+    {
+      "path": "227014_lock.png",
+      "sha256": "cc70055314f5e52d8b65c2ba34e2702c8b85ffbb36c86ed458e43f700b7fe374",
+      "bytes": 4380,
+      "source_url": "https://media.retroachievements.org/Badge/227014_lock.png"
+    },
+    {
+      "path": "227015.png",
+      "sha256": "74c61bab76e1c50f54a5131d30e7ccb90170f2ac933ccdea1180dcfacb370f16",
+      "bytes": 2875,
+      "source_url": "https://media.retroachievements.org/Badge/227015.png"
+    },
+    {
+      "path": "227015_lock.png",
+      "sha256": "bc45264ed8e13a350b5c3fa710b844cbbd60290f6c34d78c2986c47fea17b0d6",
+      "bytes": 4483,
+      "source_url": "https://media.retroachievements.org/Badge/227015_lock.png"
+    },
+    {
+      "path": "227016.png",
+      "sha256": "f1386205589f0e1f985c050bc37a96c631147e94fd0dd6c3145fee6e7c61bb5c",
+      "bytes": 2305,
+      "source_url": "https://media.retroachievements.org/Badge/227016.png"
+    },
+    {
+      "path": "227016_lock.png",
+      "sha256": "d213c6f05dfb3f31e06426c64eaac27534086ca0cfa4d9ffaeb14928e3df0859",
+      "bytes": 3806,
+      "source_url": "https://media.retroachievements.org/Badge/227016_lock.png"
+    },
+    {
+      "path": "227017.png",
+      "sha256": "6dc2a88e55b22a82cd7136fe9c460e3b3b40ceb66d87e34d44ba827031bd46d3",
+      "bytes": 2252,
+      "source_url": "https://media.retroachievements.org/Badge/227017.png"
+    },
+    {
+      "path": "227017_lock.png",
+      "sha256": "5e5529b241eaf44601f94a34c28f5209031874fa6bed756f152e561e4c27ef32",
+      "bytes": 3646,
+      "source_url": "https://media.retroachievements.org/Badge/227017_lock.png"
+    },
+    {
+      "path": "227018.png",
+      "sha256": "d10a9c71bc31b96ff47caf2d70e65e267ee26a2af888c64af025bf1b13be9f90",
+      "bytes": 2243,
+      "source_url": "https://media.retroachievements.org/Badge/227018.png"
+    },
+    {
+      "path": "227018_lock.png",
+      "sha256": "982e200f09ae23d17e9ae43a7d3826d22e7bcb186692c2947b7d4bc22295fd2d",
+      "bytes": 3631,
+      "source_url": "https://media.retroachievements.org/Badge/227018_lock.png"
+    },
+    {
+      "path": "227019.png",
+      "sha256": "f46e8c79523b9f5216739d59ee46a32840e431d9f770de8a1be85e2143148369",
+      "bytes": 2348,
+      "source_url": "https://media.retroachievements.org/Badge/227019.png"
+    },
+    {
+      "path": "227019_lock.png",
+      "sha256": "c3603e19f3be140ecfa27a6e3bc3e61ff2eb07e401f8a4c6205c938296f32673",
+      "bytes": 3622,
+      "source_url": "https://media.retroachievements.org/Badge/227019_lock.png"
+    },
+    {
+      "path": "227020.png",
+      "sha256": "eff566f6fc210469a3cc3507274d8322ab42016b098f11d96ffd27e8f5c74ea2",
+      "bytes": 3082,
+      "source_url": "https://media.retroachievements.org/Badge/227020.png"
+    },
+    {
+      "path": "227020_lock.png",
+      "sha256": "3d75d186715200c7fff87b33baf5a7c64440445078b5e1cd09c3f4f027467aad",
+      "bytes": 4347,
+      "source_url": "https://media.retroachievements.org/Badge/227020_lock.png"
+    },
+    {
+      "path": "227021.png",
+      "sha256": "64bade218d5170084181a916d287b8e15cb491ef0d496f146b229324cf29e39b",
+      "bytes": 2982,
+      "source_url": "https://media.retroachievements.org/Badge/227021.png"
+    },
+    {
+      "path": "227021_lock.png",
+      "sha256": "6dd6f0c13f9b2b00eca6f9348aa66a457e3b73b7667d6401ad70bb0e1329a959",
+      "bytes": 4331,
+      "source_url": "https://media.retroachievements.org/Badge/227021_lock.png"
+    },
+    {
+      "path": "227022.png",
+      "sha256": "cd6579692f6fc487519a8c3e5388bc0016ff5778ba6a6d7af239cbecde693b45",
+      "bytes": 2960,
+      "source_url": "https://media.retroachievements.org/Badge/227022.png"
+    },
+    {
+      "path": "227022_lock.png",
+      "sha256": "c350dd5c9c14814d92aa0660ad439978fabc381347870833a45d311183e0b5d6",
+      "bytes": 4176,
+      "source_url": "https://media.retroachievements.org/Badge/227022_lock.png"
+    },
+    {
+      "path": "227023.png",
+      "sha256": "4ac1c7b19da8aeebf985b8b0ff93b929191bb4f59d7758a7a1c991c52e0e7006",
+      "bytes": 2098,
+      "source_url": "https://media.retroachievements.org/Badge/227023.png"
+    },
+    {
+      "path": "227023_lock.png",
+      "sha256": "cba62f88aea1e46edea0a8201b57608aa4fea6d54bb1758f7e4d149aa3093ba7",
+      "bytes": 3652,
+      "source_url": "https://media.retroachievements.org/Badge/227023_lock.png"
+    },
+    {
+      "path": "227024.png",
+      "sha256": "198c227c38ad3a9982c0c1291084a1b4f7979dfa49fa623838737f10a7b7b365",
+      "bytes": 2108,
+      "source_url": "https://media.retroachievements.org/Badge/227024.png"
+    },
+    {
+      "path": "227024_lock.png",
+      "sha256": "3c03c12ff97584d180be90412a30309a6195ed6d6cb5dc43f73b19ff9d4d16a1",
+      "bytes": 3691,
+      "source_url": "https://media.retroachievements.org/Badge/227024_lock.png"
+    },
+    {
+      "path": "227025.png",
+      "sha256": "1634cc47f3a10efd9d57b2f5a12bc980668581498ca64caba400f6da9969d3b3",
+      "bytes": 2205,
+      "source_url": "https://media.retroachievements.org/Badge/227025.png"
+    },
+    {
+      "path": "227025_lock.png",
+      "sha256": "d1fc797803e63d0be759dfd03d6e56a87d48f4dc1278a4c23f1606993ed502db",
+      "bytes": 3787,
+      "source_url": "https://media.retroachievements.org/Badge/227025_lock.png"
+    },
+    {
+      "path": "227026.png",
+      "sha256": "19e7e6ed706d2f174bbdacfc216e5f3fdd9a89ab3aa6d12663d25e160150c411",
+      "bytes": 1625,
+      "source_url": "https://media.retroachievements.org/Badge/227026.png"
+    },
+    {
+      "path": "227026_lock.png",
+      "sha256": "96b8e4c69f297b618dc5fc91c7eed5b56e6590e8fa5691cd1d04f3984b61dbf1",
+      "bytes": 3064,
+      "source_url": "https://media.retroachievements.org/Badge/227026_lock.png"
+    },
+    {
+      "path": "227027.png",
+      "sha256": "2391e2dfeaf021a56850cc0f1ad502c54f2207833a59910b92c32d8f819d0c76",
+      "bytes": 1550,
+      "source_url": "https://media.retroachievements.org/Badge/227027.png"
+    },
+    {
+      "path": "227027_lock.png",
+      "sha256": "2179dc01ef5b80bf9f5457abc021e567b6b783866f524f597c72e8f460908a3a",
+      "bytes": 2928,
+      "source_url": "https://media.retroachievements.org/Badge/227027_lock.png"
+    },
+    {
+      "path": "227028.png",
+      "sha256": "0830bcc4453b6d42621f8b474ae206ecf0f28c1fd40f36bc9d733febe609f01b",
+      "bytes": 1580,
+      "source_url": "https://media.retroachievements.org/Badge/227028.png"
+    },
+    {
+      "path": "227028_lock.png",
+      "sha256": "5e5b5f5d7841c275c01d22adbb238884baa20010c27c715ca64eec22d25a630a",
+      "bytes": 2987,
+      "source_url": "https://media.retroachievements.org/Badge/227028_lock.png"
+    },
+    {
+      "path": "227029.png",
+      "sha256": "d13869cce54504b477eaa1a3617dddc20d73b9a62f5bddcb5ce1248401e84123",
+      "bytes": 1656,
+      "source_url": "https://media.retroachievements.org/Badge/227029.png"
+    },
+    {
+      "path": "227029_lock.png",
+      "sha256": "f4cd2cecaf56cb04b865b67d84b7378525402dac45a485c331f1892e910ee6a2",
+      "bytes": 2994,
+      "source_url": "https://media.retroachievements.org/Badge/227029_lock.png"
+    },
+    {
+      "path": "227030.png",
+      "sha256": "cb8fa667907e1ebc108b29c78e1b71b6e0e7f179d327a0403c02300e4f576558",
+      "bytes": 1706,
+      "source_url": "https://media.retroachievements.org/Badge/227030.png"
+    },
+    {
+      "path": "227030_lock.png",
+      "sha256": "8726947ca1f57ef77fb78e45c37843fb134024d260354886f0d1ef221f17f49b",
+      "bytes": 3306,
+      "source_url": "https://media.retroachievements.org/Badge/227030_lock.png"
+    },
+    {
+      "path": "227031.png",
+      "sha256": "46250f3393570577bfa08039709143910b9dcea3a32755ec3502868d22b85852",
+      "bytes": 1550,
+      "source_url": "https://media.retroachievements.org/Badge/227031.png"
+    },
+    {
+      "path": "227031_lock.png",
+      "sha256": "c260e99f39cb648a3ae55aeb00d47e69b5bc89257c336145256a390f9d19b1d6",
+      "bytes": 3017,
+      "source_url": "https://media.retroachievements.org/Badge/227031_lock.png"
+    },
+    {
+      "path": "227032.png",
+      "sha256": "f4d5908abe7c34363cfa9344214d96fef7a545a1aafd47388cd9b0567beeea18",
+      "bytes": 2107,
+      "source_url": "https://media.retroachievements.org/Badge/227032.png"
+    },
+    {
+      "path": "227032_lock.png",
+      "sha256": "8495ca3a991a377d1f23ddddfef3714a8f69c3fe8eae91989ca7234a0183840c",
+      "bytes": 3795,
+      "source_url": "https://media.retroachievements.org/Badge/227032_lock.png"
+    },
+    {
+      "path": "227033.png",
+      "sha256": "7c9bc76a7f597ad8dd52b3ceff14ee3c1639e3aaac7c915a507b653da88e2baf",
+      "bytes": 2117,
+      "source_url": "https://media.retroachievements.org/Badge/227033.png"
+    },
+    {
+      "path": "227033_lock.png",
+      "sha256": "5759ba051fc7e28a850b802c812b327760c531f250a2129103b5929f4178a769",
+      "bytes": 3726,
+      "source_url": "https://media.retroachievements.org/Badge/227033_lock.png"
+    },
+    {
+      "path": "227034.png",
+      "sha256": "b35a4544b6162549776b3b9f0e7f4a9e6b791cd982d57dde1942abc6eea92228",
+      "bytes": 2197,
+      "source_url": "https://media.retroachievements.org/Badge/227034.png"
+    },
+    {
+      "path": "227034_lock.png",
+      "sha256": "d4ef84b398a9efa2b5e4b4c2d4d25ffc33f69f47d67d031a50835b5a2029e193",
+      "bytes": 3691,
+      "source_url": "https://media.retroachievements.org/Badge/227034_lock.png"
+    },
+    {
+      "path": "227035.png",
+      "sha256": "5d0bccdeb3b3ab35a92bda75b22afd6cb4ce6fec431c1395a34e5768567237c5",
+      "bytes": 3030,
+      "source_url": "https://media.retroachievements.org/Badge/227035.png"
+    },
+    {
+      "path": "227035_lock.png",
+      "sha256": "acb3ec4179c58fccc42fe9ef4036c35119b4e12c11318b8ca23a437a3772fa17",
+      "bytes": 4421,
+      "source_url": "https://media.retroachievements.org/Badge/227035_lock.png"
+    },
+    {
+      "path": "227036.png",
+      "sha256": "b07f973e7be16e1bf1930356118909ef6da9d4b3cadff5c483bdddd034dd0eaa",
+      "bytes": 2934,
+      "source_url": "https://media.retroachievements.org/Badge/227036.png"
+    },
+    {
+      "path": "227036_lock.png",
+      "sha256": "e44e6b8eda48f1f21ae5cffb48daa1033e511cd83b2b568bb2a6c29be7600f26",
+      "bytes": 4233,
+      "source_url": "https://media.retroachievements.org/Badge/227036_lock.png"
+    },
+    {
+      "path": "227037.png",
+      "sha256": "2c2747b1025ec876254eeda752e2e9402932aac95ecca3bb12f3bffdf4944dd9",
+      "bytes": 2920,
+      "source_url": "https://media.retroachievements.org/Badge/227037.png"
+    },
+    {
+      "path": "227037_lock.png",
+      "sha256": "4acfb80eb1ab9b944159ea72db85e3abce5783bb3c590f8004dc6dc0b6e791ae",
+      "bytes": 4353,
+      "source_url": "https://media.retroachievements.org/Badge/227037_lock.png"
+    },
+    {
+      "path": "227038.png",
+      "sha256": "94cf2aeff16f773f63fa3f34d7f7a92ac552083be538e3dabbd4b50608a31b6a",
+      "bytes": 2290,
+      "source_url": "https://media.retroachievements.org/Badge/227038.png"
+    },
+    {
+      "path": "227038_lock.png",
+      "sha256": "73c9f25fa29997d71a197deb304b2d4c9add89f3aaee4c9228e9e4731ff66d26",
+      "bytes": 3704,
+      "source_url": "https://media.retroachievements.org/Badge/227038_lock.png"
+    },
+    {
+      "path": "227039.png",
+      "sha256": "f6dbc897d4d77c5fcffd68b2030afba845523b3f44e6c10d328e33ec91a55423",
+      "bytes": 2353,
+      "source_url": "https://media.retroachievements.org/Badge/227039.png"
+    },
+    {
+      "path": "227039_lock.png",
+      "sha256": "0a7d760deca588efc60b87c9bb0037a6e41a3c1552c2c3435dac7a2ddb127cbd",
+      "bytes": 3556,
+      "source_url": "https://media.retroachievements.org/Badge/227039_lock.png"
+    },
+    {
+      "path": "227040.png",
+      "sha256": "397dc93dc84be140bd05263b3691071663b0743acd98f1f4c522be640411ff76",
+      "bytes": 2417,
+      "source_url": "https://media.retroachievements.org/Badge/227040.png"
+    },
+    {
+      "path": "227040_lock.png",
+      "sha256": "ea8cdceb20637ec76ed823074189aee584fd48e119bd2a94180e3da54d831f92",
+      "bytes": 3898,
+      "source_url": "https://media.retroachievements.org/Badge/227040_lock.png"
+    },
+    {
+      "path": "227041.png",
+      "sha256": "66252b1608f7a1bcbb0c231943ac44abef86b7c1e74de260af3060661d0cbb96",
+      "bytes": 2319,
+      "source_url": "https://media.retroachievements.org/Badge/227041.png"
+    },
+    {
+      "path": "227041_lock.png",
+      "sha256": "3aa8ee2f069dabaa098dc39aab2a70118d36848d0b89118fc5d48abdba63eba9",
+      "bytes": 3717,
+      "source_url": "https://media.retroachievements.org/Badge/227041_lock.png"
+    },
+    {
+      "path": "227042.png",
+      "sha256": "2e62e3ebe30a6d349aedd6566030eba506799cdc022586b53f0c89191e9aea52",
+      "bytes": 2707,
+      "source_url": "https://media.retroachievements.org/Badge/227042.png"
+    },
+    {
+      "path": "227042_lock.png",
+      "sha256": "694abc94125a3a5f6ee4371bcd87788bc3f467c750af6bba0de6dfbab5eff26b",
+      "bytes": 4352,
+      "source_url": "https://media.retroachievements.org/Badge/227042_lock.png"
+    },
+    {
+      "path": "227043.png",
+      "sha256": "6ec388d4df1a4e2bc1a85d19f2adfa3cca6691547f8e1b210e2c0b0618ef1487",
+      "bytes": 2737,
+      "source_url": "https://media.retroachievements.org/Badge/227043.png"
+    },
+    {
+      "path": "227043_lock.png",
+      "sha256": "5bf0d40eb0747232ae772f7f703245bf963b47a8cd1e8b39d169de3f764dea6f",
+      "bytes": 4326,
+      "source_url": "https://media.retroachievements.org/Badge/227043_lock.png"
+    },
+    {
+      "path": "227044.png",
+      "sha256": "f5a3661bd9754d25747ff98f43cd10ac733a3c3b91c5ab8624edf0ee649d349f",
+      "bytes": 2774,
+      "source_url": "https://media.retroachievements.org/Badge/227044.png"
+    },
+    {
+      "path": "227044_lock.png",
+      "sha256": "26319a1068148c96b8c0eb56c0731d46feaad7fd8fdff942aaa967d0bc1c60ef",
+      "bytes": 4362,
+      "source_url": "https://media.retroachievements.org/Badge/227044_lock.png"
+    },
+    {
+      "path": "227045.png",
+      "sha256": "0fc79c1daa061d6ab5ce23528cd60ba96d448cccfde01530efa40fffa7cb5736",
+      "bytes": 3053,
+      "source_url": "https://media.retroachievements.org/Badge/227045.png"
+    },
+    {
+      "path": "227045_lock.png",
+      "sha256": "2a791e6f52c8a42a3d1a2df0b516d881d5b30eceeff49fed44da183bd05f3aec",
+      "bytes": 4320,
+      "source_url": "https://media.retroachievements.org/Badge/227045_lock.png"
+    },
+    {
+      "path": "227046.png",
+      "sha256": "01bf63f8f7810d668b27c8d45e7d1cb282f30a991183d1498a2f45c3fe06dfe1",
+      "bytes": 2967,
+      "source_url": "https://media.retroachievements.org/Badge/227046.png"
+    },
+    {
+      "path": "227046_lock.png",
+      "sha256": "179fc7966c6f421b4b56ed1812126846c9487306abfa175abac32b804797e650",
+      "bytes": 4204,
+      "source_url": "https://media.retroachievements.org/Badge/227046_lock.png"
+    },
+    {
+      "path": "227047.png",
+      "sha256": "b3298385b013adae3ee3a6d9889ee6c7d333f8af0819ab4322037fe67cf6cd00",
+      "bytes": 3019,
+      "source_url": "https://media.retroachievements.org/Badge/227047.png"
+    },
+    {
+      "path": "227047_lock.png",
+      "sha256": "eb4fa20acf97d51ce404c62dd1e40c0121bc13cd39f9ce0e26c2a5d4cbab2b9f",
+      "bytes": 4274,
+      "source_url": "https://media.retroachievements.org/Badge/227047_lock.png"
+    },
+    {
+      "path": "227048.png",
+      "sha256": "f5ab569cdc2fe9168db3e524556e7a1c1d13e4cb98b1702072f730aa62b283a9",
+      "bytes": 2958,
+      "source_url": "https://media.retroachievements.org/Badge/227048.png"
+    },
+    {
+      "path": "227048_lock.png",
+      "sha256": "beb9626864cb922985704a05c8d92cb335805d275dc4333a1ccbce0eca46ae7c",
+      "bytes": 4254,
+      "source_url": "https://media.retroachievements.org/Badge/227048_lock.png"
+    },
+    {
+      "path": "227218.png",
+      "sha256": "87b0b53dd44f754729106c83ad0b3fb2953ce910753b10df8106a89d5b5f2368",
+      "bytes": 1749,
+      "source_url": "https://media.retroachievements.org/Badge/227218.png"
+    },
+    {
+      "path": "227218_lock.png",
+      "sha256": "d9deb5b23138074f7bf1bdab1f89dd25bcc442fdac76cf8b976229380183fb9d",
+      "bytes": 4450,
+      "source_url": "https://media.retroachievements.org/Badge/227218_lock.png"
+    },
+    {
+      "path": "227219.png",
+      "sha256": "ebf10dcbd63839bf101df1da28ea9bb9c0bf1c5335042066ebfa1624558d69bc",
+      "bytes": 700,
+      "source_url": "https://media.retroachievements.org/Badge/227219.png"
+    },
+    {
+      "path": "227219_lock.png",
+      "sha256": "28dad702ad94b5093a74160dff7bb6e6f35dfe5f2b9ff9ed57ab033db86dd942",
+      "bytes": 2270,
+      "source_url": "https://media.retroachievements.org/Badge/227219_lock.png"
+    },
+    {
+      "path": "227300.png",
+      "sha256": "d4ee17bd9dd4fb372c538dd4cc8f02d50aa27977ec398f0ae34e8969dac229c8",
+      "bytes": 2186,
+      "source_url": "https://media.retroachievements.org/Badge/227300.png"
+    },
+    {
+      "path": "227300_lock.png",
+      "sha256": "415f40aae8486b1079cb883b9938779ab2ba0ad03b7ddf2f9e690e14f02e2cf6",
+      "bytes": 4093,
+      "source_url": "https://media.retroachievements.org/Badge/227300_lock.png"
+    }
+  ]
+}

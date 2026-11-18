@@ -11,6 +11,9 @@
 #include "language_patch.h"
 #include "controller_profiles.h"
 #include "step_lookup.h"
+#include "achievement_session.h"
+#include "achievement_ui.h"
+#include "achievement_smoke.h"
 #include DYNA_LANGUAGE_HEADER
 #if RECOMP_LAUNCHER
 #include "recomp_runtime_ui.h"
@@ -20,11 +23,13 @@ static const RecompRuntimeUiItem language_items[]={
      "Partial translation. Changes apply after restarting the application; the running game keeps its current language.",
      RECOMP_RUNTIME_UI_BOOL,0,1,1},
     {"controls.p1_profile","Controls","Player 1 layout","Automatic detects known M30 devices. Select an M30 preset for shared/generic IDs; Custom uses your SDL bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
-    {"controls.p2_profile","Controls","Player 2 layout","Saved per connected device; does not overwrite another controller's bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5}
+    {"controls.p2_profile","Controls","Player 2 layout","Saved per connected device; does not overwrite another controller's bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
+    {"dyna.achievements","Achievements","Achievement list","Local progress, badges and stage goals. Opens a paused list.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
 };
 #endif
 #include DYNA_STEP_HEADER
 #ifdef DYNA_HAS_JP
+#include "db1_video.h"
 #include "db1jp.h"
 #include "translation_identity_db1.h"
 static const GameRomAlias db1_aliases[]={
@@ -62,6 +67,11 @@ static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write1
 
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
+    dyna_achievement_session_before(g_cpu.PC);
+#ifdef DYNA_HAS_JP
+    if(g_cpu.PC==0x1c40 || g_cpu.PC==0x1c44 || g_cpu.PC==0x19980 || g_cpu.PC==0x1b040)
+        db1_video_observe(g_cpu.PC);
+#endif
     if(DYNA_ENTRY==0x200u && g_cpu.PC==0x9828u && getenv("DYNA_LZ_TRACE")) {
         uint32_t dst=glue_peek32(g_cpu.A[7]+4u);
         uint32_t src=glue_peek32(g_cpu.A[7]+8u);
@@ -128,6 +138,10 @@ static int retire(void *user,unsigned *cycles) {
     return 1;
 }
 static void entry(void) {
+    dyna_achievement_session_reset();
+#ifdef DYNA_HAS_JP
+    db1_video_reset();
+#endif
     const char *lookup=getenv("DYNA_AOT_LOOKUP");
     cached_lookup=!lookup||strcmp(lookup,"binary");
     dyna_step_cache_clear();
@@ -178,6 +192,10 @@ static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
 static void settings(const char *path){
     dyna_language_settings_load(path);
+    dyna_achievement_session_init(path,DYNA_ENTRY==0x738u);
+#ifdef DYNA_HAS_JP
+    g_app_config.integer_scale=1;
+#endif
     /* Use the common parser again after installing game defaults. Explicit
      * saved 3-button choices and unrelated settings retain their values. */
     for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_6BUTTON;
@@ -186,12 +204,18 @@ static void settings(const char *path){
 }
 static const char *snapshot_reason(void){return "Saving and rewind are not available in this development build.";}
 const GameSpec g_game_spec={
+    .native_aspect_width=4,.native_aspect_height=3,
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
     .region_label="NTSC-J (Japan)",
 #if RECOMP_LAUNCHER
-    .runtime_menu_items=language_items,.runtime_menu_item_count=3,
+    .runtime_menu_items=language_items,.runtime_menu_item_count=4,
     .runtime_menu_get=dyna_language_runtime_get,.runtime_menu_set=dyna_language_runtime_set,
+    .runtime_menu_action=dyna_achievement_session_action,
 #endif
+    .host_ui_open=dyna_achievement_ui_is_open,.host_ui_active=dyna_achievement_ui_active,
+    .host_ui_input=dyna_achievement_ui_input,.host_ui_render=dyna_achievement_smoke_render,
+    .on_diagnostic_session=dyna_achievement_session_diagnostic,
+    .on_frame_post=dyna_achievement_session_frame,
     .controller_prepare=dyna_controller_prepare,.controller_mask=dyna_controller_mask,
     .controller_removed=dyna_controller_removed,
     .expected_rom_crc32=DYNA_CRC,.expected_rom_size=DYNA_SIZE,
@@ -201,6 +225,7 @@ const GameSpec g_game_spec={
     .mods=dyna_language_mods,
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
+    .video=&db1_video,.video_default="16:9",
     .rom_aliases=db1_aliases,.num_rom_aliases=3,
 #elif defined(DYNA_HAS_OVERLAY)
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,

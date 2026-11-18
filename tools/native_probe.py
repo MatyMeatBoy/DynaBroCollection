@@ -52,6 +52,8 @@ def main():
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--audio', action='store_true')
     parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
+    parser.add_argument('--widescreen', help='Explicit game presentation mode (off, fit, stage or W:H)')
+    parser.add_argument('--achievement-ui-test', action='store_true', help='Exercise the paused achievement list with real SDL events')
     parser.add_argument('--lookup', choices=['binary', 'cached'], help='Compare native descriptor lookup policies')
     parser.add_argument('--cpu-core', type=int, help='Pin a Windows measurement to one logical processor')
     parser.add_argument('--replay', type=Path, help='Validate all executions from an existing diagnostic recording')
@@ -69,6 +71,10 @@ def main():
     if args.language:
         (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
     env = dict(os.environ)
+    env.pop('DYNA_ACHIEVEMENT_UI_TEST', None)
+    if args.achievement_ui_test:
+        args.audio = True
+        env['DYNA_ACHIEVEMENT_UI_TEST'] = str(output / 'achievements.bmp')
     env.pop('GENESIS_FORCE_INTERP', None)
     if args.lookup:
         env['DYNA_AOT_LOOKUP'] = args.lookup
@@ -79,6 +85,8 @@ def main():
     elif Path('C:/msys64/ucrt64/bin').exists():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
     argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher', '--pacing', 'accurate']
+    if args.widescreen:
+        argv += ['--widescreen', args.widescreen]
     if args.replay:
         argv += ['--replay-diagnostic', str(args.replay.resolve())]
     if args.audio:
@@ -116,6 +124,13 @@ def main():
                 ('[AOT] missing', '[ILLEGAL]', 'unexpectedly', 'native main program miss', 'HALT st=',
                  'IRQ instruction guard', '[AOT-IRQ] INVALID', 'replay file write failed', 'ROM mismatch'))]
     failures.extend(missing_captures(captures))
+    if args.achievement_ui_test:
+        for marker in ['PASS 6 modal presentations; CPU/RAM/VDP unchanged', 'PASS real SDL Back event closed modal']:
+            if '[achievement-ui-test] ' + marker not in log:
+                failures.append('Missing achievement modal evidence: ' + marker)
+        capture = output / 'achievements.bmp'
+        if not capture.is_file() or capture.read_bytes()[:2] != b'BM':
+            failures.append('Missing achievement list capture')
     if env.get('DYNA_IRQ_SELFTEST') and '[AOT-IRQ] PASS level=4' not in log:
         failures.append('H-int exception-frame check was not exercised')
     if args.language:

@@ -1,5 +1,5 @@
 diff --git a/runner/game_spec.h b/runner/game_spec.h
-index a135a9b..5eb2ae3 100644
+index a135a9b..6b2a352 100644
 --- a/runner/game_spec.h
 +++ b/runner/game_spec.h
 @@ -26,6 +26,8 @@
@@ -11,7 +11,17 @@ index a135a9b..5eb2ae3 100644
  
  /*
   * One per-game TCP debug command. The handler receives the request id
-@@ -77,6 +79,15 @@ typedef struct GameSpec {
+@@ -50,6 +52,9 @@ typedef struct GameSpec {
+      * enabled key): NULL or "off" keeps the renderer opt-in; "fit", "16:9",
+      * "21:9" or "32:9" enables it. A saved choice, including off, still wins. */
+     const char *video_default;
++    /* Optional CRT display shape for native geometry. Framebuffer samples,
++     * screenshots and deterministic state retain their original dimensions. */
++    unsigned native_aspect_width,native_aspect_height;
+     unsigned logical_players;       /* 0 = native two ports; host input/UI capacity */
+     void (*load_settings)(const char *settings_path);
+     /* Game-owned additive features may compose with the common video provider. */
+@@ -77,6 +82,25 @@ typedef struct GameSpec {
      /* Clean game name for gameplay and launcher captions, e.g. "Sonic the
       * Hedgehog". Build/backend/debug identity belongs in logs and About. */
      const char *display_name;
@@ -21,12 +31,36 @@ index a135a9b..5eb2ae3 100644
 +    size_t runtime_menu_item_count;
 +    int (*runtime_menu_get)(const char *key,int *value);
 +    int (*runtime_menu_set)(const char *key,int value);
++    int (*runtime_menu_action)(const char *key);
++    /* Optional host-only modal page and notification layer. Input semantics
++     * match RecompRuntimeUiInput; rendering is into an owned display copy.
++     * A modal page holds guest execution and consumes navigation input. */
++    int (*host_ui_open)(void);
++    int (*host_ui_active)(void);
++    void (*host_ui_input)(int semantic,int down,int repeat);
++    void (*host_ui_render)(uint32_t *pixels,int width,int height,int pitch_bytes);
++    /* Local progression can reject a launch exposing state-editing tools. */
++    void (*on_diagnostic_session)(void);
 +    void (*controller_prepare)(int joystick_index);
 +    uint16_t (*controller_mask)(unsigned player,struct _SDL_GameController *pad,uint16_t normal);
 +    void (*controller_removed)(unsigned player);
      const char *short_name;          /* "Sonic1" — shows up in info / ping */
      /* Box-art file staged next to the exe under assets/img/, e.g.
       * "boxart-sonic3.tga". NULL => the shared "boxart.tga" (single-boxart
+diff --git a/runner/game_video.h b/runner/game_video.h
+index 5a2722d..bd8c620 100644
+--- a/runner/game_video.h
++++ b/runner/game_video.h
+@@ -76,6 +76,9 @@ typedef struct GameVideo {
+      * Never enters disk states, deterministic RB images, or netplay digests. */
+     size_t (*presentation_state_save)(void *dst, size_t capacity);
+     int (*presentation_state_load)(const void *src, size_t size, int apply);
++    /* Fixed pixel canvases can opt into the user's integer scaling setting.
++     * Window-sized adapters retain fractional presentation by default. */
++    int integer_scale_supported;
+ } GameVideo;
+ 
+ /* Host-local derived frame plan, never deterministic machine/snapshot state.
 diff --git a/runner/gamepad.c b/runner/gamepad.c
 index c57d756..fe64626 100644
 --- a/runner/gamepad.c
@@ -272,7 +306,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..db3f7f8 100644
+index df30a08..9422bd7 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -389,7 +389,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
@@ -293,7 +327,92 @@ index df30a08..db3f7f8 100644
  }
  static void runtime_ui_save(void *p) {
      (void)p;
-@@ -2197,7 +2197,7 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -454,6 +454,9 @@ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
+         if (ok) recomp_runtime_ui_close(c->ui);
+         return ok;
+     }
++    if(g_game_spec.runtime_menu_action && g_game_spec.runtime_menu_action(i->key)) {
++        recomp_runtime_ui_close(c->ui);return 1;
++    }
+     return 0;
+ }
+ static int runtime_ui_key(SDL_Keycode k) {
+@@ -461,6 +464,51 @@ static int runtime_ui_key(SDL_Keycode k) {
+     case SDLK_LEFT:return RECOMP_RUNTIME_UI_INPUT_LEFT; case SDLK_RIGHT:return RECOMP_RUNTIME_UI_INPUT_RIGHT;
+     case SDLK_RETURN:case SDLK_SPACE:return RECOMP_RUNTIME_UI_INPUT_ACCEPT; case SDLK_ESCAPE:return RECOMP_RUNTIME_UI_INPUT_BACK; default:return -1; }
+ }
++static int s_screen_width,s_screen_height;
++static void update_render_logical_size(SDL_Renderer *renderer);
++static int host_ui_modal(SDL_Renderer *renderer,SDL_Texture *texture,int *running)
++{
++    if(!g_game_spec.host_ui_open || !g_game_spec.host_ui_open() ||
++       !g_game_spec.host_ui_input || !g_game_spec.host_ui_render)return 0;
++    input_set_gameplay_blocked(1);
++    cancel_load_hold();
++    audio_set_playback_enabled(0);
++    while(*running && g_game_spec.host_ui_open()) {
++        SDL_Event event;
++        while(window_poll_event(&event)) {
++            load_hold_event(&event,SDL_RenderGetWindow(renderer));
++            (void)gamepad_consume_quicksave();(void)gamepad_consume_quickload();
++            if(event.type==SDL_QUIT){*running=0;break;}
++            int input=-1,down=0,repeat=0;
++            if(event.type==SDL_KEYDOWN || event.type==SDL_KEYUP) {
++                input=runtime_ui_key(event.key.keysym.sym);
++                down=event.type==SDL_KEYDOWN;repeat=event.key.repeat;
++            } else if(event.type==SDL_CONTROLLERBUTTONDOWN || event.type==SDL_CONTROLLERBUTTONUP) {
++                down=event.type==SDL_CONTROLLERBUTTONDOWN;
++                switch(event.cbutton.button) {
++                case SDL_CONTROLLER_BUTTON_DPAD_UP:input=RECOMP_RUNTIME_UI_INPUT_UP;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:input=RECOMP_RUNTIME_UI_INPUT_DOWN;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:input=RECOMP_RUNTIME_UI_INPUT_LEFT;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:input=RECOMP_RUNTIME_UI_INPUT_RIGHT;break;
++                case SDL_CONTROLLER_BUTTON_A:input=RECOMP_RUNTIME_UI_INPUT_ACCEPT;break;
++                case SDL_CONTROLLER_BUTTON_B:case SDL_CONTROLLER_BUTTON_BACK:
++                case SDL_CONTROLLER_BUTTON_START:input=RECOMP_RUNTIME_UI_INPUT_BACK;break;
++                }
++            }
++            if(input>=0)g_game_spec.host_ui_input(input,down,repeat);
++        }
++        if(!*running || !g_game_spec.host_ui_open())break;
++        memcpy(s_present_buf,s_framebuf,(size_t)s_frame_stride*s_screen_height*sizeof(uint32_t));
++        g_game_spec.host_ui_render(s_present_buf,s_screen_width,s_screen_height,s_frame_stride*4);
++        SDL_Rect src={0,0,s_screen_width,s_screen_height};
++        SDL_UpdateTexture(texture,&src,s_present_buf,s_frame_stride*4);
++        update_render_logical_size(renderer);
++        SDL_RenderClear(renderer);SDL_RenderCopy(renderer,texture,&src,NULL);SDL_RenderPresent(renderer);
++        SDL_Delay(16);
++    }
++    input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
++    return 1;
++}
+ #endif
+ 
+ static void widescreen_setup(void)
+@@ -573,6 +621,12 @@ static void set_interlace_display_mode(const char *value)
+ 
+ static int display_logical_height(void)
+ {
++    if(!s_video_frame.viewport && g_game_spec.native_aspect_width &&
++       g_game_spec.native_aspect_height && s_screen_height<=240) {
++        unsigned width=s_screen_width==256?320u:(unsigned)s_screen_width;
++        return (int)((width*g_game_spec.native_aspect_height+
++            g_game_spec.native_aspect_width/2)/g_game_spec.native_aspect_width);
++    }
+     if (netplay_peer_view_active())
+         return s_screen_height / 2;
+     if (s_screen_height > 240 && s_interlace_display_mode == INTERLACE_DISPLAY_TV)
+@@ -613,7 +667,8 @@ static void update_render_logical_size(SDL_Renderer *renderer)
+ 
+     /* The custom renderer sizes its canvas from the window, so it keeps the
+      * fractional fill. */
+-    int integer = g_app_config.integer_scale && !s_video_frame.viewport;
++    int integer = g_app_config.integer_scale && (!s_video_frame.viewport ||
++        (s_video_frame.owner && s_video_frame.owner->integer_scale_supported));
+     if (renderer != s_last_renderer || w != s_last_w || h != s_last_h || integer != s_last_integer) {
+         /* SDL never scales below 1x, so a window smaller than the frame
+          * would crop it; integer mode keeps the window at least 1x. */
+@@ -2197,7 +2252,7 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          RecompLauncherCGameInfo gi;
          memset(&gi, 0, sizeof gi);
          gi.name                 = g_game_spec.display_name;
@@ -302,7 +421,7 @@ index df30a08..db3f7f8 100644
          gi.expected_crc         = g_game_spec.expected_rom_crc32;
          gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
  #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
-@@ -2484,6 +2484,9 @@ static void replay_view(GenesisReplayView *v,int apply)
+@@ -2484,6 +2539,9 @@ static void replay_view(GenesisReplayView *v,int apply)
  
  int main(int argc, char *argv[])
  {
@@ -312,7 +431,19 @@ index df30a08..db3f7f8 100644
      cmd_server_owner_review_init(getenv("GENESIS_OWNER_REVIEW"));
      init_exe_dir(argv[0]);
      const char *user_dir=getenv("GENESIS_USER_DIR");
-@@ -3190,7 +3193,7 @@ int main(int argc, char *argv[])
+@@ -3055,8 +3113,10 @@ int main(int argc, char *argv[])
+      * Adaptive mode then has a 16:9 window to follow on the first frame. */
+     int win_scale = g_app_config.window_scale;
+     if (win_scale < 1) win_scale = 1; else if (win_scale > 8) win_scale = 8;
+-    int win_w = 320 * win_scale, win_h = 224 * win_scale;   /* scale 2 = 640x448 (4:3) */
++    int win_w = 320 * win_scale, win_h = 224 * win_scale;
+     int custom_video_on = game_video_viewport_enabled(g_game_spec.video);
++    if(!custom_video_on && g_game_spec.native_aspect_width && g_game_spec.native_aspect_height)
++        win_h=(int)(320u*g_game_spec.native_aspect_height/g_game_spec.native_aspect_width)*win_scale;
+     if (custom_video_on) {
+         win_w = (win_h * 16 + 4) / 9;
+     } else if (ws_armed()) {
+@@ -3190,7 +3250,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -321,7 +452,7 @@ index df30a08..db3f7f8 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3204,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3261,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }
@@ -336,6 +467,86 @@ index df30a08..db3f7f8 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
+@@ -3324,6 +3392,8 @@ int main(int argc, char *argv[])
+                       DEFAULT_DEBUG_PORT);
+     if (s_debug_enabled)
+         cmd_server_init(debug_port);
++    if(s_debug_enabled && g_game_spec.on_diagnostic_session)
++        g_game_spec.on_diagnostic_session();
+ 
+ #ifdef GENESIS_COSIM
+     /* Differential co-simulation: bring up the lockstep TCP server + checkpoint
+@@ -3621,6 +3691,24 @@ session_begin:;
+                 cancel_load_hold();
+                 recomp_runtime_ui_open(s_runtime_ui.ui); continue;
+             }
++            if(ev.type==SDL_CONTROLLERBUTTONDOWN && ev.cbutton.button==SDL_CONTROLLER_BUTTON_BACK &&
++               !recomp_runtime_ui_is_open(s_runtime_ui.ui)) {
++                cancel_load_hold();recomp_runtime_ui_open(s_runtime_ui.ui);continue;
++            }
++            if(recomp_runtime_ui_is_open(s_runtime_ui.ui) &&
++               (ev.type==SDL_CONTROLLERBUTTONDOWN || ev.type==SDL_CONTROLLERBUTTONUP)) {
++                int k=-1;
++                switch(ev.cbutton.button) {
++                case SDL_CONTROLLER_BUTTON_DPAD_UP:k=RECOMP_RUNTIME_UI_INPUT_UP;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_DOWN:k=RECOMP_RUNTIME_UI_INPUT_DOWN;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_LEFT:k=RECOMP_RUNTIME_UI_INPUT_LEFT;break;
++                case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:k=RECOMP_RUNTIME_UI_INPUT_RIGHT;break;
++                case SDL_CONTROLLER_BUTTON_A:k=RECOMP_RUNTIME_UI_INPUT_ACCEPT;break;
++                case SDL_CONTROLLER_BUTTON_B:case SDL_CONTROLLER_BUTTON_BACK:k=RECOMP_RUNTIME_UI_INPUT_BACK;break;
++                }
++                if(k>=0)recomp_runtime_ui_handle_input(s_runtime_ui.ui,k,ev.type==SDL_CONTROLLERBUTTONDOWN,0);
++                continue;
++            }
+             if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
+                 int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
+                 continue;
+@@ -3736,6 +3824,12 @@ session_begin:;
+ 
+ #if RECOMP_LAUNCHER
+         input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
++        if(host_ui_modal(renderer,texture,&running)) {
++            audio_set_playback_enabled(!turbo && !cmd_server_is_paused());
++            frame_pacer_reset(&frame_pacer);
++            presentation_clock_reset(&presentation_clock);
++            if(!running){window_close_requested=1;break;}
++        }
+ #endif
+ 
+         /* LB saves immediately. RB starts a continuous hold to load slot 1;
+@@ -4180,6 +4274,7 @@ session_begin:;
+         }
+ #endif
+         int ui_open = 0;
++        int host_ui_active=g_game_spec.host_ui_active && g_game_spec.host_ui_active();
+ #if RECOMP_LAUNCHER
+         ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
+ #endif
+@@ -4188,7 +4283,7 @@ session_begin:;
+         int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
+             s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
+             s_frame_stride * 4, s_screen_width, s_screen_height,
+-            s_frame_stride, MAX_SCREEN_HEIGHT, ui_open,
++            s_frame_stride, MAX_SCREEN_HEIGHT, ui_open || host_ui_active,
+             s_color_lut_on ? present_color_row : NULL, &s_color_lut);
+         if (prepared) present_src = (const uint32_t *)view.pixels;
+         else
+@@ -4199,12 +4294,14 @@ session_begin:;
+                     s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
+                 present_src = s_present_buf;
+             }
+-            if (ui_open && present_src != s_present_buf) {
++            if ((ui_open || host_ui_active) && present_src != s_present_buf) {
+                 memcpy(s_present_buf, present_src,
+                     (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t));
+                 present_src = s_present_buf;
+             }
+         }
++        if(host_ui_active && g_game_spec.host_ui_render)
++            g_game_spec.host_ui_render(s_present_buf,s_screen_width,s_screen_height,s_frame_stride*4);
+ #if RECOMP_LAUNCHER
+         int ui_width=s_screen_width;
+         if (ui_open && s_screen_width==256) {
 diff --git a/runner/native_interrupt_frame.h b/runner/native_interrupt_frame.h
 index 1cb9d42..02f9ae5 100644
 --- a/runner/native_interrupt_frame.h
@@ -374,3 +585,61 @@ index 11c9641..03d3e34 100644
 +unsigned genesis_native_pending_interrupt(void);
 +void genesis_native_ack_interrupt(unsigned level);
  #endif
+diff --git a/runner/video/genesis_vdp.c b/runner/video/genesis_vdp.c
+index 353ada4..013fb5e 100644
+--- a/runner/video/genesis_vdp.c
++++ b/runner/video/genesis_vdp.c
+@@ -500,6 +500,7 @@ unsigned gvdp_begin_scanline(GVDP *v, int line)
+  * compositor below. */
+ static uint8_t s_spr_idx[GVDP_MAX_WIDTH];   /* palette index 0..63            */
+ static uint8_t s_spr_op [GVDP_MAX_WIDTH];   /* opaque sprite pixel            */
++static uint8_t s_spr_owner[GVDP_MAX_WIDTH];
+ static uint8_t s_spr_hi [GVDP_MAX_WIDTH];   /* sprite priority bit            */
+ static uint8_t s_spr_shadow_op[GVDP_MAX_WIDTH]; /* operator: force shadow     */
+ static uint8_t s_spr_hilite_op[GVDP_MAX_WIDTH]; /* operator: highlight        */
+@@ -669,6 +670,7 @@ static void sprite_render_line(GVDP *v, int line, int total, int offset)
+      * `offset` = output column that authentic screen column 0 maps to (centers
+      * the view in the canvas). */
+     memset(s_spr_op, 0, (size_t)total);
++    memset(s_spr_owner, 0, (size_t)total);
+     memset(s_spr_shadow_op, 0, (size_t)total);
+     memset(s_spr_hilite_op, 0, (size_t)total);
+ 
+@@ -768,6 +770,7 @@ static void sprite_render_line(GVDP *v, int line, int total, int offset)
+                         if(hd)visible|=1u<<fx;
+                     }
+                     s_spr_hi[sx] = (uint8_t)pri;
++                    s_spr_owner[sx] = (uint8_t)(link+1);
+                     drawn[sx] = 1;
+                 }
+                 if(visible) {
+@@ -808,6 +811,7 @@ static void sprite_render_line(GVDP *v, int line, int total, int offset)
+                     s_spr_op[sx]  = 1;
+                 }
+                 s_spr_hi[sx] = (uint8_t)pri;
++                s_spr_owner[sx] = (uint8_t)(link+1);
+                 drawn[sx] = 1;
+             }
+ #endif
+@@ -1041,6 +1045,7 @@ static int capture_scanline(GVDP *v, int line, GVDPRasterRow *row,int presented)
+         }
+     }
+     memcpy(row->sprite,s_spr_idx,row->width);memcpy(row->opaque,s_spr_op,row->width);
++    memcpy(row->sprite_owner,s_spr_owner,row->width);
+     memcpy(row->high,s_spr_hi,row->width);memcpy(row->shadow_op,s_spr_shadow_op,row->width);
+     memcpy(row->hilite_op,s_spr_hilite_op,row->width);
+     if(presented) {
+diff --git a/runner/video/genesis_vdp.h b/runner/video/genesis_vdp.h
+index 1695d09..d43a139 100644
+--- a/runner/video/genesis_vdp.h
++++ b/runner/video/genesis_vdp.h
+@@ -289,6 +289,9 @@ typedef struct GVDPRasterRow {
+      * carry the existing source-palette-0 remap without losing priority. */
+     uint8_t plane_a_private[GVDP_MAX_WIDTH], plane_b_private[GVDP_MAX_WIDTH];
+     uint8_t sprite[GVDP_MAX_WIDTH], opaque[GVDP_MAX_WIDTH], high[GVDP_MAX_WIDTH];
++    /* Native frontmost SAT entry + 1 (zero if none). Presentation provenance,
++     * never device state. Host sprite providers do not supply SAT ownership. */
++    uint8_t sprite_owner[GVDP_MAX_WIDTH];
+     uint8_t shadow_op[GVDP_MAX_WIDTH], hilite_op[GVDP_MAX_WIDTH];
+     uint32_t host_palette[GVDP_HOST_PALETTE_SIZE];
+ } GVDPRasterRow;

@@ -15,6 +15,7 @@ sys.path.insert(0,str(ROOT))
 from tools.windows_environment import portable_windows_env
 BIN=Path('C:/msys64/ucrt64/bin')
 EXECUTABLES=['DynaBrothersLauncher.exe','DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']
+DIAGNOSTICS=['DynaDb1VideoTest.exe','DynaDb1visibleTest.exe']
 
 
 def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -53,7 +54,8 @@ def stage(candidate):
     revision=git('rev-parse','HEAD');version=project_version()
     env=dict(os.environ);env['PATH']=str(BIN)+';'+env.get('PATH','')
     subprocess.run([str(BIN/'cmake.exe'),'--build',str(ROOT/'build/dev'),'--target',
-        'DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT','--parallel','6'],env=env,check=True)
+        'DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT',
+        *[Path(name).stem for name in DIAGNOSTICS],'--parallel','6'],env=env,check=True)
     if git('status','--porcelain'):raise RuntimeError('Source changed while building the checkpoint')
     candidate.mkdir(parents=True,exist_ok=False)
     payload=candidate/'DynaBrothers';payload.mkdir()
@@ -62,10 +64,12 @@ def stage(candidate):
         source=build/target
         if source.read_bytes()[:2]!=b'MZ':raise RuntimeError('Invalid executable: '+target)
         shutil.copy2(source,payload/target)
+    shutil.copytree(ROOT/'debug',payload/'debug')
+    for target in DIAGNOSTICS:shutil.copy2(build/target,payload/'debug'/target)
     for file in (build/'assets').rglob('*'):
         if file.is_file() and file.name!='boxart_sonic1.tga':
             target=payload/'assets'/file.relative_to(build/'assets');target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,target)
-    system=set();queue=[payload/x for x in EXECUTABLES];seen=set()
+    system=set();queue=[payload/x for x in EXECUTABLES]+[payload/'debug'/x for x in DIAGNOSTICS];seen=set()
     while queue:
         source=queue.pop()
         if source.name.lower() in seen:continue
@@ -90,6 +94,7 @@ def stage(candidate):
         'MC68000-core.txt':ROOT/'upstream/segagenesisrecomp/external/m68k-recomp-core/LICENSE',
         'rbengine.txt':ROOT/'upstream/segagenesisrecomp/external/rbengine/LICENSE',
         'recomp-ui.txt':ROOT/'upstream/recomp-ui/LICENSE',
+        'stb_image-source-and-license.h':ROOT/'upstream/recomp-ui/src/third_party/stb_image.h',
         'Fonts.md':ROOT/'upstream/recomp-ui/assets/common/fonts/NOTICE.md',
         'Controller-database.txt':ROOT/'upstream/controller-db/LICENSE',
         'SDL2.txt':BIN.parent/'share/licenses/SDL2/LICENSE.txt',
@@ -99,6 +104,7 @@ def stage(candidate):
         'MinGW-runtime.txt':BIN.parent/'share/licenses/crt/COPYING.MinGW-w64-runtime.txt'
     }
     for name,source in sources.items():shutil.copy2(source,licenses/name)
+    shutil.copy2(ROOT/'THIRD_PARTY_NOTICES.md',licenses/'DynaBrothers-notices.md')
     shutil.copy2(ROOT/f'docs/releases/v{version}-checkpoint.md',payload/'READ-ME.md')
     manifest=dict(version=version,channel='checkpoint',status='candidate',source_commit=revision,
         engine_commit=git('-C',str(ROOT/'upstream/segagenesisrecomp'),'rev-parse','HEAD'),
@@ -127,6 +133,10 @@ def close(candidate,qa_path,releases,revision=1):
     required={'db1-en','db1-ja','db2-en','db2-ja','replay-record','replay-play','hint'}
     if revision >= 2 or tuple(map(int,version.split('.'))) >= (0,1,2):required.update({'db1-practice','db1-alien','db1-credits'})
     if tuple(map(int,version.split('.'))) >= (0,1,2):required.add('db2-unpause')
+    if tuple(map(int,version.split('.'))) >= (0,1,3):required.update({
+        'db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
+        'db1-achievements-ui','db2-achievements-ui','achievement-assets',
+        'DynaDb1VideoTest','DynaDb1visibleTest'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

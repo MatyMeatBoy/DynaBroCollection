@@ -1,7 +1,8 @@
-# Dyna Brothers 1 + 2 — v0.1.2 development
+# Dyna Brothers 1 + 2 — v0.1.3 test checkpoint
 
-[![Checkpoint 0.1.2](https://img.shields.io/badge/version-0.1.2%20checkpoint-orange)](docs/releases/v0.1.2-checkpoint.md)
-[![Development 0.1.2](https://img.shields.io/badge/development-0.1.2-blue)](docs/releases/v0.1.2-checkpoint.md)
+[![Checkpoint 0.1.3](https://img.shields.io/badge/version-0.1.3%20checkpoint-orange)](docs/releases/v0.1.3-checkpoint.md)
+[![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
+[![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
 [![Target Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.1.1-checkpoint.md)
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
@@ -9,9 +10,9 @@
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
-Version 0.1.2 adds guarded English credits names, the hard-ending secret-mode message and practice/alien completion messages with their scrolling backgrounds for DB1. See [the recovered layouts, output identities and verification limits](docs/research/db1-credits-translation.md). The historical v0.1.1 ZIP remains unchanged.
+Version 0.1.3 adds an expanded-world DB1 renderer, independent of the original 36-actor drawing buffer, and native 4:3 / enhanced 16:9 presentation. It includes 76 local DB1 goals based on the public RetroAchievements catalog and 99 custom DB2 Special goals, with badges, queued popups and a paused list. [Goal contracts and evaluator limits](docs/db1-achievement-contracts.md). Previous checkpoint archives retain their original bytes.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared card-based hub. See [v0.1.2 checkpoint notes](docs/releases/v0.1.2-checkpoint.md) for the exact included scope and pending work. Complete translations, true expanded 16:9, Original/Enhanced modes and final 4:3 pixel-aspect treatment remain unfinished.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.3 checkpoint notes](docs/releases/v0.1.3-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 world expansion and full campaign/hardware acceptance remain open.
 
 ![Launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -19,11 +20,12 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 
 | Resource | Purpose |
 | --- | --- |
-| [Checkpoint notes](docs/releases/v0.1.2-checkpoint.md) | Install, controls, included work and limitations |
+| [Checkpoint notes](docs/releases/v0.1.3-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
+| [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
 | [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |
 | [Historical v0.1.1 verification](docs/releases/v0.1.1-verification.md) | Preserved original delivery identity |
-| [Changelog](CHANGELOG.md) | Changes in v0.1.1 |
+| [Changelog](CHANGELOG.md) | Changes by checkpoint |
 | [Work board](STATUS.md) | Evidence and outstanding work |
 | [Contributing](CONTRIBUTING.md) | Reproduction and review expectations |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Runtime, UI, input and font attribution |
@@ -38,6 +40,8 @@ The supplied Japanese dumps remain untouched in `D:/01Claude/Dynabrothers`. ROMs
 - Original Japanese and patched English DB1 share one AOT executable. DB2 accepts its original Japanese image and the exact scoped English image.
 - Six-button pad protocol by default; explicit saved three-button settings are retained. Physical controller acceptance remains pending.
 - Shared graphical launcher, default-on reversible language selection, per-device M30 presets and generic SDL joystick support. Virtual-controller hotplug/isolation is tested; physical Bluetooth/2.4GHz/DirectInput hardware qualification remains pending.
+- DB1 read-only expanded terrain/actor rendering, movable right HUD, original scene fallback and integer scaling. The visible list considers all 253 valid actor IDs; the original simulation remains unchanged.
+- Local achievement profiles, 350 locked/color badges, a paused list and queued badge popups. No RetroAchievements account synchronization or exact official evaluator equivalence is claimed.
 
 The usable development targets are `DynaBrothers1AOT` and `DynaBrothers2AOT`. Legacy `DynaBrothers1EN` / `DynaBrothers2JP` targets are failed function-based experiments, retained for diagnosis; they are not qualified game runners.
 
@@ -48,7 +52,7 @@ Dependencies: Python 3, CMake, Ninja and a C/C++ toolchain with SDL2. This machi
 ```powershell
 python tools/build.py --inputs 'D:\01Claude\Dynabrothers' --target both
 python -m unittest discover -s tests -v
-cmake --build build/dev --target DynaLanguagePatchTest DynaStepLookupTest DynaControllerTest DynaLanguageSettingsTest DynaRamContractTest
+cmake --build build/dev --target DynaNativeIrqTest DynaLanguagePatchTest DynaStepLookupTest DynaControllerTest DynaLanguageSettingsTest DynaRamContractTest DynaDb1worldTest DynaDb1visibleTest DynaDb1VideoTest DynaVdpOwnerTest Dynadb1AchievementTest Dynadb2AchievementTest DynaAchievementsTest DynaAchievementUiTest
 ctest --test-dir build/dev --output-on-failure
 ```
 
@@ -83,13 +87,13 @@ Native probes use separate `GENESIS_USER_DIR` profiles, remove diagnostic interp
 - DB1 English patch supplied locally; its CRC agrees with [Tybis's published v0.1 identity](https://retroachievements.org/forums/topic/15658).
 - DB2 English prompt vocabulary adapted from the supplied IPS; its author/version has not been independently established. [The catalog](translations/db2special-en.json) records guarded Special addresses and provenance.
 - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX) is used only as an independent local reference, never linked into the native port. Its downloaded DLL hash is recorded by each reference probe.
-- [OptiPort](https://github.com/MatyMeatBoy/OptiPort), current pass at `58843a2c9122720f5db8649c0d9cfdb60dc479cf`, guides preservation, measured optimization and package validation. [Feedback contributed](https://github.com/MatyMeatBoy/OptiPort/issues/28).
+- [OptiPort](https://github.com/MatyMeatBoy/OptiPort), current pass at `a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1`, guides preservation, measured optimization and package validation. [Feedback contributed](https://github.com/MatyMeatBoy/OptiPort/issues/28).
 - [recomp-ui](https://github.com/mstan/recomp-ui), MIT, provides the shared graphical settings UI. [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB) supplies pinned device mappings.
 
 Recent framework/game repositories and exact revisions are recorded in [upstream-pins.json](docs/research/upstream-pins.json). Availability of another project's feature does not establish that it works in Dyna Brothers.
 
 DB1 map-label revision: `python tools/translate_db1.py local/roms/db1-en-v01.md` creates `local/roms/db1-en-v02.md` and a BPS add-on for English v0.1. Six map/surrender labels are now readable and checked in both runtimes; this is still a partial project. The build helper also produces a CRC-named copy and accepts it in the AOT runner.
 
-The native targets now use the shared graphical launcher on a plain double-click (passing a ROM path directly bypasses it). English is enabled by default even when loading the original Japanese dump. In Mods > Language, disable **English translation** to restore Japanese on the next start. The selection is shared by the two executables in `dynabrothers-language.ini` beside the selected profile settings. Translations remain partial. An in-session restart-required item is wired, but its visual interaction still needs verification.
+The native targets use the shared graphical launcher on a plain double-click (passing a ROM path directly bypasses it). English is enabled by default even when loading the Japanese dump. In Mods > Language, disable **English translation** to restore Japanese on the next start. The selection is shared in `dynabrothers-language.ini` beside the profile settings. Translations remain partial. Esc opens settings; a mapped controller's Back opens the same menu. The achievement list holds guest execution while it is open.
 
 `tools/package_checkpoint.py stage` collects native binaries, transitive DLLs, assets and notices from clean source. `tools/verify_checkpoint.py` runs the packaged regressions with development DLL paths excluded. `package_checkpoint.py close` creates an immutable ZIP, portable folder and hashes; it refuses to overwrite a closed delivery.

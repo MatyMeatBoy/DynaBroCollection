@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.3 — checkpoint de prueba
+
+- DB1: mundo ampliado a 16:9, HUD a la derecha y render independiente del buffer de 36 actores; considera todos los IDs válidos visibles y conserva las capas de cursor/selección.
+- Original con presentación 4:3; Enhanced con lienzo 398×224 y escala entera por defecto. Adaptive acotado para otros aspectos de ventana.
+- DB1: 76 metas locales basadas en su catálogo público y badges oficiales locked/color. DB2 Special: 93 etapas y seis hitos propios, con badges originales del segundo juego.
+- Lista pausada de logros, popup con badge, cola FIFO y persistencia atómica por juego. Diagnósticos, scripts y replays excluidos del progreso.
+- Test portable de DB1 con escenas, comparación de estado/audio Original/Enhanced y pruebas sintéticas de actores y prioridades.
+- Continúan pendientes las traducciones completas, DB2 ampliado, campañas completas y hardware físico.
+
 ## 0.1.2 — en desarrollo
 
 - Corregido el bloqueo de DB2 al despausar: interrupciones continuas en el stream AOT, con excepción de 44 ciclos y retorno/contexto del programa original.

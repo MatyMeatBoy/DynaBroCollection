@@ -3,6 +3,12 @@ file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" DYNA_PROJECT_VERSION LIMIT_CO
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
 project(DynaBrothersRecomp VERSION ${DYNA_PROJECT_VERSION} LANGUAGES C CXX)
 enable_testing()
+foreach(_contract IN ITEMS world visible)
+    add_executable(DynaDb1${_contract}Test tests/db1_${_contract}_test.c games/db1_${_contract}.c)
+    target_include_directories(DynaDb1${_contract}Test PRIVATE games)
+    target_compile_options(DynaDb1${_contract}Test PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+    add_test(NAME db1_${_contract}_contract COMMAND DynaDb1${_contract}Test)
+endforeach()
 add_executable(DynaNativeIrqTest tests/native_irq_test.c
     "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp/external/m68k-recomp-core/runtime/m68k_step.c")
 target_include_directories(DynaNativeIrqTest PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp/runner"
@@ -22,7 +28,32 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(RECOMP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/upstream/segagenesisrecomp")
 set(RUNNER_ROOT "${RECOMP_ROOT}/runner")
+add_executable(DynaDb1VideoTest tests/db1_video_test.c games/db1_video.c games/db1_world.c games/db1_visible.c)
+target_include_directories(DynaDb1VideoTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/video" "${RUNNER_ROOT}/external/clowncommon")
+target_compile_options(DynaDb1VideoTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_video_layers_contract COMMAND DynaDb1VideoTest)
+add_executable(DynaVdpOwnerTest tests/vdp_owner_test.c "${RUNNER_ROOT}/video/genesis_vdp.c")
+target_include_directories(DynaVdpOwnerTest PRIVATE "${RUNNER_ROOT}/video")
+target_compile_options(DynaVdpOwnerTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME vdp_sprite_provenance_contract COMMAND DynaVdpOwnerTest)
+foreach(_game IN ITEMS db1 db2)
+    add_executable(Dyna${_game}AchievementTest tests/${_game}_achievement_events_test.c games/${_game}_achievement_events.c)
+    target_include_directories(Dyna${_game}AchievementTest PRIVATE games)
+    target_compile_options(Dyna${_game}AchievementTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+    add_test(NAME ${_game}_achievement_events_contract COMMAND Dyna${_game}AchievementTest)
+endforeach()
+add_executable(DynaAchievementsTest tests/achievements_test.c games/achievements.c)
+target_include_directories(DynaAchievementsTest PRIVATE games)
+target_compile_options(DynaAchievementsTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/test-achievements-profile")
+add_test(NAME achievement_persistence_contract COMMAND DynaAchievementsTest "${CMAKE_BINARY_DIR}/test-achievements-profile")
 find_package(SDL2 REQUIRED CONFIG)
+add_executable(DynaAchievementUiTest tests/achievement_ui_test.c games/achievement_ui.c)
+target_include_directories(DynaAchievementUiTest PRIVATE games)
+target_compile_definitions(DynaAchievementUiTest PRIVATE SDL_MAIN_HANDLED)
+target_compile_options(DynaAchievementUiTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+target_link_libraries(DynaAchievementUiTest PRIVATE SDL2::SDL2)
+add_test(NAME achievement_ui_contract COMMAND DynaAchievementUiTest "${CMAKE_SOURCE_DIR}/assets/achievements")
 add_executable(DynaControllerTest tests/controller_profiles_test.c games/controller_profiles.c
     "${RUNNER_ROOT}/gamepad.c" "${RUNNER_ROOT}/input_map.c")
 target_include_directories(DynaControllerTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include"
@@ -88,7 +119,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db1step/db1step_module.c")
     list(FILTER _sources EXCLUDE REGEX "games/dyna_spec.c$")
     set_property(TARGET DynaBrothers1AOT PROPERTY SOURCES "${_sources}")
     file(GLOB STEP_PARTS CONFIGURE_DEPENDS "generated/db1step/db1step_part*.c")
-    target_sources(DynaBrothers1AOT PRIVATE games/step_adapter.c games/db2_ram.c ${STEP_PARTS}
+    target_sources(DynaBrothers1AOT PRIVATE games/step_adapter.c games/db2_ram.c games/db1_video.c games/db1_world.c games/db1_visible.c ${STEP_PARTS}
         generated/db1step/db1step_module.c
         "${RECOMP_ROOT}/external/m68k-recomp-core/runtime/m68k_step.c")
     target_include_directories(DynaBrothers1AOT PRIVATE generated/db1step
@@ -121,10 +152,15 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db2step/db2step_module.c")
     endif()
 endif()
 
+add_custom_target(DynaAchievementAssets COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/assets/achievements" "${CMAKE_BINARY_DIR}/assets/achievements")
 foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
     if(TARGET ${_game})
         target_sources(${_game} PRIVATE games/language_patch.c games/language_settings.c games/controller_profiles.c games/step_lookup.c)
+        target_sources(${_game} PRIVATE games/achievement_session.c games/achievement_ui.c games/achievement_smoke.c games/achievements.c
+            games/db1_achievement_events.c games/db2_achievement_events.c)
         target_include_directories(${_game} PRIVATE games generated/language)
+        add_dependencies(${_game} DynaAchievementAssets)
         add_custom_command(TARGET ${_game} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${_game}>/assets"
             COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/upstream/controller-db/gamecontrollerdb.txt"

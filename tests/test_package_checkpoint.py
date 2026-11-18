@@ -5,13 +5,14 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tools.package_checkpoint import close, digest, inventory, validate_build_info
+from tools.package_checkpoint import close, digest, inventory, validate_build_info, project_version
 
 
 class PackageTests(unittest.TestCase):
     def test_requires_embedded_clean_revision_and_checkpoint_version(self):
-        validate_build_info('game 0.1.2 git abcdef1234; engine git example', 'abcdef1234567890')
-        for info in ['game 0.1.2 git abcdef1234-dirty;', 'game 0.1.2 git 1234567890;',
+        version=project_version()
+        validate_build_info(f'game {version} git abcdef1234; engine git example', 'abcdef1234567890')
+        for info in [f'game {version} git abcdef1234-dirty;', f'game {version} git 1234567890;',
                      'game 0.1.1 git abcdef1234;', 'game 0.0.1 git abcdef1234;']:
             with self.assertRaises(RuntimeError):validate_build_info(info,'abcdef1234567890')
 
@@ -103,3 +104,21 @@ class PackageTests(unittest.TestCase):
             qa['cases']['db2-unpause']=dict(passed=True);path.write_text(json.dumps(qa),encoding='utf-8')
             with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases',revision=2)
             self.assertTrue((root/'releases/DynaBrothers-v0.1.2-win64-checkpoint-r2.zip').is_file())
+
+    def test_013_requires_expanded_view_modal_assets_and_portable_diagnostics(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);candidate,path,qa=self.fixture(root)
+            manifest_path=candidate/'DynaBrothers/PACKAGE.json'
+            manifest=json.loads(manifest_path.read_text());manifest['version']='0.1.3'
+            manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+            for name in ['db1-practice','db1-alien','db1-credits','db2-unpause']:
+                qa['cases'][name]=dict(passed=True)
+            path.write_text(json.dumps(qa),encoding='utf-8')
+            with self.assertRaises(RuntimeError):close(candidate,path,root/'releases')
+            for name in ['db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
+                         'db1-achievements-ui','db2-achievements-ui','achievement-assets',
+                         'DynaDb1VideoTest','DynaDb1visibleTest']:
+                qa['cases'][name]=dict(passed=True)
+            path.write_text(json.dumps(qa),encoding='utf-8')
+            with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases')
+            self.assertTrue((root/'releases/DynaBrothers-v0.1.3-win64-checkpoint-r1.zip').is_file())
