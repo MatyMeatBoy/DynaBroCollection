@@ -1,4 +1,8 @@
-# Work board — 2026-11-17
+# Work board — 2026-11-18
+
+## Published v0.1.4 test checkpoint
+
+The audio, DB1 weather/widescreen, automatic input, same-window settings and Extras checkpoint is published. [Exact archive/source identity and24 packaged checks](docs/releases/v0.1.4-verification.md). DB2 current modules are integrated; further DB2 work is paused by user request. Remaining work is tracked in [the coordination handoff](docs/handoff/README.md). Native code saves/replay and the guide are initial implementations with documented limits, not a complete campaign acceptance claim.
 
 **The overall project remains in development.** v0.1.3 adds experimental DB1 world expansion and local achievements; full translations, DB2 expansion and full campaign/hardware acceptance remain open.
 

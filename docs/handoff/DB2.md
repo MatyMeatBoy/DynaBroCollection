@@ -1,3 +1,5 @@
+> Current status: the renderer is integrated in v0.1.4. Further DB2 development is paused by explicit user request. The task below is a retained future handoff, not authorization to resume now. See docs/research/db2-video-integration.md for the actual limits.
+
 # DB2 Special helper — concrete handoff
 
 Read README.md first. Scope is game-owned DB2 work; do not alter DB1, shared runner/SDK, CMake, step_adapter, packaging or launcher while root owns integration. No helper has claimed this scope yet. Claim by posting owner/file list to current chat and updating the board. Existing pure decoder files are available and tested; do not rewrite from guessed DB1 offsets.

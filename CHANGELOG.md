@@ -44,6 +44,6 @@ Traducciones completas, widescreen, modos Original/Enhanced y hardware físico s
 Es una entrega de desarrollo. Traducciones completas, widescreen ampliado, modos Original/Enhanced, aspecto de píxel final, campañas y hardware físico siguen pendientes. Detalles y mediciones en [notas del checkpoint](docs/releases/v0.1.1-checkpoint.md).
 
 
-## 0.1.4 candidate
+## 0.1.4 test checkpoint — 2026-11-18
 
 Timer A audio correction; integer-fill canvas and DB1 scene/weather fixes; automatic SDL controller source and M30 bindings; Start+Mode menu with analog navigation; same-window full settings; themed main hub and external launch flags; Extras guide and atomic native-code progress store/replay. DB2 guarded renderer integrated, further DB2 development paused by user. See docs/releases/v0.1.4-checkpoint.md for qualification and limits.
