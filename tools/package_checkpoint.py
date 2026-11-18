@@ -145,6 +145,7 @@ def close(candidate,qa_path,releases,revision=1):
         'DynaDb1VideoTest','DynaDb1visibleTest','portable-debug-script'})
     if tuple(map(int,version.split('.'))) >= (0,1,4):required.update({'db1-audio-signal','db1-lightning','host-settings-same-window','launcher-integration-info'})
     if tuple(map(int,version.split('.'))) >= (0,1,5):required.update({'db1-stage-intro-1440','db1-camera-1440','db1-options-1440','db1-password-1440','db1-submenus-1440','db1-tsunami-1440','green-hub-same-window'})
+    if tuple(map(int,version.split('.'))) >= (0,1,6):required.update({'green-hub-home-buttons','db1-intro-fade','db1-save-result','db1-hard-ending-save','db1-visor--2','db1-visor-0','db1-visor-2'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

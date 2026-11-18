@@ -40,6 +40,35 @@ def verify_hub(binary, rom, output):
     return report
 
 
+def verify_home(binary, output):
+    """Exercise actual home button hit-testing rather than direct setup CLI."""
+    binary, output = Path(binary).resolve(), Path(output).resolve()
+    output.mkdir(parents=True, exist_ok=False)
+    profile = output / 'profile'
+    profile.mkdir()
+    env = portable_windows_env(dict(os.environ))
+    env.update(GENESIS_USER_DIR=str(profile), DYNA_HUB_HOME_SELFTEST='1',
+               DYNA_HUB_HOME_CAPTURE=str(output / 'home.bmp'),
+               LNG_TEST_HIDDEN='1', LNG_SCRIPT='wait:3;quit')
+    startup = subprocess.STARTUPINFO()
+    startup.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    startup.wShowWindow = 0
+    result = subprocess.run([str(binary)], env=env, stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, timeout=55, startupinfo=startup)
+    log = result.stdout.decode('utf-8', errors='replace')
+    (output / 'run.log').write_text(log, encoding='utf-8')
+    capture = output / 'home.bmp'
+    passed = (result.returncode == 0 and
+              log.count('native hit-test/BM_CLICK/inline return HWND') == 2 and
+              '[hub-home-test] PASS dpi' in log and 'Could not save' not in log and
+              capture.is_file() and capture.read_bytes()[:2] == b'BM')
+    report = dict(passed=passed, returncode=result.returncode,
+                  binary_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
+                  scope='Both real home Settings hit targets, inline visits and original HWND; isolated persisted profile; own-client GDI capture')
+    (output / 'report.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+    return report
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)

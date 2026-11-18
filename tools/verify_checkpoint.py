@@ -26,7 +26,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -38,13 +38,19 @@ def main():
         if audio:command+=['--require-audio-signal']
         if host_settings:command+=['--audio','--host-settings-test']
         if window_size:command+=['--window-size',window_size]
+        if visor is not None:command+=['--visor-offset-tiles',str(visor)]
+        if overlays:command+=['--host-overlays']
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
+        env.pop('DYNA_DB1_SAVE_TEST',None)
+        if save_test:env['DYNA_DB1_SAVE_TEST']='save'
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
         elif irq:env['DYNA_IRQ_VERIFY']='1'
         result=subprocess.run(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
         if result.returncode:
             print(result.stdout.decode('utf-8',errors='replace'));raise RuntimeError('Packaged regression failed: '+name)
         report=json.loads((output/'probe.json').read_text(encoding='utf-8'))
+        if save_test and '[progress-save-test] PASS' not in (output/'run.log').read_text(encoding='utf-8'):
+            raise RuntimeError('Native result save was not persisted: '+name)
         expected='Japanese original' if language=='ja' else 'English'
         if '[language] '+expected not in (output/'run.log').read_text(encoding='utf-8'):
             raise RuntimeError('Language selection was not observed: '+name)
@@ -125,6 +131,26 @@ def main():
         result=verify_hub(payload/'DynaBrothersLauncher.exe',db1,args.output/'green-hub-same-window')
         if not result['passed']:raise RuntimeError('Green hub original-window regression failed')
         cases['green-hub-same-window']=result
+    if tuple(map(int,version.split('.'))) >= (0,1,6):
+        from tools.hub_probe import verify_home
+        result=verify_home(payload/'DynaBrothersLauncher.exe',args.output/'green-hub-home-buttons')
+        if not result['passed']:raise RuntimeError('Actual home Settings button regression failed')
+        cases['green-hub-home-buttons']=result
+        run('db1-intro-fade','DynaBrothers1AOT.exe',db1,2500,
+            ROOT/'games/db1/scenes/intro-side-fade.input',widescreen='16:9')
+        run('db1-save-result','DynaBrothers1AOT.exe',db1,11000,
+            ROOT/'games/db1/scenes/progress-save-diagnostic.input',widescreen='16:9',save_test=True,overlays=True)
+        run('db1-hard-ending-save','DynaBrothers1AOT.exe',db1,43000,
+            ROOT/'games/db1/scenes/progress-hard-ending-diagnostic.input',widescreen='16:9',overlays=True)
+        for offset in [-2,0,2]:
+            run('db1-visor-'+str(offset),'DynaBrothers1AOT.exe',db1,6800,
+                ROOT/'games/db1/scenes/camera-vertical.input',widescreen='16:9',
+                window_size='2560x1440',visor=offset)
+        baseline=cases['db1-visor-0']
+        for offset in [-2,2]:
+            if any(cases['db1-visor-'+str(offset)][key]!=baseline[key]
+                   for key in ['state_fnv1a64','audio_state_fnv1a64']):
+                raise RuntimeError('Visor placement changed canonical game/audio state')
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',
