@@ -64,6 +64,7 @@ static const GameRomAlias db1_aliases[]={
 #include "db2_video.h"
 #include "translation_identity.h"
 static const GameRomAlias english_prompts_alias={"English gameplay prompts (partial)",DYNA_DB2_ENGLISH_CRC};
+static unsigned pad_trace_remaining;
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -122,7 +123,18 @@ static int retire(void *user,unsigned *cycles) {
 #endif
     dyna_progress_runtime_before(g_cpu.PC,g_ram,sizeof g_ram,g_cpu.D,g_cpu.A);
 #ifdef DYNA_HAS_OVERLAY
-    if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e)db2_video_observe(g_cpu.PC);
+    if(pad_trace_remaining && g_cpu.PC==0x4e0 &&
+       (g_cpu.A[0]==0xa10003 || g_cpu.A[0]==0xa10005)){
+        unsigned port=(g_cpu.A[0]-0xa10003)/2,low=g_cpu.D[0]&255;
+        unsigned id=((g_cpu.D[2]&255)+((low&12)?1:0))*2+((low&3)?1:0);
+        if(id!=13){
+            fprintf(stderr,"[pad-burst] invalid id=%u port=%u low=%02X count=%u buttons=%04X pad6=%u audio_cycles=%u master=%u\n",
+                    id,port,low,g_machine.bus.pad_th_count[port],g_machine.bus.pad[port],g_machine.bus.pad_type[port],g_audio_cycle_counter,g_machine.master_cycle);
+            --pad_trace_remaining;
+        }
+    }
+    if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e ||
+       g_cpu.PC==0xf794 || g_cpu.PC==0xf728)db2_video_observe(g_cpu.PC);
 #endif
 #ifdef DYNA_HAS_JP
     switch(g_cpu.PC){
@@ -225,6 +237,8 @@ static void entry(void) {
     db1_title_menu_enable(&title_menu,db1_video_enhanced());
 #elif defined(DYNA_HAS_OVERLAY)
     db2_video_reset();
+    const char *pad_trace=getenv("DYNA_PAD_TRACE");
+    pad_trace_remaining=pad_trace&&!strcmp(pad_trace,"1")?32:0;
 #endif
     const char *lookup=getenv("DYNA_AOT_LOOKUP");
     cached_lookup=!lookup||strcmp(lookup,"binary");
@@ -285,6 +299,8 @@ static void settings(const char *path){
     dyna_language_settings_load(path);
 #ifdef DYNA_HAS_JP
     dyna_visor_settings_bind(db1_video_set_visor_offset_tiles);
+#elif defined(DYNA_HAS_OVERLAY)
+    dyna_visor_settings_bind(db2_video_visor_offset);
 #else
     dyna_visor_settings_bind(NULL);
 #endif
@@ -297,9 +313,7 @@ static void settings(const char *path){
         dyna_extras_ui_init(DYNA_ENTRY==0x738u?2:1,assets);
     }
     dyna_controller_defaults();
-#ifdef DYNA_HAS_JP
     g_app_config.integer_scale=1;
-#endif
     /* Use the common parser again after installing game defaults. Explicit
      * saved 3-button choices and unrelated settings retain their values. */
     for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_6BUTTON;

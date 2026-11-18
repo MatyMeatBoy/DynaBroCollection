@@ -198,6 +198,16 @@ def main():
         if len(data)!=105 or data[88:92]!=bytes.fromhex('00040010') or data[93:97]!=bytes.fromhex('1232226A') or int.from_bytes(data[101:105],'big')!=0x1becc:
             raise RuntimeError('EMI Save did not preserve original native padded code')
         cases['db1-emi-save']['native_save_sha256']=hashlib.sha256(data).hexdigest()
+    if tuple(map(int,version.split('.'))) >= (0,1,8):
+        for name,mode in [('db2-player-6button-original','off'),('db2-player-6button-wide','16:9')]:
+            run(name,'DynaBrothers2AOT.exe',db2,9400,ROOT/'games/db2special/scenes/player-normal2.input',
+                widescreen=mode,window_size='2560x1440',diagnostic_env={'DYNA_PAD_TRACE':'1','DYNA_DB2_VIDEO_TRACE':'1'})
+            log=(args.output/name/'run.log').read_text(encoding='utf-8')
+            if '[pad-burst] invalid' in log:raise RuntimeError('Invalid native controller identification: '+name)
+            cases[name]['invalid_native_controller_ids']=0
+        a,b=cases['db2-player-6button-original'],cases['db2-player-6button-wide']
+        if any(a[k]!=b[k] for k in ['state_fnv1a64','audio_state_fnv1a64']):raise RuntimeError('DB2 player wide mode changed canonical game/audio state')
+        cases['db2-player-6button-state-equality']=dict(passed=True,frames=9400,state_fnv1a64=a['state_fnv1a64'],audio_state_fnv1a64=a['audio_state_fnv1a64'],scope='Actual typed Normal2 password, six-button detector and B+direction camera postcondition; held-scroll may use native fallback')
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

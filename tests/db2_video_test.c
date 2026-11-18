@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 uint8_t g_rom[0x400000],g_ram[65536];
+M68KState g_cpu;
 static GVDP v;
 static GVDPRasterRow r;
 static uint32_t original[320],out[768],canvas[480*480];
@@ -25,9 +26,66 @@ static void setup(void){
  r.display=1;r.width=320;
  for(unsigned i=0;i<320;i++){original[i]=0xff123456;r.plane_b[i]=0x7f;}
  r.plane_a[216]=0x43;
+ /* Legacy synthetic polarity is explicit: A=UI E000, B=terrain C000. */
+ v.reg[2]=0x38;v.reg[4]=6;
+ w16(g_ram+0x2a5a,0xe036);w16(g_ram+0x2a5c,0xe004);
+ w16(g_ram+0x2a5e,216);w16(g_ram+0x2a60,16);
  calls=0;db2_video_reset();assert(db2_video.configure("16:9"));
 }
+static void actual_plane_contract(void){
+ setup();v.reg[2]=0x30;v.reg[4]=7;
+ uint8_t tmp[320];memcpy(tmp,r.plane_a,320);memcpy(r.plane_a,r.plane_b,320);memcpy(r.plane_b,tmp,320);
+ db2_video_observe(0x3bb0);row(0,427);
+ assert(out[100]==genesis_dac_cram_to_argb(v.cram[63],0));
+ /* Equal-priority PlaneA terrain wins over PlaneB UI, as on hardware. */
+ assert(out[323]==genesis_dac_cram_to_argb(v.cram[63],0));
+ r.plane_b[216]=0xc3;row(1,427);
+ assert(out[323]==genesis_dac_cram_to_argb(v.cram[3],0));
+ /* Native world-plane UI overlay keeps its original relative placement. */
+ r.plane_b[20]=0xc3;row(1,427);
+ assert(out[70]==genesis_dac_cram_to_argb(v.cram[3],0));
+ assert(out[20]==genesis_dac_cram_to_argb(v.cram[63],0));
+}
+static void owned_sprite_mode(unsigned source,unsigned attr,unsigned size,int x,int y,int expected,unsigned mode){
+ setup();g_ram[0x2a88]=(uint8_t)mode;uint8_t *p=g_ram+0x2752+8*source;
+ w16(p,(unsigned)y);w16(p+2,size<<8);w16(p+4,attr);w16(p+6,(unsigned)x);
+ w16(v.vram,(unsigned)y+128);w16(v.vram+2,size<<8);w16(v.vram+4,attr);w16(v.vram+6,(unsigned)x+128);
+ unsigned color=3+((attr>>9)&48);v.cram[color]=0x0e0;
+ r.sprite_owner[x]=1;r.sprite[x]=(uint8_t)color;r.opaque[x]=1;r.high[x]=(uint8_t)(attr>>15);
+ db2_video_observe(0x3bb0);row(0,427);row(y,427);
+ assert(out[expected]==genesis_dac_cram_to_argb(v.cram[color],0));
+}
+static void owned_sprite_contract(unsigned source,unsigned attr,unsigned size,int x,int y,int expected){
+ owned_sprite_mode(source,attr,size,x,y,expected,3);
+}
 int main(void){
+ /* Demo ownership is explicit and independent of campaign/player acceptance. */
+ setup();db2_video_observe(0xf794);assert(db2_video.raster_enabled(&v));
+ db2_video_observe(0xf728);assert(!db2_video.raster_enabled(&v));
+ db2_video_observe(0x3bb0);assert(db2_video.raster_enabled(&v));
+ db2_video_observe(0x3bb4);assert(!db2_video.raster_enabled(&v));
+ actual_plane_contract();
+ for(unsigned mode=0;mode<=2;mode++)owned_sprite_mode(6,0x82f4,10,260,178,367,mode);
+ owned_sprite_mode(6,0x82f4,10,260,178,367,0x82);
+ owned_sprite_mode(6,0x82f4,10,100,20,150,5);
+ owned_sprite_contract(12,0x86e1,5,258,62,365); /* Minimap owner follows HUD. */
+ owned_sprite_contract(13,0x8372,5,258,62,365);
+ owned_sprite_contract(10,0x96e8,5,192,16,242); /* Right corner stays192-wide. */
+ owned_sprite_contract(14,0x836a,13,296,32,403);
+ owned_sprite_contract(15,0x833f,13,296,32,403);
+ for(unsigned source=22;source<=30;source++){
+  owned_sprite_contract(source,0x8364,9,224,152,331);
+  owned_sprite_contract(source,0x8360,5,224,152,331);
+ }
+ for(unsigned palette=0;palette<4;palette++)owned_sprite_contract(22,0x87e9+0x2000*palette,15,248,152,355);
+ owned_sprite_contract(6,0x82f4,10,100,20,150); /* World cursor follows world. */
+ owned_sprite_contract(31,0x032f,15,100,20,150);
+ /* Valid-looking temporary record16 is not blanket-classified as HUD. */
+ setup();w16(g_ram+0x2752+16*8+4,0x82fd);w16(g_ram+0x2752+16*8+2,0x0f00);
+ w16(v.vram+4,0x82fd);w16(v.vram+2,0x0f00);w16(v.vram,128);w16(v.vram+6,128);
+ db2_video_observe(0x3bb0);row(0,427);assert(out[53]==original[0]);
+ setup();v.reg[2]=0;db2_video_observe(0x3bb0);row(0,427);assert(out[53]==original[0]);
+ setup();w16(g_ram+0x2a60,112);db2_video_observe(0x3bb0);row(0,427);assert(out[53]==original[0]);
  setup();row(0,398);assert(calls==1&&out[39]==original[0]&&out[0]==0xff000000);
  db2_video_observe(0x3bb0);row(0,398);
  assert(calls==2);assert(out[100]==genesis_dac_cram_to_argb(v.cram[63],0));
@@ -54,9 +112,9 @@ int main(void){
  unsigned pos=0x1405;for(unsigned i=0;i<3;i++){g_rom[pos++]=255;g_rom[pos++]=0;}g_rom[pos++]=254;g_rom[pos]=0;
  g_rom[0x1220]=0;g_rom[0x1221]=0;g_rom[0x1222]=5;
  for(unsigned id=1;id<=41;id++){uint8_t *rec=g_ram+0x5f58+48*id;rec[0]=1;rec[2]=15;rec[3]=15;}
- g_ram[0x5f58+48*41+2]=27;v.cram[26]=0xe;v.cram[27]=0xe0;
+ g_ram[0x5f58+48*41+2]=26;v.cram[26]=0xe;v.cram[27]=0xe0;
  db2_video_observe(0x3bb0);row(0,480);row(4,480);
- assert(calls==2&&out[384]==genesis_dac_cram_to_argb(v.cram[26],0));
+ assert(calls==2&&out[444]==genesis_dac_cram_to_argb(v.cram[26],0));
  /* A late unknown world sprite at x300 must neither become HUD nor leave
   * earlier enhanced rows mixed with native fallback. Test both canvases. */
  setup();db2_video_observe(0x3bb0);

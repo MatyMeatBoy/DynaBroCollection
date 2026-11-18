@@ -4,7 +4,9 @@ Authorized continuation after the immutable0.1.7 DB1 checkpoint. User requests a
 
 ## Reproduced mechanism
 
-The frozen0.1.7 DB218,000-frame Original/Enhanced pair has equal guest/audio state but Enhanced remains centered fallback. An actual battle snapshot has terrain on hardware PlaneA/C000 and HUD on PlaneB/E000. Reconstruction matches all216x224 terrain pixels atC000, whileE000 differs everywhere. Current compositor assumes the opposite assignment. It also rejects a legitimate source12 minimap cursor, and stretches only the right visor corners with HUD.
+The frozen0.1.7 DB218,000-frame Original/Enhanced pair has equal guest/audio state but Enhanced remains centered fallback. A captured demo-world snapshot has terrain on hardware PlaneA/C000 and HUD on PlaneB/E000. Reconstruction matches all216x224 terrain pixels atC000, whileE000 differs everywhere. The original compositor assumes the opposite assignment. It also rejects a legitimate source12 minimap cursor, and stretches only the right visor corners with HUD.
+
+The historical18k fixture was subsequently identified as attract/demo, not player control. Its ordinary3BB0 battle latch stayed inactive. Explicit demo entryF794/exitF728 is being qualified separately from an actual Story/Password-controlled route; see the public fixture scope correction.
 
 ## Intended behavior
 

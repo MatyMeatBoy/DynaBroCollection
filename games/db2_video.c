@@ -3,16 +3,20 @@
 #include "db2_actors.h"
 #include "db2_markers.h"
 #include "db2_effects.h"
+#include "db2_visor.h"
 #include "viewport.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
 #include "video/genesis_dac.h"
 #include "video/genesis_vdp_compose.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 enum { LIMIT=768, MAX_HEIGHT=480 };
 static DynaViewport view=DYNA_VIEWPORT_DEFAULT;
-static int battle,ready,canvas_top,canvas_height=224;
+enum { WORLD_NONE, WORLD_BATTLE, WORLD_DEMO };
+static int world_scene,ready,canvas_top,canvas_height=224;
 static uint8_t ram[65536];
 static GVDP snapshot;
 static Db2WorldCamera camera;
@@ -24,13 +28,29 @@ static uint32_t background;
 static uint32_t native_image[224][320];
 static uint8_t native_valid[224],owner_kind[80];
 static int rejected;
+static int world_is_a;
+static int visor_offset;
+static int trace_enabled;
+static unsigned frame_reasons,trace_seen,trace_signature,trace_budget;
+void db2_video_visor_offset(int tiles){visor_offset=tiles;}
+int db2_video_visor_requested(void){return visor_offset;}
+static int plane_layout(const GVDP *v){
+ unsigned a=((unsigned)v->reg[2]&0x38)<<10,b=((unsigned)v->reg[4]&7)<<13;
+ if(a==0xc000&&b==0xe000){world_is_a=1;return 1;}
+ if(a==0xe000&&b==0xc000){world_is_a=0;return 1;}
+ return 0;
+}
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){battle=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);}
-void db2_video_observe(unsigned pc){if(pc==0x3bb0)battle=1;else if(pc==0x3bb4||pc==0x734e)battle=0;}
+void db2_video_reset(void){world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
+void db2_video_observe(unsigned pc){
+ if(pc==0x3bb0)world_scene=WORLD_BATTLE;
+ else if(pc==0xf794)world_scene=WORLD_DEMO;
+ else if(pc==0x3bb4||pc==0x734e||pc==0xf728)world_scene=WORLD_NONE;
+}
 static int configure(const char *s){return dyna_viewport_configure(&view,s);}
 static int enabled(void){return view.enabled;}
 static int width(int dw,int dh,int nw,int nh){(void)nw;canvas_top=0;canvas_height=nh;return dyna_viewport_width(&view,dw,dh,nh);}
-static int raster_enabled(const GVDP *v){(void)v;return battle&&!(g_ram[0x286]&0x88);}
+static int raster_enabled(const GVDP *v){(void)v;return world_scene!=WORLD_NONE&&!(g_ram[0x286]&0x88);}
 static int geometry(int dw,int dh,int nw,int nh,int *w,int *h){
  if(!view.enabled||nw!=320||nh!=224)return 0;
  int scale=game_video_integer_canvas(dw,dh,dyna_viewport_width(&view,dw,dh,nh),nh,w,h);
@@ -40,12 +60,15 @@ static int geometry(int dw,int dh,int nw,int nh,int *w,int *h){
 static void capture(const GVDP *v){
  memcpy(ram,g_ram,sizeof ram);memcpy(&snapshot,v,sizeof snapshot);
  Db2WorldContext c={g_rom,2621440,ram,sizeof ram,snapshot.vram,sizeof snapshot.vram};
- ready=db2_world_read_camera(&c,&camera);
+ ready=db2_world_read_camera(&c,&camera)&&plane_layout(v)&&
+       word(ram+0x2a5a)==0xe036&&word(ram+0x2a5c)==0xe004&&
+       word(ram+0x2a5e)==216&&word(ram+0x2a60)==16;
+ if(!ready)frame_reasons|=1;
  Db2ActorsContext ac={g_rom,2621440,ram,sizeof ram};count=0;
  for(unsigned id=0;id<255;id++)rank[id]=72+id;
  unsigned off=word(ram+0x9d3a);uint8_t seen[72]={0};
  for(unsigned n=0;n<72&&off;n++){
-  if(off<4||(off-4)%8||(off-4)/8>=72||seen[(off-4)/8]){ready=0;break;}
+  if(off<4||(off-4)%8||(off-4)/8>=72||seen[(off-4)/8]){ready=0;frame_reasons|=2;break;}
   seen[(off-4)/8]=1;const uint8_t *p=ram+0x9d3a+off;
   if(p[2]>0&&p[2]<255)rank[p[2]]=n;
   off=word(p);
@@ -53,7 +76,7 @@ static void capture(const GVDP *v){
  for(unsigned id=1;id<=254;id++){
   const uint8_t *p=ram+0x5f58+48*id;
   if(!p[0])continue;
-  Db2Actor a;if(!(db2_actor_decode_cached(&ac,id,&a)||db2_actor_decode(&ac,id,&a))){ready=0;continue;}
+  Db2Actor a;if(!(db2_actor_decode_cached(&ac,id,&a)||db2_actor_decode(&ac,id,&a))){ready=0;frame_reasons|=4;continue;}
   actors[count++]=a;
  }
  for(unsigned i=0;i<count;i++)for(unsigned j=i+1;j<count;j++)
@@ -72,8 +95,19 @@ static int ui_kind(unsigned attr,unsigned size,int x,int y){
      ((word(p+6)+128)&511)!=(unsigned)((x+128)&511)||
      ((word(p)+128)&1023)!=(unsigned)((y+128)&1023))continue;
   if(i<6&&attr==0x86e7&&size==0)return 2; /* HUD counters, 691A/6CBC */
-  if((i==6||i==7)&&(attr==0x82f4||attr==0x8376)&&(size==10||size==5))return 1;
-  if(i>=8&&i<=11&&(attr&0xe7ff)==0x86e8&&size==5)return i>=10?2:1;
+  if(i==6&&attr==0x82f4&&size==10&&!(ram[0x2a89]&4)){
+   /* Native input dispatch41DE: modes0/1/2 retain a HUD command hand;
+    * modes3/5 project its shared coordinates into the world. */
+   /* Native15B46/15CAC sets/clears bit7 while the same camera mode scrolls. */
+   unsigned mode=ram[0x2a88]&0x7f;
+   if(mode<=2)return 2;
+   if(mode==3||mode==5)return 1;
+  }
+  if(i>=8&&i<=11&&(attr&0xe7ff)==0x86e8&&size==5)return 1;
+  if((i==12&&attr==0x86e1&&size==5)||(i==13&&attr==0x8372&&size==5))return 2;
+  if((i==14&&attr==0x836a&&size==13)||(i==15&&attr==0x833f&&size==13))return 2;
+  if(i>=22&&i<=30&&((attr==0x8364&&size==9)||(attr==0x8360&&size==5)))return 2;
+  if(i==22&&(attr&0x9fff)==0x87e9&&size==15)return 2;
   if(i==31&&attr==0x032f&&size==15)return 1;
  }
  return 0;
@@ -83,7 +117,7 @@ static void classify_sprites(void){
  unsigned base=((unsigned)snapshot.reg[5]&127)<<9,link=0;uint8_t seen[80]={0};
  memset(owner_kind,0,sizeof owner_kind);
  for(unsigned n=0;n<80;n++){
-  if(link>=80||seen[link]){rejected=1;return;}seen[link]=1;
+  if(link>=80||seen[link]){rejected=1;frame_reasons|=8;return;}seen[link]=1;
   unsigned p=base+link*8,attr=word(snapshot.vram+((p+4)&65535));
   unsigned size=snapshot.vram[(p+2)&65535],next=snapshot.vram[(p+3)&65535]&127;
   int x=(int)(word(snapshot.vram+((p+6)&65535))&511)-128;
@@ -92,12 +126,21 @@ static void classify_sprites(void){
   if(!attr)kind=1;
   if(db2_actor_native_sat_body(&ac,attr)||db2_effects_is_marker((uint16_t)attr))kind=3;
   for(size_t i=0;i<effect_count;i++)if(effects[i].sat_index==link)kind=3;
-  if(!kind){rejected=1;return;}
+  if(!kind){
+   if(trace_enabled&&!(trace_seen&8)){
+    fprintf(stderr,"[db2-video] unknown SAT=%u attr=%04X size=%02X xy=%d,%d pc=%06X cache_head=%04X\n",link,attr,size,x,y,g_cpu.PC,word(ram+0x20b2));
+    for(unsigned slot=0;slot<40;slot++){
+     const uint8_t *p=ram+0x1bb2+32*slot;
+     fprintf(stderr,"[db2-video] cache slot=%03X next=%04X owner=%04X patterns=%04X/%04X type=%02X state=%02X direction=%02X\n",32*slot,word(p),word(p+10),word(p+4),word(p+8),p[0x14],p[0x18],p[0x19]);
+    }
+   }
+   rejected=1;frame_reasons|=8;return;
+  }
   owner_kind[link]=(uint8_t)kind;
   if(!next)return;
   link=next;
  }
- rejected=1;
+ rejected=1;frame_reasons|=8;
 }
 static uint8_t tile_pixel(unsigned attr,unsigned size,int px,int py){
  unsigned hc=((size>>2)&3)+1,vc=(size&3)+1;
@@ -112,40 +155,61 @@ static void put(uint8_t *s,uint8_t *o,uint8_t *hi,int x,int w,uint8_t p,unsigned
  if(x<0||x>=w||!(p&15))return;
  s[x]=p;o[x]=1;hi[x]=(uint8_t)(attr>>15);
 }
-static void effect_row(const Db2WorldEffect *e,int y,int w,uint8_t *s,uint8_t *o,uint8_t *hi){
+static void effect_row(const Db2WorldEffect *e,int y,int w,int shift,uint8_t *s,uint8_t *o,uint8_t *hi){
  int h=((e->size&3)+1)*8,ww=(((e->size>>2)&3)+1)*8;
  if(y<e->y||y>=e->y+h)return;
- for(int x=0;x<ww;x++)put(s,o,hi,e->x+x,w,tile_pixel(e->attr,e->size,x,y-e->y),e->attr);
+ for(int x=0;x<ww;x++)put(s,o,hi,e->x+x+shift,w,tile_pixel(e->attr,e->size,x,y-e->y),e->attr);
+}
+static uint8_t terrain_pixel(const Db2WorldContext *c,int x,int y){
+ uint8_t pixel=0;
+ int wx=x-camera.anchor_x+(int)camera.cell_x*32;
+ int wy=y-camera.anchor_y+(int)camera.cell_y*32;
+ if(wx>=0&&wy>=0&&wx<1280&&wy<1280)
+  db2_world_terrain_plane(c,(unsigned)wx/32,(unsigned)wy/32,(unsigned)wx%32,(unsigned)wy%32,&pixel);
+ return pixel;
 }
 static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  uint8_t a[LIMIT]={0},b[LIMIT]={0},s[LIMIT]={0},o[LIMIT]={0},hi[LIMIT]={0};
  uint8_t sh[LIMIT]={0},hl[LIMIT]={0},pixels[LIMIT];
  Db2WorldContext c={g_rom,2621440,ram,sizeof ram,snapshot.vram,sizeof snapshot.vram};
- int wy=y-camera.anchor_y+(int)camera.cell_y*32;
+ Db2VisorLayout layout;
+ if(!db2_visor_layout(w,visor_offset,&layout)){rejected=1;return;}
+ int shift=layout.world_shift_x;
+ uint8_t *terrain=world_is_a?a:b,*ui=world_is_a?b:a;
  for(int x=0;x<w;x++){
-  int wx=x-camera.anchor_x+(int)camera.cell_x*32;
-  if(wx>=0&&wy>=0&&wx<1280&&wy<1280)db2_world_terrain_plane(&c,(unsigned)wx/32,(unsigned)wy/32,(unsigned)wx%32,(unsigned)wy%32,b+x);
+  terrain[x]=terrain_pixel(&c,x-shift,y);
  }
  /* Verify the entire native world span before accepting this frame. Weather,
   * unknown scroll/raster effects and terrain mismatches trigger whole-frame
   * native rollback at frame_complete, never a cut at the old HUD boundary. */
- if(r){if(memcmp(b,r->plane_b,216))rejected=1;memcpy(a+w-104,r->plane_a+216,104);}
+ if(r){
+  const uint8_t *native_terrain=world_is_a?r->plane_a:r->plane_b;
+  const uint8_t *native_ui=world_is_a?r->plane_b:r->plane_a;
+  for(int x=0;x<216;x++){
+   int dx=x+shift;
+   uint8_t expected=dx>=0&&dx<w?terrain[dx]:terrain_pixel(&c,x,y);
+   if(expected!=native_terrain[x]){rejected=1;frame_reasons|=16;}
+   if(dx>=0&&dx<w)ui[dx]=native_ui[x];
+  }
+  memcpy(ui+layout.hud_left,native_ui+216,104);
+ }
  size_t ei=effect_count;
  for(unsigned remaining=count;remaining;){const Db2Actor *ac=actors+--remaining;
-  while(ei&&(effects[ei-1].depth<ac->depth||(effects[ei-1].depth==ac->depth&&effects[ei-1].rank>rank[ac->id])))effect_row(effects+--ei,y,w,s,o,hi);
+  while(ei&&(effects[ei-1].depth<ac->depth||(effects[ei-1].depth==ac->depth&&effects[ei-1].rank>rank[ac->id])))effect_row(effects+--ei,y,w,shift,s,o,hi);
   for(unsigned part=ac->component_count;part;){const Db2ActorComponent *p=ac->part+--part;
-   int xx=ac->x+p->dx,yy=ac->y+p->dy;if(y<yy||y>=yy+32)continue;
+   int xx=ac->x+p->dx+shift,yy=ac->y+p->dy;if(y<yy||y>=yy+32)continue;
    for(int px=0;px<32;px++){uint8_t color;db2_actor_pixel(p,(unsigned)px,(unsigned)(y-yy),&color);put(s,o,hi,xx+px,w,color,p->flags);}
   }
   Db2WorldMarker m[6];unsigned n=db2_world_markers(ram[0x2a89],ram[0x5f58+48*ac->id+0x28],ac->x,ac->y,m);
-  while(n){const Db2WorldMarker *p=m+--n;if(y<p->y||y>=p->y+8)continue;for(int px=0;px<8;px++)put(s,o,hi,p->x+px,w,tile_pixel(p->attribute,0,px,y-p->y),p->attribute);}
+  while(n){const Db2WorldMarker *p=m+--n;if(y<p->y||y>=p->y+8)continue;for(int px=0;px<8;px++)put(s,o,hi,p->x+px+shift,w,tile_pixel(p->attribute,0,px,y-p->y),p->attribute);}
  }
- while(ei)effect_row(effects+--ei,y,w,s,o,hi);
+ while(ei)effect_row(effects+--ei,y,w,shift,s,o,hi);
  if(r){
   for(int x=0;x<320;x++){unsigned owner=r->sprite_owner[x];if(!owner)continue;
-   if(owner>80||!owner_kind[owner-1]){rejected=1;continue;}
+   if(owner>80||!owner_kind[owner-1]){rejected=1;frame_reasons|=8;continue;}
    if(owner_kind[owner-1]==3)continue;
-   int dx=x+(owner_kind[owner-1]==2?w-320:0);
+   int dx=x+(owner_kind[owner-1]==2?layout.hud_shift:shift);
+   if(dx<0||dx>=w)continue;
    s[dx]=r->sprite[x];o[dx]=r->opaque[x];hi[dx]=r->high[x];sh[dx]=r->shadow_op[x];hl[dx]=r->hilite_op[x];
   }
  }
@@ -157,15 +221,14 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
 static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNativeRow native,void *ctx,const GVDPRasterRow *r){
  background=genesis_dac_cram_to_argb(v->cram[v->reg[7]&63],0);
  int supported=nw==320&&w>=320&&w<=LIMIT&&r&&r->display&&raster_enabled(v);
- if(y==0){ready=0;rejected=0;memset(native_valid,0,sizeof native_valid);if(supported)capture(v);}
+ if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);if(supported)capture(v);}
  const uint32_t *p=native(ctx);
  if(y>=0&&y<224&&nw==320){memcpy(native_image[y],p,sizeof native_image[y]);native_valid[y]=1;}
  if(supported&&ready){
   if(memcmp(ram,g_ram,sizeof ram))capture(v);else memcpy(&snapshot,v,sizeof snapshot);
   classify_sprites();
-  for(int x=0;x<216;x++)if(r->plane_a[x]&64){rejected=1;break;}
  }
- if(!supported||!ready||rejected){rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw)memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);return;}
+ if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw)memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);return;}
  world_row(y,w,r,out);
 }
 static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
@@ -173,8 +236,22 @@ static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int t
  for(int y=0;y<h;y++)if(y<top||y>=top+nh){if(ready)world_row(y-top,w,NULL,pixels+(size_t)y*stride);else for(int x=0;x<w;x++)pixels[(size_t)y*stride+x]=background;}
 }
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
- (void)v;if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
- if(!rejected&&ready)return;
+ if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
+ if(!rejected&&ready){
+  if(trace_enabled&&!(trace_seen&64)){
+   Db2VisorLayout layout={0};db2_visor_layout(w,visor_offset,&layout);
+   fprintf(stderr,"[db2-video] accepted canvas=%dx%d scene=%s terrain=%c actors=%u frame=%d,%d,%d,%d\n",w,h,world_scene==WORLD_DEMO?"demo":"battle",world_is_a?'A':'B',count,layout.frame.x,layout.frame.y,layout.frame.w,layout.frame.h);trace_seen|=64;
+  }
+  return;
+ }
+ if(trace_enabled&&trace_budget){
+  unsigned pa=v?v->reg[2]:0,pb=v?v->reg[4]:0;
+  unsigned signature=((unsigned)world_scene<<24)|((unsigned)(g_ram[0x286]&0x88)<<16)|(pa<<8)|pb;
+  if((frame_reasons&~trace_seen)||signature!=trace_signature){
+   fprintf(stderr,"[db2-video] native fallback reasons=%02X scene=%d flags=%02X planes=%02X/%02X ready=%d actors=%u\n",frame_reasons,world_scene,g_ram[0x286],pa,pb,ready,count);
+   --trace_budget;trace_signature=signature;trace_seen|=frame_reasons;
+  }
+ }
  /* All rows are restored together, including rows drawn before an unknown
   * effect appeared. No callback/provider/runner pointer is retained. */
  for(int y=0;y<h;y++){

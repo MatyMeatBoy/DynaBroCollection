@@ -1,3 +1,38 @@
+diff --git a/runner/cmd_server.c b/runner/cmd_server.c
+index 754fb08..5d48def 100644
+--- a/runner/cmd_server.c
++++ b/runner/cmd_server.c
+@@ -1100,6 +1100,8 @@ static void handle_read_joypad_port(int id)
+     uint8_t saved_data = bus->io_data[0];
+     uint8_t saved_cnt  = bus->pad_th_count[0];
+     uint8_t saved_prev = bus->pad_th_prev[0];
++    uint64_t saved_clock = bus->pad_th_last_clock[0];
++    uint8_t saved_clock_valid = bus->pad_th_clock_valid[0];
+ 
+     /* TH=0 phase */
+     glue_poke8(0xA10003, 0x00);
+@@ -1112,6 +1114,8 @@ static void handle_read_joypad_port(int id)
+     bus->io_data[0]      = saved_data;
+     bus->pad_th_count[0] = saved_cnt;
+     bus->pad_th_prev[0]  = saved_prev;
++    bus->pad_th_last_clock[0] = saved_clock;
++    bus->pad_th_clock_valid[0] = saved_clock_valid;
+ 
+     /* Combine: phase0 bits 6-7 (shifted from Start,A), phase1 bits 0-5 (CBRLDU) */
+     uint8_t combined = ((phase0 << 2) & 0xC0) | (phase1 & 0x3F);
+diff --git a/runner/cosim_state.c b/runner/cosim_state.c
+index 6e54035..b5a376b 100644
+--- a/runner/cosim_state.c
++++ b/runner/cosim_state.c
+@@ -131,6 +131,8 @@ static uint64_t hash_handshake(void) {
+     for (int i = 0; i < 2; i++) h = cosim_fnv_u8(h, b->pad_type[i]);
+     for (int i = 0; i < 2; i++) h = cosim_fnv_u8(h, b->pad_th_count[i]);
+     for (int i = 0; i < 2; i++) h = cosim_fnv_u8(h, b->pad_th_prev[i]);
++    for (int i = 0; i < 2; i++) h = cosim_fnv_u64(h, b->pad_th_last_clock[i]);
++    for (int i = 0; i < 2; i++) h = cosim_fnv_u8(h, b->pad_th_clock_valid[i]);
+     for (int i = 0; i < 3; i++) h = cosim_fnv_u8(h, b->io_data[i]);
+     for (int i = 0; i < 3; i++) h = cosim_fnv_u8(h, b->io_ctrl[i]);
+     h = cosim_fnv_u8(h, b->version);
 diff --git a/runner/game_spec.h b/runner/game_spec.h
 index a135a9b..314b927 100644
 --- a/runner/game_spec.h
@@ -1124,24 +1159,25 @@ index 11c9641..03d3e34 100644
 +void genesis_native_ack_interrupt(unsigned level);
  #endif
 diff --git a/runner/rb_state.c b/runner/rb_state.c
-index 7294574..e37e7e0 100644
+index 7294574..ed05b7d 100644
 --- a/runner/rb_state.c
 +++ b/runner/rb_state.c
-@@ -41,8 +41,10 @@ _Static_assert(sizeof(g_ram) == 0x10000, "work RAM size changed");
+@@ -41,8 +41,11 @@ _Static_assert(sizeof(g_ram) == 0x10000, "work RAM size changed");
  #if UINTPTR_MAX == 0xFFFFFFFFFFFFFFFFu
  /* 64-bit layouts (the host pointers inside are scrubbed by machine_rb_save). */
  _Static_assert(sizeof(GVDP) == 65824, "GVDP changed: review machine_rb_save (pointers) and rb_state");
 -_Static_assert(sizeof(GenesisBus) == 24664, "GenesisBus changed: review machine_rb_save and rb_state");
 -_Static_assert(sizeof(GenesisMachine) == 90576, "GenesisMachine changed: review machine_rb_save and rb_state");
-+/* Timer A reload/phase state is scalar guest state copied by machine_rb_save;
++/* Timer A and controller TH timestamps are scalar guest state copied by
++ * machine_rb_save; no new host pointers need scrubbing.
 + * size-checked rollback loads reject images from the previous layout. */
-+_Static_assert(sizeof(GenesisBus) == 24688, "GenesisBus changed: review machine_rb_save and rb_state");
-+_Static_assert(sizeof(GenesisMachine) == 90600, "GenesisMachine changed: review machine_rb_save and rb_state");
++_Static_assert(sizeof(GenesisBus) == 24712, "GenesisBus changed: review machine_rb_save and rb_state");
++_Static_assert(sizeof(GenesisMachine) == 90624, "GenesisMachine changed: review machine_rb_save and rb_state");
  #endif
  
  /* ---- sections ---------------------------------------------------------------- */
 diff --git a/runner/video/genesis_bus.c b/runner/video/genesis_bus.c
-index d0e1647..3860044 100644
+index d0e1647..70e6da9 100644
 --- a/runner/video/genesis_bus.c
 +++ b/runner/video/genesis_bus.c
 @@ -89,10 +89,11 @@ extern void glue_charge_68k_stall(uint32_t cycles);
@@ -1197,8 +1233,110 @@ index d0e1647..3860044 100644
          if (val & 0x02u) {
              /* Loading starts a stopped timer. A flag acknowledgement that
               * leaves it loaded must preserve the running timer's phase. */
+@@ -232,14 +249,27 @@ uint32_t gbus_sram_size(const GenesisBus *b)    { return b->sram_present ? b->sr
+  * 3-button: TH=1 -> ?1CBRLDU, TH=0 -> ?0SA00DU (unchanged from the original).
+  *
+  * 6-button: the pad maintains a counter incremented on each TH 1->0 edge (see
+- * io_write), reset between read bursts (machine_set_pad zeroes it per frame, the
+- * ~1.5ms hardware timeout). After the 3rd falling edge the controller reveals
++ * io_write), reset after guest-clock inactivity, independent of host input
++ * refresh. After the 3rd falling edge the controller reveals
+  * the extra buttons:
+  *   c<3, TH=1 -> ?1CBRLDU      c<3,  TH=0 -> ?0SA00DU      (as 3-button)
+  *   c==3,TH=0 -> ?0SA0000      (low nibble 0 = "6-button present" signature)
+- *   c>=3,TH=1 -> ?1CB MXYZ     (Mode, X, Y, Z in the low nibble)
+- *   c>=4,TH=0 -> ?0SA1111      (sequence terminator)
++ *   c==3,TH=1 -> ?1CB MXYZ     (Mode, X, Y, Z in the low nibble)
++ *   c==4,TH=0 -> ?0SA1111      (sequence terminator)
++ * The following rising edge returns to the ordinary phase.
+  */
++/* Approximately1.5ms at the NTSC master clock. No host wall-clock dependency.
++ * A peek does not advance device state, matching other side-effect-free ports. */
++#define PAD_TH_TIMEOUT_MASTER 80540ull
++static void pad_expire(GenesisBus *b,int port,uint64_t now)
++{
++    if(b->pad_type[port]!=1 || !b->pad_th_clock_valid[port])return;
++    uint64_t last=b->pad_th_last_clock[port];
++    if(now<last || now-last>=PAD_TH_TIMEOUT_MASTER){
++        b->pad_th_count[port]=0;
++        b->pad_th_clock_valid[port]=0;
++    }
++}
+ static uint8_t pad_read(const GenesisBus *b, int port)
+ {
+     uint16_t p  = b->pad[port];                /* GPAD_* bits, 1 = pressed     */
+@@ -249,7 +279,7 @@ static uint8_t pad_read(const GenesisBus *b, int port)
+     if (b->pad_type[port] == 1) {              /* 6-button extended protocol   */
+         uint8_t c = b->pad_th_count[port];
+         if (th) {                              /* TH = 1 */
+-            if (c >= 3)                        /* ?1CB MXYZ (extras)           */
++            if (c == 3)                        /* ?1CB MXYZ (extras)           */
+                 return (uint8_t)(0x40
+                     | ((p & GPAD_C)    ? 0 : 0x20) | ((p & GPAD_B) ? 0 : 0x10)
+                     | ((p & GPAD_MODE) ? 0 : 0x08) | ((p & GPAD_X) ? 0 : 0x04)
+@@ -298,17 +328,39 @@ static uint16_t io_read(const GenesisBus *b, uint32_t a)
+     }
+ }
+ 
+-/* Advance the 6-button TH edge counter on a 1->0 transition of the port's TH
+- * line. No-op for 3-button pads. The counter is zeroed once per frame by
+- * machine_set_pad (modeling the ~1.5ms read-burst timeout). */
++/* Only real TH transitions refresh the inactivity deadline. Completed
++ * extended reads return to the ordinary phase on their terminal rising edge. */
+ static void pad_io_tick(GenesisBus *b, int port, uint8_t new_data)
+ {
+-    if (b->pad_type[port] != 1) { b->pad_th_prev[port] = new_data & 0x40; return; }
+-    uint8_t th = new_data & 0x40;
+-    if (b->pad_th_prev[port] && !th) {           /* falling edge 1 -> 0 */
+-        if (b->pad_th_count[port] < 0xFF) b->pad_th_count[port]++;
++    uint8_t th=new_data&0x40;
++    if(b->pad_type[port]==1){
++        uint64_t now=ym_abs_68k_stamp();
++        pad_expire(b,port,now);
++        if(b->pad_th_prev[port]!=th){
++            if(!b->pad_th_prev[port] && th && b->pad_th_count[port]>=4)
++                b->pad_th_count[port]=0;
++            else if(b->pad_th_prev[port] && !th && b->pad_th_count[port]<4)
++                ++b->pad_th_count[port];
++            b->pad_th_last_clock[port]=now;
++            b->pad_th_clock_valid[port]=1;
++        }
+     }
+-    b->pad_th_prev[port] = th;
++    b->pad_th_prev[port]=th;
++}
++void gbus_set_pad(GenesisBus *b,int port,uint16_t buttons)
++{
++    if(b && port>=0 && port<2)b->pad[port]=buttons;
++}
++void gbus_set_pad_type(GenesisBus *b,int port,int six_button)
++{
++    if(!b || port<0 || port>=2)return;
++    uint8_t type=six_button?1:0;
++    if(b->pad_type[port]==type)return;
++    b->pad_type[port]=type;
++    b->pad_th_count[port]=0;
++    b->pad_th_prev[port]=b->io_data[port]&0x40;
++    b->pad_th_last_clock[port]=0;
++    b->pad_th_clock_valid[port]=0;
+ }
+ 
+ static void io_write(GenesisBus *b, uint32_t a, uint8_t v)
+@@ -370,7 +422,11 @@ uint16_t gbus_read16(GenesisBus *b, uint32_t a)
+         }
+         return 0xFFFFu;                          /* bank/PSG region: open bus  */
+     }
+-    if (a >= 0xA10000u && a < 0xA10020u) return io_read(b, a);      /* I/O      */
++    if (a >= 0xA10000u && a < 0xA10020u) {
++        unsigned reg=a&0x1e;
++        if(reg==2 || reg==4)pad_expire(b,(int)(reg/2)-1,ym_abs_68k_stamp());
++        return io_read(b,a);
++    } /* I/O */
+     if (a == 0xA11100u) { uint16_t ack = (uint16_t)(b->z80_busreq ? 0x0000 : 0x0100);
+         snd_trace_busreq("REQ-READack", ack ? 1 : 0); return ack; }  /* [SND-TRACE] */
+     if (a == 0xA11200u) return (uint16_t)(b->z80_reset_off ? 0x0100 : 0x0000);
 diff --git a/runner/video/genesis_bus.h b/runner/video/genesis_bus.h
-index 242774c..290695d 100644
+index 242774c..4734649 100644
 --- a/runner/video/genesis_bus.h
 +++ b/runner/video/genesis_bus.h
 @@ -40,8 +40,8 @@ typedef struct GenesisBus {
@@ -1212,7 +1350,7 @@ index 242774c..290695d 100644
      uint8_t  ym_addr[2];                /* address latch for ports 0/1         */
      uint8_t  ym_timer_b;                /* register $26                        */
      uint8_t  ym_mode;                   /* register $27                        */
-@@ -49,6 +49,10 @@ typedef struct GenesisBus {
+@@ -49,12 +49,18 @@ typedef struct GenesisBus {
      uint8_t  ym_timer_b_running;
      uint64_t ym_timer_b_deadline;       /* absolute scheduler master cycles    */
      uint64_t ym_timer_b_period;         /* cached period in master cycles      */
@@ -1223,6 +1361,50 @@ index 242774c..290695d 100644
  
      /* Controllers / I-O. */
      uint16_t pad[2];                    /* live button state (GPAD_* bits, 12) */
+     uint8_t  pad_type[2];               /* 0 = 3-button, 1 = 6-button          */
+     uint8_t  pad_th_count[2];           /* 6-button TH 1->0 edge counter       */
+     uint8_t  pad_th_prev[2];            /* previous TH level (edge detect)     */
++    uint64_t pad_th_last_clock[2];      /* absolute guest master-clock edge    */
++    uint8_t  pad_th_clock_valid[2];
+     uint8_t  io_data[3];                /* last value written to data ports   */
+     uint8_t  io_ctrl[3];                /* TH direction/control per port      */
+     uint8_t  version;                   /* $A10000 region/version register    */
+@@ -117,6 +123,9 @@ static inline int gbus_sram_mapped_at(const GenesisBus *b, uint32_t addr)
+ }
+ 
+ void gbus_init(GenesisBus *b, GVDP *vdp);
++/* Input levels do not reset the peripheral protocol; actual type changes do. */
++void gbus_set_pad(GenesisBus *b, int port, uint16_t buttons);
++void gbus_set_pad_type(GenesisBus *b, int port, int six_button);
+ 
+ /* Optional cartridge work RAM in the otherwise unmapped $800000-$9FFFFF
+  * window. Like g_rom_ext, this is a single game-owned cartridge mapping.
+diff --git a/runner/video/genesis_machine.c b/runner/video/genesis_machine.c
+index bfbe22d..648e7c1 100644
+--- a/runner/video/genesis_machine.c
++++ b/runner/video/genesis_machine.c
+@@ -364,19 +364,12 @@ int machine_rb_load(const void *src, size_t len)
+ 
+ void machine_set_pad(int port, uint16_t buttons)
+ {
+-    if (port >= 0 && port < 2) {
+-        g_machine.bus.pad[port] = buttons;
+-        /* New read burst this frame: clear the 6-button TH edge counter so the
+-         * controller protocol restarts from the 3-button reads (models the
+-         * ~1.5ms hardware timeout between bursts). */
+-        g_machine.bus.pad_th_count[port] = 0;
+-        g_machine.bus.pad_th_prev[port]  = g_machine.bus.io_data[port] & 0x40;
+-    }
++    gbus_set_pad(&g_machine.bus,port,buttons);
+ }
+ 
+ void machine_set_pad_type(int port, int six_button)
+ {
+-    if (port >= 0 && port < 2) g_machine.bus.pad_type[port] = six_button ? 1 : 0;
++    gbus_set_pad_type(&g_machine.bus,port,six_button);
+ }
+ 
+ /* NTSC raster timing. */
 diff --git a/runner/video/genesis_vdp.c b/runner/video/genesis_vdp.c
 index 353ada4..013fb5e 100644
 --- a/runner/video/genesis_vdp.c

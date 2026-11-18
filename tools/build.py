@@ -77,7 +77,13 @@ def main():
     args = parser.parse_args()
     os.chdir(ROOT)
     # Select the available toolchain without changing machine-wide PATH.
-    if Path('C:/msys64/ucrt64/bin/cmake.exe').exists():
+    selected_toolchain = os.environ.get('DYNA_TOOLCHAIN_BIN')
+    if selected_toolchain:
+        selected_toolchain = Path(selected_toolchain).resolve()
+        if not (selected_toolchain / 'cmake.exe').is_file():
+            raise RuntimeError('DYNA_TOOLCHAIN_BIN does not contain cmake.exe')
+        os.environ['PATH'] = str(selected_toolchain) + os.pathsep + os.environ.get('PATH', '')
+    elif Path('C:/msys64/ucrt64/bin/cmake.exe').exists():
         os.environ['PATH'] = 'C:/msys64/ucrt64/bin;' + os.environ['PATH']
     cmake = shutil.which('cmake')
     if not cmake:

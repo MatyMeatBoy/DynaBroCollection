@@ -13,7 +13,7 @@ import zipfile
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
 from tools.windows_environment import portable_windows_env
-BIN=Path('C:/msys64/ucrt64/bin')
+BIN=Path(os.environ.get('DYNA_TOOLCHAIN_BIN','C:/msys64/ucrt64/bin'))
 EXECUTABLES=['DynaBrothersLauncher.exe','DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']
 DIAGNOSTICS=['DynaDb1VideoTest.exe','DynaDb1visibleTest.exe']
 
@@ -149,6 +149,7 @@ def close(candidate,qa_path,releases,revision=1):
     if tuple(map(int,version.split('.'))) >= (0,1,5):required.update({'db1-stage-intro-1440','db1-camera-1440','db1-options-1440','db1-password-1440','db1-submenus-1440','db1-tsunami-1440','green-hub-same-window'})
     if tuple(map(int,version.split('.'))) >= (0,1,6):required.update({'green-hub-home-buttons','db1-intro-fade','db1-save-result','db1-hard-ending-save','db1-visor--2','db1-visor-0','db1-visor-2','db1-save-unicode'})
     if tuple(map(int,version.split('.'))) >= (0,1,7):required.update({'db1-title-extras','db1-title-level','db1-emi-save'})
+    if tuple(map(int,version.split('.'))) >= (0,1,8):required.update({'db2-player-6button-original','db2-player-6button-wide','db2-player-6button-state-equality'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

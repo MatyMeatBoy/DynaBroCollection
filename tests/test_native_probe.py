@@ -25,3 +25,15 @@ class NativeProbeTests(unittest.TestCase):
             path = output / 'frame.png'
             path.write_bytes(b'not a png')
             self.assertEqual(missing_captures([path]), ['Invalid PNG capture: frame.png'])
+
+    def test_relocates_dump_paths_without_overwriting_old_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)
+            script,captures=prepare_scene_script('DUMP_RAM D:/old/probe/final.ram\nDUMP_VRAM C:\\old\\final.vram',output)
+            self.assertEqual(captures,[])
+            self.assertEqual(script,'DUMP_RAM '+(output/'final.ram').as_posix()+'\nDUMP_VRAM '+(output/'final.vram').as_posix())
+
+    def test_rejects_colliding_or_invalid_dump_outputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for script in ['DUMP_RAM old/file.png\nSCREENSHOT new/file.png','DUMP_RAM ..','DUMP_VRAM','DUMP_RAM file:stream']:
+                with self.assertRaises(ValueError):prepare_scene_script(script,Path(directory))

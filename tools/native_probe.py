@@ -14,22 +14,25 @@ from tools.audio_capture import inspect_audio_capture
 
 
 def prepare_scene_script(script, output):
-    lines, captures = [], []
+    lines, captures, targets = [], [], set()
     for line in script.splitlines():
         command = line.strip().split(maxsplit=1)
         if command and command[0] == 'EXIT':
             continue
-        if command and command[0] == 'SCREENSHOT':
+        if command and command[0] in ('SCREENSHOT','DUMP_RAM','DUMP_VRAM'):
             if len(command) != 2:
-                raise ValueError('SCREENSHOT requires a path')
+                raise ValueError(command[0] + ' requires a path')
             name = command[1].replace('\\', '/').rsplit('/', 1)[-1]
-            if not name.lower().endswith('.png') or name in ('.png', '..png'):
+            if name in ('', '.', '..') or ':' in name:
+                raise ValueError('Invalid diagnostic output filename')
+            if command[0] == 'SCREENSHOT' and (not name.lower().endswith('.png') or name in ('.png', '..png')):
                 raise ValueError('Capture must have a PNG filename')
             target = output / name
-            if target in captures:
-                raise ValueError('Duplicate capture filename: ' + name)
-            captures.append(target)
-            line = 'SCREENSHOT ' + target.as_posix()
+            if target in targets:
+                raise ValueError('Duplicate diagnostic filename: ' + name)
+            targets.add(target)
+            if command[0] == 'SCREENSHOT': captures.append(target)
+            line = command[0] + ' ' + target.as_posix()
         lines.append(line)
     return '\n'.join(lines), captures
 
