@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "convention": "https://www.reddit.com/r/decomps/ (recomp/decomp frontend standards open letter)",
+  "application": "DynaBroCollection - Dyna Brothers 1 + 2",
+  "repo": "MatyMeatBoy/DynaBroCollection",
+  "platform": ["windows-x64"],
+  "portable": true,
+  "single_entry_point": true,
+  "primary_executable": "DynaBrothersLauncher.exe",
+  "internal_executables": [
+    {
+      "file": "DynaBrothers1AOT.exe",
+      "reason": "Child process started by the primary executable. Not a separate app; do not list or launch directly from a frontend's game grid.",
+      "launch_via": "DynaBrothersLauncher.exe --game db1 --no-launcher --rom \"{rom}\""
+    },
+    {
+      "file": "DynaBrothers2AOT.exe",
+      "reason": "Child process started by the primary executable. Not a separate app; do not list or launch directly from a frontend's game grid.",
+      "launch_via": "DynaBrothersLauncher.exe --game db2 --no-launcher --rom \"{rom}\""
+    }
+  ],
+  "integration_info_command": "DynaBrothersLauncher.exe --integration-info",
+  "cli": {
+    "--game": ["db1", "db2"],
+    "--rom": "path (user-supplied ROM; never bundled)",
+    "--no-launcher": "skip the game-select UI, go straight into --game",
+    "--setup": "force the per-game setup screen before playing",
+    "--fullscreen": "start in fullscreen",
+    "--widescreen": ["off", "16:9", "fit"],
+    "--integration-info": "print this same launch surface as machine-readable JSON",
+    "--help": "human-readable help"
+  },
+  "rom_required": "user_supplied",
+  "writes_outside_own_folder": false,
+  "notes": "No separate builder step: DynaBrothersLauncher.exe and both *AOT.exe are shipped prebuilt in every release zip and run as-is. Deleting the extracted folder removes the whole install. Settings/cache files (settings.ini, rom-*.cfg) are written next to the executables unless GENESIS_USER_DIR is set."
+}

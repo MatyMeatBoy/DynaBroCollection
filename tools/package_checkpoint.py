@@ -121,7 +121,9 @@ def stage(candidate):
         controller_database_commit=git('-C',str(ROOT/'upstream/controller-db'),'rev-parse','HEAD'),
         embedded_build_info=embedded,
         target='Windows x64',compiler=subprocess.check_output([str(BIN/'gcc.exe'),'--version'],text=True).splitlines()[0],
-        system_libraries=sorted(system),files=inventory(payload),proprietary_input_images_included=False)
+        system_libraries=sorted(system),files=inventory(payload),proprietary_input_images_included=False,
+        single_entry_point=True,primary_executable='DynaBrothersLauncher.exe',
+        internal_executables=['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe'])
     (payload/'PACKAGE.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     print(json.dumps(dict(candidate=str(candidate),source_commit=revision,files=len(manifest['files'])),indent=2))
 

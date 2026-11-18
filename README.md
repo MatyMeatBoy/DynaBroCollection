@@ -104,6 +104,10 @@ English is enabled by default with either qualified input language. In **Mods > 
 
 Native probes use separate `GENESIS_USER_DIR` profiles, remove diagnostic interpreter overrides, require completed finite workloads, and check errors beyond the process exit status. `--audio` records uncapped PCM through SDL's dummy output; it does not certify audible device behavior, tempo, or latency. Uncapped audio queue overflow is recorded separately from CPU execution acceptance.
 
+## Frontend / recomp-launcher integration
+
+`DynaBrothersLauncher.exe` is the single supported entry point. `DynaBrothers1AOT.exe` and `DynaBrothers2AOT.exe` are internal child processes the launcher starts (per the recomp/decomp community's shared-conventions open letter); a frontend scanning a release folder should surface the launcher only, not all three executables. `DynaBrothersLauncher.exe --integration-info` prints the supported CLI surface (`--game db1|db2`, `--rom`, `--no-launcher`, `--setup`, `--fullscreen`, `--widescreen`) as JSON; see [recomp-launcher.json](recomp-launcher.json) for the same mapping as a static manifest. The install is fully portable: deleting the extracted folder removes everything, unless `GENESIS_USER_DIR` is set.
+
 ## Sources and credits
 
 - [GenesisRecomp](https://github.com/mstan/segagenesisrecomp), pinned at `4b2247d2b33a45623a686043a48c2021744c39ab`, with [the local explicit-PC/IRQ patch](patches/0001-explicit-pc-mainloop.patch). Its PolyForm Noncommercial terms and third-party licenses remain applicable.
