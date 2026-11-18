@@ -1,7 +1,11 @@
 import hashlib
+import json
+from pathlib import Path
 import struct
 import unittest
 from tools.translate_db2 import translate
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 class TranslationTests(unittest.TestCase):
@@ -29,3 +33,20 @@ class TranslationTests(unittest.TestCase):
         self.catalog['entries'][0]['english'] = 'HELLO'
         with self.assertRaises(ValueError):
             translate(self.source, self.catalog)
+
+    def test_real_catalog_entries_are_self_consistent(self):
+        catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
+        entries = catalog['entries']
+        self.assertEqual(len(entries), 22)
+        used = set()
+        for entry in entries:
+            address, capacity = entry['address'], entry['capacity']
+            before = bytes.fromhex(entry['before'])
+            english = entry['english'].encode('ascii')
+            self.assertGreaterEqual(address, 512)
+            self.assertEqual(len(before), capacity)
+            self.assertEqual(len(english), capacity)
+            self.assertTrue(all(x >= 32 or x == 1 for x in english))
+            span = set(range(address, address + capacity))
+            self.assertFalse(span & used, f'overlapping entries at {address:06X}')
+            used |= span
