@@ -402,12 +402,14 @@ static void paint_home(HDC dc) {
  RECT banner=native_rect(home_layout.banner);
  if(logo)image_paint(dc,logo,banner);else draw_text(dc,L"Dyna Brothers 1 + 2",banner,title_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
  RECT version=native_rect(home_layout.version);
- draw_text(dc,L"Checkpoint v" DYNA_WIDEN(DYNA_VERSION),version,body_font,RGB(90,205,245),DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ draw_text(dc,L"Alpha v" DYNA_WIDEN(DYNA_VERSION),version,body_font,RGB(90,205,245),DT_CENTER|DT_VCENTER|DT_SINGLELINE);
  RECT note=native_rect(home_layout.note);
  draw_text(dc,L"English is enabled by default. Language and controls are in Settings.\nTranslations are in progress. Use your own Japanese game dumps.",note,body_font,muted,DT_CENTER|DT_WORDBREAK);
 }
 static void home_capture(HWND window) {
  const char *path=getenv("DYNA_HUB_HOME_CAPTURE");if(!path||!*path)return;
+ const char *reveal=getenv("DYNA_HUB_CARD_REVEAL");
+ if(reveal){double value=atof(reveal);card_reveal[0]=value;card_reveal[1]=value;}
  RECT r;GetClientRect(window,&r);HDC dc=GetDC(window),memory=CreateCompatibleDC(dc);
  BITMAPINFO info={0};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
  info.bmiHeader.biWidth=r.right;info.bmiHeader.biHeight=-r.bottom;info.bmiHeader.biPlanes=1;
@@ -417,7 +419,7 @@ static void home_capture(HWND window) {
  /* PrintWindow may report success without painting a hidden HWND. Explicit
   * WM_PRINT omits PRF_CHECKVISIBLE and asks these same native controls to draw. */
  FillRect(memory,&r,background_brush);paint_home(memory);
- HWND children[]={cards[0],cards[1],settings_buttons[0],settings_buttons[1],status};
+ HWND children[]={cards[0],cards[1],settings_buttons[0],settings_buttons[1],manual_buttons[0],manual_buttons[1],status};
  for(unsigned i=0;i<sizeof children/sizeof children[0];i++){
   HWND child=children[i];if(!(GetWindowLongW(child,GWL_STYLE)&WS_VISIBLE))continue;
   RECT bounds;GetWindowRect(child,&bounds);MapWindowPoints(NULL,window,(POINT *)&bounds,2);
@@ -602,9 +604,15 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
         int box_w=scale(70);
         RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
         image_paint(item->hDC,box_art[index],box);
-        if(cart_art[index]){
-            int slide=(int)(card_reveal[index]*scale(55));
-            RECT cart={box.left+scale(6)+slide,box.top+(box.bottom-box.top)/2-scale(9),box.right+scale(26)+slide,box.top+(box.bottom-box.top)/2+scale(9)};
+        if(cart_art[index]&&card_reveal[index]>0.01){
+            /* Lift the cartridge straight up and out of the box's open top
+             * edge, growing as it rises, instead of sliding sideways across
+             * the middle of the cover art (which used to look like the
+             * cartridge was crossing/cutting through the box). */
+            int cart_w=box.right-box.left-scale(8);
+            int cart_h=(int)(card_reveal[index]*scale(16));
+            int cart_bottom=box.top+scale(4)-(int)(card_reveal[index]*scale(28));
+            RECT cart={box.left+scale(4),cart_bottom-cart_h,box.left+scale(4)+cart_w,cart_bottom};
             image_paint(item->hDC,cart_art[index],cart);
         }
         RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
