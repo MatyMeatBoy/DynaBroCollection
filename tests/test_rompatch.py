@@ -3,7 +3,7 @@ import os
 import struct
 import unittest
 import zlib
-from tools.rompatch import apply_bps, apply_ips, PatchError
+from tools.rompatch import apply_bps, apply_ips, PatchError, LIMIT
 
 
 class PatchTests(unittest.TestCase):
@@ -12,6 +12,26 @@ class PatchTests(unittest.TestCase):
         body = b'BPS1' + bytes([0x80 | len(source), 0x80 | len(target), 0x80]) + stream
         body += struct.pack('<II', zlib.crc32(source), zlib.crc32(target))
         return body + struct.pack('<I', zlib.crc32(body))
+
+    @staticmethod
+    def varint(value):
+        out = bytearray()
+        while True:
+            byte = value & 127
+            value >>= 7
+            if not value:
+                out.append(byte | 128)
+                return bytes(out)
+            out.append(byte)
+            value -= 1
+
+    def test_bps_rejects_declared_target_size_over_the_limit(self):
+        source = b'abc'
+        body = b'BPS1' + self.varint(len(source)) + self.varint(LIMIT + 1) + self.varint(0)
+        body += struct.pack('<II', zlib.crc32(source), 0)
+        patch = body + struct.pack('<I', zlib.crc32(body))
+        with self.assertRaises(PatchError):
+            apply_bps(source, patch)
 
     def test_bps_overlapping_target_copy(self):
         patch = self.bps(b'', b'AAAA', b'\x81A\x8b\x80')
