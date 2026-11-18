@@ -149,3 +149,29 @@ class PackageTests(unittest.TestCase):
             path.write_text(json.dumps(qa),encoding='utf-8')
             with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases')
             self.assertTrue((root/'releases/DynaBrothers-v0.1.6-win64-checkpoint-r1.zip').is_file())
+
+    def test_017_requires_native_extras_level_and_emi_save_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);candidate,path,qa=self.fixture(root)
+            manifest_path=candidate/'DynaBrothers/PACKAGE.json'
+            manifest=json.loads(manifest_path.read_text());manifest['version']='0.1.7'
+            manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+            prior=['db1-practice','db1-alien','db1-credits','db2-unpause',
+                         'db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
+                         'db1-achievements-ui','db2-achievements-ui','achievement-assets',
+                         'DynaDb1VideoTest','DynaDb1visibleTest','portable-debug-script',
+                         'db1-audio-signal','db1-lightning','host-settings-same-window',
+                         'launcher-integration-info','db1-stage-intro-1440','db1-camera-1440',
+                         'db1-options-1440','db1-password-1440','db1-submenus-1440',
+                         'db1-tsunami-1440','green-hub-same-window','db1-intro-fade',
+                         'db1-save-result','db1-hard-ending-save','db1-visor--2',
+                         'db1-visor-0','db1-visor-2','db1-save-unicode']+['green-hub-home-buttons']
+            qa['cases'].update({name:dict(passed=True) for name in prior})
+            for name in ['db1-title-extras','db1-title-level','db1-emi-save']:
+                path.write_text(json.dumps(qa),encoding='utf-8')
+                with self.assertRaises(RuntimeError):close(candidate,path,root/'releases')
+                self.assertFalse((candidate/'CLOSED.json').exists())
+                qa['cases'][name]=dict(passed=True)
+            path.write_text(json.dumps(qa),encoding='utf-8')
+            with contextlib.redirect_stdout(io.StringIO()):close(candidate,path,root/'releases')
+            self.assertTrue((root/'releases/DynaBrothers-v0.1.7-win64-checkpoint-r1.zip').is_file())

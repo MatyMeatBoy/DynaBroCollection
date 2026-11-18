@@ -20,7 +20,8 @@ static int valid(const DynaProgressReplay *s,const DynaProgressCode *c) {
     if(s->game==1) {
         if(c->length!=4)return 0;
         p=0x1e87e + (unsigned)index*4;
-        for(unsigned i=0;i<4;i++)if((c->code[i]>>2)>=26)return 0;
+        for(unsigned i=0;i<4;i++)if((c->code[i]>>2)>=26&&
+            !(index==95&&i==3&&c->code[i]==0x6a))return 0;
         return p+4<=s->rom_size&&!memcmp(c->code,s->rom+p,4);
     }
     if(!c->length||c->length>6)return 0;
@@ -53,6 +54,9 @@ void dyna_progress_replay_before(DynaProgressReplay *s,uint32_t pc,
         if(!s->supplied&&(pc==0x1db7e||pc==0x1db88)) {
             /* Existing native password screen owns FF0036 and D4 here.
              * 1DB7E refreshes the original display;1DB88 is its input loop. */
+            /* Native1DB84/1DB86 clears cursor after the refresh hook. Wait
+             * for its input-loop entry before choosing Alien16's END cell. */
+            if(index==95&&pc==0x1db7e)return;
             if((d[4]&0xffffu)>4)return;
             unsigned button=0;
             for(unsigned i=0;i<3;i++)if(ram[0x28+i]==1){button=1u<<i;break;}
@@ -63,6 +67,10 @@ void dyna_progress_replay_before(DynaProgressReplay *s,uint32_t pc,
              * CANCEL cursor. With length4, accepting this cell submits before
              * the native handler writes a fifth character (1DBE2..1DBE6). */
             d[2]&=0xffff0000u;d[3]&=0xffff0000u;
+            /* Alien16's blank is trimmed by native display1DF40, so accepting
+             * a letter would replace it. Native END at grid6,3 (table1DFF2)
+             * submits the preserved four bytes via1DBD8/1DBDA instead. */
+            if(index==95&&s->requested.code[3]==0x6a){d[2]|=6u;d[3]|=3u;}
             s->supplied=1;s->status=DYNA_REPLAY_PREFILLED;
             s->confirm_button=button;s->pulse_frame=0;
         }

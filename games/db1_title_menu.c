@@ -9,6 +9,15 @@ void db1_title_menu_enable(Db1TitleMenu *s,int enabled){
  unsigned value=enabled!=0;
  if(s->enabled!=value){clear(s);s->enabled=value;}
 }
+void db1_title_menu_enable_mature(Db1TitleMenu *s,int enabled,int mature,unsigned native){
+ if(!s)return;
+ unsigned was_enabled=s->enabled;
+ db1_title_menu_enable(s,enabled);
+ if(!was_enabled&&s->enabled&&mature&&native<=3){
+  s->entered=1;s->active=1;s->native_selection=native;
+  /* enable() cleared release/history: held input cannot select or confirm. */
+ }
+}
 void db1_title_menu_before(Db1TitleMenu *s,uint32_t pc,unsigned native){
  if(!s)return;
  switch(pc){
@@ -90,4 +99,11 @@ int db1_title_menu_selection(const Db1TitleMenu *s,unsigned *selected){
 }
 void db1_title_menu_host_closed(Db1TitleMenu *s){
  if(s&&s->active){s->modal=0;s->released=0;s->previous=0;}
+}
+void db1_title_menu_resume_mature(Db1TitleMenu *s,int enabled,int mature,
+ int released,unsigned native){
+ if(!s)return;
+ db1_title_menu_reset(s);s->enabled=enabled!=0;
+ if(!s->enabled||!mature||!released||native>3)return;
+ s->entered=1;s->active=1;s->released=1;s->native_selection=native;
 }

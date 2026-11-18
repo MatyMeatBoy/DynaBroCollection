@@ -46,18 +46,20 @@ def default_input_root(root=ROOT):
 
 
 def db1_language_images(original, translated, catalog):
-    """Preserve every qualified prior input while making speech English slot1."""
+    """Preserve qualified prior inputs; slot1 includes speech and live-font ending fixes."""
     from tools.translate_db1 import translate as translate_db1
     from tools.db1_speech_translation import translate as translate_speech
     if hashlib.sha256(original).hexdigest() != DB1_SHA:
         raise ValueError('DB1 Japanese compatibility image differs from qualified identity')
     old_current = translate_db1(translated, catalog)
-    current, _ = translate_speech(old_current)  # Requires exact guarded950A8FC3.
+    speech_current, _ = translate_speech(old_current)  # Requires exact guarded950A8FC3.
+    from tools.db1_ending_punctuation import repair
+    current = repair(speech_current)
     previous = translate_db1(translated, {key: value for key, value in catalog.items()
         if key not in ('credits_tables', 'bonus_messages')})
     if hashlib.sha256(previous).hexdigest() != '04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4':
         raise RuntimeError('DB1 v0.2 compatibility image differs from its qualified identity')
-    return [original, current, translated, previous, old_current]
+    return [original, current, translated, previous, old_current, speech_current]
 
 
 def find_by_hash(root, digest, extensions):
@@ -144,7 +146,7 @@ def main():
     db1_en = db1_images[1]
     db1_crc = f'{zlib.crc32(db1_en):08X}'
     # Keep the previous current-English image as a qualified reusable input.
-    for image in (db1_images[4], db1_en):
+    for image in (db1_images[4], db1_images[5], db1_en):
         cache_crc = f'{zlib.crc32(image):08X}'
         db1_cache = ROOT / f'local/roms/db1-en-{cache_crc}.md'
         if db1_cache.exists():

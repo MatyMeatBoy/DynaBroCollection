@@ -2,6 +2,7 @@
 #include "db1_visible.h"
 #include "db1_scenes.h"
 #include "db1_title_art.h"
+#include "db1_title_menu_art.h"
 #include "db1_menu_layout.h"
 #include "db1_hazard_effects.h"
 #include "db1_intro_fade.h"
@@ -17,9 +18,12 @@ static int battle,map_overlay,frame_map_overlay,spell_effect,frame_spell,fullpla
 static int bottom_spell,bottom_fullplane,title_english;
 static Db1HazardEffects hazards;
 static int visor_offset_tiles;
+static int title_menu_selection=-1;
+void db1_video_set_title_menu_selection(int selected){title_menu_selection=selected>=0&&selected<=4?selected:-1;}
 static Db1VisorLayout frame_visor;
 void db1_video_set_visor_offset_tiles(int tiles){visor_offset_tiles=tiles;}
 void db1_video_set_english(int enabled){title_english=!!enabled;}
+int db1_video_english(void){return title_english;}
 static DynaViewport viewport=DYNA_VIEWPORT_DEFAULT;
 static Db1VisibleActor actors[256];
 static Db1WorldActorFrame frames[256];
@@ -48,11 +52,12 @@ static int configure(const char *mode) {
     return dyna_viewport_configure(&viewport,mode);
 }
 static int is_enabled(void){return viewport.enabled;}
+int db1_video_enhanced(void){return viewport.enabled;}
 static int width(int dw,int dh,int nw,int nh){
     (void)nw;
     return dyna_viewport_width(&viewport,dw,dh,nh);
 }
-void db1_video_reset(void){battle=map_overlay=frame_map_overlay=spell_effect=fullplane_effect=0;count=0;center_supported=0;frame_world=intro_spawn=frame_spawn=bottom_spawn=0;bottom_valid=actor_cache_valid=0;canvas_height=224;canvas_top=0;db1_visor_layout(320,visor_offset_tiles,&frame_visor);db1_scenes_reset();db1_intro_fade_reset();db1_hazard_effects_reset(&hazards);}
+void db1_video_reset(void){title_menu_selection=-1;battle=map_overlay=frame_map_overlay=spell_effect=fullplane_effect=0;count=0;center_supported=0;frame_world=intro_spawn=frame_spawn=bottom_spawn=0;bottom_valid=actor_cache_valid=0;canvas_height=224;canvas_top=0;db1_visor_layout(320,visor_offset_tiles,&frame_visor);db1_scenes_reset();db1_intro_fade_reset();db1_hazard_effects_reset(&hazards);}
 void db1_video_observe(unsigned pc) {
     db1_scenes_observe(pc);db1_intro_fade_observe(pc);
     if(pc==0x1b38 || pc==0x1b42)intro_spawn=1;
@@ -365,6 +370,8 @@ static void scanline(const GVDP *vdp,int line,int nw,uint32_t *out,int w,
         if(db1_scenes_row(vdp,line,native,nw,out,w)){
             db1_menu_layout_row(db1_scenes_kind(),line,native,out,w);
             db1_title_art_row(vdp,line,out,w,(w-320)/2,title_english);
+            if(title_menu_selection>=0 && db1_title_art_identified(vdp))
+                db1_title_menu_art_row(vdp,line,out,w,(w-320)/2,(unsigned)title_menu_selection,db1_title_art_background_pixel);
             db1_intro_fade_row(out,w,nw,line,viewport.enabled,db1_intro_fade_active(),background);return;
         }
         for(int x=0;x<w;x++)out[x]=background;

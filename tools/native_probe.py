@@ -125,7 +125,7 @@ def main():
         argv += ['--input-script', str(path)]
     start = time.monotonic()
     try:
-        process = subprocess.Popen(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(argv, env=env, cwd=output, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if args.cpu_core is not None:
             import ctypes
             if os.name != 'nt' or not 0 <= args.cpu_core < 64:

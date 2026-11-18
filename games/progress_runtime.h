@@ -13,3 +13,10 @@ int dyna_progress_runtime_prompt(unsigned *selected,const char **feedback);
 int dyna_progress_runtime_prompt_kind(void);
 
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask);
+
+/* One-shot DB1 level request, consumed by qualified native title navigation. */
+int dyna_progress_runtime_take_navigation_request(void);
+void dyna_progress_runtime_navigation_status(const char *text,int cancel);
+
+/* Static, qualified DB1 SHA list: canonical Japanese first, all accepted variants. */
+void dyna_progress_runtime_db1_identities(const char *const *hashes,size_t count);

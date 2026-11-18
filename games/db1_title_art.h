@@ -8,10 +8,12 @@ void db1_title_art_row(const GVDP *,int line,uint32_t *out,int width,int native_
  * canvas bottom while native plane A / sprite screen coordinates stay put. */
 void db1_title_art_geometry(int canvas_height,int native_top,int native_height);
 int db1_title_art_background_line(int native_line);
+uint32_t db1_title_art_background_pixel(const GVDP *,int x,int native_line);
 unsigned db1_title_art_logo_nearest(uint32_t rgb);
 /* Pure helpers, also useful for validating the optional asset contract. */
 int db1_title_art_band_offset(int image_w,int image_h,int sx,int sy);
 unsigned db1_title_art_nearest(uint32_t rgb,const uint16_t palette[64],unsigned first,unsigned count);
 uint32_t db1_title_art_alpha(uint32_t dst,uint32_t src,unsigned alpha);
 int db1_title_art_identified(const GVDP *);
+int db1_title_art_logo_ready(void);
 #endif

@@ -18,6 +18,7 @@ const DynaProgressCode *dyna_progress_session_current(const DynaProgressSession 
 int dyna_progress_session_save(DynaProgressSession *,const char *path);
 unsigned dyna_progress_session_count(const DynaProgressSession *);
 const DynaProgressCode *dyna_progress_session_item(const DynaProgressSession *,unsigned index);
-/* UTF-8/ASCII display of the original code. Output capacity at least 9. */
+/* UTF-8/ASCII display of original code, capacity9. Native DB1 Alien16
+ * trims its trailing blank glyph; stored encoded width remains4. */
 int dyna_progress_session_text(const DynaProgressSession *,const DynaProgressCode *,char text[9]);
 #endif

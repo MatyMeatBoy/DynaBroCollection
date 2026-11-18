@@ -15,6 +15,7 @@ int main(void){
  assert(ld_classify(L"test.zip")==LD_UNKNOWN);
  assert(ld_classify(L"test.md.zip")==LD_UNKNOWN);
  assert(ld_identify(1048576,0x360c1b20,NULL,0)==1);
+ assert(ld_identify(1048576,0x2740c64e,NULL,0)==1);
  assert(ld_identify(1048576,0x38b20f8f,NULL,0)==1);
  assert(ld_identify(1048576,0x950a8fc3,NULL,0)==1);
  assert(ld_identify(2621440,0xba3554bc,NULL,0)==2);

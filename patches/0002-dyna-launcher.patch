@@ -1032,6 +1032,29 @@ index bc60540..818e4a2 100644
  #define RECOMP_LAUNCHER_HAS_ROM_READER 1
  #define RECOMP_LAUNCHER_HAS_NATIVE_SAVE_PATH_PROVIDER 1
  #define RECOMP_LAUNCHER_HAS_VSYNC_VRR 1
+diff --git a/src/third_party/stb_image.h b/src/third_party/stb_image.h
+index ef76fc1..d430d37 100644
+--- a/src/third_party/stb_image.h
++++ b/src/third_party/stb_image.h
+@@ -5100,13 +5100,14 @@ static int stbi__parse_png_file(stbi__png *z, int scan, int req_comp)
+                for (i=0; i < c.length; ++i)
+                   palette[i*4+3] = stbi__get8(s);
+             } else {
+-               if (!(s->img_n & 1)) return stbi__err("tRNS with alpha","Corrupt PNG");
+-               if (c.length != (stbi__uint32) s->img_n*2) return stbi__err("bad tRNS len","Corrupt PNG");
++               const int trns_n = s->img_n;
++               if (trns_n != 1 && trns_n != 3) return stbi__err("tRNS with alpha","Corrupt PNG");
++               if (c.length != (stbi__uint32) trns_n*2) return stbi__err("bad tRNS len","Corrupt PNG");
+                has_trans = 1;
+                if (z->depth == 16) {
+-                  for (k = 0; k < s->img_n; ++k) tc16[k] = (stbi__uint16)stbi__get16be(s); // copy the values as-is
++                  for (k = 0; k < trns_n; ++k) tc16[k] = (stbi__uint16)stbi__get16be(s); // copy the values as-is
+                } else {
+-                  for (k = 0; k < s->img_n; ++k) tc[k] = (stbi_uc)(stbi__get16be(s) & 255) * stbi__depth_scale_table[z->depth]; // non 8-bit images will be larger
++                  for (k = 0; k < trns_n; ++k) tc[k] = (stbi_uc)(stbi__get16be(s) & 255) * stbi__depth_scale_table[z->depth]; // non 8-bit images will be larger
+                }
+             }
+             break;
 diff --git a/tests/genesis_binding_snapshot_test.c b/tests/genesis_binding_snapshot_test.c
 new file mode 100644
 index 0000000..8a5f8e2

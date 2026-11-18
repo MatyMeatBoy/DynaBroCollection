@@ -23,7 +23,7 @@ static void expanded(unsigned count) {
     assert(!memcmp(rom,variants[0],4));
 }
 int main(void) {
-    expanded(5);expanded(8);
+    expanded(5);expanded(6);expanded(8);
     const uint8_t jp[]={1,2}, en[]={3,4}, old[]={3,2};
     DynaLanguageSpan span={1,2,{jp,en,old}};
     const uint8_t original[]={0,1,2,0}, translated[]={0,3,4,0}, previous[]={0,3,2,0};

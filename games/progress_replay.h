@@ -18,6 +18,7 @@ typedef struct {
 } DynaProgressReplay;
 int dyna_progress_replay_init(DynaProgressReplay *,unsigned game,const uint8_t *rom,size_t rom_size);
 /* Code must resolve to a qualified native campaign/special-stage entry.
+ * DB1 Alien16 retains its native4 bytes including trailing0x6A blank.
  * Request queues; it never changes the current guest screen or program counter. */
 int dyna_progress_replay_request(DynaProgressReplay *,const DynaProgressCode *);
 void dyna_progress_replay_cancel(DynaProgressReplay *);

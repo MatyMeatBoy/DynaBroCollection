@@ -84,7 +84,7 @@ const wchar_t *dyna_launcher_options_help(void) {
         L"--widescreen off|16:9|fit\n"
         L"--integration-info     Print supported launch options as JSON\n"
         L"--help                 Show this help\n\n"
-        L"Example: DynaBrothers.exe --game db2 --rom \"C:\\Games\\DB2.bin\" --no-launcher\n";
+        L"Example: DynaBrothersLauncher.exe --game db2 --rom \"C:\\Games\\DB2.bin\" --no-launcher\n";
 }
 const char *dyna_launcher_integration_info(void) {
     return "{\"schema_version\":1,\"application\":\"Dyna Brothers\","

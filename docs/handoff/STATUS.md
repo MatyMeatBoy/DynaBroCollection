@@ -1,42 +1,39 @@
 # Current coordination board
 
-Updated2026-11-18. This file is the current entry point; README.md retains historical evidence. User authorizes autonomous work while asleep. Finish DB1 first; then apply verified lessons to DB2.
+Updated 2026-11-18. User authorizes autonomous decisions while asleep. Finish DB1 readiness before resuming DB2 gameplay development.
 
-## Protected inputs and deliveries
+## Protected deliveries and inputs
 
-- Original dumps and supplied patches under project/Dynabrothers/ are private, read-only and ignored by Git.
-- Public0.1.3,0.1.4 and0.1.5 archives are immutable. Personal archives contain private dumps and must never be uploaded.
--0.1.6 candidate compiled from568d57c91eb21a6469e7c63370c7713e9b80a996 passed38 packaged cases but is superseded for delivery by the Unicode progress-path fix. A new candidate must be staged and qualified. It was never delivered. Later source work does not change that preserved candidate.
+Original dumps and supplied patches under Dynabrothers/ are private, read-only and ignored. Published 0.1.3 through 0.1.6 archives are immutable. Personal ZIPs include user dumps and must never be uploaded.
+
+0.1.6 is published from 43bdc5e96e136cb113e6f1b717c5476fe0e8a84f, with 39 packaged qualification cases. Public ZIP SHA256 ddc68adb5ab62241d35ca81bdbf4857458a7fde1c898dbe8e4fd15213a86b434; private personal ZIP cfc35af51c9222be014a189027b88abd0b477dab5d204621d02250864c3d954e. See docs/releases/v0.1.6-verification.md. Later development does not change these bytes.
 
 ## Ownership
 
-| Scope | Owner | Boundary |
-| --- | --- | --- |
-| Integration, launcher, CMake, step adapter, patches, packaging and publication | Root | Only root links build/dev or closes releases |
-| Native Extras title-menu state and original-menu research | db1_progress_native | New db1_title_menu module/tests and research plan; no shared integration edits |
-| DB1 level catalogue | db1_camera_continuity | New db1_level_catalog module/tests; no progress_runtime or step adapter edits |
-| Remaining graphical translation inventory | db1_intro_background_fix | Read-only ROM/graphics investigation; no unapproved text substitutions |
-| DB2 gameplay development | Paused | Resume after DB1 readiness; qualify its own geometry and logic |
+Root owns integration, shared adapter/CMake/SDK patches, build/dev links and release closure. All returned agent modules are frozen and owned by root again. Workers may use private copies only after explicit READY and SHA verification. Do not infer readiness from timestamps. No active worker source edits remain at this checkpoint.
 
-Workers run private copies and isolated profiles. Do not infer that build/dev is ready from timestamps. Source modules returned by completed workers belong to root again. Preserve other workers' changes; no reset, broad cleanup or public proprietary assets.
+## Integrated development for 0.1.7
 
-## Verified source
+- Native fifth Extras row in Enhanced title; four native rows preserved in Original. Host-only fifth index never reaches native dispatch.
+- Level catalogue, original Password navigation, cancellation/release/timeout guards; no guest PC jumps. Saved frontiers enable replay convenience, not achievement credit.
+- Canonical DB1 save identity imports validated older English saves atomically, preserves legacy files and supports Unicode paths. DB2 save identity remains unchanged.
+- P-chan's eight graphical speech frames translated with unchanged non-letter pixels. Five hard-ending punctuation glyphs repaired against the font actually loaded at runtime.
+- Current English CRC2740C64E; six recognized DB1 input revisions, reversible English/Japanese. Original English title now shows the translated logo without changing the 4:3 layout or game clocks.
+- Special three-letter EMI code retains its native blank padding, accepts END through the original parser and saves after natural loss. No forced stage/PC writes.
+- PNG transparency loop uses an explicit channel bound; synthetic valid/malformed cases preserve behavior. This resolves a compiler diagnostic, not a demonstrated reachable exploit or measured speed gain.
 
-- Actual green home Settings hit targets for both games, same-window lifecycle, larger responsive layout and approved1+2 logo.
-- Original-size visor, whole-tile persistent positioning, full-canvas actors and coherent projection; rain and damage bounds remain native. Lightning visual bounds differ from damage bounds by original design.
-- Normal code-screen Save/Continue; timed hard-ending Save-only; atomic storage, retry, held input, native parser replay and transition expiry.
-- Black title-logo outline, original ground anchored at the bottom, sky-only upper extension; story side fade preserves center/text and branding transitions.
-- Five verified DB1 unit-stat pages and short basic/advanced strategy sections with native examples.
--42 CTests and45 Python tests passed before packaging; an added closure regression also passes. Physical device acceptance and complete campaigns are not implied.
+## Evidence
 
-## Remaining DB1 work
+50 freshly rebuilt CTests and 67 Python tests pass. An isolated native matrix loaded 85/85 password destinations with 255 stage/descriptor assertions and 510,000 total frames; see docs/research/db1-load-matrix.md. This proves finite native loading, not full campaign completion. Title Extras uses actual SDL input and compositor snapshots; modal presentations preserve guest RAM/VDP/CPU state. Old-save migration, timed ending Save, EMI natural-loss Save, menu timeout/cancel, speech pixel masks and ending punctuation have separate retained native evidence.
 
-1. Integrate Extras naturally into native title menu; preserve four native rows in Original mode, never write a fifth native index.
-2. Level selection: first Practice/Normal/Hard levels are available by native menu rules. Earlier campaign levels through a validated saved frontier are an explicit replay convenience, not evidence of clears. Back requires a saved Back code; Alien targets require their own saved codes. Never award achievements from catalogue availability.
-3. Navigate selected replay through original Password flow automatically without PC jumps; maintain cancellation, held-input release and timeout.
-4. Translate remaining graphical P-chan speech and audit staff/other branches using verified reading and frame-preserving edits. English remains partial until verified.
-5. Broaden relevant campaign/achievement and scene acceptance; keep diagnostic prepared states separate from real campaign completion.
-6. Unicode progress-file paths are now corrected and unit-qualified; require the new packaged production-input Unicode Save case before delivery.
-7. Close and qualify the next public portable checkpoint and separate private personal ZIP; publish only verified immutable bytes.
+Earlier verified work remains: audio timing/queue fixes, green same-window launcher settings, M30 mappings, original-size movable visor, coherent world projection and full-canvas actors, native rain/damage bounds, lightning visual-vs-damage distinction, title ground anchored at bottom/sky above, story side fade, guide and strategy examples.
 
-After DB1 readiness, adapt verified concepts to DB2 with its own original-ROM evidence. Do not copy DB1 addresses, visor sizes or effect assumptions into DB2.
+## Remaining work
+
+1. Rebuild both games and launcher from the final integrated 0.1.7 source, verify exact upstream patches and shared DB2 ABI regression.
+2. Qualify final six-input language convergence, production launcher and packaged new Extras/save paths. Preserve exact binary/source/hash evidence.
+3. Close a new public portable checkpoint and separate personal ZIP only after packaged checks pass. Do not overwrite 0.1.6.
+4. Broaden campaign/achievement acceptance where meaningful. Physical M30/reporter-PC acceptance is distinct from local synthetic/native-input checks.
+5. After DB1 readiness, resume DB2 and apply proven concepts using DB2's own addresses, geometry and effect rules.
+
+OptiPort main freshness checked at a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1. No claim of every bug or hardware platform being complete.

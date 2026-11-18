@@ -19,3 +19,19 @@ Private copied executable19f22a5455aedc75f3f6d559c3df102122c414a0ae9a12d98407533
 Sixteen paired JP/English sprite comparisons preserve every pixel outside the lettering interior, including outline, hand, body and tail. English opaque pixels match the translated pattern and the native faction palette. This is a prepared RAM diagnostic, not a campaign playthrough. An earlier fixture used decimal-looking values parsed as hex and was corrected; its invalid-state failure is not attributed to the game.
 
 Private evidence: local/pchan-native-proof/QUALIFICATION.md and native-pixel-qualification.json. Extracted art and derived ROM images are not committed. This feature is newer than the immutable0.1.6 package. Staff/other remaining graphical text and comprehensive scene coverage retain their separate audit status; no complete-translation percentage is claimed.
+
+## Subsequent integrated ending repair
+
+The speech-only image remains accepted as CRC38B20F8F. The current default is
+CRC2740C64E, SHA25644fe845490eadcbabe54747aea3c26b7153bef48eb343904230ec873f942f026,
+which additionally repairs five punctuation glyphs in the hard ending. All six
+qualified input images remain reversible. The earlier five-input native result
+above belongs to its recorded binary; it is not relabeled as a six-input run.
+
+The staff table already uses a second Latin alphabet, not untranslated kana.
+Runtime uploads replace the old generic exclamation/period slots. The guarded
+ending tool changes three exclamation bytes to0x9B and two periods to0x99, plus
+the checksum. A43,000-frame native comparison changed168 pixels, all within the
+five intended8x8 character cells; all other captured pixels and the final audio
+state matched the prior image. The timed hard-ending save remained valid.
+This does not imply a complete campaign or exhaustive text inventory.

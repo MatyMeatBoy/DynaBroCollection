@@ -1,6 +1,8 @@
 /* Host persistence bridge. Guest code capture remains immutable. */
 #include "progress_runtime.h"
+#include "db1_progress_migration.h"
 #include "progress_session.h"
+#include "db1_level_catalog.h"
 #include "progress_replay.h"
 #include "progress_ui.h"
 #include "video/genesis_bus.h"
@@ -18,12 +20,16 @@ static DynaProgressReplay replay;
 static DynaProgressUi prompt;
 static char folder[1800],path[2048],status[128];
 static int ready;
+static const char *const *db1_hashes;
+static size_t db1_hash_count;
+static int navigation_requested;
 /* Dormant unless explicitly requested by a native qualification run. */
-static int test_index=-1,test_queued,test_queue_title;
+static int test_index=-1,test_queued,test_queue_title,trace_progress;
 static unsigned test_cancel_after;
 static int save_test_mode,save_test_pending,save_test_done;
 static void save_test_frame(void);
 static void test_setup(unsigned game) {
+ const char *trace=getenv("DYNA_PROGRESS_TRACE");trace_progress=trace&&!strcmp(trace,"1");
  const char *v=getenv("DYNA_DB1_REPLAY_TEST_INDEX");char *end;
  const char *save=getenv("DYNA_DB1_SAVE_TEST");
  save_test_mode=0;save_test_pending=save_test_done=0;
@@ -48,6 +54,9 @@ static void test_setup(unsigned game) {
 static void test_log(uint32_t pc) {
  fprintf(stderr,"[progress-test] pc=%06X status=%u elapsed=%u pulse=%u\n",
   pc,(unsigned)replay.status,replay.elapsed,replay.pulse_frame);
+}
+void dyna_progress_runtime_db1_identities(const char *const *hashes,size_t count){
+ db1_hashes=hashes;db1_hash_count=count;
 }
 void dyna_progress_runtime_settings(const char *settings) {
  ready=0;folder[0]=path[0]=0;
@@ -75,10 +84,17 @@ static int identity(const uint8_t *rom,size_t size,char text[65]) {
  (void)rom;(void)size;(void)text;return 0;
 #endif
 }
-static size_t count(void *u,unsigned game){(void)u;return ready&&game==store.game?dyna_progress_session_count(&session):0;}
+static size_t count(void *u,unsigned game){(void)u;return ready&&game==store.game?(game==1?db1_level_catalog_count(&session):dyna_progress_session_count(&session)):0;}
 static int item(void *u,unsigned game,size_t i,DynaExtrasLevel *out) {
  (void)u;static char title[80],detail[120];
  if(!out || !ready || game!=store.game || i>255)return 0;
+ if(game==1){
+  Db1LevelCatalogItem entry;
+  if(!db1_level_catalog_item(&session,(unsigned)i,&entry))return 0;
+  snprintf(title,sizeof title,"%s",entry.label);
+  snprintf(detail,sizeof detail,"%s",entry.has_saved_code?"SAVED PROGRESS":"AVAILABLE TO REPLAY");
+  out->title=title;out->detail=detail;out->available=1;return 1;
+ }
  const DynaProgressCode *c=dyna_progress_session_item(&session,(unsigned)i);char code[9];
  if(!c || !dyna_progress_session_text(&session,c,code))return 0;
  snprintf(title,sizeof title,"MODE %u / STAGE %u",c->mode,c->stage);
@@ -87,6 +103,14 @@ static int item(void *u,unsigned game,size_t i,DynaExtrasLevel *out) {
 }
 static int launch(void *u,unsigned game,size_t i) {
  (void)u;if(!ready || game!=store.game || i>255)return 0;
+ if(game==1){
+  Db1LevelCatalogItem entry;DynaProgressCode generated;
+  if(!db1_level_catalog_item(&session,(unsigned)i,&entry) ||
+     !db1_level_catalog_request_code(&session,entry.mode,entry.stage,&generated) ||
+     !dyna_progress_replay_request(&replay,&generated))return 0;
+  snprintf(status,sizeof status,"LOADING SELECTED LEVEL");
+  navigation_requested=1;dyna_extras_ui_notice(status);return 1;
+ }
  const DynaProgressCode *code=dyna_progress_session_item(&session,(unsigned)i);
  if(!code || !dyna_progress_replay_request(&replay,code))return 0;
  dyna_extras_ui_notice(dyna_progress_replay_status_text(&replay));
@@ -94,11 +118,32 @@ static int launch(void *u,unsigned game,size_t i) {
 }
 int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size) {
  dyna_progress_ui_reset(&prompt);
+ navigation_requested=0;
  test_setup(game);
  char hash[65];ready=0;snprintf(status,sizeof status,"SAVE UNAVAILABLE");
- if(!folder[0] || !rom || !identity(rom,size,hash) || !dyna_progress_init(&store,game,hash))return 0;
- if(snprintf(path,sizeof path,"%sdyna%u-progress-%.16s.bin",folder,game,hash)>=(int)sizeof path)return 0;
- if(dyna_progress_file_exists(path) && !dyna_progress_load(&store,path)){snprintf(status,sizeof status,"SAVE FILE COULD NOT BE READ");path[0]=0;return 0;}
+ if(!folder[0] || !rom || !identity(rom,size,hash))return 0;
+ const char *profile_hash=hash;
+ if(game==1 && db1_hashes){
+  int known=0;
+  if(!db1_hash_count || db1_hash_count>DB1_PROGRESS_MIGRATION_MAX_HASHES)return 0;
+  for(size_t i=0;i<db1_hash_count;i++)if(db1_hashes[i]&&!strcmp(hash,db1_hashes[i]))known=1;
+  if(!known){snprintf(status,sizeof status,"SAVE IMAGE IDENTITY UNAVAILABLE");return 0;}
+  profile_hash=db1_hashes[0];
+ }
+ if(!dyna_progress_init(&store,game,profile_hash))return 0;
+ if(snprintf(path,sizeof path,"%sdyna%u-progress-%.16s.bin",folder,game,profile_hash)>=(int)sizeof path)return 0;
+ if(game==1 && db1_hashes){
+  Db1ProgressMigrationReport migration;
+  if(!db1_progress_migration_run(&store,folder,profile_hash,db1_hashes,db1_hash_count,rom,size,&migration)){
+   fprintf(stderr,"[progress-migration] FAIL status=%u; prior files preserved\n",(unsigned)migration.status);
+   snprintf(status,sizeof status,"SAVED PROGRESS COULD NOT BE LOADED");path[0]=0;return 0;
+  }
+  if(migration.written || migration.invalid_codes || migration.corrupt_legacy)
+   fprintf(stderr,"[progress-migration] imported=%u invalid=%u corrupt_legacy=%u written=%u\n",
+           migration.imported,migration.invalid_codes,migration.corrupt_legacy,migration.written);
+ }else if(dyna_progress_file_exists(path) && !dyna_progress_load(&store,path)){
+  snprintf(status,sizeof status,"SAVE FILE COULD NOT BE READ");path[0]=0;return 0;
+ }
  ready=dyna_progress_session_init(&session,&store,rom,size);
  dyna_progress_replay_init(&replay,game,rom,size);
  DynaExtrasLevelProvider provider={NULL,count,item,launch};dyna_extras_ui_set_level_provider(&provider);
@@ -135,7 +180,7 @@ void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t 
      dyna_progress_session_current(&session))save_test_pending=1;
   if(replay.status!=before){
    dyna_extras_ui_notice(dyna_progress_replay_status_text(&replay));
-   if(test_index>=0 && size>=0x3a){
+   if((test_index>=0 || trace_progress) && size>=0x3a){
     test_log(pc);
     fprintf(stderr,"[progress-test] stage=%02X%02X ptr=%02X%02X%02X%02X d4=%08X code=%02X%02X%02X%02X\n",
      ram[0x34],ram[0x35],ram[0x2e],ram[0x2f],ram[0x30],ram[0x31],d[4],ram[0x36],ram[0x37],ram[0x38],ram[0x39]);
@@ -213,7 +258,18 @@ static void save_test_frame(void) {
   }
  }
  free(pixels);
+ /* Catalogue order differs from saved-store order. Select by identity. */
+ unsigned target_index=0;int found=0;
+ for(unsigned i=0;i<count(NULL,store.game);i++){
+  Db1LevelCatalogItem entry;
+  if(db1_level_catalog_item(&session,i,&entry) &&
+     entry.mode==expected.mode && entry.stage==expected.stage){target_index=i;found=1;break;}
+ }
+ if(!found)ok=0;
+ for(unsigned i=0;i<target_index;i++)dyna_extras_ui_input(3,1,0);
+ if(dyna_extras_ui_state().selected!=target_index)ok=0;
  dyna_extras_ui_input(6,1,0); /* Real provider launch callback. */
+ if(dyna_extras_ui_is_open() || replay.requested.source_pc!=0)ok=0;
  if(replay.status!=DYNA_REPLAY_WAIT_PASSWORD || replay.requested.mode!=expected.mode ||
     replay.requested.stage!=expected.stage || replay.requested.length!=expected.length ||
     memcmp(replay.requested.code,expected.code,expected.length))ok=0;
@@ -224,6 +280,15 @@ static void save_test_frame(void) {
   ok?"PASS":"FAIL",save_test_mode,n,expected.source_pc,expected.mode,expected.stage,path);
 }
 
+int dyna_progress_runtime_take_navigation_request(void){
+ int take=navigation_requested && ready && store.game==1 && replay.status==DYNA_REPLAY_WAIT_PASSWORD;
+ navigation_requested=0;return take;
+}
+void dyna_progress_runtime_navigation_status(const char *text,int cancel){
+ if(cancel && replay.status>=DYNA_REPLAY_WAIT_PASSWORD && replay.status<=DYNA_REPLAY_ACCEPTED)
+  dyna_progress_replay_cancel(&replay);
+ snprintf(status,sizeof status,"%s",text?text:"");dyna_extras_ui_notice(status);
+}
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask) {
  if(!ready || player)return mask;
  save_test_frame();

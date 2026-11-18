@@ -38,13 +38,25 @@ static const RecompRuntimeUiItem language_items[]={
 #include DYNA_STEP_HEADER
 #ifdef DYNA_HAS_JP
 #include "db1_video.h"
+#include "db1_title_menu.h"
+#include "db1_original_title.h"
+#include "db1_title_menu_smoke.h"
+#include "db1_password_nav.h"
+static Db1TitleMenu title_menu;
+static Db1PasswordNav password_nav;
+static Db1PasswordNavStatus navigation_seen;
+static int native_title_entered,native_title_mature;
+static void title_selection_update(void){
+ unsigned selected;db1_video_set_title_menu_selection(db1_title_menu_selection(&title_menu,&selected)?(int)selected:-1);
+}
 #include "db1jp.h"
 #include "translation_identity_db1.h"
 static const GameRomAlias db1_aliases[]={
     {"Japanese original",0x360C1B20u},
     {"English text repairs (partial)",DYNA_DB1_ENGLISH_CRC},
     {"English v0.2 map-label repairs (partial)",0x3BE23E09u},
-    {"English previous text repairs (partial)",0x950A8FC3u}
+    {"English previous text repairs (partial)",0x950A8FC3u},
+    {"English speech repairs (partial)",0x38B20F8Fu}
 };
 #endif
 #ifdef DYNA_HAS_OVERLAY
@@ -75,14 +87,57 @@ static unsigned ack_interrupt(void *u,unsigned level) {
 }
 static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16,.ack_interrupt=ack_interrupt};
 
+#ifdef DYNA_HAS_JP
+static void navigation_sync(void){
+ Db1PasswordNavStatus state=db1_password_nav_status(&password_nav);
+ if(state==navigation_seen)return;
+ navigation_seen=state;
+ if(state!=DB1_PASSWORD_IDLE){
+  int cancel=state==DB1_PASSWORD_CANCELED || state==DB1_PASSWORD_TIMEOUT || state==DB1_PASSWORD_UNAVAILABLE;
+  dyna_progress_runtime_navigation_status(db1_password_nav_status_text(&password_nav),cancel);
+  fprintf(stderr,"[level-nav] state=%u native=%u owns=%d\n",(unsigned)state,
+          password_nav.native_selection,db1_password_nav_owns(&password_nav));
+ }
+}
+static void navigation_observe(uint32_t pc){
+ if(!db1_password_nav_owns(&password_nav))return;
+ switch(pc){
+ case 0x1950:case 0x1a14:case 0x1e024:case 0x1d7b6:case 0x1c5a4:
+ case 0x1c9ce:case 0x1caf6:case 0x1cb0c:case 0x1cbc4:case 0x1cbea:
+ case 0x1cc16:case 0x1cc5c:case 0x1cc7c:case 0x1cc80:case 0x1cc92:case 0x1cc96:
+ case 0x1cb30:case 0x1cb34:case 0x1cb46:case 0x1cb4a:case 0x1cb4e:case 0x1cb54:break;
+ default:return;
+ }
+ unsigned confirm=0;
+ for(unsigned i=0;i<3;i++)if(g_ram[0x28+i]==1){confirm=1u<<i;break;}
+ db1_password_nav_before(&password_nav,pc,((unsigned)g_ram[0xfe]<<8)|g_ram[0xff],confirm);
+ navigation_sync();
+}
+#endif
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
     dyna_achievement_session_before(g_cpu.PC);
+#ifdef DYNA_HAS_JP
+    navigation_observe(g_cpu.PC);
+#endif
     dyna_progress_runtime_before(g_cpu.PC,g_ram,sizeof g_ram,g_cpu.D,g_cpu.A);
 #ifdef DYNA_HAS_OVERLAY
     if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e)db2_video_observe(g_cpu.PC);
 #endif
 #ifdef DYNA_HAS_JP
+    switch(g_cpu.PC){
+    case 0x1950:case 0x1a14:case 0x1e024:case 0x1d7b6:case 0x1c5a4:
+    case 0x1c9ce:case 0x1caf6:case 0x1cb0c:case 0x1cbc4:case 0x1cbea:
+    case 0x1cc16:case 0x1cc5c:case 0x1cc7c:case 0x1cc92:
+    case 0x1cb30:case 0x1cb34:case 0x1cb46:case 0x1cb4a:case 0x1cb4e:case 0x1cb54:
+        if(g_cpu.PC>=0x1cb30 && g_cpu.PC<=0x1cb54){
+            if(g_cpu.PC==0x1cb30)native_title_entered=1;
+            if(native_title_entered && g_cpu.PC!=0x1cb30 && g_cpu.PC!=0x1cb34)native_title_mature=1;
+        }else native_title_entered=native_title_mature=0;
+        db1_title_menu_before(&title_menu,g_cpu.PC,((unsigned)g_ram[0xfe]<<8)|g_ram[0xff]);
+        title_selection_update();break;
+    default:break;
+    }
     switch(g_cpu.PC){
     case 0x1c40:case 0x1c44:case 0x19980:case 0x1b040:
     case 0x1c5a4:case 0x1c7d0:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
@@ -163,6 +218,11 @@ static void entry(void) {
     dyna_achievement_session_reset();
 #ifdef DYNA_HAS_JP
     db1_video_reset();
+    db1_title_menu_smoke_init();
+    db1_password_nav_reset(&password_nav);navigation_seen=DB1_PASSWORD_IDLE;
+    native_title_entered=native_title_mature=0;
+    db1_title_menu_reset(&title_menu);
+    db1_title_menu_enable(&title_menu,db1_video_enhanced());
 #elif defined(DYNA_HAS_OVERLAY)
     db2_video_reset();
 #endif
@@ -175,6 +235,9 @@ static void entry(void) {
     }
 #ifdef DYNA_HAS_JP
     db1_video_set_english(dyna_language_english());
+#endif
+#ifdef DYNA_HAS_JP
+    dyna_progress_runtime_db1_identities(db1_language_sha256,sizeof db1_language_sha256/sizeof db1_language_sha256[0]);
 #endif
     dyna_progress_runtime_start(DYNA_ENTRY==0x738u?2:1,g_rom,DYNA_SIZE);
     dyna_language_started();
@@ -243,6 +306,60 @@ static void settings(const char *path){
     app_config_load(path);
     dyna_controllers_load(path);
 }
+static uint16_t game_input_filter(unsigned player,uint16_t mask){
+#ifdef DYNA_HAS_JP
+ if(!player){
+  if(dyna_progress_runtime_take_navigation_request()){
+   int started=db1_password_nav_request(&password_nav,native_title_mature,((unsigned)g_ram[0xfe]<<8)|g_ram[0xff]);
+   navigation_sync();
+   if(!started){
+    dyna_progress_runtime_navigation_status(db1_password_nav_status_text(&password_nav),1);
+    dyna_extras_ui_open();return 0;
+   }
+  }
+  if(db1_password_nav_owns(&password_nav)){
+   unsigned input=0,pad=0;int replace=0;
+   if(mask&GPAD_A)input|=DB1_PASSWORD_A;
+   if(mask&GPAD_B)input|=DB1_PASSWORD_B;
+   if(mask&GPAD_C)input|=DB1_PASSWORD_C;
+   if(mask&GPAD_UP)input|=DB1_PASSWORD_UP;
+   if(mask&GPAD_DOWN)input|=DB1_PASSWORD_DOWN;
+   if(mask&~(GPAD_A|GPAD_B|GPAD_C|GPAD_UP|GPAD_DOWN))input|=DB1_PASSWORD_OTHER;
+   db1_title_menu_enable(&title_menu,0);title_selection_update();
+   db1_password_nav_frame(&password_nav,input,&replace,&pad);navigation_sync();
+   if(!db1_password_nav_owns(&password_nav)){
+    db1_title_menu_resume_mature(&title_menu,db1_video_enhanced(),native_title_mature,!input,
+                                ((unsigned)g_ram[0xfe]<<8)|g_ram[0xff]);
+    title_selection_update();
+   }
+   /* Exclusive navigation skips replay_frame and virtual Extras until handoff. */
+   if(replace)return (uint16_t)((pad&DB1_PASSWORD_A?GPAD_A:0)|(pad&DB1_PASSWORD_B?GPAD_B:0)|
+       (pad&DB1_PASSWORD_C?GPAD_C:0)|(pad&DB1_PASSWORD_UP?GPAD_UP:0)|(pad&DB1_PASSWORD_DOWN?GPAD_DOWN:0));
+  }
+ }
+#endif
+ mask=dyna_progress_runtime_input(player,mask);
+#ifdef DYNA_HAS_JP
+ if(!player){
+  db1_title_menu_smoke_frame();
+  db1_title_menu_enable_mature(&title_menu,db1_video_enhanced(),native_title_mature,
+                               ((unsigned)g_ram[0xfe]<<8)|g_ram[0xff]);
+  if(title_menu.modal && !dyna_extras_ui_is_open())db1_title_menu_host_closed(&title_menu);
+  unsigned input=0,pad=0;int replace=0;
+  if(mask&GPAD_UP)input|=DB1_TITLE_UP;
+  if(mask&GPAD_DOWN)input|=DB1_TITLE_DOWN;
+  if(mask&(GPAD_A|GPAD_B|GPAD_C))input|=DB1_TITLE_CONFIRM;
+  if(mask&GPAD_START)input|=DB1_TITLE_START;
+  if(mask&~(GPAD_UP|GPAD_DOWN|GPAD_A|GPAD_B|GPAD_C|GPAD_START))input|=DB1_TITLE_OTHER;
+  if(db1_title_menu_frame(&title_menu,input,&replace,&pad)){
+   dyna_extras_ui_open();db1_title_menu_smoke_opened();
+  }
+  title_selection_update();
+  if(replace)return (uint16_t)((pad&DB1_TITLE_UP?GPAD_UP:0)|(pad&DB1_TITLE_DOWN?GPAD_DOWN:0));
+ }
+#endif
+ return mask;
+}
 static int game_runtime_get(const char *key,int *value){
  return dyna_visor_runtime_get(key,value)||dyna_language_runtime_get(key,value);
 }
@@ -254,12 +371,21 @@ static const struct RecompLauncherCModProvider *game_mods(const struct RecompLau
 }
 static const char *snapshot_reason(void){return "Mid-battle save states and rewind are unavailable. Save Game stores native progress codes.";}
 static int game_ui_open(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_is_open();}
-static int game_ui_active(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_active() || dyna_progress_runtime_prompt(NULL,NULL);}
+static int game_ui_active(void){
+ int active=dyna_extras_ui_is_open() || dyna_achievement_ui_active() || dyna_progress_runtime_prompt(NULL,NULL);
+#ifdef DYNA_HAS_JP
+ active=active || db1_original_title_active(&g_machine.vdp,db1_video_english(),db1_video_enhanced());
+#endif
+ return active;
+}
 static void game_ui_input(int action,int down,int repeat) {
  if(dyna_extras_ui_is_open())dyna_extras_ui_input(action,down,repeat);
  else dyna_achievement_ui_input(action,down,repeat);
 }
 static void game_ui_render(uint32_t *pixels,int w,int h,int pitch) {
+#ifdef DYNA_HAS_JP
+ db1_original_title_render(&g_machine.vdp,pixels,w,h,pitch,db1_video_english(),db1_video_enhanced());
+#endif
  unsigned selected;const char *feedback;
  if(dyna_progress_runtime_prompt(&selected,&feedback)){
   if(dyna_progress_runtime_prompt_kind()==2)dyna_extras_ui_ending_save_prompt(pixels,w,h,pitch,feedback);
@@ -267,6 +393,9 @@ static void game_ui_render(uint32_t *pixels,int w,int h,int pitch) {
  }
  dyna_achievement_smoke_render(pixels,w,h,pitch);
  dyna_extras_ui_render(pixels,w,h,pitch);
+#ifdef DYNA_HAS_JP
+ db1_title_menu_smoke_render(pixels,w,h,pitch);
+#endif
 }
 static int game_ui_action(const char *key) {
  if(key && !strcmp(key,"dyna.extras")){dyna_extras_ui_open();return 1;}
@@ -280,7 +409,7 @@ static int menu_tick(uint32_t mask,int open,uint64_t now,int *blocked) {
 }
 const GameSpec g_game_spec={
     .menu_input_tick=menu_tick,
-    .input_filter=dyna_progress_runtime_input,
+    .input_filter=game_input_filter,
     .pacing_default="accurate",.frame_rate_numerator=53693175,.frame_rate_denominator=3420*262,
     .native_aspect_width=4,.native_aspect_height=3,
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
@@ -304,7 +433,7 @@ const GameSpec g_game_spec={
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
     .video=&db1_video,.video_default="16:9",
-    .rom_aliases=db1_aliases,.num_rom_aliases=4,
+    .rom_aliases=db1_aliases,.num_rom_aliases=5,
 #elif defined(DYNA_HAS_OVERLAY)
     .video=&db2_video,.video_default="16:9",
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,

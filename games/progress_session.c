@@ -21,7 +21,8 @@ static int expected(const DynaProgressSession *s,const DynaProgressCode *c) {
         int index=db1_index(c);if(index<0||c->length!=4)return 0;
         size_t p=0x1e87e + (unsigned)index*4;
         if(p+4>s->rom_size||memcmp(s->rom+p,c->code,4))return 0;
-        for(unsigned i=0;i<4;i++)if((c->code[i]>>2)>=26)return 0;
+        for(unsigned i=0;i<4;i++)if((c->code[i]>>2)>=26&&
+            !(index==95&&i==3&&c->code[i]==0x6a))return 0;
         return 1;
     }
     int index=db2_index(c->mode,c->stage);if(index<0||!c->length||c->length>6)return 0;
@@ -101,5 +102,6 @@ const DynaProgressCode *dyna_progress_session_item(const DynaProgressSession *s,
 int dyna_progress_session_text(const DynaProgressSession *s,const DynaProgressCode *c,char text[9]) {
     if(!text||!expected(s,c))return 0;
     for(unsigned i=0;i<c->length;i++)text[i]=s->store->game==1?(char)('A'+(c->code[i]>>2)):(char)c->code[i];
-    text[c->length]=0;return 1;
+    /* Native Alien16 stores4 glyphs, but its last0x6A is a display blank. */
+    text[s->store->game==1&&c->mode==4&&c->stage==16&&c->code[3]==0x6a?3:c->length]=0;return 1;
 }

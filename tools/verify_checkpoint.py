@@ -26,7 +26,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None,diagnostic_env=None,markers=()):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -43,6 +43,7 @@ def main():
         if profile_name:command+=['--profile-name',profile_name]
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         env.pop('DYNA_DB1_SAVE_TEST',None)
+        if diagnostic_env:env.update(diagnostic_env)
         if save_test:env['DYNA_DB1_SAVE_TEST']='save'
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
         elif irq:env['DYNA_IRQ_VERIFY']='1'
@@ -50,6 +51,9 @@ def main():
         if result.returncode:
             print(result.stdout.decode('utf-8',errors='replace'));raise RuntimeError('Packaged regression failed: '+name)
         report=json.loads((output/'probe.json').read_text(encoding='utf-8'))
+        log=(output/'run.log').read_text(encoding='utf-8')
+        for marker in markers:
+            if marker not in log:raise RuntimeError('Missing native evidence: '+name+' / '+marker)
         if save_test and '[progress-save-test] PASS' not in (output/'run.log').read_text(encoding='utf-8'):
             raise RuntimeError('Native result save was not persisted: '+name)
         expected='Japanese original' if language=='ja' else 'English'
@@ -171,6 +175,29 @@ def main():
             raise RuntimeError('Unicode profile progress checksum failed')
         cases['db1-save-unicode']=cases.pop(unicode_name)
         cases['db1-save-unicode']['native_save_sha256']=hashlib.sha256(data).hexdigest()
+    if tuple(map(int,version.split('.'))) >= (0,1,7):
+        for level in [False,True]:
+            name='db1-title-level' if level else 'db1-title-extras'
+            dest=args.output.resolve()/name
+            script=args.output/(name+'.input')
+            source='WAIT 1999\nPRESS START 12\nWAIT 2000\nPRESS START 12\nWAIT 500\nPRESS UP 12\nWAIT 60\nPRESS A 12\nWAIT 2500\n'
+            if level:source+='ASSERT_RAM16 FF0034 0014\nASSERT_RAM16 FF002E 00FF\nASSERT_RAM16 FF0030 B3A6\n'
+            source+='SCREENSHOT title-result.png\n'
+            script.write_text(source,encoding='utf-8')
+            env={'DYNA_DB1_TITLE_UI_TEST':str(dest/'extras.bmp'),'DYNA_DB1_TITLE_UI_MODE':'level' if level else 'back','DYNA_PROGRESS_TRACE':'1'}
+            markers=['PASS 4 level modal presentations; CPU/RAM/VDP unchanged','PASS real SDL level confirm closed modal','status=5'] if level else ['PASS 6 modal presentations; CPU/RAM/VDP unchanged','PASS real SDL Back event closed modal']
+            run(name,'DynaBrothers1AOT.exe',db1,8000,script,widescreen='16:9',overlays=True,diagnostic_env=env,markers=markers)
+            capture=dest/'extras.bmp'
+            if not capture.is_file() or capture.read_bytes()[:2]!=b'BM':raise RuntimeError('Missing actual Extras compositor capture')
+        run('db1-emi-save','DynaBrothers1AOT.exe',db1,9500,
+            ROOT/'games/db1/scenes/emi-natural-loss.input',widescreen='16:9',overlays=True,
+            diagnostic_env={'DYNA_DB1_REPLAY_TEST_INDEX':'95','DYNA_PROGRESS_TRACE':'1'},markers=['status=5'])
+        saves=list((args.output/'db1-emi-save/profile').glob('dyna1-progress-*.bin'))
+        if len(saves)!=1:raise RuntimeError('EMI natural-loss Save is missing')
+        data=saves[0].read_bytes()
+        if len(data)!=105 or data[88:92]!=bytes.fromhex('00040010') or data[93:97]!=bytes.fromhex('1232226A') or int.from_bytes(data[101:105],'big')!=0x1becc:
+            raise RuntimeError('EMI Save did not preserve original native padded code')
+        cases['db1-emi-save']['native_save_sha256']=hashlib.sha256(data).hexdigest()
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

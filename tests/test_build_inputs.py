@@ -36,10 +36,12 @@ class Db1LanguagePipelineTests(unittest.TestCase):
         old_current=(root/'local/roms/db1-en-950A8FC3.md').read_bytes()
         before=original,supplied,old_current
         images=db1_language_images(original,supplied,catalog)
-        self.assertEqual(len(images),5)
+        self.assertEqual(len(images),6)
         self.assertEqual(images[0],original);self.assertEqual(images[2],supplied)
         self.assertEqual(images[4],old_current);self.assertNotEqual(images[1],old_current)
-        self.assertEqual([f'{zlib.crc32(x):08X}' for x in images[2:]],['C1E5C0DA','3BE23E09','950A8FC3'])
+        self.assertEqual(f'{zlib.crc32(images[1]):08X}','2740C64E')
+        self.assertEqual(f'{zlib.crc32(images[5]):08X}','38B20F8F')
+        self.assertEqual([f'{zlib.crc32(x):08X}' for x in images[2:5]],['C1E5C0DA','3BE23E09','950A8FC3'])
         spans=ranges(images)
         for source in images:
             for target in images:

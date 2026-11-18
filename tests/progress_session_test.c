@@ -23,6 +23,19 @@ int main(void) {
     dyna_progress_session_before(&s,0x28f1a,ram,sizeof ram,a);
     c=dyna_progress_session_current(&s);assert(c&&c->mode==3&&c->stage==1);
     assert(dyna_progress_session_text(&s,c,text));assert(!strcmp(text,"MHRI"));
+    /* Only native Alien16 permits the literal fourth-byte blank glyph. */
+    ram[0x35]=95;ram[0xadde + 95*0x4a]=0;a[1]=0x1e87eu+95*4;
+    const uint8_t padded[4]={0x12,0x32,0x22,0x6a};memcpy(rom+a[1],padded,4);
+    dyna_progress_session_before(&s,0x1becc,ram,sizeof ram,a);
+    c=dyna_progress_session_current(&s);assert(c&&c->mode==4&&c->stage==16&&c->length==4);
+    assert(dyna_progress_session_text(&s,c,text)&&!strcmp(text,"EMI"));
+    assert(dyna_progress_add(&store,c));
+    DynaProgressCode wrong=*c;wrong.stage=15;memcpy(rom+0x1e87eu+94*4,padded,4);
+    assert(!dyna_progress_session_text(&s,&wrong,text));
+    wrong=*c;wrong.length=3;assert(!dyna_progress_session_text(&s,&wrong,text));
+    wrong=*c;wrong.code[3]=0x6b;rom[a[1]+3]=0x6b;assert(!dyna_progress_session_text(&s,&wrong,text));
+    rom[a[1]+3]=0x6a;wrong=*c;wrong.code[1]=0x6a;rom[a[1]+1]=0x6a;
+    assert(!dyna_progress_session_text(&s,&wrong,text));rom[a[1]+1]=0x32;
     assert(dyna_progress_init(&store,2,hash));memset(ram,0,sizeof ram);memset(rom,0,sizeof rom);
     assert(dyna_progress_session_init(&s,&store,rom,sizeof rom));
     /* Mode1 stage2 is password table index9. Native stack target is next stage. */

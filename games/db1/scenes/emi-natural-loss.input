@@ -1,0 +1,26 @@
+# Original Password route to Alien16, then ordinary elapsed play and original Loss.
+# No PC jump, RAM write, ROM patch, descriptor/result mutation.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS DOWN 12
+WAIT 60
+PRESS DOWN 12
+WAIT 60
+PRESS DOWN 12
+WAIT 60
+PRESS A 12
+WAIT 1800
+ASSERT_RAM16 FF0034 005F
+ASSERT_RAM16 FF002E 00FF
+ASSERT_RAM16 FF0030 C954
+SCREENSHOT alien16-clean-loader.png
+WAIT 2000
+SCREENSHOT alien16-clean-loss.png
+PRESS DOWN 12
+WAIT 60
+PRESS A 12
+WAIT 120
+SCREENSHOT alien16-clean-saved.png

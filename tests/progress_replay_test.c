@@ -36,6 +36,24 @@ int main(void) {
     assert(s.status==DYNA_REPLAY_FAILED&&!override);
     assert(dyna_progress_replay_request(&s,&c));dyna_progress_replay_cancel(&s);
     assert(s.status==DYNA_REPLAY_CANCELED);
+    /* Alien16 stays width4; original parser sees the exact native blank. */
+    c.mode=4;c.stage=16;c.length=4;
+    const uint8_t padded[4]={0x12,0x32,0x22,0x6a};memcpy(c.code,padded,4);
+    memcpy(rom+0x1e87eu+95*4,padded,4);assert(dyna_progress_replay_request(&s,&c));
+    d[4]=0;memcpy(snapshot,ram,sizeof ram);
+    dyna_progress_replay_before(&s,0x1db7e,ram,sizeof ram,d,a);
+    assert(s.status==DYNA_REPLAY_WAIT_PASSWORD&&!memcmp(snapshot,ram,sizeof ram));
+    dyna_progress_replay_before(&s,0x1db88,ram,sizeof ram,d,a);
+    assert(s.status==DYNA_REPLAY_PREFILLED&&d[4]==4&&d[2]==6&&d[3]==3&&!memcmp(ram+0x36,padded,4));
+    dyna_progress_replay_before(&s,0x1dcec,ram,sizeof ram,d,a);
+    ram[0x35]=95;put(0x2e,0xffc954);
+    dyna_progress_replay_before(&s,0x1dd90,ram,sizeof ram,d,a);assert(s.status==DYNA_REPLAY_ACCEPTED);
+    dyna_progress_replay_before(&s,0x1950,ram,sizeof ram,d,a);assert(s.status==DYNA_REPLAY_LOADED);
+    c.stage=15;memcpy(rom+0x1e87eu+94*4,padded,4);assert(!dyna_progress_replay_request(&s,&c));
+    c.stage=16;c.length=3;assert(!dyna_progress_replay_request(&s,&c));c.length=4;
+    c.code[3]=0x6b;rom[0x1e87eu+95*4+3]=0x6b;assert(!dyna_progress_replay_request(&s,&c));
+    c.code[3]=0x6a;rom[0x1e87eu+95*4+3]=0x6a;c.code[0]=0x6a;rom[0x1e87eu+95*4]=0x6a;
+    assert(!dyna_progress_replay_request(&s,&c));
     /* DB2 requires the user's native submission; it never guesses a pad map. */
     memset(rom,0,sizeof rom);memset(ram,0,sizeof ram);c.mode=1;c.stage=2;c.length=6;
     memcpy(c.code,"native",6);unsigned table=0x49f8a+9*2;

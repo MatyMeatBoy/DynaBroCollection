@@ -68,6 +68,7 @@ static void load(Art *a,const char *base,const char *name,unsigned first,unsigne
  for(int i=0;i<a->w*a->h;i++){unsigned char *p=a->rgba+i*4;uint32_t rgb=(uint32_t)p[0]<<16|(uint32_t)p[1]<<8|p[2];a->map[i]=p[3]?(unsigned char)(first==16?db1_title_art_logo_nearest(rgb):db1_title_art_nearest(rgb,reference,first,count)):0;}
 }
 static void ensure(void){if(loaded)return;loaded=1;char *base=SDL_GetBasePath();if(!base)return;load(&bands,base,"db1-title-background-512x288.png",48,16,512,288);load(&logo,base,"dyna-logo-v1.png",16,16,224,120);SDL_free(base);}
+int db1_title_art_logo_ready(void){ensure();return logo.rgba!=NULL && logo.map!=NULL;}
 int db1_title_art_identified(const GVDP *v){
  if(!v||db1_scenes_kind()!=DB1_SCENE_TITLE||(v->reg[16]&0x33)!=1||(v->reg[12]&6)||!(v->reg[1]&64))return 0;
  unsigned a=(v->reg[2]&56)<<10;
@@ -100,7 +101,7 @@ static void sprite_mask(const GVDP *v,int line,int width,int left,unsigned char 
   index=v->vram[(a+3)&65535]&127;if(!index)break;
  }
 }
-static uint32_t title_background(const GVDP *v,int x,int line){
+uint32_t db1_title_art_background_pixel(const GVDP *v,int x,int line){
  int shifted=db1_title_art_background_line(line),sx,sy;
  if(db1_scenes_plane_b_coordinates(v,x,shifted,&sx,&sy)&&sy<0){
   if(bands.rgba){int off=db1_title_art_band_offset(bands.w,bands.h,sx,sy< -32?-32:sy);if(off>=0)return mapped(v,&bands,off/4);}
@@ -117,10 +118,10 @@ void db1_title_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,i
   a_coordinates(v,x,line,&sx,&sy);int px=wrap(sx,512),py=wrap(sy,256);
   unsigned attr=word(v,((v->reg[2]&56)<<10)+2*((py/8)*64+px/8)),tile=attr&2047;
   unsigned opaque=pattern_pixel(v,attr,px&7,py&7);
-  if(!opaque&&!sprites[dx])out[dx]=title_background(v,x,line);
+  if(!opaque&&!sprites[dx])out[dx]=db1_title_art_background_pixel(v,x,line);
   if(!english||!logo.rgba)continue;
   if(px<48||px>=272||py<24||py>=144)continue;
-  if(tile>=0x102&&tile<=0x262&&opaque&&!sprites[dx])out[dx]=title_background(v,x,line);
+  if(tile>=0x102&&tile<=0x262&&opaque&&!sprites[dx])out[dx]=db1_title_art_background_pixel(v,x,line);
   int i=((py-24)*logo.h/120)*logo.w+(px-48)*logo.w/224;out[dx]=db1_title_art_alpha(out[dx],mapped(v,&logo,i),logo.rgba[i*4+3]);
  }
 }

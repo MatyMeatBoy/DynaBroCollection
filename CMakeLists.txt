@@ -396,7 +396,7 @@ target_compile_options(DynaVisorSettingsTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang
 add_test(NAME visor_settings_contract COMMAND DynaVisorSettingsTest)
 
 
-# Pure components for the next native Extras integration; not yet installed in AOT.
+# Pure contracts for the host-owned DB1 title extension and level catalogue.
 add_executable(DynaDb1TitleMenuTest tests/db1_title_menu_test.c games/db1_title_menu.c)
 target_include_directories(DynaDb1TitleMenuTest PRIVATE games)
 target_compile_options(DynaDb1TitleMenuTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
@@ -405,3 +405,55 @@ add_executable(DynaDb1LevelCatalogTest tests/db1_level_catalog_test.c games/db1_
 target_include_directories(DynaDb1LevelCatalogTest PRIVATE games)
 target_compile_options(DynaDb1LevelCatalogTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME db1_level_catalog_contract COMMAND DynaDb1LevelCatalogTest)
+
+
+foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
+ target_sources(${_game} PRIVATE games/db1_level_catalog.c)
+endforeach()
+target_sources(DynaBrothers1AOT PRIVATE games/db1_title_menu.c)
+add_executable(DynaDb1LevelBridgeTest tests/db1_level_catalog_bridge_test.c games/db1_level_catalog.c games/progress_session.c games/progress_store.c games/progress_replay.c games/progress_ui.c)
+target_include_directories(DynaDb1LevelBridgeTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/external/clowncommon")
+target_compile_options(DynaDb1LevelBridgeTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+if(WIN32)
+ target_link_libraries(DynaDb1LevelBridgeTest PRIVATE bcrypt)
+endif()
+add_test(NAME db1_level_bridge_contract COMMAND DynaDb1LevelBridgeTest)
+
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_title_menu_art.c)
+target_sources(DynaDb1VideoTest PRIVATE games/db1_title_menu_art.c)
+add_executable(DynaDb1TitleMenuArtTest tests/db1_title_menu_art_test.c games/db1_title_menu_art.c)
+target_include_directories(DynaDb1TitleMenuArtTest PRIVATE games "${RUNNER_ROOT}")
+target_compile_options(DynaDb1TitleMenuArtTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_title_menu_art_contract COMMAND DynaDb1TitleMenuArtTest)
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_title_menu_smoke.c)
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_password_nav.c)
+add_executable(DynaDb1PasswordNavTest tests/db1_password_nav_test.c games/db1_password_nav.c)
+target_include_directories(DynaDb1PasswordNavTest PRIVATE games)
+target_compile_options(DynaDb1PasswordNavTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_password_nav_contract COMMAND DynaDb1PasswordNavTest)
+
+foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
+ target_sources(${_game} PRIVATE games/db1_progress_migration.c)
+endforeach()
+target_sources(DynaDb1LevelBridgeTest PRIVATE games/db1_progress_migration.c)
+add_executable(DynaDb1ProgressMigrationTest tests/db1_progress_migration_test.c games/db1_progress_migration.c games/progress_session.c games/progress_store.c)
+target_include_directories(DynaDb1ProgressMigrationTest PRIVATE games)
+target_compile_options(DynaDb1ProgressMigrationTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_progress_migration_contract COMMAND DynaDb1ProgressMigrationTest "${CMAKE_BINARY_DIR}")
+
+target_sources(DynaBrothers1AOT PRIVATE games/db1_original_title.c)
+add_executable(DynaDb1OriginalTitleTest tests/db1_original_title_test.c games/db1_original_title.c)
+target_include_directories(DynaDb1OriginalTitleTest PRIVATE games "${RUNNER_ROOT}")
+target_compile_options(DynaDb1OriginalTitleTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_original_title_translation_contract COMMAND DynaDb1OriginalTitleTest)
+
+add_executable(DynaPngTransparencyTest tests/png_transparency_test.c)
+target_include_directories(DynaPngTransparencyTest PRIVATE "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src/third_party")
+target_compile_options(DynaPngTransparencyTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+ target_compile_options(DynaPngTransparencyTest PRIVATE -O3 -Wall -Wextra -Werror=stringop-overflow)
+endif()
+add_test(NAME png_transparency_bounds_contract COMMAND DynaPngTransparencyTest)

@@ -55,6 +55,7 @@ static void glyph(Canvas *c,int x,int y,unsigned char ch,uint32_t color){
     unsigned char tmp[5]={0};const unsigned char *bits=tmp;ch=(unsigned char)toupper(ch);
     if(ch>='A'&&ch<='Z')bits=letters[ch-'A'];else if(ch>='0'&&ch<='9')bits=letters[26+ch-'0'];
     else switch(ch){
+      case '>':tmp[0]=0x7f;tmp[1]=0x3e;tmp[2]=0x1c;tmp[3]=8;break;
       case ' ':break;case '.':tmp[2]=0x60;break;case ',':tmp[2]=0x60;tmp[1]=0x40;break;
       case ':':tmp[2]=0x36;break;case ';':tmp[2]=0x36;tmp[1]=0x40;break;
       case '!':tmp[2]=0x5f;break;case '?':tmp[0]=2;tmp[1]=1;tmp[2]=0x51;tmp[3]=9;tmp[4]=6;break;
@@ -178,7 +179,7 @@ void dyna_extras_ui_render(uint32_t *pixels,int w,int h,int pitch_bytes){
   text(&c,x+28,y,width-43,label,available?INK:GOLD);
  }
  if(state.screen==1&&provider.item){DynaExtrasLevel item={0};if(provider.item(provider.userdata,game_id,state.selected,&item))wrapped(&c,x+15,bottom-44,width-30,2,item.detail,0,INK);}
- text(&c,x+13,bottom-17,width-26,"UP/DOWN SELECT  A OPEN  BACK",GOLD);
+ text(&c,x+13,bottom-17,width-26,"UP/DOWN SELECT  A OPEN  B BACK",GOLD);
 }
 
 static uint32_t prompt_tint(uint32_t color,unsigned fade){
