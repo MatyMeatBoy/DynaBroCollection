@@ -12,6 +12,7 @@ void db1_video_set_visor_offset_tiles(int tiles);
 /* Host-only title extension. -1 clears it; native selection is never written. */
 int db1_video_enhanced(void);
 void db1_video_set_title_menu_selection(int selected);
+void db1_video_set_title_menu_modal(int modal);
 
 /* Language actually applied to this running session, independent of restart preferences. */
 int db1_video_english(void);

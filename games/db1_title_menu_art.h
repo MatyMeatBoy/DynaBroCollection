@@ -9,5 +9,5 @@ typedef uint32_t (*Db1TitleMenuBackground)(const GVDP *,int x,int line);
  * Background must preserve TitleArt's anchored plane B geometry. Returns1
  * when the row belongs to this identified menu overlay,0 otherwise. */
 int db1_title_menu_art_row(const GVDP *,int line,uint32_t *out,int width,int left,
- unsigned selected,Db1TitleMenuBackground background);
+ unsigned selected,int modal,Db1TitleMenuBackground background);
 #endif

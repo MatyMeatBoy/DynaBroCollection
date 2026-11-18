@@ -19,7 +19,9 @@ static int bottom_spell,bottom_fullplane,title_english;
 static Db1HazardEffects hazards;
 static int visor_offset_tiles;
 static int title_menu_selection=-1;
+static int title_menu_modal;
 void db1_video_set_title_menu_selection(int selected){title_menu_selection=selected>=0&&selected<=4?selected:-1;}
+void db1_video_set_title_menu_modal(int modal){title_menu_modal=modal!=0;}
 static Db1VisorLayout frame_visor;
 void db1_video_set_visor_offset_tiles(int tiles){visor_offset_tiles=tiles;}
 void db1_video_set_english(int enabled){title_english=!!enabled;}
@@ -371,7 +373,7 @@ static void scanline(const GVDP *vdp,int line,int nw,uint32_t *out,int w,
             db1_menu_layout_row(db1_scenes_kind(),line,native,out,w);
             db1_title_art_row(vdp,line,out,w,(w-320)/2,title_english);
             if(title_menu_selection>=0 && db1_title_art_identified(vdp))
-                db1_title_menu_art_row(vdp,line,out,w,(w-320)/2,(unsigned)title_menu_selection,db1_title_art_background_pixel);
+                db1_title_menu_art_row(vdp,line,out,w,(w-320)/2,(unsigned)title_menu_selection,title_menu_modal,db1_title_art_background_pixel);
             db1_intro_fade_row(out,w,nw,line,viewport.enabled,db1_intro_fade_active(),background);return;
         }
         for(int x=0;x<w;x++)out[x]=background;

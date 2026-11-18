@@ -51,6 +51,7 @@ static Db1PasswordNavStatus navigation_seen;
 static int native_title_entered,native_title_mature;
 static void title_selection_update(void){
  unsigned selected;db1_video_set_title_menu_selection(db1_title_menu_selection(&title_menu,&selected)?(int)selected:-1);
+ db1_video_set_title_menu_modal(title_menu.modal);
 }
 #include "db1jp.h"
 #include "translation_identity_db1.h"
