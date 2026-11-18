@@ -42,6 +42,6 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 - Diálogo adicional del laboratorio tras la intro (ej. "よし この実験がうまくいけば...") sigue en japonés: ejecutar `glyph_trace_report` con `DYNA_TRACE_GLYPH=1`.
 
 ## Estado 2026-11-18 tarde
-- FALLO PREEXISTENTE en la base (no causado por traducciones): `controller_profiles_contract` aborta (`tests/controller_profiles_test.c:29`, `gamepad_menu_mask()` no devuelve START|BACK) tras los commits de otro agente "reconcile controller hotplug"/"retain physical D-pad directions". Arreglar o revisar.
+- `controller_profiles_contract` aborta ahora de forma consistente en esta máquina (`tests/controller_profiles_test.c:29`, usa joysticks virtuales SDL) aunque `games/controller_profiles.c` no cambió desde 2c9fecd y antes pasaba (53/53 CTest hasta ~14:50). Probablemente depende del entorno (dispositivo/driver de entrada presente o estado SDL); revisar en otra máquina antes de tocar código. (Nota: el repo en GitHub se llama ahora `DynaBroCollection`; el remoto `origin` redirige.)
 - Briefings de Práctica 2-6 (0x2222FC-0x2225A9) traducidos (32 entradas, sin captura).
 - Diálogo del laboratorio tras la intro NO son cadenas fijas: viven en un búfer RAM deslizante (0xFF2816+, texto descomprimido de un script). Traza `[glyph-ram]` con `DYNA_TRACE_GLYPH=1`. Hace falta localizar el cargador del script (FF10) y traducir el flujo, o hacer búsqueda por contenido (hash de palabras) en el gancho de `db2_glyph_text`.
