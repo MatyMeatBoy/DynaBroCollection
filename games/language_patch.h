@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define DYNA_LANGUAGE_VARIANTS 4
+#define DYNA_LANGUAGE_VARIANTS 8
 typedef struct {
     size_t address, length;
     const uint8_t *bytes[DYNA_LANGUAGE_VARIANTS];

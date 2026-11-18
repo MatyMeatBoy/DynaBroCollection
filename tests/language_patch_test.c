@@ -2,7 +2,28 @@
 #include <assert.h>
 #include <string.h>
 
+static void expanded(unsigned count) {
+    assert(DYNA_LANGUAGE_VARIANTS==8);
+    uint8_t variants[8][4]={{0}};
+    DynaLanguageSpan span={1,2,{0}};
+    DynaLanguageImage image={4,count,{0},&span,1};
+    for(unsigned i=0;i<count;i++) {
+        variants[i][1]=(uint8_t)(i+1);variants[i][2]=(uint8_t)(i*3);
+        span.bytes[i]=variants[i]+1;
+        image.crc[i]=dyna_language_crc(variants[i],4);
+    }
+    char error[100];uint8_t rom[4];
+    for(unsigned source=0;source<count;source++)for(int english=0;english<2;english++) {
+        memcpy(rom,variants[source],4);
+        assert(dyna_language_apply(rom,4,&image,english,error,sizeof error));
+        assert(!memcmp(rom,variants[english?1:0],4));
+    }
+    image.variants=9;memcpy(rom,variants[0],4);
+    assert(!dyna_language_apply(rom,4,&image,1,error,sizeof error));
+    assert(!memcmp(rom,variants[0],4));
+}
 int main(void) {
+    expanded(5);expanded(8);
     const uint8_t jp[]={1,2}, en[]={3,4}, old[]={3,2};
     DynaLanguageSpan span={1,2,{jp,en,old}};
     const uint8_t original[]={0,1,2,0}, translated[]={0,3,4,0}, previous[]={0,3,2,0};

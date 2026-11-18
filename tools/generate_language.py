@@ -5,10 +5,13 @@ import re
 
 from tools.rompatch import identity
 
+# Must match DYNA_LANGUAGE_VARIANTS in games/language_patch.h.
+MAX_LANGUAGE_VARIANTS = 8
+
 
 def ranges(images):
-    if not 2 <= len(images) <= 4 or not images[0] or any(len(x) != len(images[0]) for x in images):
-        raise ValueError('Language variants require two to four equal-sized images')
+    if not 2 <= len(images) <= MAX_LANGUAGE_VARIANTS or not images[0] or any(len(x) != len(images[0]) for x in images):
+        raise ValueError('Language variants require two to eight equal-sized images')
     changed = [i for i in range(len(images[0])) if any(x[i] != images[0][i] for x in images[1:])]
     spans = []
     for index in changed:
@@ -40,6 +43,8 @@ def emit_image(images, name, output):
         lines.append(f'{{0x{start:x},{end-start},{{{pointers}}}}},')
         offset += end-start
     lines.append('};')
+    hashes = ','.join('"' + identity(image)['sha256'] + '"' for image in images)
+    lines.append(f'static const char *const {name}_language_sha256[]={{{hashes}}};')
     crcs = ','.join('0x' + identity(image)['crc32'] + 'u' for image in images)
     lines.append(f'static const DynaLanguageImage {name}_language_image={{{len(images[0])},{len(images)},{{{crcs}}},{name}_spans,{len(spans)}}};')
     (output / f'{name}_language.h').write_text('\n'.join(lines)+'\n', encoding='utf-8')

@@ -45,6 +45,21 @@ def default_input_root(root=ROOT):
     return preferred if preferred.is_dir() else root.parent / 'Dynabrothers'
 
 
+def db1_language_images(original, translated, catalog):
+    """Preserve every qualified prior input while making speech English slot1."""
+    from tools.translate_db1 import translate as translate_db1
+    from tools.db1_speech_translation import translate as translate_speech
+    if hashlib.sha256(original).hexdigest() != DB1_SHA:
+        raise ValueError('DB1 Japanese compatibility image differs from qualified identity')
+    old_current = translate_db1(translated, catalog)
+    current, _ = translate_speech(old_current)  # Requires exact guarded950A8FC3.
+    previous = translate_db1(translated, {key: value for key, value in catalog.items()
+        if key not in ('credits_tables', 'bonus_messages')})
+    if hashlib.sha256(previous).hexdigest() != '04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4':
+        raise RuntimeError('DB1 v0.2 compatibility image differs from its qualified identity')
+    return [original, current, translated, previous, old_current]
+
+
 def find_by_hash(root, digest, extensions):
     for path in root.rglob('*'):
         if path.is_file() and path.suffix.lower() in extensions and hashlib.sha256(path.read_bytes()).hexdigest() == digest:
@@ -124,28 +139,27 @@ def main():
     from tools.translate_db2 import translate
     import json
     import zlib
-    from tools.translate_db1 import translate as translate_db1
     catalog_db1 = json.loads((ROOT / 'translations/db1-en.json').read_text(encoding='utf-8'))
-    db1_en = translate_db1(translated, catalog_db1)
+    db1_images = db1_language_images(db1.read_bytes(), translated, catalog_db1)
+    db1_en = db1_images[1]
     db1_crc = f'{zlib.crc32(db1_en):08X}'
-    db1_cache = ROOT / f'local/roms/db1-en-{db1_crc}.md'
-    if db1_cache.exists():
-        if db1_cache.read_bytes() != db1_en:
-            raise RuntimeError('Existing DB1 English cache differs')
-    else:
-        with db1_cache.open('xb') as out:
-            out.write(db1_en)
+    # Keep the previous current-English image as a qualified reusable input.
+    for image in (db1_images[4], db1_en):
+        cache_crc = f'{zlib.crc32(image):08X}'
+        db1_cache = ROOT / f'local/roms/db1-en-{cache_crc}.md'
+        if db1_cache.exists():
+            if db1_cache.read_bytes() != image:
+                raise RuntimeError('Existing DB1 English cache differs')
+        else:
+            with db1_cache.open('xb') as out:
+                out.write(image)
     db1_step_dir = ROOT / 'generated/db1step'
     db1_step_dir.mkdir(parents=True, exist_ok=True)
     (db1_step_dir / 'translation_identity_db1.h').write_text('#pragma once\n#define DYNA_DB1_ENGLISH_CRC 0x' + db1_crc + 'u\n')
     catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
     db2_en = translate(db2.read_bytes(), catalog)
     from tools.generate_language import emit_image
-    previous_db1 = translate_db1(translated, {key: value for key, value in catalog_db1.items()
-        if key not in ('credits_tables', 'bonus_messages')})
-    if hashlib.sha256(previous_db1).hexdigest() != '04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4':
-        raise RuntimeError('DB1 v0.2 compatibility image differs from its qualified identity')
-    emit_image([db1.read_bytes(), db1_en, translated, previous_db1], 'db1', ROOT / 'generated/language')
+    emit_image(db1_images, 'db1', ROOT / 'generated/language')
     emit_image([db2.read_bytes(), db2_en], 'db2', ROOT / 'generated/language')
     for name, original, target, crc in [('db1', db1.read_bytes(), db1_en, db1_crc),
                                          ('db2special', db2.read_bytes(), db2_en, f'{zlib.crc32(db2_en):08X}')]:

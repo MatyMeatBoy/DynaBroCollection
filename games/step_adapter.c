@@ -43,7 +43,8 @@ static const RecompRuntimeUiItem language_items[]={
 static const GameRomAlias db1_aliases[]={
     {"Japanese original",0x360C1B20u},
     {"English text repairs (partial)",DYNA_DB1_ENGLISH_CRC},
-    {"English v0.2 map-label repairs (partial)",0x3BE23E09u}
+    {"English v0.2 map-label repairs (partial)",0x3BE23E09u},
+    {"English previous text repairs (partial)",0x950A8FC3u}
 };
 #endif
 #ifdef DYNA_HAS_OVERLAY
@@ -303,7 +304,7 @@ const GameSpec g_game_spec={
     .state_unavailable_reason=snapshot_reason,
 #ifdef DYNA_HAS_JP
     .video=&db1_video,.video_default="16:9",
-    .rom_aliases=db1_aliases,.num_rom_aliases=3,
+    .rom_aliases=db1_aliases,.num_rom_aliases=4,
 #elif defined(DYNA_HAS_OVERLAY)
     .video=&db2_video,.video_default="16:9",
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,
