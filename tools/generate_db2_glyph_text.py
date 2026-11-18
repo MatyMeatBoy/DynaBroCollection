@@ -28,6 +28,25 @@ def fnv32(data: bytes) -> int:
     return h
 
 
+def control_cells(before_hex: str) -> int:
+    """Leading control words: even, below 0x120 and strictly increasing (see games/db2_glyph_text.c)."""
+    raw = bytes.fromhex(before_hex)
+    count = prev = 0
+    for i in range(0, len(raw), 2):
+        word = int.from_bytes(raw[i:i + 2], 'big')
+        if not word or word & 1 or word >= 0x120 or word <= prev:
+            break
+        prev = word
+        count += 1
+    return count
+
+
+def centered(text: str, entry: dict) -> str:
+    chars = 2 * (len(entry['before']) // 4 - control_cells(entry['before']))
+    spare = max(0, chars - len(text))
+    return ' ' * (spare // 2) + text
+
+
 def c_string(text: str) -> str:
     if not text.isascii() or any(ord(c) < 32 or c in '"\\' for c in text):
         raise ValueError(f'Unsupported character in {text!r}')
@@ -41,6 +60,8 @@ def render(catalog: dict) -> str:
         if len(before) % 2 or not 1 <= len(before) // 2 <= 64:
             raise ValueError('Invalid glyph_text entry size')
         lines = entry['lines']
+        if entry.get('align') == 'center':
+            lines = [centered(line, entry) for line in lines]
         if not 1 <= len(lines) <= 6:
             raise ValueError('glyph_text needs 1..6 lines')
         rows.append('{0x%06X,%d,0x%08Xu,%d,{%s}},' % (
