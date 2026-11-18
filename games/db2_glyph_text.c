@@ -53,11 +53,55 @@ static int verify(const GlyphText *t,unsigned i)
  return state[i]==OK;
 }
 
+/* Script dialogue lives in a RAM stream (decompressed from a ROM script), so it is
+ * identified by the FNV-1a32 of its original Japanese words, not by a ROM address. */
+typedef struct{uint16_t prefix[6];uint16_t cells;uint8_t nlines;const char *line[6];}RamText;
+static const RamText ram_table[]={
+#include "db2_ram_text_table.inc"
+};
+#define RAM_COUNT (sizeof ram_table/sizeof ram_table[0])
+static unsigned ram_word(uint32_t a){return ((unsigned)g_ram[a&0xffffu]<<8)|g_ram[(a+1)&0xffffu];}
+static unsigned norm(unsigned w){return w==2?1:w;}
+static int ram_observe(uint32_t a1,uint32_t a0)
+{
+ if(RAM_COUNT==0||a1<0xff0000u||a1>=0xfffff0u)return 0;
+ /* Find the entry whose first four (normalised) words start at or before a1
+  * and whose span covers a1; the nearest start wins. */
+ const RamText *t=NULL;uint32_t start=0;
+ for(size_t i=0;i<RAM_COUNT&&!t;i++){
+  const RamText *e=&ram_table[i];
+  for(uint32_t p=a1;p+12u<=0xfffff0u&&a1-p<=2u*e->cells;p-=2){
+   if((p&0xffffu)<2)break;
+   if(norm(ram_word(p))==e->prefix[0]&&norm(ram_word(p+2))==e->prefix[1]&&norm(ram_word(p+4))==e->prefix[2]&&norm(ram_word(p+6))==e->prefix[3]&&norm(ram_word(p+8))==e->prefix[4]&&norm(ram_word(p+10))==e->prefix[5]){t=e;start=p;break;}
+  }
+ }
+ if(!t)return 0;
+ unsigned cells=t->cells;
+ /* Blank cells (word 1) are skipped by the renderer; make the already-loaded ones
+  * real cells so the English text can use them. Only the display scratch string changes. */
+ for(unsigned c=0;c<cells;c++){uint32_t q=start+2*c;if((q&0xffffu)>=0xfffc)break;if(ram_word(q)==1){g_ram[q&0xffffu]=0;g_ram[(q+1)&0xffffu]=2;}}
+ unsigned stride=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
+ if(!stride)return 1;
+ unsigned skip=0,prev=0;
+ while(skip<cells){unsigned w=ram_word(start+2*skip);if(!w||(w&1)||w>=0x120||w<=prev)break;prev=w;skip++;}
+ unsigned abs_cell=(a1-start)/2;
+ if(abs_cell<skip)return 1;
+ unsigned cell=abs_cell-skip,line=cell/stride,col=cell%stride;
+ if(line>=t->nlines)return 1;
+ const char *text=t->line[line];size_t n=strlen(text);
+ char c0=2*col<n?text[2*col]:' ',c1=2*col+1<n?text[2*col+1]:' ';
+ unsigned char bitmap[32];
+ if(db2_glyph_text_cell(c0,c1,bitmap))memcpy(g_ram+(a0&0xffffu),bitmap,32);
+ return 1;
+}
+
 void db2_glyph_text_observe(unsigned pc)
 {
  if(pc!=0x5b174||TABLE_COUNT==0)return;
  uint32_t a1=g_cpu.A[1]&0xffffffu,a0=g_cpu.A[0]&0xffffffu;
- if(a1>=0x280000u||a0<0xff0000u||a0>0xffffe0u)return;
+ if(a0<0xff0000u||a0>0xffffe0u)return;
+ if(a1>=0xff0000u){ram_observe(a1,a0);return;}
+ if(a1>=0x280000u)return;
  unsigned idx;const GlyphText *t=find(a1,&idx);
  uint32_t start=t?t->addr:0;
  if(!t||!verify(t,idx))return;
