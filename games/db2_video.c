@@ -32,6 +32,7 @@ static int world_is_a;
 static int visor_offset;
 static int trace_enabled;
 static unsigned frame_reasons,trace_seen,trace_signature,trace_budget;
+static unsigned trace_ok_frames,trace_fallback_frames,trace_reason_frames[6];
 void db2_video_visor_offset(int tiles){visor_offset=tiles;}
 int db2_video_visor_requested(void){return visor_offset;}
 static int plane_layout(const GVDP *v){
@@ -120,6 +121,7 @@ static int sprite_transparent(unsigned attr,unsigned size){
  }
  return 1;
 }
+static uint8_t tile_pixel(unsigned attr,unsigned size,int px,int py);
 static void classify_sprites(void){
  Db2ActorsContext ac={g_rom,2621440,ram,sizeof ram};
  unsigned base=((unsigned)snapshot.reg[5]&127)<<9,link=0;uint8_t seen[80]={0};
@@ -140,6 +142,13 @@ static void classify_sprites(void){
    * irrelevant for it; any non-zero pattern byte still rejects the frame. */
   if(!kind&&sprite_transparent(attr,size))kind=3;
   if(!kind){
+   if(trace_enabled){
+    static unsigned unk_attr[16],unk_size[16],unk_count[16],unk_n;unsigned u=0;
+    for(;u<unk_n;u++)if(unk_attr[u]==attr&&unk_size[u]==size)break;
+    if(u==unk_n&&unk_n<16){unk_attr[u]=attr;unk_size[u]=size;unk_n++;fprintf(stderr,"[db2-video] new unknown SAT link=%u attr=%04X size=%02X xy=%d,%d pc=%06X\n",link,attr,size,x,y,g_cpu.PC);
+     for(int py=0;py<32;py+=2){char row[33];for(int px=0;px<32;px++)row[px]="0123456789ABCDEF"[tile_pixel(attr,size,px,py)&15];row[32]=0;fprintf(stderr,"[db2-video]   %s\n",row);}}
+    if(u<16&&++unk_count[u]%500==0)fprintf(stderr,"[db2-video] unknown SAT attr=%04X size=%02X seen=%u\n",attr,size,unk_count[u]);
+   }
    if(trace_enabled&&!(trace_seen&8)){
     trace_seen|=8;
     fprintf(stderr,"[db2-video] unknown SAT=%u attr=%04X size=%02X xy=%d,%d pc=%06X cache_head=%04X\n",link,attr,size,x,y,g_cpu.PC,word(ram+0x20b2));
@@ -249,15 +258,21 @@ static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int t
  (void)v;if(!pixels||w<320||w>LIMIT||h>MAX_HEIGHT||stride<w||top<0||top+nh>h)return;
  for(int y=0;y<h;y++)if(y<top||y>=top+nh){if(ready)world_row(y-top,w,NULL,pixels+(size_t)y*stride);else for(int x=0;x<w;x++)pixels[(size_t)y*stride+x]=background;}
 }
+static void trace_totals(void){
+ if(trace_enabled&&!((trace_ok_frames+trace_fallback_frames)%600))fprintf(stderr,"[db2-video] totals accepted=%u fallback=%u r01=%u r02=%u r04=%u r08=%u r10=%u r20=%u\n",trace_ok_frames,trace_fallback_frames,trace_reason_frames[0],trace_reason_frames[1],trace_reason_frames[2],trace_reason_frames[3],trace_reason_frames[4],trace_reason_frames[5]);
+}
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
  if(!rejected&&ready){
+  ++trace_ok_frames;trace_totals();
   if(trace_enabled&&!(trace_seen&64)){
    Db2VisorLayout layout={0};db2_visor_layout(w,visor_offset,&layout);
    fprintf(stderr,"[db2-video] accepted canvas=%dx%d scene=%s terrain=%c actors=%u frame=%d,%d,%d,%d\n",w,h,world_scene==WORLD_DEMO?"demo":"battle",world_is_a?'A':'B',count,layout.frame.x,layout.frame.y,layout.frame.w,layout.frame.h);trace_seen|=64;
   }
   return;
  }
+ ++trace_fallback_frames;if(trace_enabled)for(unsigned b=0;b<6;b++)if(frame_reasons&(1u<<b))++trace_reason_frames[b];
+ trace_totals();
  if(trace_enabled&&trace_budget){
   unsigned pa=v?v->reg[2]:0,pb=v?v->reg[4]:0;
   unsigned signature=((unsigned)world_scene<<24)|((unsigned)(g_ram[0x286]&0x88)<<16)|(pa<<8)|pb;
