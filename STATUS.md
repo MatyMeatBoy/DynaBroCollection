@@ -1,3 +1,11 @@
+## Development update 2026-11-18 (after v0.1.8) — see docs/handoff/PENDING.md
+
+Work resumed at the owner's request. Source checks: 53 CTest (one environment-dependent controller test currently aborts locally, see PENDING.md) and 111+ Python tests. DB2 Special English catalog now has 385 guarded entries plus 90+ host-rendered glyph strings; the current English CRC32 is recorded in `games/hub_settings.c` / `games/launcher_discovery.c`.
+
+- Video: Normal2 16:9 battle no longer falls back to the native image (unowned SAT entries reject a frame only when visible); hidden terrain under opaque UI and blank guest lines are tolerated.
+- Translation: Stage List/Versus/password menus, 17 stage names, VS/Dyna Fight labels, story intro and battle dialogue (host glyph overlay), biography overlay, 41 Story and Practice stage briefings (stage 1 verified on screen, the rest not yet).
+- Not translated yet: laboratory/story script dialogue after the intro (RAM script stream), Original-mode kanji stage names, title OPTIONS menu, QUIT/results/Versus dialogs unverified. Debug helpers: `DYNA_TRACE_GLYPH=1`, `tools/glyph_trace_report.py`, `DYNA_DB2_NO_HOST_TEXT=1`; PR integration: `tools/integrate_prs.sh`.
+
 ## Final v0.1.8 delivery — STOP
 
 The new version is published, its45 packaged checks passed and the public download was verified. The private personal runtime and complete offline continuation toolkit are separate from public assets. [Closed verification](docs/releases/v0.1.8-verification.md) · [Handoff](docs/handoff/CONTINUE-ON-ANOTHER-PC.md). No further feature development is active.
