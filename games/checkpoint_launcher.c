@@ -296,8 +296,12 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
             }return 0;
         }
         if(game_process&&WaitForSingleObject(game_process,0)==WAIT_OBJECT_0) {
+            DWORD exit_code=0;GetExitCodeProcess(game_process,&exit_code);
             CloseHandle(game_process);game_process=NULL;KillTimer(window,1);
-            if(direct_launch){DestroyWindow(window);return 0;}
+            /* The game's own "Quit to Desktop" menu action exits with this
+             * code (also used when it relaunched itself for Restart Level,
+             * since the fresh instance is no longer this launcher's child). */
+            if(direct_launch || exit_code==42){DestroyWindow(window);return 0;}
             ShowWindow(window,SW_SHOW);
             EnableWindow(cards[0],TRUE);EnableWindow(cards[1],TRUE);SetWindowTextW(status,L"Choose a game");SetFocus(cards[0]);
         }return 0;

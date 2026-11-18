@@ -35,7 +35,10 @@ static const RecompRuntimeUiItem language_items[]={
     {"controls.p2_profile","Controls","Player 2 layout","Saved per connected device; does not overwrite another controller's bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
     {"dyna.save","Game","Save Game","Save the progress code shown by the original game.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
     {"dyna.extras","Extras","Extras","Level Selection and Game Guide.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
-    {"dyna.achievements","Achievements","Achievement list","Local progress, badges and stage goals. Opens a paused list.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
+    {"dyna.achievements","Achievements","Achievement list","Local progress, badges and stage goals. Opens a paused list.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {RECOMP_RUNTIME_UI_KEY_RESET,"System","Restart Level","Relaunches fresh from the title screen. Any unsaved progress is lost; use Save Game first.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {RECOMP_RUNTIME_UI_KEY_RETURN_TO_LAUNCHER,"System","Return to Title Screen","Closes this game and returns to the DynaBrothers launcher.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {RECOMP_RUNTIME_UI_KEY_QUIT,"System","Quit to Desktop","Closes the game and the launcher entirely.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
 };
 #endif
 #include DYNA_STEP_HEADER
