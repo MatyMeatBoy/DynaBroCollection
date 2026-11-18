@@ -128,6 +128,13 @@ static int pressed(SDL_Joystick *stick,int button){return button>=0&&button<SDL_
 uint16_t dyna_controller_mask(unsigned player,SDL_GameController *pad,uint16_t normal) {
     if(player>=INPUT_MAX_PLAYERS||!pad)return normal;
     remember(player,pad);Device *device=&devices[player];int profile=device->choice?device->choice:device->automatic;
+    /* Automatic/preset layouts accept the physical D-pad in addition to the
+     * bound left axes. Custom leaves the user's direction table authoritative. */
+    if(device->choice!=DYNA_PAD_CUSTOM) {
+        const SDL_GameControllerButton buttons[]={SDL_CONTROLLER_BUTTON_DPAD_UP,SDL_CONTROLLER_BUTTON_DPAD_DOWN,SDL_CONTROLLER_BUTTON_DPAD_LEFT,SDL_CONTROLLER_BUTTON_DPAD_RIGHT};
+        const GenesisButton logical_directions[]={GB_UP,GB_DOWN,GB_LEFT,GB_RIGHT};
+        for(unsigned i=0;i<4;i++)if(SDL_GameControllerGetButton(pad,buttons[i]))normal|=input_button_bit(logical_directions[i]);
+    }
     if(profile==DYNA_PAD_CUSTOM)return normal;
     SDL_Joystick *stick=SDL_GameControllerGetJoystick(pad);
     uint16_t mask=normal&(input_button_bit(GB_UP)|input_button_bit(GB_DOWN)|input_button_bit(GB_LEFT)|input_button_bit(GB_RIGHT));

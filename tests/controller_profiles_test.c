@@ -56,6 +56,19 @@ static void xbox_startup_and_hotplug(const char *settings) {
     assert(gamepad_menu_mask()==GP_OVERLAY_UP);
     SDL_JoystickSetVirtualHat(stick,0,SDL_HAT_CENTERED);SDL_JoystickSetVirtualAxis(stick,1,0);
     SDL_JoystickSetVirtualAxis(stick,0,0);
+    /* AUTO accepts a physical D-pad even when the displayed bindings use axes. */
+    const int hats[]={SDL_HAT_UP,SDL_HAT_DOWN,SDL_HAT_LEFT,SDL_HAT_RIGHT};
+    const GenesisButton hat_buttons[]={GB_UP,GB_DOWN,GB_LEFT,GB_RIGHT};
+    for(unsigned n=0;n<4;n++) {
+        SDL_JoystickSetVirtualHat(stick,0,hats[n]);SDL_JoystickUpdate();drain();
+        assert(input_current_mask(0)==input_button_bit(hat_buttons[n]));
+        SDL_JoystickSetVirtualHat(stick,0,SDL_HAT_CENTERED);SDL_JoystickUpdate();drain();
+    }
+    assert(dyna_controller_set("controls.p1_profile",DYNA_PAD_CUSTOM));
+    SDL_JoystickSetVirtualHat(stick,0,SDL_HAT_UP);SDL_JoystickUpdate();drain();
+    assert(!input_current_mask(0)); /* Explicit Custom does not add hidden D-pad binds. */
+    SDL_JoystickSetVirtualHat(stick,0,SDL_HAT_CENTERED);SDL_JoystickUpdate();drain();
+    assert(dyna_controller_set("controls.p1_profile",DYNA_PAD_AUTO));
     /* A custom table and explicit source remain authoritative in AUTO. */
     g_input_map.p[0].pad[GB_A].code=SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
     SDL_JoystickSetVirtualButton(stick,4,1);SDL_JoystickUpdate();drain();
