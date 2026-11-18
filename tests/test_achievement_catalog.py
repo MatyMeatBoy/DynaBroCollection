@@ -71,3 +71,15 @@ class AchievementCatalogTests(unittest.TestCase):
                 (root / 'assets/achievements/db2.json').write_text(json.dumps(data), encoding='utf-8')
                 with self.assertRaises(ValueError):
                     generate(root)
+    def test_db2_titles_and_descriptions_are_clean_english_text(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        for entry in catalog['achievements']:
+            for field in ['title', 'description']:
+                text = entry[field]
+                with self.subTest(id=entry['id'], field=field):
+                    self.assertTrue(text.isascii())
+                    self.assertEqual(text, text.strip())
+                    self.assertNotIn('  ', text)
+            with self.subTest(id=entry['id'], field='description'):
+                self.assertTrue(entry['description'].endswith(('.', '!')))
