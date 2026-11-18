@@ -220,8 +220,13 @@ static int prepare_actors(const GVDP *vdp,const uint8_t *ram,int w) {
     center_supported=1;
     for(unsigned i=0;i<count;i++) {
         const uint8_t *record=ram+0x5f34+actors[i].id*16;
+        /* An actor mid-transition (e.g. the frame(s) it dies on) can briefly
+         * fail db1_world_actor_frame; valid[i]=0 already makes the per-actor
+         * draw loop below skip exactly that actor. Previously this also
+         * dropped center_supported for the WHOLE frame, which fell all the
+         * way back to centered-native rendering (a visible snap to 4:3) just
+         * because one actor's record was transiently unreadable. */
         valid[i]=(uint8_t)db1_world_actor_frame(&c,record,actors[i].id,&frames[i]);
-        if(record[0]&&!valid[i])center_supported=0;
     }
     return center_supported;
 }
@@ -257,8 +262,10 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
         int x=source+shift;if(x>=0&&x<w)b[x]=raster->plane_b[source];
     }
     if(fullplane) {
-        /* Lightning/tsunami replace the original320px screen, including its
-         * HUD, but do not acquire extra clouds/waves from the larger canvas. */
+        /* Lightning/tsunami replace the original 320px screen, including its
+         * HUD; the weather fill below now also covers the widened margins
+         * so the hazard clouds/waves span the full wide canvas instead of
+         * stopping at the native screen edge. */
         if(line>=0 && line<224)for(int source=0;source<320;source++) {
             int x=source+shift;if(x>=0&&x<w)a[x]=authored_plane_a(vdp,source,line);
         }
@@ -271,7 +278,8 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
         }
         for(int source=216;source<320;source++)a[source+w-320]=raster->plane_a[source];
     }
-    if(!fullplane)for(int x=0;x<w;x++) {
+    for(int x=0;x<w;x++) {
+        if(fullplane){int source=x-shift;if(source>=0&&source<320)continue;}
         uint8_t cloud=weather_plane(vdp,ram,x-shift,line);
         if((cloud&64) && !(a[x]&64))a[x]=cloud;
     }
