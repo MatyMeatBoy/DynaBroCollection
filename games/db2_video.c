@@ -4,6 +4,7 @@
 #include "db2_markers.h"
 #include "db2_effects.h"
 #include "db2_visor.h"
+#include "db2_bio_overlay.h"
 #include "viewport.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
@@ -42,7 +43,7 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
 void db2_video_observe(unsigned pc){
  if(pc==0x3bb0)world_scene=WORLD_BATTLE;
  else if(pc==0xf794)world_scene=WORLD_DEMO;
@@ -258,7 +259,7 @@ static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNat
   if(memcmp(ram,g_ram,sizeof ram))capture(v);else memcpy(&snapshot,v,sizeof snapshot);
   classify_sprites();
  }
- if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw)memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);return;}
+ if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw){memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);if(nw==320)db2_bio_overlay_row(v,y,out,w,(w-nw)/2);}return;}
  world_row(y,w,r,out);
 }
 static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
@@ -292,7 +293,7 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
   * effect appeared. No callback/provider/runner pointer is retained. */
  for(int y=0;y<h;y++){
   uint32_t *out=pixels+(size_t)y*stride;for(int x=0;x<w;x++)out[x]=background;
-  int source=y-top;if(source>=0&&source<224&&native_valid[source])memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);
+  int source=y-top;if(source>=0&&source<224&&native_valid[source]){memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);db2_bio_overlay_row(v,source,out,w,(w-320)/2);}
  }
 }
-const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete};
+const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete,.overlay_scanline=db2_bio_overlay_scanline};

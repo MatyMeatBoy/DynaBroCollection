@@ -274,11 +274,15 @@ target_include_directories(DynaProgressReplayTest PRIVATE games)
 target_compile_options(DynaProgressReplayTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME progress_replay_contract COMMAND DynaProgressReplayTest)
 
-target_sources(DynaBrothers2AOT PRIVATE games/db2_video.c games/db2_visor.c games/db2_world.c games/db2_actors.c games/db2_markers.c games/db2_effects.c)
-add_executable(DynaDb2VideoTest tests/db2_video_test.c games/db2_video.c games/db2_visor.c games/db2_world.c games/db2_actors.c games/db2_markers.c games/db2_effects.c games/viewport.c)
+target_sources(DynaBrothers2AOT PRIVATE games/db2_video.c games/db2_bio_overlay.c games/db2_visor.c games/db2_world.c games/db2_actors.c games/db2_markers.c games/db2_effects.c)
+add_executable(DynaDb2VideoTest tests/db2_video_test.c games/db2_video.c games/db2_bio_overlay.c games/db2_visor.c games/db2_world.c games/db2_actors.c games/db2_markers.c games/db2_effects.c games/viewport.c)
 target_include_directories(DynaDb2VideoTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/video")
 target_compile_options(DynaDb2VideoTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME db2_video_contract COMMAND DynaDb2VideoTest)
+add_executable(DynaDb2BioOverlayTest tests/db2_bio_overlay_test.c games/db2_bio_overlay.c)
+target_include_directories(DynaDb2BioOverlayTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/video")
+target_compile_options(DynaDb2BioOverlayTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db2_bio_overlay_contract COMMAND DynaDb2BioOverlayTest)
 
 
 

@@ -13,6 +13,7 @@
 #include "app_config.h"
 #include "input_map.h"
 #include "language_settings.h"
+#include "db2_bio_overlay.h"
 #include "language_patch.h"
 #include "controller_profiles.h"
 #include "step_lookup.h"
@@ -135,6 +136,8 @@ static int retire(void *user,unsigned *cycles) {
     }
     if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e ||
        g_cpu.PC==0xf794 || g_cpu.PC==0xf728)db2_video_observe(g_cpu.PC);
+    if(dyna_language_english() && (g_cpu.PC==0x5d3d4 || g_cpu.PC==0x5d57a ||
+       g_cpu.PC==0x5d674 || g_cpu.PC==0x5d722))db2_bio_overlay_observe(g_cpu.PC);
 #endif
 #ifdef DYNA_HAS_JP
     switch(g_cpu.PC){
