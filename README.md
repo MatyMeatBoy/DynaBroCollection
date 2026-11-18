@@ -1,6 +1,6 @@
 # Dyna Brothers 1 + 2 — v0.1.2 development
 
-[![Checkpoint 0.1.1](https://img.shields.io/badge/version-0.1.1%20checkpoint-orange)](docs/releases/v0.1.1-checkpoint.md)
+[![Checkpoint 0.1.2](https://img.shields.io/badge/version-0.1.2%20checkpoint-orange)](docs/releases/v0.1.2-checkpoint.md)
 [![Development 0.1.2](https://img.shields.io/badge/development-0.1.2-blue)](docs/releases/v0.1.2-checkpoint.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
 [![Target Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.1.1-checkpoint.md)
@@ -9,9 +9,9 @@
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
-Development after the closed checkpoint adds guarded English credits names, the hard-ending secret-mode message and practice/alien completion messages with their scrolling backgrounds for DB1. See [the recovered layouts, output identities and verification limits](docs/research/db1-credits-translation.md). These changes do not replace the existing v0.1.1 ZIP.
+Version 0.1.2 adds guarded English credits names, the hard-ending secret-mode message and practice/alien completion messages with their scrolling backgrounds for DB1. See [the recovered layouts, output identities and verification limits](docs/research/db1-credits-translation.md). The historical v0.1.1 ZIP remains unchanged.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared card-based hub. See [v0.1.1 checkpoint notes](docs/releases/v0.1.1-checkpoint.md) for the exact included scope and pending work. Complete translations, true expanded 16:9, Original/Enhanced modes and final 4:3 pixel-aspect treatment remain unfinished.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared card-based hub. See [v0.1.2 checkpoint notes](docs/releases/v0.1.2-checkpoint.md) for the exact included scope and pending work. Complete translations, true expanded 16:9, Original/Enhanced modes and final 4:3 pixel-aspect treatment remain unfinished.
 
 ![Launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -19,8 +19,9 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 
 | Resource | Purpose |
 | --- | --- |
-| [Checkpoint notes](docs/releases/v0.1.1-checkpoint.md) | Install, controls, included work and limitations |
-| [Closed checkpoint verification](docs/releases/v0.1.1-verification.md) | Compiled revision, archive identity and bounded regression results |
+| [Checkpoint notes](docs/releases/v0.1.2-checkpoint.md) | Install, controls, included work and limitations |
+| [Closed checkpoint verification](docs/releases/v0.1.2-verification.md) | Compiled revision, archive identity and bounded regression results |
+| [Historical v0.1.1 verification](docs/releases/v0.1.1-verification.md) | Preserved original delivery identity |
 | [Changelog](CHANGELOG.md) | Changes in v0.1.1 |
 | [Work board](STATUS.md) | Evidence and outstanding work |
 | [Contributing](CONTRIBUTING.md) | Reproduction and review expectations |

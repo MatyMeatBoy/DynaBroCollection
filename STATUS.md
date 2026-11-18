@@ -4,7 +4,7 @@
 
 ## Latest development after the closed checkpoint
 
-Active development version is now **0.1.2**, as requested. The native targets and launcher build with that version from the shared `VERSION` file. Version-aware packaging preserves historical archives and requires the original seven regressions plus the three new DB1 prepared-scene routes for 0.1.2. Source tests: 37 Python tests and five native contracts passed; the new portable candidate still requires its own packaged verification.
+Active development version is now **0.1.2**, as requested. The native targets and launcher build with that version from the shared `VERSION` file. The first local 0.1.2 checkpoint is closed and its ten packaged regressions passed, with extracted-ZIP probes and hash verification. See [its exact artifact/source identity](docs/releases/v0.1.2-verification.md). Source checks: 37 Python tests and five native contracts passed. Further development continues separately from this immutable artifact.
 
 The local v0.1.1 checkpoint is closed and verified; see [its exact archive/source identity](docs/releases/v0.1.1-verification.md). Historical entries below retain their original milestone context.
 
