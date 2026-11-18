@@ -74,6 +74,10 @@ class PatchTests(unittest.TestCase):
         with self.assertRaises(PatchError):
             apply_ips(b'', b'PATCH\xff\xff\xfe\x00\x02ABEOF')
 
+    def test_ips_rejects_resize_over_the_limit(self):
+        with self.assertRaises(PatchError):
+            apply_ips(b'1234', b'PATCHEOF' + (LIMIT + 1).to_bytes(3, 'big'))
+
     def test_ips_rejects_unexplained_trailer(self):
         with self.assertRaises(PatchError):
             apply_ips(b'123', b'PATCHEOF\x00')
