@@ -1,3 +1,14 @@
+# v0.2.0 checkpoint
+
+- DB2 Special translation grows from 454 to 582 catalog entries: title OPTIONS menu and sound-test names, Custom Versus settings and COM difficulty names, Practice briefings 2-6, stage-2 RAM cutscene dialogue, and a centering fix for the 3-line gameplay prompt boxes.
+- DB1 native rendering: a single actor with a transiently unreadable RAM record (e.g. the frame it dies on) no longer drops the whole frame to centered-native/4:3 presentation — only that actor's own sprite is skipped, with a dedicated regression test (`manual_data_contract`/`db1_video_layers_contract`). Likely fixes the owner-reported "4:3 flash on unit death" and "glitch right after issuing an order".
+- DB1 hazard weather (lightning/tsunami) clouds now fill the full widescreen canvas instead of stopping at the native 320px edge.
+- Launcher: isometric box-art covers for both games with a hover-triggered cartridge reveal animation, built from real Sega Retro box scans; mouse cursor now auto-hides after 1s idle in fullscreen/borderless (both games are controller/keyboard-only).
+- New in-game menu actions: Restart Level, Return to Title Screen, Quit to Desktop.
+- `recomp-launcher.json`: declares `DynaBrothersLauncher.exe` as the single supported entry point for third-party recomp frontends, with both `*AOT.exe` marked as internal child processes.
+- Data layer (not yet wired into a UI) for an upcoming Settings > Manuals feature: both games' Japanese manual pages plus a page-by-page English translation, tested end to end.
+- Known remaining gaps: DB2 in-game Options menu text and Original mode's kanji stage names (suspected tile graphics); a subtle, low-severity moving-actor rendering glitch near the DB1 HUD/world seam; DB1 title-menu row-wrap highlight timing.
+
 # v0.1.9 checkpoint
 
 - DB2 Special English translation expanded from 22 to 454 catalog strings: Original/Versus/Sega Channel/Password/2P-setup menus, story-mode dialogue and stage briefings, VS character/control screens.

@@ -1,6 +1,6 @@
 # DynaBroCollection - Dyna Brothers 1 + 2
 
-[![Checkpoint 0.1.9](https://img.shields.io/badge/version-0.1.9%20checkpoint-orange)](docs/releases/v0.1.9-checkpoint.md)
+[![Checkpoint 0.2.0](https://img.shields.io/badge/version-0.2.0%20checkpoint-orange)](docs/releases/v0.2.0-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
 [![DB2 strings translated](https://img.shields.io/badge/DB2%20strings-454%20translated-5c9b73)](translations/db2special-en.json)
 [![DB2 biographies](https://img.shields.io/badge/DB2-biographies%20translated-5c9b73)](games/db2_bio_overlay.c)
@@ -14,7 +14,7 @@
 
 The project's own stone logo (`assets/img/dyna-logo-1plus2-v1.png`), also used as the launcher's banner.
 
-Version 0.1.9 adds the DB2 Special host biography overlay (creature name/stats/flavor text in English), translates the Original/Versus mode menus, story-mode stage briefings and dialogue, and fixes a title-menu highlight staying yellow after opening Extras. [Scope and limits](docs/releases/v0.1.9-checkpoint.md). Previous checkpoint: [v0.1.8](docs/releases/v0.1.8-checkpoint.md) fixed the six-button peripheral handshake and the actual DB2 plane layout. DB2 can still fall back to the native image during held camera movement; some menus (in-game Options, a few Original-mode kanji stage names) remain untranslated — see [STATUS.md](STATUS.md).
+Version 0.2.0 grows the DB2 Special translation catalog to 582 entries (title OPTIONS menu, Custom Versus settings, Practice briefings, stage-2 cutscene dialogue), fixes a DB1 rendering bug where a single actor's bad frame dropped the whole screen to 4:3, and adds isometric box-art covers plus three new in-game menu actions (Restart Level, Return to Title, Quit to Desktop) to the launcher. [Scope and limits](docs/releases/v0.2.0-checkpoint.md). Previous checkpoint: [v0.1.9](docs/releases/v0.1.9-checkpoint.md) added the DB2 host biography overlay. DB2 can still fall back to the native image during held camera movement; some menus (in-game Options, a few Original-mode kanji stage names) remain untranslated — see [STATUS.md](STATUS.md).
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
@@ -27,11 +27,11 @@ Development milestone, **not a finished port**. Current scope and evidence are i
 | ![DB2 story briefing, translated](docs/images/db2-story-briefing-v0.1.9.png) | ![DB2 Versus stage list, translated](docs/images/db2-versus-stages-v0.1.9.png) |
 | Story mode stage briefing | Versus mode stage-select list |
 
-Native captures from the v0.1.9 development build; [provenance for each image](docs/images/) sits beside it as a matching `.json` file. Campaign/full-game acceptance is separate from any single capture.
+Native captures from the v0.1.9 development build (still accurate for these screens in v0.2.0); [provenance for each image](docs/images/) sits beside it as a matching `.json` file. Campaign/full-game acceptance is separate from any single capture.
 
 Version 0.1.3 adds an expanded-world DB1 renderer, independent of the original 36-actor drawing buffer, and native 4:3 / enhanced 16:9 presentation. It includes 76 local DB1 goals based on the public RetroAchievements catalog and 99 custom DB2 Special goals, with badges, queued popups and a paused list. [Goal contracts and evaluator limits](docs/db1-achievement-contracts.md). Previous checkpoint archives retain their original bytes.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.9 checkpoint notes](docs/releases/v0.1.9-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification remains pending. Full campaign/hardware acceptance remains open.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.2.0 checkpoint notes](docs/releases/v0.2.0-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits; further native qualification remains pending. Full campaign/hardware acceptance remains open.
 
 ![Historical launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -39,12 +39,13 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 
 | Resource | Purpose |
 | --- | --- |
-| [Download v0.1.9](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.1.9) | Portable Windows x64 test release with its debug script |
-| [v0.1.9 verification](docs/releases/v0.1.9-verification.md) | Closed source/archive identity, packaged checks and offline continuation |
+| [Download v0.2.0](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.2.0) | Portable Windows x64 test release with its debug script |
+| [v0.2.0 verification](docs/releases/v0.2.0-verification.md) | Closed source/archive identity, packaged checks and offline continuation |
+| [Historical v0.1.9 verification](docs/releases/v0.1.9-verification.md) | Closed source/archive identity, packaged checks and offline continuation |
 | [Historical v0.1.8 verification](docs/releases/v0.1.8-verification.md) | Closed source/archive identity, 45 packaged checks and offline continuation |
 | [Historical v0.1.7 verification](docs/releases/v0.1.7-verification.md) | Closed archive/source identity,42 packaged checks and limits |
 | [Historical v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Preserved previous archive/source identity |
-| [Checkpoint notes](docs/releases/v0.1.9-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
+| [Checkpoint notes](docs/releases/v0.2.0-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
 | [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
 | [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |
