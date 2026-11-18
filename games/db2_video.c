@@ -142,22 +142,18 @@ static void classify_sprites(void){
    * irrelevant for it; any non-zero pattern byte still rejects the frame. */
   if(!kind&&sprite_transparent(attr,size))kind=3;
   if(!kind){
+   /* Unknown entry: not rejected here. world_row rejects the frame only if one
+    * of its pixels is visible in the native raster (sprite_owner without a
+    * kind); hidden, off-screen or limit-dropped entries contribute nothing. */
    if(trace_enabled){
     static unsigned unk_attr[16],unk_size[16],unk_count[16],unk_n;unsigned u=0;
     for(;u<unk_n;u++)if(unk_attr[u]==attr&&unk_size[u]==size)break;
-    if(u==unk_n&&unk_n<16){unk_attr[u]=attr;unk_size[u]=size;unk_n++;fprintf(stderr,"[db2-video] new unknown SAT link=%u attr=%04X size=%02X xy=%d,%d pc=%06X\n",link,attr,size,x,y,g_cpu.PC);
-     for(int py=0;py<32;py+=2){char row[33];for(int px=0;px<32;px++)row[px]="0123456789ABCDEF"[tile_pixel(attr,size,px,py)&15];row[32]=0;fprintf(stderr,"[db2-video]   %s\n",row);}}
-    if(u<16&&++unk_count[u]%500==0)fprintf(stderr,"[db2-video] unknown SAT attr=%04X size=%02X seen=%u\n",attr,size,unk_count[u]);
+    if(u==unk_n&&unk_n<16){unk_attr[u]=attr;unk_size[u]=size;unk_n++;fprintf(stderr,"[db2-video] unowned SAT link=%u attr=%04X size=%02X xy=%d,%d pc=%06X\n",link,attr,size,x,y,g_cpu.PC);}
+    if(u<16&&++unk_count[u]%500==0)fprintf(stderr,"[db2-video] unowned SAT attr=%04X size=%02X seen=%u\n",attr,size,unk_count[u]);
    }
-   if(trace_enabled&&!(trace_seen&8)){
-    trace_seen|=8;
-    fprintf(stderr,"[db2-video] unknown SAT=%u attr=%04X size=%02X xy=%d,%d pc=%06X cache_head=%04X\n",link,attr,size,x,y,g_cpu.PC,word(ram+0x20b2));
-    for(unsigned slot=0;slot<40;slot++){
-     const uint8_t *p=ram+0x1bb2+32*slot;
-     fprintf(stderr,"[db2-video] cache slot=%03X next=%04X owner=%04X patterns=%04X/%04X type=%02X state=%02X direction=%02X\n",32*slot,word(p),word(p+10),word(p+4),word(p+8),p[0x14],p[0x18],p[0x19]);
-    }
-   }
-   rejected=1;frame_reasons|=8;return;
+   owner_kind[link]=0;
+   if(!next)return;
+   link=next;continue;
   }
   owner_kind[link]=(uint8_t)kind;
   if(!next)return;
