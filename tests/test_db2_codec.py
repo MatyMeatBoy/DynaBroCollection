@@ -24,7 +24,7 @@ class CodecTests(unittest.TestCase):
             self.assertEqual(decode(packed), (source, len(packed)))
 
     def test_rejects_truncated_and_invalid_backreferences(self):
-        for packed in [b'', b'\x00\x01\x00', b'\x00\x01\x00\x80\x00', b'\x00\x01\x00\x01AB']:
+        for packed in [b'', b'\x00\x00\x00', b'\x00\x01\x00', b'\x00\x01\x00\x80\x00', b'\x00\x01\x00\x01AB']:
             with self.subTest(packed=packed), self.assertRaises(CodecError):
                 decode(packed)
 
