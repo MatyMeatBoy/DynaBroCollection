@@ -65,7 +65,7 @@ The follow-up repairs practice and alien-mode completion bodies plus their scrol
 - `local/roms/db1-en-v01.md`: supplied DB1 translation.
 - `local/roms/db1-en-v02.md`: six additional map/surrender label repairs; CRC32 `3BE23E09`, SHA256 `04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4`.
 - `local/patches/db1-en-v02-addon.bps`: 206-byte add-on, applies to supplied English v0.1 output (not directly to Japanese).
-- `local/roms/db2special-en-v02.md`: **partial** Special translation; CRC32 `DAC9BAFC`, SHA256 `157c75e691528da42abf87e1074d26dca96c14151026be1bd4f8d288889be2db`.
+- `local/roms/db2special-en-v02.md`: **partial** Special translation (57 strings as of 2026-11-18; CRC32 `07FEA88F` with the extended table, launcher still accepts earlier `DAC9BAFC`; the SHA256 below predates the extension), SHA256 `157c75e691528da42abf87e1074d26dca96c14151026be1bd4f8d288889be2db`.
 - `local/patches/db2special-en-v02.bps`: 461-byte delta; SHA256 `4e1b3e46611ccd3f37d111f79ee8a16d91f7d876ff50cc4ec350f9b5aeb50971`.
 - `build/dev/DynaBrothers1AOT.exe`, `build/dev/DynaBrothers2AOT.exe`: mutable development builds. Not packaged or published.
 

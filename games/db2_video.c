@@ -4,6 +4,7 @@
 #include "db2_markers.h"
 #include "db2_effects.h"
 #include "db2_visor.h"
+#include "db2_bio_overlay.h"
 #include "viewport.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
@@ -32,6 +33,7 @@ static int world_is_a;
 static int visor_offset;
 static int trace_enabled;
 static unsigned frame_reasons,trace_seen,trace_signature,trace_budget;
+static unsigned trace_ok_frames,trace_fallback_frames,trace_reason_frames[6];
 void db2_video_visor_offset(int tiles){visor_offset=tiles;}
 int db2_video_visor_requested(void){return visor_offset;}
 static int plane_layout(const GVDP *v){
@@ -41,7 +43,7 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;}
 void db2_video_observe(unsigned pc){
  if(pc==0x3bb0)world_scene=WORLD_BATTLE;
  else if(pc==0xf794)world_scene=WORLD_DEMO;
@@ -112,6 +114,15 @@ static int ui_kind(unsigned attr,unsigned size,int x,int y){
  }
  return 0;
 }
+static int sprite_transparent(unsigned attr,unsigned size){
+ unsigned tiles=(((size>>2)&3)+1)*((size&3)+1);
+ for(unsigned t=0;t<tiles;t++){
+  const uint8_t *p=snapshot.vram+((((attr&2047)+t)&2047)*32);
+  for(unsigned i=0;i<32;i++)if(p[i])return 0;
+ }
+ return 1;
+}
+static uint8_t tile_pixel(unsigned attr,unsigned size,int px,int py);
 static void classify_sprites(void){
  Db2ActorsContext ac={g_rom,2621440,ram,sizeof ram};
  unsigned base=((unsigned)snapshot.reg[5]&127)<<9,link=0;uint8_t seen[80]={0};
@@ -126,15 +137,24 @@ static void classify_sprites(void){
   if(!attr)kind=1;
   if(db2_actor_native_sat_body(&ac,attr)||db2_effects_is_marker((uint16_t)attr))kind=3;
   for(size_t i=0;i<effect_count;i++)if(effects[i].sat_index==link)kind=3;
+  /* An unattributed entry whose every referenced pattern is fully transparent
+   * contributes no pixel in either the native or widened raster (seen as a
+   * parked 32x32 pattern-0 body at x=-32 during Normal2 play). Ownership is
+   * irrelevant for it; any non-zero pattern byte still rejects the frame. */
+  if(!kind&&sprite_transparent(attr,size))kind=3;
   if(!kind){
-   if(trace_enabled&&!(trace_seen&8)){
-    fprintf(stderr,"[db2-video] unknown SAT=%u attr=%04X size=%02X xy=%d,%d pc=%06X cache_head=%04X\n",link,attr,size,x,y,g_cpu.PC,word(ram+0x20b2));
-    for(unsigned slot=0;slot<40;slot++){
-     const uint8_t *p=ram+0x1bb2+32*slot;
-     fprintf(stderr,"[db2-video] cache slot=%03X next=%04X owner=%04X patterns=%04X/%04X type=%02X state=%02X direction=%02X\n",32*slot,word(p),word(p+10),word(p+4),word(p+8),p[0x14],p[0x18],p[0x19]);
-    }
+   /* Unknown entry: not rejected here. world_row rejects the frame only if one
+    * of its pixels is visible in the native raster (sprite_owner without a
+    * kind); hidden, off-screen or limit-dropped entries contribute nothing. */
+   if(trace_enabled){
+    static unsigned unk_attr[16],unk_size[16],unk_count[16],unk_n;unsigned u=0;
+    for(;u<unk_n;u++)if(unk_attr[u]==attr&&unk_size[u]==size)break;
+    if(u==unk_n&&unk_n<16){unk_attr[u]=attr;unk_size[u]=size;unk_n++;fprintf(stderr,"[db2-video] unowned SAT link=%u attr=%04X size=%02X xy=%d,%d pc=%06X\n",link,attr,size,x,y,g_cpu.PC);}
+    if(u<16&&++unk_count[u]%500==0)fprintf(stderr,"[db2-video] unowned SAT attr=%04X size=%02X seen=%u\n",attr,size,unk_count[u]);
    }
-   rejected=1;frame_reasons|=8;return;
+   owner_kind[link]=0;
+   if(!next)return;
+   link=next;continue;
   }
   owner_kind[link]=(uint8_t)kind;
   if(!next)return;
@@ -185,10 +205,21 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  if(r){
   const uint8_t *native_terrain=world_is_a?r->plane_a:r->plane_b;
   const uint8_t *native_ui=world_is_a?r->plane_b:r->plane_a;
+  /* A line the guest leaves completely blank (no plane pixel, native image is
+   * pure backdrop across the world span) is blank in the widened view too. */
+  int blank=y>=0&&y<224&&native_valid[y];
+  for(int x=0;blank&&x<216;x++)if(native_terrain[x]||native_ui[x]||native_image[y][x]!=background)blank=0;
+  if(blank)for(int x=0;x<w;x++)terrain[x]=0;
   for(int x=0;x<216;x++){
+   if(blank)break;
    int dx=x+shift;
    uint8_t expected=dx>=0&&dx<w?terrain[dx]:terrain_pixel(&c,x,y);
-   if(expected!=native_terrain[x]){rejected=1;frame_reasons|=16;}
+   /* Terrain under an opaque high-priority UI pixel is invisible; the native
+    * plane capture may omit it, so it cannot be compared. */
+   if(expected!=native_terrain[x]&&!((native_ui[x]&0x80)&&(native_ui[x]&15))){
+    if(trace_enabled&&!rejected){static unsigned n;if(n++%25==0)fprintf(stderr,"[db2-video] terrain mismatch y=%d x=%d expected=%02X native=%02X anchor=%d,%d cell=%d,%d shift=%d\n",y,x,expected,native_terrain[x],camera.anchor_x,camera.anchor_y,(int)camera.cell_x,(int)camera.cell_y,shift);}
+    if(trace_enabled&&!rejected){static unsigned m;if(m++%25==0){unsigned bad=0,nz=0,bgc=0;for(int q=0;q<216;q++){bgc+=(y>=0&&y<224&&native_valid[y]&&native_image[y][q]==background);int dd=q+shift;uint8_t ex=dd>=0&&dd<w?terrain[dd]:terrain_pixel(&c,q,y);if(ex!=native_terrain[q])bad++;if(native_terrain[q])nz++;}fprintf(stderr,"[db2-video]   row y=%d mismatching=%u native_nonzero=%u native_img_bg=%u winH=%02X winV=%02X reg0=%02X reg11=%02X vs=%d ui=%02X,%02X,%02X,%02X spr=%02X,%02X,%02X,%02X img=%08X,%08X bg=%08X exp=%02X,%02X\n",y,bad,nz,bgc,snapshot.reg[17],snapshot.reg[18],snapshot.reg[0],snapshot.reg[11],world_is_a,native_ui[0],native_ui[50],native_ui[100],native_ui[200],r->sprite[0],r->sprite[50],r->sprite[100],r->sprite[200],native_image[0][0],native_image[0][100],background,terrain[shift],terrain[shift+100]);}}
+    rejected=1;frame_reasons|=16;}
    if(dx>=0&&dx<w)ui[dx]=native_ui[x];
   }
   memcpy(ui+layout.hud_left,native_ui+216,104);
@@ -228,22 +259,28 @@ static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNat
   if(memcmp(ram,g_ram,sizeof ram))capture(v);else memcpy(&snapshot,v,sizeof snapshot);
   classify_sprites();
  }
- if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw)memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);return;}
+ if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw){memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);if(nw==320)db2_bio_overlay_row(v,y,out,w,(w-nw)/2);}return;}
  world_row(y,w,r,out);
 }
 static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  (void)v;if(!pixels||w<320||w>LIMIT||h>MAX_HEIGHT||stride<w||top<0||top+nh>h)return;
  for(int y=0;y<h;y++)if(y<top||y>=top+nh){if(ready)world_row(y-top,w,NULL,pixels+(size_t)y*stride);else for(int x=0;x<w;x++)pixels[(size_t)y*stride+x]=background;}
 }
+static void trace_totals(void){
+ if(trace_enabled&&!((trace_ok_frames+trace_fallback_frames)%600))fprintf(stderr,"[db2-video] totals accepted=%u fallback=%u r01=%u r02=%u r04=%u r08=%u r10=%u r20=%u\n",trace_ok_frames,trace_fallback_frames,trace_reason_frames[0],trace_reason_frames[1],trace_reason_frames[2],trace_reason_frames[3],trace_reason_frames[4],trace_reason_frames[5]);
+}
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
  if(!rejected&&ready){
+  ++trace_ok_frames;trace_totals();
   if(trace_enabled&&!(trace_seen&64)){
    Db2VisorLayout layout={0};db2_visor_layout(w,visor_offset,&layout);
    fprintf(stderr,"[db2-video] accepted canvas=%dx%d scene=%s terrain=%c actors=%u frame=%d,%d,%d,%d\n",w,h,world_scene==WORLD_DEMO?"demo":"battle",world_is_a?'A':'B',count,layout.frame.x,layout.frame.y,layout.frame.w,layout.frame.h);trace_seen|=64;
   }
   return;
  }
+ ++trace_fallback_frames;if(trace_enabled)for(unsigned b=0;b<6;b++)if(frame_reasons&(1u<<b))++trace_reason_frames[b];
+ trace_totals();
  if(trace_enabled&&trace_budget){
   unsigned pa=v?v->reg[2]:0,pb=v?v->reg[4]:0;
   unsigned signature=((unsigned)world_scene<<24)|((unsigned)(g_ram[0x286]&0x88)<<16)|(pa<<8)|pb;
@@ -256,7 +293,7 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
   * effect appeared. No callback/provider/runner pointer is retained. */
  for(int y=0;y<h;y++){
   uint32_t *out=pixels+(size_t)y*stride;for(int x=0;x<w;x++)out[x]=background;
-  int source=y-top;if(source>=0&&source<224&&native_valid[source])memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);
+  int source=y-top;if(source>=0&&source<224&&native_valid[source]){memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);db2_bio_overlay_row(v,source,out,w,(w-320)/2);}
  }
 }
-const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete};
+const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete,.overlay_scanline=db2_bio_overlay_scanline};

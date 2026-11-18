@@ -38,3 +38,70 @@ class AchievementCatalogTests(unittest.TestCase):
             if game == 'db2':
                 self.assertFalse(catalog['official_set'])
                 self.assertEqual(sum(bool(e.get('requires_all')) for e in entries), 6)
+
+    def test_db2_rejects_invalid_ids_and_milestone_dependencies(self):
+        def mutate(data):
+            data['achievements'][1]['id'] = data['achievements'][0]['id']
+
+        def negative_id(data):
+            data['achievements'][0]['id'] = -1
+
+        def missing_dependency(data):
+            data['achievements'][0]['requires_all'] = [999999999]
+
+        def self_dependency(data):
+            data['achievements'][0]['requires_all'] = [data['achievements'][0]['id']]
+
+        def duplicate_dependency(data):
+            entry = next(e for e in data['achievements'] if e.get('requires_all'))
+            entry['requires_all'] = entry['requires_all'] * 2
+
+        def nested_milestone(data):
+            first, second, *_ = (e for e in data['achievements'] if e.get('requires_all'))
+            second['requires_all'] = [first['id']]
+
+        for mutator in [mutate, negative_id, missing_dependency, self_dependency, duplicate_dependency, nested_milestone]:
+            with self.subTest(mutator=mutator.__name__), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / 'assets/achievements').mkdir(parents=True)
+                for game in ['db1', 'db2']:
+                    shutil.copy2(ROOT / f'assets/achievements/{game}.json', root / f'assets/achievements/{game}.json')
+                data = json.loads((root / 'assets/achievements/db2.json').read_text(encoding='utf-8'))
+                mutator(data)
+                (root / 'assets/achievements/db2.json').write_text(json.dumps(data), encoding='utf-8')
+                with self.assertRaises(ValueError):
+                    generate(root)
+    def test_db2_titles_and_descriptions_are_clean_english_text(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        for entry in catalog['achievements']:
+            for field in ['title', 'description']:
+                text = entry[field]
+                with self.subTest(id=entry['id'], field=field):
+                    self.assertTrue(text.isascii())
+                    self.assertEqual(text, text.strip())
+                    self.assertNotIn('  ', text)
+            with self.subTest(id=entry['id'], field='description'):
+                self.assertTrue(entry['description'].endswith(('.', '!')))
+    def test_db2_stage_and_mode_keys_and_display_order_are_well_formed(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        entries = catalog['achievements']
+        orders = [entry['display_order'] for entry in entries]
+        self.assertEqual(len(set(orders)), len(orders))
+        self.assertEqual(orders, sorted(orders))
+        kinds = [entry['kind'] for entry in entries]
+        self.assertEqual(kinds.count('stage'), 93)
+        self.assertEqual(kinds.count('completion'), 6)
+        self.assertEqual(len(entries), len(kinds))
+        stage_keys = [(entry['mode'], entry['stage']) for entry in entries if entry['kind'] == 'stage']
+        self.assertEqual(len(stage_keys), len(set(stage_keys)))
+    def test_db2_has_no_orphaned_badge_files(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        referenced = set()
+        for entry in catalog['achievements']:
+            referenced.add(entry['badge_file_locked'])
+            referenced.add(entry['badge_file_unlocked'])
+        actual = {f'db2/{path.name}' for path in (source / 'db2').glob('*.png')}
+        self.assertEqual(actual, referenced)

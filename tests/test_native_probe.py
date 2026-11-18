@@ -4,8 +4,18 @@ from pathlib import Path
 
 from tools.native_probe import prepare_scene_script, missing_captures
 
+ROOT = Path(__file__).resolve().parent.parent
+
 
 class NativeProbeTests(unittest.TestCase):
+    def test_real_db2_scene_scripts_parse_without_a_native_build(self):
+        scenes = ROOT / 'games/db2special/scenes'
+        for name in ['tutorial.input', 'unpause-gameplay.input', 'player-normal2.input']:
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
+                script = (scenes / name).read_text(encoding='utf-8')
+                _, captures = prepare_scene_script(script, Path(directory))
+                self.assertTrue(all(path.suffix == '.png' for path in captures))
+
     def test_relocates_nested_captures_and_removes_only_exit_command(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
