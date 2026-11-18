@@ -7,6 +7,8 @@
 static HWND cards[2],status;
 static HFONT title_font,body_font,card_font;
 static HBRUSH background_brush;
+#define DYNA_WIDEN_INNER(x) L##x
+#define DYNA_WIDEN(x) DYNA_WIDEN_INNER(x)
 static HANDLE game_process;
 static UINT dpi=96;
 static int scale(int x){return MulDiv(x,(int)dpi,96);}
@@ -82,7 +84,7 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
     case WM_PAINT: {
         PAINTSTRUCT p;HDC dc=BeginPaint(window,&p);RECT r;GetClientRect(window,&r);r.left=scale(28);r.top=scale(24);r.bottom=scale(75);
         draw_text(dc,L"Dyna Brothers",r,title_font,text_color,DT_LEFT);
-        r.top=scale(83);r.bottom=scale(112);draw_text(dc,L"Checkpoint v0.1.1",r,body_font,RGB(90,205,245),DT_LEFT);
+        r.top=scale(83);r.bottom=scale(112);draw_text(dc,L"Checkpoint v" DYNA_WIDEN(DYNA_VERSION),r,body_font,RGB(90,205,245),DT_LEFT);
         r.top=scale(386);r.bottom=scale(440);r.right-=scale(28);
         draw_text(dc,L"English is enabled by default. Language and controls are in each game's settings.\nTranslations are still in progress. Use your own Japanese game dumps.",r,body_font,muted,DT_LEFT|DT_WORDBREAK);
         EndPaint(window,&p);return 0;
@@ -96,7 +98,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     type.hCursor=LoadCursorW(NULL,IDC_ARROW);type.lpszClassName=L"DynaBrothersCheckpoint";
     if(!RegisterClassW(&type))return 1;
     dpi=GetDpiForSystem();
-    HWND window=CreateWindowW(type.lpszClassName,L"Dyna Brothers - v0.1.1",WS_OVERLAPPEDWINDOW,
+    HWND window=CreateWindowW(type.lpszClassName,L"Dyna Brothers - v" DYNA_WIDEN(DYNA_VERSION),WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT,CW_USEDEFAULT,scale(900),scale(540),NULL,NULL,instance,NULL);if(!window)return 1;
     ShowWindow(window,show);UpdateWindow(window);
     MSG message;while(GetMessageW(&message,NULL,0,0)>0){if(!IsDialogMessageW(window,&message)){TranslateMessage(&message);DispatchMessageW(&message);}}

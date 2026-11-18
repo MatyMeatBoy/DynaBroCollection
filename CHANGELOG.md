@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2 — en desarrollo
+
+- DB1: 18 nombres de créditos y mensaje secreto del final difícil en inglés.
+- DB1: mensajes de completar práctica/modo alienígena y fondos de texto corregidos.
+- Idiomas: se conserva la recuperación de japonés/inglés desde los dumps cualificados y las imágenes inglesas v0.1/v0.2.
+- Versión compartida entre CMake, launcher y empaquetado; entregas históricas conservadas por versión/revisión.
+- El gate de paquete añade las rutas preparadas de práctica, alienígenas y créditos. No certifica completar esos modos normalmente.
+
+Traducciones completas, widescreen, modos Original/Enhanced y hardware físico siguen pendientes.
+
 ## 0.1.1 — checkpoint
 
 ### Añadido

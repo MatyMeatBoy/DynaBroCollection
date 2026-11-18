@@ -34,6 +34,8 @@ Current cumulative English output, including credits and both special messages:
 
 The final wording retains the planet's name as **Planet Jura**. Earlier English capture drafts used a descriptive “Jurassic planet”; those intermediate images and hashes remain preserved rather than overwritten. An additional native practice route loaded the old v0.2 English input with Japanese selected and showed the original Japanese message and backdrop. The ordinary map route passed again at 8,900 frames after these additional edits.
 
+The final Planet Jura wording was subsequently recaptured after rebuilding from committed source `e2db7b2030`: both the native alien-mode screen and independent reference show the corrected name. Native maps and Japanese restoration from v0.2 passed on the same rebuilt executable. These translation changes are carried into development version 0.1.2. The reusable font-base lesson was sent as [OptiPort feedback](https://github.com/MatyMeatBoy/OptiPort/issues/28#issuecomment-6965301864).
+
 ## Verification and limits
 
 32 Python tests and five native CTest contracts passed. Negative checks reject bad source/table guards, overlapping edits, overflow and unsupported glyphs. Four-variant metadata and native conversion from the fourth variant to both languages are covered. The full BPS roundtrip and unchanged original dump/closed checkpoint hashes were checked locally.

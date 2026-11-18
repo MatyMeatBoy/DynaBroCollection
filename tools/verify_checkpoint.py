@@ -53,6 +53,9 @@ def main():
     run('replay-record','DynaBrothers2AOT.exe',db2,300)
     run('replay-play','DynaBrothers2AOT.exe',db2,301,replay=args.output/'replay-record/profile/logs/DynaBrothers2AOT-feedback.replay')
     run('hint','DynaBrothers1AOT.exe',db1,60,hint=True)
+    run('db1-practice','DynaBrothers1AOT.exe',db1,9600,ROOT/'games/db1/scenes/practice-completion-diagnostic.input')
+    run('db1-alien','DynaBrothers1AOT.exe',db1,9600,ROOT/'games/db1/scenes/alien-completion-diagnostic.input')
+    run('db1-credits','DynaBrothers1AOT.exe',db1,52000,ROOT/'games/db1/scenes/credits-diagnostic.input')
     binaries={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.glob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

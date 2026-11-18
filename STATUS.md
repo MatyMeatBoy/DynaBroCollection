@@ -4,6 +4,8 @@
 
 ## Latest development after the closed checkpoint
 
+Active development version is now **0.1.2**, as requested. The native targets and launcher build with that version from the shared `VERSION` file. Version-aware packaging preserves historical archives and requires the original seven regressions plus the three new DB1 prepared-scene routes for 0.1.2. Source tests: 37 Python tests and five native contracts passed; the new portable candidate still requires its own packaged verification.
+
 The local v0.1.1 checkpoint is closed and verified; see [its exact archive/source identity](docs/releases/v0.1.1-verification.md). Historical entries below retain their original milestone context.
 
 DB1 now has guarded repairs for 18 credits character names and the nine-row hard-ending secret-mode message. Current English CRC32 is `11688440`; JP, supplied v0.1 and previous v0.2 remain accepted by native language switching. Reference captures and a 52,000-frame prepared native ending route show readable credits names and MHRI message. Both games rebuilt; 32 Python tests, five native contracts, both DB1 language/map routes and the DB2 tutorial passed. See [layout, identities, diagnostic limits and remaining inventory](docs/research/db1-credits-translation.md). The closed checkpoint ZIP remains unchanged; this is newer source/development work.

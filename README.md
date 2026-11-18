@@ -1,6 +1,7 @@
-# Dyna Brothers 1 + 2 — checkpoint v0.1.1
+# Dyna Brothers 1 + 2 — v0.1.2 development
 
 [![Checkpoint 0.1.1](https://img.shields.io/badge/version-0.1.1%20checkpoint-orange)](docs/releases/v0.1.1-checkpoint.md)
+[![Development 0.1.2](https://img.shields.io/badge/development-0.1.2-blue)](docs/releases/v0.1.2-checkpoint.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
 [![Target Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.1.1-checkpoint.md)
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)

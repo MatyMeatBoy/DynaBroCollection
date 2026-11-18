@@ -21,8 +21,18 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def git(*args):return subprocess.check_output(['git','-C',str(ROOT),*args],text=True).strip()
 
 
-def validate_build_info(text,revision):
-    match=re.search(r'\bgame 0\.1\.1 git ([0-9a-f]{7,40});',text)
+def package_version(value):
+    if not isinstance(value,str) or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+',value) or len(value)>32:
+        raise ValueError('Invalid package version')
+    return value
+
+
+def project_version():return package_version((ROOT/'VERSION').read_text(encoding='ascii').strip())
+
+
+def validate_build_info(text,revision,version=None):
+    version=package_version(version or project_version())
+    match=re.search(r'\bgame '+re.escape(version)+r' git ([0-9a-f]{7,40});',text)
     if not match or not revision.startswith(match.group(1)):
         raise RuntimeError('Packaged executable does not identify the clean checkpoint source')
 
@@ -40,7 +50,7 @@ def stage(candidate):
     for name,expected in [('recomp-ui',UI_SHA),('controller-db',CONTROLLER_DB_SHA)]:
         if git('-C',str(ROOT/'upstream'/name),'rev-parse','HEAD')!=expected or git('-C',str(ROOT/'upstream'/name),'status','--porcelain'):
             raise RuntimeError('Unqualified package dependency: '+name)
-    revision=git('rev-parse','HEAD')
+    revision=git('rev-parse','HEAD');version=project_version()
     env=dict(os.environ);env['PATH']=str(BIN)+';'+env.get('PATH','')
     subprocess.run([str(BIN/'cmake.exe'),'--build',str(ROOT/'build/dev'),'--target',
         'DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT','--parallel','6'],env=env,check=True)
@@ -72,7 +82,7 @@ def stage(candidate):
     portable_env=portable_windows_env(env)
     for target in ['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']:
         text=subprocess.check_output([str(payload/target),'--build-info'],env=portable_env,text=True).strip()
-        validate_build_info(text,revision);embedded[target]=text
+        validate_build_info(text,revision,version);embedded[target]=text
     licenses=payload/'licenses';licenses.mkdir()
     sources={
         'GenesisRecomp.txt':ROOT/'upstream/segagenesisrecomp/LICENSE.md',
@@ -89,8 +99,8 @@ def stage(candidate):
         'MinGW-runtime.txt':BIN.parent/'share/licenses/crt/COPYING.MinGW-w64-runtime.txt'
     }
     for name,source in sources.items():shutil.copy2(source,licenses/name)
-    shutil.copy2(ROOT/'docs/releases/v0.1.1-checkpoint.md',payload/'READ-ME.md')
-    manifest=dict(version='0.1.1',channel='checkpoint',status='candidate',source_commit=revision,
+    shutil.copy2(ROOT/f'docs/releases/v{version}-checkpoint.md',payload/'READ-ME.md')
+    manifest=dict(version=version,channel='checkpoint',status='candidate',source_commit=revision,
         engine_commit=git('-C',str(ROOT/'upstream/segagenesisrecomp'),'rev-parse','HEAD'),
         engine_patch_sha256=digest(ROOT/'patches/0001-explicit-pc-mainloop.patch'),
         ui_commit=git('-C',str(ROOT/'upstream/recomp-ui'),'rev-parse','HEAD'),
@@ -102,26 +112,32 @@ def stage(candidate):
     print(json.dumps(dict(candidate=str(candidate),source_commit=revision,files=len(manifest['files'])),indent=2))
 
 
-def close(candidate,qa_path,releases):
+def close(candidate,qa_path,releases,revision=1):
+    if type(revision) is not int or not 1 <= revision <= 999:
+        raise ValueError('Checkpoint revision must be an integer from 1 to 999')
     if (candidate/'CLOSED.json').exists():raise RuntimeError('Checkpoint is already closed; preserve delivered bytes')
     payload=candidate/'DynaBrothers';manifest_path=payload/'PACKAGE.json'
     manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
+    version=package_version(manifest['version'])
     if inventory(payload)!=manifest['files']:raise RuntimeError('Staged package changed after its identity was recorded')
     qa=json.loads(qa_path.read_text(encoding='utf-8'))
     if not qa.get('passed'):raise RuntimeError('Packaged native regressions have not passed')
     for name,sha in qa['binaries'].items():
         if digest(payload/name)!=sha:raise RuntimeError('QA belongs to another executable')
     required={'db1-en','db1-ja','db2-en','db2-ja','replay-record','replay-play','hint'}
-    if set(qa['cases'])!=required or not all(x['passed'] for x in qa['cases'].values()):
+    if revision >= 2 or tuple(map(int,version.split('.'))) >= (0,1,2):required.update({'db1-practice','db1-alien','db1-credits'})
+    if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
-    manifest['status']='ready';manifest['verification']=qa
+    destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'
+    portable=releases/destination.stem
+    if destination.exists() or portable.exists():
+        raise FileExistsError('Preserve existing delivery; choose a new checkpoint revision')
+    manifest['status']='ready';manifest['checkpoint_revision']=revision;manifest['verification']=qa
     manifest_path.write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     releases.mkdir(parents=True,exist_ok=True)
-    destination=releases/'DynaBrothers-v0.1.1-win64-checkpoint-r1.zip'
     with zipfile.ZipFile(destination,'x',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
         for file in sorted(payload.rglob('*')):
             if file.is_file():archive.write(file,'DynaBrothers/'+file.relative_to(payload).as_posix())
-    portable=releases/destination.stem
     shutil.copytree(payload,portable)
     if inventory(portable)!=inventory(payload) or digest(portable/'PACKAGE.json')!=digest(manifest_path):
         raise RuntimeError('Portable folder differs from the closed ZIP inputs')
@@ -135,10 +151,10 @@ def close(candidate,qa_path,releases):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);commands=parser.add_subparsers(dest='command',required=True)
     prepare=commands.add_parser('stage');prepare.add_argument('candidate',type=Path)
-    finish=commands.add_parser('close');finish.add_argument('candidate',type=Path);finish.add_argument('--qa',type=Path,required=True);finish.add_argument('--releases',type=Path,default=ROOT/'releases')
+    finish=commands.add_parser('close');finish.add_argument('candidate',type=Path);finish.add_argument('--qa',type=Path,required=True);finish.add_argument('--releases',type=Path,default=ROOT/'releases');finish.add_argument('--revision',type=int,default=1)
     args=parser.parse_args()
     if args.command=='stage':stage(args.candidate.resolve())
-    else:close(args.candidate.resolve(),args.qa.resolve(),args.releases.resolve())
+    else:close(args.candidate.resolve(),args.qa.resolve(),args.releases.resolve(),args.revision)
 
 
 if __name__=='__main__':main()
