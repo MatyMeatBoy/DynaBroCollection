@@ -40,3 +40,8 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 ## Briefings de la Story (traducidos; fase 1 verificada en pantalla: STEGO PARK, 4 líneas limpias; el resto sin ver)
 - 223 entradas `briefing-*` (texto de medio ancho 0x220FF9-0x2222E2: 41 títulos + cuerpos, prefijos de 2 bytes conservados). Captura candidata: `local/br2-en/t29.png` (ruta `local/story1.input`). Falta revisar visualmente y mejorar la calidad del inglés (varias líneas son aproximadas por capacidad). Cuerpo de "れんしゅう" continúa tras 0x2222E2 (revisar hasta 0x222400).
 - Diálogo adicional del laboratorio tras la intro (ej. "よし この実験がうまくいけば...") sigue en japonés: ejecutar `glyph_trace_report` con `DYNA_TRACE_GLYPH=1`.
+
+## Estado 2026-11-18 tarde
+- FALLO PREEXISTENTE en la base (no causado por traducciones): `controller_profiles_contract` aborta (`tests/controller_profiles_test.c:29`, `gamepad_menu_mask()` no devuelve START|BACK) tras los commits de otro agente "reconcile controller hotplug"/"retain physical D-pad directions". Arreglar o revisar.
+- Briefings de Práctica 2-6 (0x2222FC-0x2225A9) traducidos (32 entradas, sin captura).
+- Diálogo del laboratorio tras la intro NO son cadenas fijas: viven en un búfer RAM deslizante (0xFF2816+, texto descomprimido de un script). Traza `[glyph-ram]` con `DYNA_TRACE_GLYPH=1`. Hace falta localizar el cargador del script (FF10) y traducir el flujo, o hacer búsqueda por contenido (hash de palabras) en el gancho de `db2_glyph_text`.
