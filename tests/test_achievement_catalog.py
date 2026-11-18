@@ -38,3 +38,13 @@ class AchievementCatalogTests(unittest.TestCase):
             if game == 'db2':
                 self.assertFalse(catalog['official_set'])
                 self.assertEqual(sum(bool(e.get('requires_all')) for e in entries), 6)
+
+    def test_db2_has_no_orphaned_badge_files(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        referenced = set()
+        for entry in catalog['achievements']:
+            referenced.add(entry['badge_file_locked'])
+            referenced.add(entry['badge_file_unlocked'])
+        actual = {f'db2/{path.name}' for path in (source / 'db2').glob('*.png')}
+        self.assertEqual(actual, referenced)
