@@ -38,3 +38,17 @@ class AchievementCatalogTests(unittest.TestCase):
             if game == 'db2':
                 self.assertFalse(catalog['official_set'])
                 self.assertEqual(sum(bool(e.get('requires_all')) for e in entries), 6)
+
+    def test_db2_stage_and_mode_keys_and_display_order_are_well_formed(self):
+        source = ROOT / 'assets/achievements'
+        catalog = json.loads((source / 'db2.json').read_text(encoding='utf-8'))
+        entries = catalog['achievements']
+        orders = [entry['display_order'] for entry in entries]
+        self.assertEqual(len(set(orders)), len(orders))
+        self.assertEqual(orders, sorted(orders))
+        kinds = [entry['kind'] for entry in entries]
+        self.assertEqual(kinds.count('stage'), 93)
+        self.assertEqual(kinds.count('completion'), 6)
+        self.assertEqual(len(entries), len(kinds))
+        stage_keys = [(entry['mode'], entry['stage']) for entry in entries if entry['kind'] == 'stage']
+        self.assertEqual(len(stage_keys), len(set(stage_keys)))
