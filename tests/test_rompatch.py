@@ -13,6 +13,37 @@ class PatchTests(unittest.TestCase):
         body += struct.pack('<II', zlib.crc32(source), zlib.crc32(target))
         return body + struct.pack('<I', zlib.crc32(body))
 
+    @staticmethod
+    def varint(value):
+        out = bytearray()
+        while True:
+            byte = value & 127
+            value >>= 7
+            if not value:
+                out.append(byte | 128)
+                return bytes(out)
+            out.append(byte)
+            value -= 1
+
+    def test_bps_rejects_oversized_integer_truncated_metadata_source_oob_and_target_crc(self):
+        v = self.varint
+        source = b''
+        header = lambda source_sz, target_sz, meta_sz: b'BPS1' + v(source_sz) + v(target_sz) + v(meta_sz)
+
+        def finish(body, source=source, target_crc=0):
+            body += struct.pack('<II', zlib.crc32(source), target_crc)
+            return body + struct.pack('<I', zlib.crc32(body))
+
+        cases = {
+            'oversized_integer': finish(header(0, 0, 0)[:-1] + bytes([0] * 10)),
+            'truncated_metadata': finish(header(0, 0, 50)),
+            'source_read_out_of_bounds': finish(header(0, 5, 0) + v(0)),
+            'target_crc_mismatch': finish(header(0, 0, 0), target_crc=0xDEADBEEF),
+        }
+        for name, patch in cases.items():
+            with self.subTest(case=name), self.assertRaises(PatchError):
+                apply_bps(source, patch)
+
     def test_bps_overlapping_target_copy(self):
         patch = self.bps(b'', b'AAAA', b'\x81A\x8b\x80')
         self.assertEqual(apply_bps(b'', patch), b'AAAA')
