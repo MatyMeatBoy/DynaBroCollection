@@ -79,6 +79,14 @@ static void xbox_startup_and_hotplug(const char *settings) {
     stick=attach("Xbox One S Controller",0x045e,0x02ea,&index);drain();assert(gamepad_player_connected(0));
     SDL_JoystickSetVirtualButton(stick,4,1);SDL_JoystickUpdate();drain();
     assert(input_current_mask(0)==input_button_bit(GB_A));
+    SDL_JoystickClose(stick);SDL_JoystickDetachVirtual(index);
+    SDL_Event swallowed;SDL_PumpEvents();while(SDL_PollEvent(&swallowed)){} /* modal owns the SDL queue */
+    stick=attach("Xbox One S Controller",0x045e,0x02ea,&index);
+    SDL_PumpEvents();while(SDL_PollEvent(&swallowed)){}
+    assert(!gamepad_player_connected(0));
+    gamepad_init_players(2);assert(gamepad_player_connected(0));assert(!gamepad_player_connected(1));
+    SDL_JoystickSetVirtualButton(stick,4,1);SDL_JoystickUpdate();drain();
+    assert(input_current_mask(0)==input_button_bit(GB_A));
     gamepad_shutdown();SDL_JoystickClose(stick);SDL_JoystickDetachVirtual(index);drain();
 }
 int main(int argc,char **argv) {

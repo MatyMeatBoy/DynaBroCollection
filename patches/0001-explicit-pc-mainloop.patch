@@ -190,7 +190,7 @@ index 5a2722d..d32edaa 100644
   * contract as GameVideoNativeRow. Returns the actual initialized row width.
   * An oversized local plan falls back to the complete original row; it never
 diff --git a/runner/gamepad.c b/runner/gamepad.c
-index c57d756..a2a5b09 100644
+index c57d756..26be2f6 100644
 --- a/runner/gamepad.c
 +++ b/runner/gamepad.c
 @@ -15,6 +15,7 @@
@@ -217,7 +217,18 @@ index c57d756..a2a5b09 100644
              if (i == 0) s_pending_load = 0;
          }
      }
-@@ -87,6 +90,7 @@ void gamepad_shutdown(void)
+@@ -75,6 +78,10 @@ void gamepad_init_players(unsigned logical_players)
+ {
+     s_player_limit = logical_players ? logical_players : 2;
+     if (s_player_limit > INPUT_MAX_PLAYERS) s_player_limit = INPUT_MAX_PLAYERS;
++    /* A borrowed settings UI may have consumed hotplug events. Reconcile
++     * detached handles before scanning, retaining every still-attached seat. */
++    for (int i=0;i<INPUT_MAX_PLAYERS;i++)
++        if(s_pad[i] && !SDL_GameControllerGetAttached(s_pad[i]))close_pad_by_jid(s_pad_jid[i]);
+     /* Walk the already-attached joysticks so pads plugged in before the window
+      * opened still work without waiting for a re-plug. */
+     int n = SDL_NumJoysticks();
+@@ -87,6 +94,7 @@ void gamepad_shutdown(void)
          if (s_pad[i]) SDL_GameControllerClose(s_pad[i]);
          s_pad[i]     = NULL;
          s_pad_jid[i] = -1;
@@ -225,7 +236,7 @@ index c57d756..a2a5b09 100644
      }
      s_pending_save = 0;
      s_pending_load = 0;
-@@ -99,10 +103,12 @@ void gamepad_handle_event(const SDL_Event *ev)
+@@ -99,10 +107,12 @@ void gamepad_handle_event(const SDL_Event *ev)
      if (gamepad_cancels_quickload(ev)) s_pending_load = 0;
      switch (ev->type) {
          case SDL_CONTROLLERDEVICEADDED:
@@ -238,7 +249,7 @@ index c57d756..a2a5b09 100644
              /* cdevice.which is an instance id on REMOVED. */
              close_pad_by_jid((SDL_JoystickID)ev->cdevice.which);
              break;
-@@ -169,7 +175,7 @@ uint16_t gamepad_player_mask(int player)
+@@ -169,7 +179,7 @@ uint16_t gamepad_player_mask(int player)
      if (ly < -dz) m |= input_button_bit(GB_UP);
      if (ly >  dz) m |= input_button_bit(GB_DOWN);
  
@@ -247,7 +258,7 @@ index c57d756..a2a5b09 100644
  }
  
  int gamepad_player_connected(int player)
-@@ -191,6 +197,7 @@ uint32_t gamepad_overlay_mask(void)
+@@ -191,6 +201,7 @@ uint32_t gamepad_overlay_mask(void)
      if (!c) return 0;
      static const struct { SDL_GameControllerButton button; uint32_t bit; } map[] = {
          { SDL_CONTROLLER_BUTTON_BACK, GP_OVERLAY_BACK },
@@ -255,7 +266,7 @@ index c57d756..a2a5b09 100644
          { SDL_CONTROLLER_BUTTON_RIGHTSTICK, GP_OVERLAY_R3 },
          { SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, GP_OVERLAY_RB },
          { SDL_CONTROLLER_BUTTON_DPAD_UP, GP_OVERLAY_UP },
-@@ -207,6 +214,18 @@ uint32_t gamepad_overlay_mask(void)
+@@ -207,6 +218,18 @@ uint32_t gamepad_overlay_mask(void)
      return mask;
  }
  
@@ -479,7 +490,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..dceeeea 100644
+index df30a08..be4ea30 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -894,7 +905,7 @@ index df30a08..dceeeea 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3735,7 +3903,45 @@ session_begin:;
+@@ -3735,7 +3903,46 @@ session_begin:;
          }
  
  #if RECOMP_LAUNCHER
@@ -918,6 +929,7 @@ index df30a08..dceeeea 100644
 +            }
 +            int settings_result=run_recomp_launcher(g_game_spec.display_name,rom_path,chosen,sizeof chosen,&same_rom,
 +                                settings_ini,rom_cfg_path,NULL,2);
++            gamepad_init_players(g_game_spec.logical_players);
 +            if(check_ram) {
 +                if(memcmp(check_ram,g_ram,sizeof g_ram)||memcmp(&check_cpu,&g_cpu,sizeof g_cpu)||
 +                   memcmp(check_vdp,&g_machine.vdp,sizeof *check_vdp)||SDL_GetWindowFromID(check_window)!=window || SDL_GetRenderer(window)!=renderer) {
@@ -941,7 +953,7 @@ index df30a08..dceeeea 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -3898,6 +4104,13 @@ session_begin:;
+@@ -3898,6 +4105,13 @@ session_begin:;
             * the existing interlace display modes (tv squash / raw) take over
             * from here, same as the clownmdemu path. */
            s_screen_height = gvdp_output_height(&g_machine.vdp);
@@ -955,7 +967,7 @@ index df30a08..dceeeea 100644
            if (!completed) {                        /* reverse-debug quit */
                fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
                    "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
-@@ -4180,6 +4393,7 @@ session_begin:;
+@@ -4180,6 +4394,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -963,7 +975,7 @@ index df30a08..dceeeea 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4402,7 @@ session_begin:;
+@@ -4188,7 +4403,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -972,7 +984,7 @@ index df30a08..dceeeea 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4413,14 @@ session_begin:;
+@@ -4199,12 +4414,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -988,7 +1000,7 @@ index df30a08..dceeeea 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
-@@ -4288,7 +4504,14 @@ session_begin:;
+@@ -4288,7 +4505,14 @@ session_begin:;
              }
              peer_view_was_active = peer_view_is_active;
          }
