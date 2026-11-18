@@ -1,6 +1,10 @@
 # Work board — 2026-11-18
 
-## Published v0.1.4 test checkpoint
+## Published v0.1.6 test checkpoint
+
+The latest immutable package passed39 packaged checks. It fixes actual home Settings buttons, adds original-size visor positioning and native code-screen saving, and corrects title/story presentation. [Exact delivery identity and limits](docs/releases/v0.1.6-verification.md). Subsequent native title-menu Extras and level navigation are development work outside that package. Current ownership and pending work: [coordination board](docs/handoff/STATUS.md). Finish DB1 before resuming DB2.
+
+## Historical v0.1.4 test checkpoint
 
 The audio, DB1 weather/widescreen, automatic input, same-window settings and Extras checkpoint is published. [Exact archive/source identity and24 packaged checks](docs/releases/v0.1.4-verification.md). DB2 current modules are integrated; further DB2 work is paused by user request. Remaining work is tracked in [the coordination handoff](docs/handoff/README.md). Native code saves/replay and the guide are initial implementations with documented limits, not a complete campaign acceptance claim.
 

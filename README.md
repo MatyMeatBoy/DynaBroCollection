@@ -1,6 +1,6 @@
-# Dyna Brothers 1 + 2 — v0.1.4 test checkpoint
+# Dyna Brothers 1 + 2 — v0.1.6 test checkpoint
 
-[![Checkpoint 0.1.5](https://img.shields.io/badge/version-0.1.5%20checkpoint-orange)](docs/releases/v0.1.5-checkpoint.md)
+[![Checkpoint 0.1.6](https://img.shields.io/badge/version-0.1.6%20checkpoint-orange)](docs/releases/v0.1.6-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
 [![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
@@ -8,13 +8,13 @@
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
 
-Version0.1.5 is published with coherent DB1 camera/stage/submenu rendering and one green settings surface. [Scope and limits](docs/releases/v0.1.5-checkpoint.md). It retains the0.1.4 fixes: Timer A audio, DB1 continuous weather/widescreen, automatic controls, same-window settings and Extras. [Checkpoint scope and limits](docs/releases/v0.1.4-checkpoint.md). DB2 current renderer is integrated; further DB2 work is paused at the user's request.
+Version0.1.6 fixes the real green-launcher Settings buttons, restores the original-size DB1 command visor within the panoramic world, adds whole-tile visor positioning and code-screen progress saving, and corrects title/story presentation. [Scope and limits](docs/releases/v0.1.6-checkpoint.md). All39 packaged checks pass. DB2 retains its integrated base until DB1 is ready.
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
 Version 0.1.3 adds an expanded-world DB1 renderer, independent of the original 36-actor drawing buffer, and native 4:3 / enhanced 16:9 presentation. It includes 76 local DB1 goals based on the public RetroAchievements catalog and 99 custom DB2 Special goals, with badges, queued popups and a paused list. [Goal contracts and evaluator limits](docs/db1-achievement-contracts.md). Previous checkpoint archives retain their original bytes.
 
-Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.5 checkpoint notes](docs/releases/v0.1.5-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits and paused. Full campaign/hardware acceptance remains open.
+Start `DynaBrothersLauncher.exe` to choose a game from the shared rounded-card hub. See [v0.1.6 checkpoint notes](docs/releases/v0.1.6-checkpoint.md) for installation, the portable debug test and limitations. Both translations remain partial; DB2 expansion is integrated with documented limits and paused. Full campaign/hardware acceptance remains open.
 
 ![Historical launcher v0.1.1 with two rounded game cards](docs/images/launcher-v0.1.1.jpg)
 
@@ -22,10 +22,10 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 
 | Resource | Purpose |
 | --- | --- |
-| [Download v0.1.5](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.5) | Portable Windows x64 test release with its debug script |
-| [v0.1.5 verification](docs/releases/v0.1.5-verification.md) | Closed archive/source identity,31 packaged checks and limits |
+| [Download v0.1.6](https://github.com/MatyMeatBoy/DynaBrothers1-2/releases/tag/v0.1.6) | Portable Windows x64 test release with its debug script |
+| [v0.1.6 verification](docs/releases/v0.1.6-verification.md) | Closed archive/source identity,39 packaged checks and limits |
 | [Historical v0.1.3 verification](docs/releases/v0.1.3-verification.md) | Preserved previous archive/source identity |
-| [Checkpoint notes](docs/releases/v0.1.5-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
+| [Checkpoint notes](docs/releases/v0.1.6-checkpoint.md) | Install, controls, expanded view, achievements and portable debug test |
 | [DB1 achievement contracts](docs/db1-achievement-contracts.md) | Independent local goal implementation and public sources |
 | [Corrected r2 verification](docs/releases/v0.1.2-r2-verification.md) | Compiled revision, archive identity and active DB2 gameplay regression |
 | [Historical v0.1.2 r1](docs/releases/v0.1.2-verification.md) | Preserved identity and later-discovered unpause issue |
@@ -35,7 +35,7 @@ Historical local launcher capture; [image/executable provenance](docs/images/lau
 | [Contributing](CONTRIBUTING.md) | Reproduction and review expectations |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Runtime, UI, input and font attribution |
 
-The supplied Japanese dumps remain untouched in `D:/01Claude/Dynabrothers`. ROMs, raw extracted cartridge assets, generated game code, binaries and private test logs stay outside Git. Approved launcher art and selected gameplay guide screenshots are versioned with their provenance.
+The supplied Japanese dumps remain untouched in the private, ignored `Dynabrothers/` input folder inside the project. ROMs, raw extracted cartridge assets, generated game code, binaries and private test logs stay outside Git. Approved launcher art and selected gameplay guide screenshots are versioned with their provenance.
 
 ## What currently exists
 
@@ -55,7 +55,7 @@ The usable development targets are `DynaBrothers1AOT` and `DynaBrothers2AOT`. Le
 Dependencies: Python 3, CMake, Ninja and a C/C++ toolchain with SDL2. This machine uses MSYS2 UCRT64/GCC 16.2. The build helper finds that installation without changing the machine-wide PATH.
 
 ```powershell
-python tools/build.py --inputs 'D:\01Claude\Dynabrothers' --target both
+python tools/build.py --target both
 python -m unittest discover -s tests -v
 cmake --build build/dev --target DynaNativeIrqTest DynaLanguagePatchTest DynaStepLookupTest DynaControllerTest DynaLanguageSettingsTest DynaRamContractTest DynaDb1worldTest DynaDb1visibleTest DynaDb1VideoTest DynaVdpOwnerTest Dynadb1AchievementTest Dynadb2AchievementTest DynaAchievementsTest DynaAchievementUiTest
 ctest --test-dir build/dev --output-on-failure

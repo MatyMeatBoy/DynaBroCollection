@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.6 — checkpoint de prueba
+
+- Launcher verde: Settings funciona desde ambos botones reales, ventana más grande con fallback y logo1+2 aprobado.
+- DB1: visor de tamaño original, desplazamiento por tiles, HUD a la derecha y alcance nativo de lluvia/daño.
+- Guardado en pantallas de códigos, Continue nativo y Save del final difícil sin cambiar su temporizador; rutas Unicode protegidas.
+- Sombra negra del título, suelo original hasta abajo, cielo extendido y fundido lateral del mural.
+- Guía de unidades con cifras verificadas;39 comprobaciones del paquete y descarga pública verificada.
+- Extras dentro del menú nativo y selección automática de niveles continúan en el desarrollo posterior al paquete.
+
+
 ## 0.1.5 — checkpoint de prueba
 
 - DB1: cámara coherente, introducción de nivel y submenús extendidos, hazards continuos, fondos y logo del título integrados.
