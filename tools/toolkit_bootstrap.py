@@ -48,7 +48,7 @@ def restore(kit, destination, manifest, env):
         raise FileExistsError('Existing work is preserved; choose a new destination')
     destination.parent.mkdir(parents=True, exist_ok=True)
     git = kit/'git/cmd/git.exe'
-    run([git, 'clone', '--branch', manifest['branch'],
+    run([git, 'clone', '--config', 'core.autocrlf=true', '--branch', manifest['branch'],
          kit/'bundles/dynabrothers.bundle', destination], env)
     actual = subprocess.check_output([str(git), '-C', str(destination),
         'rev-parse', 'HEAD'], env=env, text=True).strip()
