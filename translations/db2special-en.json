@@ -102,7 +102,7 @@
       "id": "assault_target",
       "address": 34078,
       "before": "d4afc2b9d901b1b2c3a601b4d7ddc3dec8af",
-      "english": "PICK_THE\u0001TARGET___",
+      "english": "PICK\u0001THE\u0001TARGET___",
       "capacity": 18,
       "verification": "binary-only; scene-pending"
     },
@@ -134,7 +134,7 @@
       "id": "plant_spot",
       "address": 35836,
       "before": "b3b4d901cadebcaea601b4d7ddc3dec8af",
-      "english": "WHERE\u0001TO_PLANT?__",
+      "english": "WHERE\u0001TO\u0001PLANT?__",
       "capacity": 17,
       "verification": "binary-only; scene-pending"
     },
@@ -166,7 +166,7 @@
       "id": "rain",
       "address": 37102,
       "before": "ccd7bed901caddb2a601b4d7ddc3dec8af",
-      "english": "PICK_AREA\u0001TO_RAIN",
+      "english": "PICK\u0001AREA_TO\u0001RAIN",
       "capacity": 17,
       "verification": "binary-only; scene-pending"
     },
@@ -174,7 +174,7 @@
       "id": "dry",
       "address": 37120,
       "before": "c3d7bd01caddb2a601b4d7ddc3dec8af",
-      "english": "PICK_AREA\u0001TO_DRY",
+      "english": "PICK\u0001AREA_TO\u0001DRY",
       "capacity": 16,
       "verification": "binary-only; scene-pending"
     },
