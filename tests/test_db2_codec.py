@@ -23,6 +23,11 @@ class CodecTests(unittest.TestCase):
             packed = encode_literals(source)
             self.assertEqual(decode(packed), (source, len(packed)))
 
+    def test_literal_encoder_rejects_empty_and_oversized_payloads(self):
+        for data in [b'', bytes(65536)]:
+            with self.subTest(size=len(data)), self.assertRaises(CodecError):
+                encode_literals(data)
+
     def test_rejects_truncated_and_invalid_backreferences(self):
         for packed in [b'', b'\x00\x01\x00', b'\x00\x01\x00\x80\x00', b'\x00\x01\x00\x01AB']:
             with self.subTest(packed=packed), self.assertRaises(CodecError):
