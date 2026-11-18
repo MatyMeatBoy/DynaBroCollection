@@ -38,6 +38,11 @@ int main(void){
         g_ram[0x5f34+id*16+4]=(uint8_t)(slot*12);
     }
     g_ram[0x6f34+8*2]=100;g_ram[0x5f34+100*16]=1;
+    /* One actor with an unconfigured type (no ROM entry at all) must not
+     * drop the whole frame to native/4:3 fallback -- only that actor's own
+     * sprite should be skipped. Regression coverage for the 2026-11-18 fix
+     * to prepare_actors()/center_supported. */
+    g_ram[0x6f34+9*2]=101;g_ram[0x5f34+101*16]=99;
     vdp.cram[1]=0xeee;vdp.cram[2]=0xe;vdp.cram[3]=0xe0;
     raster.width=320;raster.count=320;raster.display=1;
     for(unsigned x=0;x<320;x++)native[x]=0xff123456;
