@@ -15,7 +15,8 @@
 #include <stdlib.h>
 
 typedef struct {UINT32 version;void *callback;BOOL no_thread,no_codecs;} DynaGdiStartup;
-static HMODULE image_library;static ULONG_PTR image_token;static void *logo,*game_art[2];
+static HMODULE image_library;static ULONG_PTR image_token;static void *logo,*game_art[2],*box_art[2],*cart_art[2];
+static double card_reveal[2];
 static int (WINAPI *image_load)(const WCHAR *,void **);
 static int (WINAPI *graphics_create)(HDC,void **);
 static int (WINAPI *graphics_delete)(void *);
@@ -36,6 +37,9 @@ static void images_init(void) {
  wchar_t *slash=wcsrchr(directory,L'\\');if(!slash)return;slash[1]=0;
  swprintf(path,2200,L"%lsassets\\img\\dyna-logo-1plus2-v1.png",directory);image_load(path,&logo);
  for(int i=0;i<2;i++){swprintf(path,2200,L"%lsassets\\img\\db%d-gameplay.png",directory,i+1);image_load(path,&game_art[i]);}
+ for(int i=0;i<2;i++){swprintf(path,2200,L"%lsassets\\img\\db%d-box.png",directory,i+1);image_load(path,&box_art[i]);}
+ for(int i=0;i<2;i++){swprintf(path,2200,L"%lsassets\\img\\db%d-cart.png",directory,i+1);image_load(path,&cart_art[i]);}
+ if(getenv("DYNA_HUB_ASSET_DEBUG"))for(int i=0;i<2;i++)fprintf(stderr,"[hub-asset] box%d=%p cart%d=%p\n",i,box_art[i],i,cart_art[i]);
 }
 static void image_paint(HDC dc,void *image,RECT r) {
  if(!image||!image_token)return;void *graphics=NULL;
@@ -282,6 +286,13 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
                 int command=dyna_hub_navigation_tick(&hub_navigation,dyna_hub_controls_poll(),SDL_GetTicks64());
                 if(hub_navigation.focus!=old_focus)SetFocus(hub_navigation.focus<2?cards[hub_navigation.focus]:settings_buttons[hub_navigation.focus-2]);
                 if(command)SendMessageW(window,WM_COMMAND,(WPARAM)command,0);
+            }
+            for(int i=0;i<2;i++){
+                int hovered=GetFocus()==cards[i];double target=hovered?1.0:0.0;double before=card_reveal[i];
+                double step=0.18;
+                if(card_reveal[i]<target){card_reveal[i]+=step;if(card_reveal[i]>target)card_reveal[i]=target;}
+                else if(card_reveal[i]>target){card_reveal[i]-=step;if(card_reveal[i]<target)card_reveal[i]=target;}
+                if(card_reveal[i]!=before&&cards[i])InvalidateRect(cards[i],NULL,FALSE);
             }return 0;
         }
         if(game_process&&WaitForSingleObject(game_process,0)==WAIT_OBJECT_0) {
@@ -307,7 +318,15 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
         RoundRect(item->hDC,r.left+2,r.top+2,r.right-2,r.bottom-2,scale(30),scale(30));
         SelectObject(item->hDC,old_brush);SelectObject(item->hDC,old_pen);DeleteObject(brush);DeleteObject(pen);
         int height=r.bottom;
-        RECT art={scale(14),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
+        int box_w=scale(70);
+        RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
+        image_paint(item->hDC,box_art[index],box);
+        if(cart_art[index]){
+            int slide=(int)(card_reveal[index]*scale(55));
+            RECT cart={box.left+scale(6)+slide,box.top+(box.bottom-box.top)/2-scale(9),box.right+scale(26)+slide,box.top+(box.bottom-box.top)/2+scale(9)};
+            image_paint(item->hDC,cart_art[index],cart);
+        }
+        RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
         r.left+=scale(20);r.right-=scale(20);r.top=height-scale(80);r.bottom=height-scale(28);
         draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
 
@@ -324,7 +343,7 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
         paint_home(dc);
         EndPaint(window,&p);return 0;
     }
-    case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
+    case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);for(int i=0;i<2;i++){if(box_art[i])image_dispose(box_art[i]);if(cart_art[i])image_dispose(cart_art[i]);}if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
     }
     return DefWindowProcW(window,message,w,l);
 }
