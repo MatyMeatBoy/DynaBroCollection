@@ -14,6 +14,8 @@ END = (7, 3)
 def moves(src, dst):
     out = []
     dx, dy = dst[0] - src[0], dst[1] - src[1]
+    if src[1] == 3 and dst == END:  # row 3 keys are Y Z -> <- END: step through them one by one
+        dx = 4 - src[0]
     horiz = ['RIGHT'] * dx if dx > 0 else ['LEFT'] * -dx
     vert = ['DOWN'] * dy if dy > 0 else ['UP'] * -dy
     # Row 3 has only five keys: enter it last and leave it first.
