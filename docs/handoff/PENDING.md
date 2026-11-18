@@ -125,3 +125,14 @@ Update: all 45 Story + Practice 1-6 briefings now verified on screen (CITY neede
 - ANIME / SIFUKU viewers: script takes no screenshots; check manually.
 - Secret stage passwords that loaded (ROULET CRYSTL MASIRI HIMITU BEEP DAJO) have no briefing; untested: CHORO DARUMA DBTWO FAMITS HOSHI JIJII KISSME LOVEME MMD NABEO NOMISO RIERIE YOUKO CSK.
 - Native-speaker review, physical controller test, refreshed packaging candidate (local/candidate-next stale), DB1 manual keyboard test.
+
+## How to work each remaining item (what to look for)
+1. DB1EN build: run `python -m tools.build --target both --jobs 8`, then `cmake --build build/dev --parallel 8`. Success = no `s_quit_to_desktop undeclared`; then `ctest.exe` in build/dev (expect 54 pass) and `python -m unittest discover -s tests -p "test_*.py"`. If the engine checkout and patch drift, `git -C upstream/segagenesisrecomp apply --reverse` the old patch, re-run tools.build.
+2. Practice title "PRACTICE 4": run `python tools/db2_password_script.py TIRANO` (Practice 2), `TORI`, `ARO`, `PUKPUK`... and compare briefing screenshots (`brief.png`). The level number is a title graphic, not text; find which tiles/VRAM write draws it (DYNA_DB2_VIDEO_TRACE=1) and whether the English build patches the wrong tile. Done when each level shows its own number.
+3. Japanese outside briefings: play each mode with scripted input (tools.native_probe --script, SCREENSHOT) and scan screenshots for kana/kanji. Candidates: results/score screens after a stage, Original-mode stage names (kanji), Dyna Fight, owner build "YOU WENT EXTINCT". For each, run with DYNA_TRACE_GLYPH=1 --language en, use tools/glyph_trace_report.py on the log to list untranslated glyph strings (TODO rows), then add `glyph_text`/`ram_text` entries in translations/db2special-en.json.
+4. Stage event dialogue: password routes (tools/db2_password_script.py) only reach the intro cutscene; play deeper (scripted gameplay or save states) with DYNA_TRACE_GLYPH=1 and rebuild strings with the ramstr2-style reconstruction from `[glyph-ram]` log lines; add `ram_text` entries (6-word prefix must be unique).
+5. Animation viewers ANIME/SIFUKU: enter the password manually in the launcher build and check labels are English; script cannot capture them because the post-password flow differs (no briefing screen).
+6. Untested secret stages: run `python tools/db2_password_script.py <WORD>` for each listed word; the result is gameplay directly, so check `brief.png` shows a loaded map and the HUD has no Japanese.
+7. Native-speaker review: send the English strings in translations/db2special-en.json (grep "english") to a reviewer; look for wording, truncation at box edges, line breaks.
+8. Controller test: connect a physical pad, run each build, verify menu navigation, password entry (A/C/START) and in-game commands.
+9. Packaging: rebuild the candidate package from current `work/dynabrothers` (local/candidate-next is stale) after items 1-3.
