@@ -34,7 +34,6 @@ class TranslationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             translate(self.source, self.catalog)
 
-<<<<<<< HEAD
     def test_rejects_out_of_bounds_guard_and_control_char_entries(self):
         cases = [
             dict(address=500, capacity=7, before=b'JP_TEXT'.hex(), english='HELLO__'),
@@ -56,7 +55,6 @@ class TranslationTests(unittest.TestCase):
             dict(address=605, capacity=9, before=source[605:614].hex(), english='B' * 9)])
         with self.assertRaises(ValueError):
             translate(source, catalog)
-=======
     def test_real_catalog_entries_are_self_consistent(self):
         catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
         entries = catalog['entries']
@@ -73,4 +71,3 @@ class TranslationTests(unittest.TestCase):
             span = set(range(address, address + capacity))
             self.assertFalse(span & used, f'overlapping entries at {address:06X}')
             used |= span
->>>>>>> origin/test/db2-catalog-self-consistency
