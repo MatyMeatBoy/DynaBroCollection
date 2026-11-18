@@ -74,3 +74,6 @@ Added per owner request ("en el menu interno tener opciones de salir del juego a
 
 - Verificado en pantalla: cuerpo del briefing de Práctica 1 (`local/prac2.input`, captura `local/pbr/t38.png`). El TÍTULO gráfico "れんしゅう N" (pantalla de briefing) y los iconos del menú principal (れんしゅうモード, ストーリーモード, オリジナルモード, たいけつモード) son imágenes de teselas: requieren parche de gráficos u overlay (ver tarea 3).
 - Nombres de efectos de sonido del OPTIONS (ポチャン etc., 0x4F6D8-0x4F7F0, onomatopeyas) sin traducir; bajo valor.
+
+- Biografías: las 6 verificadas en pantalla (STEGO incluida; captura `local/bio3/sheet.png`, ruta `local/bio3.input`, 70000 fotogramas, un screenshot cada 600).
+- `controller_profiles_contract`: en esta máquina existe `SDL_GAMECONTROLLERCONFIG` (mapeo de un mando N64 USB) y hay un dispositivo USB de entrada conectado; quitar la variable o ignorar dispositivos con `SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT` NO arregla el fallo. Probar sin ningún mando físico conectado o en otra máquina; si falla igual, depurar `gamepad_init`/`s_pad[0]` frente a los joysticks virtuales.
