@@ -1470,6 +1470,14 @@
       "align": "center"
     },
     {
+      "address": 2150166,
+      "before": "01b1019901cf001c01a90e3e110f",
+      "lines": [
+        "ENTER PASSWORD"
+      ],
+      "verification": "glyph-ID string; guard exact; scene capture pending"
+    },
+    {
       "address": 2238072,
       "before": "0004001401550143015501430155014301550143",
       "lines": [
