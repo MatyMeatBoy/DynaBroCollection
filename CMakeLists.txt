@@ -471,3 +471,9 @@ add_executable(DynaPadProtocolTest tests/pad_protocol_test.c "${RUNNER_ROOT}/vid
 target_include_directories(DynaPadProtocolTest PRIVATE "${RUNNER_ROOT}" "${RUNNER_ROOT}/video")
 target_compile_options(DynaPadProtocolTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME pad_protocol_contract COMMAND DynaPadProtocolTest)
+
+add_executable(DynaManualDataTest tests/manual_data_test.c games/manual_data.c)
+target_include_directories(DynaManualDataTest PRIVATE games)
+target_compile_options(DynaManualDataTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME manual_data_contract COMMAND DynaManualDataTest
+    "${CMAKE_SOURCE_DIR}/docs/manuals/db1-manual-en.json" "${CMAKE_SOURCE_DIR}/docs/manuals/db2-manual-en.json")
