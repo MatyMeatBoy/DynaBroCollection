@@ -26,7 +26,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -37,6 +37,7 @@ def main():
         if ui:command+=['--achievement-ui-test']
         if audio:command+=['--require-audio-signal']
         if host_settings:command+=['--audio','--host-settings-test']
+        if window_size:command+=['--window-size',window_size]
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
         elif irq:env['DYNA_IRQ_VERIFY']='1'
@@ -110,6 +111,20 @@ def main():
         info=json.loads(integration.stdout)
         if integration.returncode or info.get('schema_version')!=1 or len(info.get('games',[]))!=2:raise RuntimeError('Launcher integration metadata failed')
         cases['launcher-integration-info']=dict(passed=True,schema_version=1)
+    if tuple(map(int,version.split('.'))) >= (0,1,5):
+        for name,scene,frames in [
+            ('db1-stage-intro-1440','camera-stage-intro',5600),
+            ('db1-camera-1440','camera-vertical',6800),
+            ('db1-options-1440','options-native',6400),
+            ('db1-password-1440','password-native',6500),
+            ('db1-submenus-1440','submenu-native',12000),
+            ('db1-tsunami-1440','hazard-tsunami',8500)]:
+            run(name,'DynaBrothers1AOT.exe',db1,frames,ROOT/('games/db1/scenes/'+scene+'.input'),
+                widescreen='16:9',audio=True,window_size='2560x1440')
+        from tools.hub_probe import verify_hub
+        result=verify_hub(payload/'DynaBrothersLauncher.exe',db1,args.output/'green-hub-same-window')
+        if not result['passed']:raise RuntimeError('Green hub original-window regression failed')
+        cases['green-hub-same-window']=result
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

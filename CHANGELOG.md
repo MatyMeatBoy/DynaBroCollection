@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5 — checkpoint candidate
+
+- DB1: cámara coherente, introducción de nivel y submenús extendidos, hazards continuos, fondos y logo del título integrados.
+- Launcher verde único con settings en la misma ventana, DPI y navegación por mando; descubrimiento de ROMs y parches, selección explícita respetada.
+- Replay de contraseña nativo verificado; guardado/Extras completo y traducciones restantes siguen pendientes. DB2 continúa pausado.
+
 ## 0.1.3 â€” checkpoint de prueba
 
 - DB1: mundo ampliado a 16:9, HUD a la derecha y render independiente del buffer de 36 actores; considera todos los IDs vÃ¡lidos visibles y conserva las capas de cursor/selecciÃ³n.

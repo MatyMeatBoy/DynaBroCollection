@@ -1,6 +1,6 @@
 # Dyna Brothers 1 + 2 — v0.1.4 test checkpoint
 
-[![Checkpoint 0.1.4](https://img.shields.io/badge/version-0.1.4%20checkpoint-orange)](docs/releases/v0.1.4-checkpoint.md)
+[![Checkpoint 0.1.5](https://img.shields.io/badge/version-0.1.5%20candidate-orange)](docs/releases/v0.1.5-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
 [![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
@@ -8,7 +8,7 @@
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
 
-Version0.1.4 is published as a test checkpoint: Timer A audio, DB1 continuous weather/widescreen, automatic controls, same-window settings and Extras. [Checkpoint scope and limits](docs/releases/v0.1.4-checkpoint.md). DB2 current renderer is integrated; further DB2 work is paused at the user's request.
+Version0.1.5 is being qualified with coherent DB1 camera/stage/submenu rendering and a single green settings surface. [Candidate scope](docs/releases/v0.1.5-checkpoint.md). Version0.1.4 remains the published test checkpoint: Timer A audio, DB1 continuous weather/widescreen, automatic controls, same-window settings and Extras. [Checkpoint scope and limits](docs/releases/v0.1.4-checkpoint.md). DB2 current renderer is integrated; further DB2 work is paused at the user's request.
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
