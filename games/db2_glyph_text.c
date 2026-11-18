@@ -32,9 +32,9 @@ int db2_glyph_text_cell(char left,char right,unsigned char out[32])
  return 1;
 }
 
-static const GlyphText *find(uint32_t start,unsigned *index)
+static const GlyphText *find(uint32_t a1,unsigned *index)
 {
- for(size_t i=0;i<TABLE_COUNT;i++)if(table[i].addr==start){*index=(unsigned)i;return &table[i];}
+ for(size_t i=0;i<TABLE_COUNT;i++)if(a1>=table[i].addr&&a1<table[i].addr+2u*table[i].cells){*index=(unsigned)i;return &table[i];}
  return NULL;
 }
 
@@ -58,10 +58,8 @@ void db2_glyph_text_observe(unsigned pc)
  if(pc!=0x5b174||TABLE_COUNT==0)return;
  uint32_t a1=g_cpu.A[1]&0xffffffu,a0=g_cpu.A[0]&0xffffffu;
  if(a1>=0x280000u||a0<0xff0000u||a0>0xffffe0u)return;
- /* Walk back to the string start (previous NUL word). */
- uint32_t start=a1;
- while(start>=2&&rom_word(start-2)!=0)start-=2;
- unsigned idx;const GlyphText *t=find(start,&idx);
+ unsigned idx;const GlyphText *t=find(a1,&idx);
+ uint32_t start=t?t->addr:0;
  if(!t||!verify(t,idx))return;
  unsigned stride=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
  if(!stride)return;
