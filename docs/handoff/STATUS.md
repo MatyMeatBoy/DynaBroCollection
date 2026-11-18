@@ -39,3 +39,12 @@ DB2 source ABI regressions on the exact package match delivered0.1.6 guest/audio
 Remaining: qualify and repair DB2 native extended view/actors/fallbacks, restore original-size movable visor with verified effect rules, complete guarded English repairs, extend appropriate Extras/guide/save contracts and package later verified milestones. Broaden DB1 campaign/achievement acceptance as useful; local input/mixer checks do not substitute for physical M30/reporter-PC audio confirmation.
 
 OptiPort main freshness checked at a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1. Feedback: https://github.com/MatyMeatBoy/OptiPort/issues/28#issuecomment-6976057576 . No claim of every bug or hardware platform being complete.
+
+
+Post-publication DB2 finding: the legacy18k unpause script reaches attract/demo,
+not established player control. Ordinary3BB0 battle ownership therefore stayed
+inactive, hiding the latent plane/UI defects behind native fallback. See
+[scope correction](../releases/db2-demo-fixture-scope.md). Root is implementing
+separate explicit demo ownership; camera worker now derives a natural Story route.
+No interactive or accepted-wide proof is claimed yet. Pure plane/visor contracts
+pass, and both-game preference preservation is committed as1d53bf4.

@@ -25,3 +25,11 @@ The exact engine diff is recorded in `patches/0001-explicit-pc-mainloop.patch` a
 Accelerated dummy audio generates many output-queue drops; it tests control-flow/state equivalence here, not physical audio or presentation pacing. The independent reference remains useful for visuals, but its original input cadence reached different tutorial contexts; no frame-perfect equivalence to it is claimed by this test. Corrected packaged qualification and longer gameplay remain separate gates.
 
 Subsequent qualification: [v0.1.2 r2](../releases/v0.1.2-r2-verification.md) passed all eleven portable cases, an additional 18,000-execution gameplay replay and the affected routes from its extracted closed ZIP. The original guard failure remains preserved in the before evidence and r1 supplement.
+
+## Subsequent fixture identification
+
+After0.1.7 publication, native driver tracing identified the historical18,000-frame
+route as attract/demo rather than established player-controlled gameplay.
+The IRQ failure, repaired finite execution and matching hashes remain observed;
+the earlier gameplay/unpause acceptance interpretation is narrower than stated.
+[Scope correction and exact driver evidence](../releases/db2-demo-fixture-scope.md).
