@@ -1,4 +1,4 @@
-# Dyna Brothers 1 + 2 — v0.1.9 test checkpoint
+# DynaBroCollection - Dyna Brothers 1 + 2
 
 [![Checkpoint 0.1.9](https://img.shields.io/badge/version-0.1.9%20checkpoint-orange)](docs/releases/v0.1.9-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
@@ -10,9 +10,9 @@
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
 
-![DB2 Special native title screen](docs/images/db2-title-v0.1.9.png)
+![Dyna Brothers 1 + 2 logo](docs/images/dyna-logo-1plus2-v1.png)
 
-Native capture, not designed art; [image/executable provenance](docs/images/db2-title-v0.1.9.json).
+The project's own stone logo (`assets/img/dyna-logo-1plus2-v1.png`), also used as the launcher's banner.
 
 Version 0.1.9 adds the DB2 Special host biography overlay (creature name/stats/flavor text in English), translates the Original/Versus mode menus, story-mode stage briefings and dialogue, and fixes a title-menu highlight staying yellow after opening Extras. [Scope and limits](docs/releases/v0.1.9-checkpoint.md). Previous checkpoint: [v0.1.8](docs/releases/v0.1.8-checkpoint.md) fixed the six-button peripheral handshake and the actual DB2 plane layout. DB2 can still fall back to the native image during held camera movement; some menus (in-game Options, a few Original-mode kanji stage names) remain untranslated — see [STATUS.md](STATUS.md).
 
