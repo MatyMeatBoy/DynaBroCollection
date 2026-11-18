@@ -145,9 +145,13 @@ static int retire(void *user,unsigned *cycles) {
     if(g_cpu.PC==0x5b174){static int trace=-1;if(trace<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace=t&&t[0]=='1';}
         if(trace){unsigned a1=g_cpu.A[1]&0xffffffu,w=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
             fprintf(stderr,"[glyph] a1=%06X word=%04X width=%u a0=%08X\n",a1,a1<0x400000u?(((unsigned)g_rom[a1]<<8)|g_rom[a1+1]):(((unsigned)g_ram[a1&0xffff]<<8)|g_ram[(a1+1)&0xffff]),w,g_cpu.A[0]);}}
+    {static int no_host_text=-1;if(no_host_text<0){const char *e=getenv("DYNA_DB2_NO_HOST_TEXT");no_host_text=e&&e[0]=='1';}
+    /* Debug switch: disable the DB2 host text overlays to compare guest/audio state hashes. */
+    if(!no_host_text){
     if(g_cpu.PC==0x5b174 && dyna_language_english())db2_glyph_text_observe(g_cpu.PC);
     if(dyna_language_english() && (g_cpu.PC==0x5d3d4 || g_cpu.PC==0x5d57a ||
        g_cpu.PC==0x5d674 || g_cpu.PC==0x5d722))db2_bio_overlay_observe(g_cpu.PC);
+    }}
 #endif
 #ifdef DYNA_HAS_JP
     switch(g_cpu.PC){

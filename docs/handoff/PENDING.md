@@ -14,7 +14,7 @@ Dev setup (Git Bash): put `D:/01Claude/DynaBrothers/toolchain/ucrt64/bin`, `git/
 
 ## Recomp / video
 6. Reasons 01/04/20 fallbacks before battle and reason 10 during stage-intro transitions are expected; remaining coherence work is producer/SAT latch research (`evidence/db2-visor-research/coherence.md`).
-7. Compare guest/audio state hashes with overlays on vs off (bio overlay, glyph text) over the 9400-frame fixture.
+7. DONE (2026-11-18): guest/audio state hashes are identical with host text overlays on vs off (`DYNA_DB2_NO_HOST_TEXT=1` disables them): story intro 14000 frames `B2CEBC46990F365D`/`7BC5E6D4DB88CE33`, biography attract route 12000 frames `99624DBF45032A7F`/`0A92539EC3BCFE2C`. Re-check when adding new overlays.
 8. Physical controller recognition and audio on the reporter PC (cannot be tested here).
 
 ## Packaging
