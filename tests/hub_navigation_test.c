@@ -18,4 +18,16 @@ int main(void){DynaHubNavigation s={0};
  assert(dyna_hub_navigation_tick(&s,GP_OVERLAY_A,13)==101);
  s.focus=2;dyna_hub_navigation_tick(&s,0,14);
  assert(dyna_hub_navigation_tick(&s,GP_OVERLAY_A,15)==201);
+ /* Third row (301/302, the Manual buttons): reachable by DOWN from
+  * settings, and DOWN again must clamp there rather than wrap or overflow. */
+ s.focus=2;dyna_hub_navigation_tick(&s,0,16);
+ assert(!dyna_hub_navigation_tick(&s,GP_OVERLAY_DOWN,17)&&s.focus==4);
+ assert(dyna_hub_navigation_tick(&s,GP_OVERLAY_A,18)==301);
+ dyna_hub_navigation_tick(&s,0,19);
+ assert(!dyna_hub_navigation_tick(&s,GP_OVERLAY_DOWN,20)&&s.focus==4);
+ assert(!dyna_hub_navigation_tick(&s,GP_OVERLAY_RIGHT,21)&&s.focus==5);
+ assert(dyna_hub_navigation_tick(&s,GP_OVERLAY_A,22)==302);
+ dyna_hub_navigation_tick(&s,0,23);
+ assert(!dyna_hub_navigation_tick(&s,GP_OVERLAY_UP,24)&&s.focus==3);
+ assert(dyna_hub_navigation_tick(&s,GP_OVERLAY_A,25)==202);
  return 0;}

@@ -530,13 +530,20 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         break;
     case WM_TIMER:
         if(w==2){
-            if(!settings_open&&!game_process&&GetForegroundWindow()==window){
+            /* The Manual viewer hides cards/settings and uses its own
+             * buttons; this gamepad focus cycle must stay out of its way
+             * while it's open (those controls would be invisible targets). */
+            if(!settings_open&&manuals_game<0&&!game_process&&GetForegroundWindow()==window){
                 HWND focused=GetFocus();int id=GetDlgCtrlID(focused);
                 if(id==101||id==102)hub_navigation.focus=(unsigned)(id-101);
                 else if(id==201||id==202)hub_navigation.focus=(unsigned)(id-199);
+                else if(id==301||id==302)hub_navigation.focus=(unsigned)(id-301)+4;
                 unsigned old_focus=hub_navigation.focus;
                 int command=dyna_hub_navigation_tick(&hub_navigation,dyna_hub_controls_poll(),SDL_GetTicks64());
-                if(hub_navigation.focus!=old_focus)SetFocus(hub_navigation.focus<2?cards[hub_navigation.focus]:settings_buttons[hub_navigation.focus-2]);
+                if(hub_navigation.focus!=old_focus){
+                    HWND *row[3]={cards,settings_buttons,manual_buttons};
+                    SetFocus(row[hub_navigation.focus/2][hub_navigation.focus%2]);
+                }
                 if(command)SendMessageW(window,WM_COMMAND,(WPARAM)command,0);
             }
             for(int i=0;i<2;i++){
