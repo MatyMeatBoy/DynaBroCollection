@@ -151,6 +151,24 @@ def main():
             if any(cases['db1-visor-'+str(offset)][key]!=baseline[key]
                    for key in ['state_fnv1a64','audio_state_fnv1a64']):
                 raise RuntimeError('Visor placement changed canonical game/audio state')
+        # Use production input, not the Save-test callback, under a real Unicode profile.
+        unicode_script=args.output/'unicode-save.input'
+        source=(ROOT/'games/db1/scenes/progress-save-diagnostic.input').read_text(encoding='utf-8')
+        source='\n'.join(line for line in source.splitlines() if not line.startswith('SCREENSHOT'))
+        unicode_script.write_text(source+'\nPRESS DOWN 12\nWAIT 30\nPRESS A 12\nWAIT 120\n',encoding='utf-8')
+        unicode_name='db1-save-\u4fdd\u5b58'
+        run(unicode_name,'DynaBrothers1AOT.exe',db1,12500,unicode_script,widescreen='16:9')
+        saves=list((args.output/unicode_name/'profile').glob('dyna1-progress-*.bin'))
+        if len(saves)!=1:raise RuntimeError('Unicode profile native Save did not create its progress file')
+        data=saves[0].read_bytes()
+        if len(data)!=105 or data[:8]!=b'DYNAPRG1' or int.from_bytes(data[101:105],'big')!=0x1becc:
+            raise RuntimeError('Unicode profile saved an unexpected native progress record')
+        checked=bytearray(data);checked[84:88]=bytes(4);checksum=2166136261
+        for value in checked:checksum=((checksum^value)*16777619)&0xffffffff
+        if checksum!=int.from_bytes(data[84:88],'big'):
+            raise RuntimeError('Unicode profile progress checksum failed')
+        cases['db1-save-unicode']=cases.pop(unicode_name)
+        cases['db1-save-unicode']['native_save_sha256']=hashlib.sha256(data).hexdigest()
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

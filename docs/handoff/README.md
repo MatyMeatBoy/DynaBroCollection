@@ -1,3 +1,5 @@
+Current coordination: [STATUS.md](STATUS.md). Historical sections below retain their original context.
+
 # Coordination and handoff — 2026-11-18
 
 Start here before changing this checkout. Active workspace: `D:/01Claude/Dynabrothers1+2`. Branch: `work/dynabrothers`. The working tree contains substantial uncommitted work from several owners. Do not reset, clean, stash globally, switch branches, regenerate patches or overwrite other owners' changes.

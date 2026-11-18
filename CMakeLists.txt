@@ -394,3 +394,14 @@ add_executable(DynaVisorSettingsTest tests/visor_settings_test.c games/visor_set
 target_include_directories(DynaVisorSettingsTest PRIVATE games "${CMAKE_SOURCE_DIR}/upstream/recomp-ui/src")
 target_compile_options(DynaVisorSettingsTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME visor_settings_contract COMMAND DynaVisorSettingsTest)
+
+
+# Pure components for the next native Extras integration; not yet installed in AOT.
+add_executable(DynaDb1TitleMenuTest tests/db1_title_menu_test.c games/db1_title_menu.c)
+target_include_directories(DynaDb1TitleMenuTest PRIVATE games)
+target_compile_options(DynaDb1TitleMenuTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_title_menu_contract COMMAND DynaDb1TitleMenuTest)
+add_executable(DynaDb1LevelCatalogTest tests/db1_level_catalog_test.c games/db1_level_catalog.c games/progress_session.c games/progress_store.c)
+target_include_directories(DynaDb1LevelCatalogTest PRIVATE games)
+target_compile_options(DynaDb1LevelCatalogTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db1_level_catalog_contract COMMAND DynaDb1LevelCatalogTest)

@@ -139,7 +139,7 @@ class PackageTests(unittest.TestCase):
                          'db1-options-1440','db1-password-1440','db1-submenus-1440',
                          'db1-tsunami-1440','green-hub-same-window','db1-intro-fade',
                          'db1-save-result','db1-hard-ending-save','db1-visor--2',
-                         'db1-visor-0','db1-visor-2']:
+                         'db1-visor-0','db1-visor-2','db1-save-unicode']:
                 qa['cases'][name]=dict(passed=True)
             path.write_text(json.dumps(qa),encoding='utf-8')
             with self.assertRaisesRegex(RuntimeError,'Missing packaged regression cases'):
