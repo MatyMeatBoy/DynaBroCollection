@@ -117,3 +117,11 @@ Password ROULET (from tcrf search result) is valid: secret roulette stage loads 
 ## Password sweep 2026-11-18 (all public lists)
 Full list verified from GameFAQs/kakusi.jp (Story 1-45, Practice 1-8, Original easy/normal/hard, secret stages). tools/db2_password_script.py now submits words under 6 letters via END (row 3 col 7). Briefings of stages 4,5,7,8,9,19,21,23,27,29,30,33,35,37-44 checked on screen; fixed stage 30 title (FUTURE) and stage 37/43 leftover kana. Secret stages ROULET/CRYSTL/MASIRI/HIMITU/BEEP/DAJO load; SHOKAI shows English character intros. Pending: DB1EN target fails to build in build/dev (s_quit_to_desktop undeclared in upstream runner/main.c after patch 0001 update) - not from this work; view remaining briefings; non-briefing Japanese.
 Update: all 45 Story + Practice 1-6 briefings now verified on screen (CITY needed Y->END fix in the script). Practice screens all show the graphic title "PRACTICE 4" regardless of level (title graphic bug, pending). ANIME (viewer) takes no screenshots in the script - view manually.
+
+## Remaining after 2026-11-18 session (what is genuinely left)
+- DB1EN build fix: patches/0001 guards `s_quit_to_desktop` use in main() with `#if RECOMP_LAUNCHER` (it was declared only under that guard). Verify `cmake --build build/dev` + ctest (54) + unittest after merging.
+- Practice screens: graphic title shows "PRACTICE 4" for every level (title graphic/tile selection), still unverified fix.
+- Japanese outside briefings: results/score screens, Original-mode kanji stage names, Dyna Fight screens, owner build extinct screen, event dialogue in stages not yet played (only password-route cutscenes seen).
+- ANIME / SIFUKU viewers: script takes no screenshots; check manually.
+- Secret stage passwords that loaded (ROULET CRYSTL MASIRI HIMITU BEEP DAJO) have no briefing; untested: CHORO DARUMA DBTWO FAMITS HOSHI JIJII KISSME LOVEME MMD NABEO NOMISO RIERIE YOUKO CSK.
+- Native-speaker review, physical controller test, refreshed packaging candidate (local/candidate-next stale), DB1 manual keyboard test.
