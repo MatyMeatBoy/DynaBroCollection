@@ -1,3 +1,11 @@
+# v0.2.1 alpha
+
+- New Settings > Manual viewer in the launcher: a book-sized, GDI-drawn open booklet with a staple-bound spine, PDF-reader pagination (cover alone, then real facing pairs), and a JP/EN toggle. Auto-detects whether a DB2 scan is a single page or an already-joined two-page spread and renders each correctly. Fully gamepad-reachable (D-pad to the Manual button, then LEFT/RIGHT/A/BACK inside the viewer).
+- DB2 gets the same rendering fix DB1 got in v0.2.0: a single actor with a transiently unreadable record (confirmed live during ordinary battle play, not just the documented pre-battle window) no longer drops the whole frame to the native fallback image -- only that actor's own sprite is skipped.
+- DB2 Special translation catalog grows from 582 to 704 entries (stage-2 RAM cutscene dialogue, password-screen fixes, stage 30 title, assorted briefing leftovers).
+- Launcher: the home screen's gamepad navigation was generalized from a hardcoded 2x2 grid to a 3-row grid, with full regression coverage for the existing rows.
+- Known remaining gaps unchanged from v0.2.0 (DB2 Options menu/kanji stage-name tile graphics, the DB1 title-menu wraparound timing question, a subtle moving-actor HUD-seam glitch) -- see docs/handoff/PENDING.md.
+
 # v0.2.0 alpha
 
 - DB2 Special translation grows from 454 to 582 catalog entries: title OPTIONS menu and sound-test names, Custom Versus settings and COM difficulty names, Practice briefings 2-6, stage-2 RAM cutscene dialogue, and a centering fix for the 3-line gameplay prompt boxes.
