@@ -207,7 +207,10 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
   for(int x=0;x<216;x++){
    int dx=x+shift;
    uint8_t expected=dx>=0&&dx<w?terrain[dx]:terrain_pixel(&c,x,y);
-   if(expected!=native_terrain[x]){rejected=1;frame_reasons|=16;}
+   if(expected!=native_terrain[x]){
+    if(trace_enabled&&!rejected){static unsigned n;if(n++%25==0)fprintf(stderr,"[db2-video] terrain mismatch y=%d x=%d expected=%02X native=%02X anchor=%d,%d cell=%d,%d shift=%d\n",y,x,expected,native_terrain[x],camera.anchor_x,camera.anchor_y,(int)camera.cell_x,(int)camera.cell_y,shift);}
+    if(trace_enabled&&!rejected){static unsigned m;if(m++%25==0){unsigned bad=0,nz=0,bgc=0;for(int q=0;q<216;q++){bgc+=(y>=0&&y<224&&native_valid[y]&&native_image[y][q]==background);int dd=q+shift;uint8_t ex=dd>=0&&dd<w?terrain[dd]:terrain_pixel(&c,q,y);if(ex!=native_terrain[q])bad++;if(native_terrain[q])nz++;}fprintf(stderr,"[db2-video]   row y=%d mismatching=%u native_nonzero=%u native_img_bg=%u\n",y,bad,nz,bgc);}}
+    rejected=1;frame_reasons|=16;}
    if(dx>=0&&dx<w)ui[dx]=native_ui[x];
   }
   memcpy(ui+layout.hud_left,native_ui+216,104);
