@@ -58,3 +58,26 @@ class Db1TranslationTests(unittest.TestCase):
         catalog['credits_tables'] = [dict(address=0x1c000, width=3, count=1,
             before='000000', lines=['.!?'])]
         self.assertEqual(translate(source, catalog)[0x1c000:0x1c003], bytes([0x27, 0x29, 0x28]))
+
+    def test_bonus_message_encoding_matches_distinct_vram_font_bases(self):
+        source, catalog = self.fixture()
+        catalog['bonus_messages'] = [dict(address=0x4000, capacity=10, before='00'*10,
+            lines=['A Z!', 'B'], background_address=0x4020, background_before='00'*16,
+            background='CONGRATS! GREAT!')]
+        result = translate(source, catalog)
+        self.assertEqual(result[0x4000:0x400a], bytes([0xa9,0x20,0xc2,0xc6,0,0xaa,0,0,0,0]))
+        self.assertEqual(result[0x4020], 0x16)  # C: font tile $85 minus background base $6F
+        self.assertEqual(result[0x4028], 0x31)  # !: loaded font index $27 + $79 - $6F
+        self.assertEqual(result[0x4029], 0xff)  # renderer's explicit blank sentinel
+
+    def test_bonus_messages_reject_overflow_glyphs_guards_and_overlaps(self):
+        source, catalog = self.fixture()
+        table = dict(address=0x4000, capacity=10, before='00'*10, lines=['HELLO'],
+            background_address=0x4020, background_before='00'*16, background='CONGRATS! GREAT!')
+        for change in [dict(lines=['A'*25]),dict(lines=['HELLO WORLD']),dict(lines=['Hi']),
+                       dict(before='01'*10),dict(background_before='01'*16),
+                       dict(background='A'*17),dict(background_address=0x4000),
+                       dict(address=0x1b464),dict(lines=['']*7)]:
+            invalid = copy.deepcopy(catalog)
+            invalid['bonus_messages'] = [dict(table, **change)]
+            with self.assertRaises(ValueError):translate(source, invalid)

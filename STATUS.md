@@ -8,6 +8,8 @@ The local v0.1.1 checkpoint is closed and verified; see [its exact archive/sourc
 
 DB1 now has guarded repairs for 18 credits character names and the nine-row hard-ending secret-mode message. Current English CRC32 is `11688440`; JP, supplied v0.1 and previous v0.2 remain accepted by native language switching. Reference captures and a 52,000-frame prepared native ending route show readable credits names and MHRI message. Both games rebuilt; 32 Python tests, five native contracts, both DB1 language/map routes and the DB2 tutorial passed. See [layout, identities, diagnostic limits and remaining inventory](docs/research/db1-credits-translation.md). The closed checkpoint ZIP remains unchanged; this is newer source/development work.
 
+The follow-up repairs practice and alien-mode completion bodies plus their scrolling congratulation backdrops. Current cumulative English CRC32 is now `950A8FC3` (the `11688440` credits milestone is retained privately). Both screens are readable in native and independent reference captures; 34 Python tests pass. Ordinary first-stage victory was already English and was checked separately. No full campaign or full translation completion is inferred.
+
 ## Completed work with bounded evidence
 
 | Work | Evidence and limit |

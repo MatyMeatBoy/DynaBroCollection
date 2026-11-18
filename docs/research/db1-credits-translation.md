@@ -10,13 +10,29 @@ The hard-ending message at `$29CE4..$29DCD` contains nine rows of 26 tiles. The 
 
 Both tables now use guarded fixed-width catalog edits. Long display names are shortened: Gumigumi-chan becomes GUMIGUMI, Perorinchicchi becomes PERORIN and Pekipekiman becomes PEKIPEKI. Other names use compact romanizations; these are fan-localized display names, not claimed official English names. Existing staff attributions are preserved.
 
-## Qualified output
+## Credits milestone output
 
 - Full image size: 1,048,576 bytes, unchanged.
 - English CRC32: `11688440`.
 - SHA256: `37891b312529b72cee0ff568f161d8258f528baa04c83f4b0bc6c0ef48de5daa`.
 - Relative to v0.2, only the two tables and Mega Drive checksum change. Code and timing are untouched.
 - Native language metadata accepts JP, new English, supplied v0.1 and previous v0.2. The old v0.2 is reconstructed from the map-only catalog and checked against its known SHA256 before inclusion.
+
+## Practice and alien completion messages
+
+A subsequent prepared-win investigation separated the already-English ordinary victory result from two special completion screens. Original stage type 4 enters `$48AE` for practice completion; type 3 enters `$48B6` for alien-mode completion. Their bodies at `$478E` (100 bytes) and `$481E` (101 bytes) still contained half-width Japanese characters. The first congratulates the player on practice and invites normal/hard play; the second celebrates driving the dinosaurs away and making Planet Jura an alien paradise.
+
+The renderer at `$4BEA` treats a NUL as a row break and the following NUL as the end, writing rows two tiles apart. Body characters and the scrolling backdrop have distinct VRAM font bases. With the supplied English font, A must be encoded `$A9` for the body and `$14` for the backdrop. Literal ASCII letters would render incorrectly. The implementation derives both encodings from the verified font glyph indices, preserves original byte capacities and rejects rows beyond 24 tiles. The two 16-byte backgrounds at `$477C` and `$480C` now read `CONGRATS! GREAT!`, preserving the congratulatory meaning and original scrolling behavior.
+
+Current cumulative English output, including credits and both special messages:
+
+- CRC32 `950A8FC3`, SHA256 `ad9a90450d46b860dfd38772fa19655576e4244bf7c4df4c2fdb8d7786c1c261`.
+- 1,048,576 bytes, unchanged. Only guarded text/background tables and the cartridge checksum are edited beyond the previous translation.
+- 34 Python tests passed, including font-base encoding, NUL termination, bounds/capacity, byte guards and overlapping-edit rejection.
+- Both English completion screens and their moving backdrops were visually inspected in native captures and an independent reference. Each native prepared route completed 9,600 frames with executable SHA256 `4f25748ed83862013b17f3f18b76152beda243bf7aeb53016f55223bc50dcd59`.
+- Reproduction uses [practice](../../games/db1/scenes/practice-completion-diagnostic.input) and [alien](../../games/db1/scenes/alien-completion-diagnostic.input) diagnostic scripts. These prepare a win in RAM; they do not represent full mode completion. The reference-only copies redirect the initialized boot jump to the respective original routine; that diagnostic code is excluded from the translation.
+
+The final wording retains the planet's name as **Planet Jura**. Earlier English capture drafts used a descriptive “Jurassic planet”; those intermediate images and hashes remain preserved rather than overwritten. An additional native practice route loaded the old v0.2 English input with Japanese selected and showed the original Japanese message and backdrop. The ordinary map route passed again at 8,900 frames after these additional edits.
 
 ## Verification and limits
 
@@ -38,7 +54,8 @@ That native route completed 52,000 frames with executable SHA256 `62c0c33e2bd276
 | Character names in credits | Eighteen fixed-width entries repaired; sampled reference and native captures verified |
 | Secret-mode message | Nine rows translated and readable in reference and native captures |
 | Intro/options/password/defeat | Existing English observed in earlier bounded routes; no claim of exhaustive coverage |
-| Victory results | Garbled output observed during prepared-win diagnostics; qualify the ordinary first-stage context and trace its font/table before patching |
+| Ordinary victory results | Existing English confirmed in a prepared first-stage win; full stage inventory remains open |
+| Practice/alien completion | Both bodies and scrolling backgrounds repaired and visually checked in native/reference captures |
 | Title graphic | Still requires graphical-text inventory and an English treatment |
 | P-chan speech bubble | Still requires graphic resource identification and translation |
 | Other secrets/endings | Need reachable scene inventory and regression routes |

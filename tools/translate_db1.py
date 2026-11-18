@@ -11,12 +11,13 @@ from tools.rompatch import apply_bps, create_bps, identity
 SYMBOLS = 'ACDEGLMNOPRSTUY?'
 FONT_INDEX = {letter: ord(letter) - ord('A') + 10 for letter in SYMBOLS if letter != '?'}
 FONT_INDEX['?'] = 47
+CREDITS_GLYPHS = {chr(65+i): 0x0c+i for i in range(26)}
+CREDITS_GLYPHS.update({' ': 0, '.': 0x27, '?': 0x28, '!': 0x29, "'": 0x31})
 
 
 def credits_edits(source, tables):
     """The credits renderer writes byte-sized tile indices directly to VRAM."""
-    alphabet = {chr(65+i): 0x0c+i for i in range(26)}
-    alphabet.update({' ': 0, '.': 0x27, '?': 0x28, '!': 0x29, "'": 0x31})
+    alphabet = CREDITS_GLYPHS
     edits = []
     occupied = [(0x18e, 0x190), (0x1b464, 0x1b4d0), (0x1b510, 0x1b538)]
     for table in tables:
@@ -45,6 +46,45 @@ def credits_edits(source, tables):
     return edits
 
 
+def bonus_edits(source, tables, previous_edits):
+    """Original bonus renderer uses different VRAM bases for body and backdrop."""
+    edits = []
+    occupied = [(0x18e, 0x190), (0x1b464, 0x1b4d0), (0x1b510, 0x1b538)]
+    occupied.extend((address, address+len(data)) for address, data in previous_edits)
+
+    def add(address, before, data):
+        length = len(data)
+        if (type(address) is not int or not length or address < 0x200
+                or address > len(source)-length
+                or any(address < end and address+length > start for start, end in occupied)):
+            raise ValueError('DB1 bonus table is outside ROM or overlaps another edit')
+        guard = bytes.fromhex(before)
+        if len(guard) != length or source[address:address+length] != guard:
+            raise ValueError('DB1 bonus table guard mismatch')
+        edits.append((address, data));occupied.append((address, address+length))
+
+    for table in tables:
+        capacity, lines = table['capacity'], table['lines']
+        if type(capacity) is not int or not 1 <= capacity <= 512 or not 1 <= len(lines) <= 6:
+            raise ValueError('Invalid DB1 bonus message dimensions')
+        data = bytearray()
+        for line in lines:
+            if not 1 <= len(line) <= 24 or any(char not in CREDITS_GLYPHS for char in line):
+                raise ValueError('Unsupported bonus character or row exceeds 24 tiles')
+            data.extend(0x20 if char == ' ' else CREDITS_GLYPHS[char]+0x9d for char in line)
+            data.append(0)
+        data.append(0)  # Original renderer terminates on the second NUL.
+        if len(data) > capacity:
+            raise ValueError('DB1 bonus message exceeds original byte capacity')
+        add(table['address'], table['before'], bytes(data).ljust(capacity, b'\0'))
+        background = table['background']
+        if len(background) != 16 or any(char not in CREDITS_GLYPHS for char in background):
+            raise ValueError('DB1 bonus background requires sixteen qualified tiles')
+        data = bytes(0xff if char == ' ' else CREDITS_GLYPHS[char]+8 for char in background)
+        add(table['background_address'], table['background_before'], data)
+    return edits
+
+
 def translate(source, catalog):
     if hashlib.sha256(source).hexdigest() != catalog['source_sha256']:
         raise ValueError('DB1 English v0.1 source SHA256 mismatch')
@@ -66,6 +106,7 @@ def translate(source, catalog):
     font = [FONT_INDEX[letter] * 32 for letter in SYMBOLS]
     font.extend([0] * (20 - len(font)))
     edits = credits_edits(source, catalog.get('credits_tables', []))
+    edits.extend(bonus_edits(source, catalog.get('bonus_messages', []), edits))
     out = bytearray(source)
     out[0x1b464:0x1b4d0] = b''.join(x.to_bytes(2, 'big') for x in words)
     out[0x1b510:0x1b538] = b''.join(x.to_bytes(2, 'big') for x in font)

@@ -130,7 +130,8 @@ def main():
     catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
     db2_en = translate(db2.read_bytes(), catalog)
     from tools.generate_language import emit_image
-    previous_db1 = translate_db1(translated, {key: value for key, value in catalog_db1.items() if key != 'credits_tables'})
+    previous_db1 = translate_db1(translated, {key: value for key, value in catalog_db1.items()
+        if key not in ('credits_tables', 'bonus_messages')})
     if hashlib.sha256(previous_db1).hexdigest() != '04d8be46c5e0597efa3315537a694e8cc314e66c0e519420cab9ba222195a4c4':
         raise RuntimeError('DB1 v0.2 compatibility image differs from its qualified identity')
     emit_image([db1.read_bytes(), db1_en, translated, previous_db1], 'db1', ROOT / 'generated/language')

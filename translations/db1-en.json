@@ -1,6 +1,6 @@
 {
   "source_sha256": "30ba0e06ce6a0704168d191cbb4d45487406908859f5df7aacd484bd42b0e7b7",
-  "scope": "Six map/menu labels, 18 credits character names and the nine-row post-credits secret-mode message; overall translation remains incomplete",
+  "scope": "Six map/menu labels, 18 credits names, nine-row secret-mode message, practice/alien completion messages and their scrolling backdrops; overall translation remains incomplete",
   "labels_before": "0009000400110015000c0013000300110016000b00060004000d00150001000a00020002000a0013000700150013000300110016000200070005000800140002000200020002000200040004001000000002000200020002000200120014000e0005000f0000000200020002",
   "font_before": "02000260028003400360038003e0042004400460048004a004e0054005a005e0060007c007e00800",
   "labels": [
@@ -57,6 +57,40 @@
         "ALIEN MODE PASSWORD MHRI"
       ],
       "context": "After hard-mode credits: congratulations, playable aliens, staff-made bonus stages and MHRI password. Original renderer uses nine 26-tile rows."
+    }
+  ],
+  "bonus_messages": [
+    {
+      "address": 18318,
+      "capacity": 100,
+      "before": "2020202020202020b5d2c3dec4b32100b1c5c0ca20daddbcadb3d3b0c4dea620b8d8b1bccfbcc02100bac920daddbcadb3d3b0c4dec3de20b5cedeb4c0bac4a600dcbddabddec6a4c9b0cfd9a4cab0c4ded3b0c4dec600c1aeb3beddbccfbcaeb3210000",
+      "lines": [
+        "    CONGRATULATIONS!",
+        "YOU CLEARED PRACTICE!",
+        "USE WHAT YOU LEARNED",
+        "TO TRY NORMAL AND",
+        "HARD MODES!"
+      ],
+      "background_address": 18300,
+      "background_before": "203d2e492f1e0bffff3f1a2b330bffff",
+      "background": "CONGRATS! GREAT!",
+      "context": "Practice completion"
+    },
+    {
+      "address": 18462,
+      "capacity": 101,
+      "before": "2020202020202020b5d2c3dec4b3210020b1c5c0c920b6c2d4b8c6d6d8a4bcdeaccfc500b7aeb3d8adb3a620b5b2c0debdbac4b6dec3deb7cfbcc02100badac3de20bcdeadd7beb2ca20b3c1adb3bcdeddc0c1c900d7b8b4ddc420c5d9c3debcaeb3a10000",
+      "lines": [
+        "   CONGRATULATIONS!",
+        "YOU DROVE OUT THE DINOS!",
+        "PLANET JURA IS NOW",
+        "A PARADISE FOR",
+        "THE ALIENS!"
+      ],
+      "background_address": 18444,
+      "background_before": "203d2e492f1e0affff3f1a2b330affff",
+      "background": "CONGRATS! GREAT!",
+      "context": "Alien mode completion"
     }
   ]
 }
