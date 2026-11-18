@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -14,6 +15,16 @@ def inventory(root):
             for p in sorted(root.rglob('*')) if p.is_file() and p.name != 'TOOLKIT.json'}
 
 
+def local_tool_copy(source, target):
+    # Local staging only: delivered ZIP members are independent byte copies.
+    # Link immutable tool binaries to avoid recopying thousands of files.
+    try:
+        os.link(source, target)
+        return target
+    except OSError:
+        return shutil.copy2(source, target)
+
+
 def stage(destination, runtime):
     if subprocess.check_output(['git','-C',str(ROOT),'status','--porcelain'],text=True).strip():
         raise RuntimeError('Commit source before freezing toolkit')
@@ -23,7 +34,8 @@ def stage(destination, runtime):
         (chain/'ucrt64','toolchain/ucrt64'),(chain/'python','python'),
         (ROOT/'generated','generated'),(ROOT/'Dynabrothers','inputs'),
         (ROOT/'local/roms','cache/roms'),(runtime,'play')]:
-        shutil.copytree(src,destination/target,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+        shutil.copytree(src,destination/target,ignore=shutil.ignore_patterns('__pycache__','*.pyc'),
+            copy_function=local_tool_copy if target in ('git','toolchain/ucrt64','python') else shutil.copy2)
     metadata=destination/'metadata';metadata.mkdir()
     for src,name in [(deps/'portable-git-files.json','portable-git-files.json'),
         (deps/'verification.json','dependency-staging-verification.json'),
