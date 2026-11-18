@@ -20,7 +20,7 @@ Stage List/Versus menus, password selector, Versus settings and COM names, 17 Ve
 4. Capture-verify: QUIT/rematch dialogs (`*s`), result screens, Dyna Fight screens, Sega Channel, endings. Reach requires Extras corner/passwords (`DBSAMA`→`UHYO`→`MAKOTU` unlock route in `evidence/db2-quit-proof`).
 5. Owner build screen "YOU WENT EXTINCT!!" (HITS/KILLS/ALIENS/TIME/PASSWORD, CONTINUE/SAVE GAME) is not in this checkout's ROM text; compare against the owner's build to see what remains.
 6. Native-speaker review of stage/character/briefing wording (translations are best effort and abbreviated to fit byte capacity).
-7. `controller_profiles_contract` aborts on this machine (SDL virtual joysticks; a physical USB pad and `SDL_GAMECONTROLLERCONFIG` exist here; unsetting them did not help). Try with no pad connected/another PC; else debug `gamepad_init`/`s_pad[0]`.
+7. `controller_profiles_contract` aborted earlier on this machine (SDL virtual joysticks; physical USB pad present) but passes now (54/54 CTest at 17:03 after `cmake -S . -B build/dev` and building `DynaManualDataTest`); treat as environment-dependent, re-run if it fails.
 8. Physical controller recognition and audio on the reporter PC (cannot be tested here).
 
 ## Packaging
