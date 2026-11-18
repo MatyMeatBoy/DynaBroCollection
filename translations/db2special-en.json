@@ -4790,6 +4790,872 @@
         "MUNKI"
       ],
       "verification": "script dialogue in RAM stream (stage 2 cutscene)"
+    },
+    {
+      "words": "018E 01C3 018A 000A 0001 0133 0173 014A 01C4 01A4 0001 014F 0138 0161 0146 08AB 013F 013E 000A",
+      "lines": [
+        "GYAO! NEVER SEEN ONE LIKE THIS!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 015E 0128 013F 0141 0001 0124 0143 013F 0124 067F 0162 014E 014A 0173 0140 0009",
+      "lines": [
+        "WHO THE HECK ARE YOU?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 0133 0169 0158 0173 012B 0169 0BB5 0D3E 014B 0166 001C 0146 015F 000A",
+      "lines": [
+        "COME ON, TELL ME HONESTLY!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013B 0024 0001 013B 0143 0137 0163 0162 0001 0137 014E 0153 014E 0001 0001 0001 0001 014F 0137 012F 016C 0147 0134 0136 016B 0024",
+      "lines": [
+        "I TOO AM A MERE NINJA,",
+        "SIR..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0149 001C 0164 0169 0001 0D4B 0124 105C 014B 0947 016F 014A 0001 0F6C 012B 0169 0173 0168 001C 0164 014A",
+      "lines": [
+        "LOOKS LIKE YOU NEED A BEATING",
+        "TO LEARN"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 014C 0137 0169 014B 019F 01BE 0194 0C64 0BAE 076F 014E 0133 0148 0172 0001 0001 0CEE 0169 016C 016B 012F 0169 0124 014A 0169 0150 0024",
+      "lines": [
+        "IF YOU LEARN OF THE EGG MAKER",
+        "I WOULD RATHER..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0124 016D 0124 016D 0137 0163 0159 0143 0146 013F 0138 0163 014A 0124 012B 000A 000A",
+      "lines": [
+        "HE TALKED A LOT, THOUGH!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0025 0025 0025 0025 0148 0124 0126 016F 0131 0147 0001 0001 0001 0001 0001 0001 0001 01AF 018B 019B 014F 0CA7 0F91 012A 0FDB 0137 0124",
+      "lines": [
+        "...SO,",
+        "THE DOC IS VERY BUSY"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0CA5 016F 0143 0146 0001 0133 014E 0A04 012C 09F8 0778 0172 0001 0001 0001 0001 0001 0148 0169 013B 0146 0124 013F 0140 012D 015E 0139",
+      "lines": [
+        "I WILL TAKE COMMAND",
+        "IN HIS PLACE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0124 0124 0147 0139 014D",
+      "lines": [
+        "ALL RIGHT?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014F 014F 0143 000A",
+      "lines": [
+        "YES SIR!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0141 0167 0143 0148 0C94 0144 018E 01C3 0021 000A",
+      "lines": [
+        "HOLD ON A SEC!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 015F 0163 0121 0021 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 018A 01CA 10AD 0168 016A 08E5 012B 0169 0E3E 0143 013F 012F 013B 014B",
+      "lines": [
+        "HEY YOU!",
+        "YOU JOINED AFTER ME!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01AB 01C3 0021 01D3 0147 0F54 0CA2 0172 0137 012D 0143 0148 016B 0173 018E 01C3 0021",
+      "lines": [
+        "WHY ARE YOU IN CHARGE?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018A 01CA 10AD 014F 0E5C 0E00 0124 012B 0173 018E 01C3 0021",
+      "lines": [
+        "I DO NOT ACCEPT THIS!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0BE4 0C90 0001 0E47 0161 0173 018E 01C3 0021",
+      "lines": [
+        "NEVER ACCEPT IT!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "016F 012B 016A 015E 0137 013F",
+      "lines": [
+        "UNDERSTOOD"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0147 014F 0001 0122 014A 013F 014B 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0CA2 0D39 014B 014A 0143 0146 0124 013F 0140 012D 015E 0137 0167 0126",
+      "lines": [
+        "THEN YOU",
+        "SHALL BE CAPTAIN"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01BB 01D3 01A8 0001 018D 01C3 0021 0021 0021 0021 0021 0021 0021 0021 01A3 000A 000A",
+      "lines": [
+        "REALLY? YAAAAAAAY!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0168 001C 0137 0001 013D 0126 018D 01C3 000A",
+      "lines": [
+        "ALL RIGHT, DO IT!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013D 016A 0147 0001 0CA2 0D39 014E 018A 01CA 10AD 014F 067F 0172 0139 016C 0150 0001 0124 0124 0173 018E 01C3 0009",
+      "lines": [
+        "SO WHAT DOES THE CAPTAIN",
+        "(ME) DO?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "067F 018E 01C3 000A",
+      "lines": [
+        "WHAT?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0168 001C 0137 0001 01B7 01A6 01C9 012C 0124 0143 0146 0001 0001 0001 0001 0001 0001 012A 0143 0151 0169 0143 0146 012F 016B 0162 0173 000A",
+      "lines": [
+        "OK, PTERA WILL GO",
+        "CHASE HIM OFF!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0121 0001 0168 0137 014A 0168 001C",
+      "lines": [
+        "AH, STOP IT!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0164 0124 0143 000A 0001 012A 015E 0128 014F 067F 0162 014E 0140 0143 000A",
+      "lines": [
+        "HEY! WHO ARE YOU?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0169 0001 0122 013F 0137 014F 01A6 0183 0182 01C9 0141 0163 0173 0168",
+      "lines": [
+        "OH, I AM TIARA!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01B7 001C 01A3 000A 0001 0133 0143 0141 014F 01B7 01A6 01C9 0140 0162 0173 000A",
+      "lines": [
+        "PFFT! I AM PTERA!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 0168 0001 01B0 01A3 019F 0162 0173 0009 0001 0164 013B 0141 0163 0143 013F 014D",
+      "lines": [
+        "OH, BATTAMON? YOU LOST WEIGHT"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0141 012C 001C 0126 000A 000A 01B7 01A6 01C9 0140 0162 001C 001C 0173 0143 000A 000A",
+      "lines": [
+        "NO!! I AM PTERA!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0158 0127 0001 012B 016F 0124 0124 01A8 01CA 0135 0173 014D",
+      "lines": [
+        "OH, WHAT A CUTE BIRD"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0121 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0143 000A 000A 01A8 01CA 0143 0146 0124 0143 013F 014A 001C 0143 000A",
+      "lines": [
+        "AAAAAAH!!",
+        "YOU CALLED ME A BIRD!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01A8 01CA 0138 0163 014A 0124 0162 0173 0001 01B7 01A6 01C9 0140 0162 001C 0173 000A",
+      "lines": [
+        "NOT A BIRD! I AM PTERA!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0126 016F 016F 016F 016F 016F 001C 001C 0143 000A",
+      "lines": [
+        "WAAAAAAH!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0169 0001 0149 0126 0137 013F 014E 0009 0001 0EE8 016C 013F 014E 0009 0001 0001 01B4 01A6 01C9 0141 0163 0173",
+      "lines": [
+        "OH, WHAT IS IT? TIRED?",
+        "PITERA"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01B4 0021 01A6 0021 01C9 0021 0138 0163 0021 014A 0021 0124 0021 0162 0021",
+      "lines": [
+        "IT IS NOT PITERA!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "08B5 0784 0AB0 0137 0146 014D",
+      "lines": [
+        "CHEER UP!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0162 0129 0001 067F 0147 0162 012B 015E 016F 014A 0124 0162 0021 0173 000A 000A",
+      "lines": [
+        "FINE, WHATEVER!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "015E 0143 013F 012F 0D34 09F2 014E 0124 0124 01C4 01A4 0140 013C 000A",
+      "lines": [
+        "WHAT A SMOOTH TALKER!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014A 0173 012B 019A",
+      "lines": [
+        "HUH?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0126 0021 0021 0160 0001 01A6 0183 0182 01C9 0161 0024",
+      "lines": [
+        "HMMM, THAT TIARA..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013D 0129 0021 012A 0147 0137 0167 0021",
+      "lines": [
+        "THAT IS RIGHT~"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01A6 0183 0182 01C9 10AD 0148 0124 0124 0001 0001 0001 0001 0001 0001 0001 0001 0001 0122 014E 018C 01C9 014E 05AD 0124 06B8 0AA3 0148 0124 0124",
+      "lines": [
+        "BOTH LADY TIARA AND",
+        "THAT ROUGH MONSTER..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0149 0021 0162 0001 07E8 110F 0D8A 0147 014F 0134 0136 0124 015E 013B 0173 014A",
+      "lines": [
+        "THEY ARE NOT VERY COOPERATIVE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01AF 018B 019B 000A",
+      "lines": [
+        "DOC!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0133 0133 014F 0152 0148 0144 0001 0133 014E 0A04 0161 014B 0001 0001 0001 0001 0001 012A 015E 012B 013B 012F 0140 0135 0124",
+      "lines": [
+        "LEAVE THIS",
+        "TO ME"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018D 0195 01BE 012C 0024 0009",
+      "lines": [
+        "YOU...?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0D88 014F 0D06 0F89 014E 0B85 1067 0172 0EB4 0131 0001 0001 0001 0001 0001 0001 0001 0BB5 104C 015E 0147 0B4F 0E3E 0137 013F 0147 0134 0136 016B",
+      "lines": [
+        "THE ENEMY PASSED THE FLOODGATE",
+        "AND REACHED THE FRONT"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014A 0121 014B 0123 0021 0143 000A 0009",
+      "lines": [
+        "WHAAAT?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 014E 1035 0E5D 014A 07F2 10F5 0149 0162 012C 012B 0143 000A 0009",
+      "lines": [
+        "THOSE USELESS DINOS?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014F 0143 0001 01BD 01D3 01BD 01D3 0149 014E 012C 0BE8 0DF3 0137 0146 0001 0001 0001 012A 0169 016C 016B 012C 0166 0128 0024",
+      "lines": [
+        "SIR, PONPON IS LEADING",
+        "THEM, SO..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0128 001C 0124 0001 0126 0143 0148 001C 0137 0123 0001 01C4 01A4 0169 0161 0143 000A",
+      "lines": [
+        "BAH, ANNOYING PESTS!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0133 014E 0001 014B 0173 015D 001C 0853 0CE4 0001 0F89 104C 0F54 0CA2 012C 0001 0001 0164 0156 016C 016B 0148 014F 0143 000A",
+      "lines": [
+        "THE NINPO WALL CORPS",
+        "DEFEATED?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0130 014F 0143 000A",
+      "lines": [
+        "GAH!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014B 0173 015D 001C 012F 0173 0001 0139 015E 014A 0124 014E 0169 0024",
+      "lines": [
+        "NINPO KUN, I AM SORRY..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0193 0184 01A4 0169 015F 013F 0124 014A 0001 0168 013D 08AB 0150 0143 012B 016A 0001 0137 0148 016B 01C4 01A4 0169 014B 0F49 0131 016B 012B 0124 000A",
+      "lines": [
+        "NO WAY I LOSE TO GUYS",
+        "WHO ONLY LOOK AWAY!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0147 0162 0001 012A 015E 0124 0169 0001 014A 0173 016C 01BD 01D3 013F 0141 0172 0001 0AD5 0131 013F 0173 0169 0009",
+      "lines": [
+        "BUT WHY DID YOU HELP",
+        "THE PONS?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018E 01C3 018A 000A",
+      "lines": [
+        "GYAO!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018A 01CC 012C 0191 01D3 018B 0139 016B 014E 014F 0001 0001 0001 0001 0001 0001 0001 01AF 01C9 0158 0143 0146 016B 0148 012D 0140 0131 0140 013E 000A",
+      "lines": [
+        "I ONLY FIGHT WHEN",
+        "I AM HUNGRY!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018A 01BE 0188 0169 0162 0001 013D 001C 0164 016D",
+      "lines": [
+        "YOU TOO, RIGHT?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01AF 018B 019B 012C 08C0 0143 0146 013F 0193 01A8 0148 0141 012C 0126 014E 0169 0024",
+      "lines": [
+        "THAT IS NOT WHAT THE DOC SAID..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0168 012F 013E 0001 0134 1035 0A16 0147 000A",
+      "lines": [
+        "GLAD YOU ARE SAFE!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014F 0143 000A 067F 0162 014A 012B 0143 013F 0147 0134 0136 016B",
+      "lines": [
+        "NO, NOTHING, SIR!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 0C10 013F 0141 014F 06D0 014E 08AB 0D25 016A 014B 0DD6 013F 016C",
+      "lines": [
+        "YOU GUARD OUTSIDE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0C55 0CF6 0172 06CB 0EAF 0139 016B 013F 0161 014E 0A11 08BB 0162 0AEF 014A 0124",
+      "lines": [
+        "RESOURCES FOR THE DEVICE ARE LOW"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0126 0160 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0122 0148 014F 0784 0B1D 019B 01D3 0195 001C 0172 0148 016A 0144 0131 014D 0150",
+      "lines": [
+        "YES.",
+        "I STILL NEED WEATHER SENSORS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018C 0186 018C 0186 000A",
+      "lines": [
+        "GAUGAU!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "07F2 10F5 0149 0162 014B 06B5 0135 016C 013F 019F 01BE 0194 0C64 0BAE 076F 0172 0001 06B3 0A7D 0137 0146 0133 0124 000A",
+      "lines": [
+        "RECOVER THE EGG MAKER",
+        "DINOS BROKE!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 0126 000A 0001 012A 0C10 013F 0141 0001 0001 0001 0001 0001 0001 0001 0001 0001 0135 0143 013D 012F 09E5 0A16 0138 0163 014D 001C 012B",
+      "lines": [
+        "HEY! YOU TWO,",
+        "TIME TO WORK, NO?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018D 0195 01BE 0162 0934 012B 0173 012B 000A",
+      "lines": [
+        "YOU GO TOO!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013F 015E 0134 0001 015F 001C 0143 0131 000A",
+      "lines": [
+        "FOUND AN EGG!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0162 0126 014A 0124 012B 014A",
+      "lines": [
+        "ANY MORE?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0164 0021 0021 0143 0148 01BC 018F 014E 0AB0 0ED6 0140 01AD 000A",
+      "lines": [
+        "FINALLY IT IS MY TURN!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01BC 018F 012C 0152 0148 012F 0141",
+      "lines": [
+        "I TAKE A BITE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0137 012B 0162 0001 0133 014E 087A 06B7 014A 01B5 01A3 01A8 01CF 001C 018F 0147",
+      "lines": [
+        "AND WITH THIS LIGHT FOOTWORK"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0199 019F 01BF 01AA 0162 0150 0143 0141 016A 0135 0143 000A",
+      "lines": [
+        "STAMINA IS PERFECT TOO!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0D88 014E 0148 0133 016D 014B 0001 013F 0149 016A 0144 0131 0150 0001 0001 0001 0001 0122 0148 014F 0CA7 0708 1076 0140 012B 0169",
+      "lines": [
+        "ONCE I REACH THE ENEMY",
+        "I WILL SHINE!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0141 0163 0173 0148 01BC 018F 012C 0D4C 016C 016B 0168 0126 014B 0001 0001 0001 0001 060B 0172 0155 0169 013B 0146 0933 0CEF 0172 0BB0 0EF7 0139 016B 0133 0148 0140 01AD",
+      "lines": [
+        "MAKE RAIN AND PREPARE THE",
+        "WASTELAND SO I CAN PASS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "015E 0001 01AE 01CD 01BE 014E 01A6 0183 01C9 01AE 014A 0173 012B 0168 016A 0001 0001 01BC 018F 014E 0FBD 012C 013A 0143 0148 07EF 0124 0143 0146 0133 0148 012B 014A 0009",
+      "lines": [
+        "WELL, I AM FAR STRONGER",
+        "THAN SLOW TYRANNO, RIGHT?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018E 01C3 018A 001C 01A3 000A 0001 014A 0173 0140 0148 001C 0143 000A 000A",
+      "lines": [
+        "GYAOO! WHAT?!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "016F 0143 000A",
+      "lines": [
+        "WOW!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 015E 0128 0001",
+      "lines": [
+        "YOU!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "016C 0173 0137 0165 0126 0001 00D4",
+      "lines": [
+        "PRACTICE 4"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018E 01C3 018A 000A 0133 0173 014A 01C4 01A4 0AC9 0161 0146 08AB 013F 013E 0143 000A",
+      "lines": [
+        "GYAO! NEVER SEEN ONE LIKE THIS!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013D 001C 0140 014D 0024",
+      "lines": [
+        "TRUE..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0131 0149 0001 0122 015E 016A 07EF 012F 014A 0135 013D 0126 0140 0143 013F 0168",
+      "lines": [
+        "BUT HE DOES NOT LOOK STRONG"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012D 0143 0148 0607 0D08 0B6D 012C 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 015E 013F 0916 0161 0146 012D 013F 0173 0140 0021 000A",
+      "lines": [
+        "THE ALIENS MUST HAVE",
+        "ATTACKED AGAIN!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0133 014E 0CEF 05E8 014F 015C 012F 013F 0141 0150 012B 016A 0140 012B 0169 0001 0001 0A91 0143 0146 0133 0169 016C 013F 0169 0149 0126 0137 0168 0021",
+      "lines": [
+        "ONLY OUR KIND LIVE HERE,",
+        "WHAT IF WE ARE ATTACKED?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01B5 01D3 0001 0122 0124 012B 016F 0169 013A 0B30 0131 014A 0124 014A 0121 0024",
+      "lines": [
+        "HMPH, STILL PATHETIC AS EVER"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018E 01C3 018A 001C 018A 000A 01A8 01CA 0191 01C9 012B 0121 0021 000A",
+      "lines": [
+        "GYAOOO! A TRICERA?!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01C4 01A4 0169 012C 015E 013F 0916 0161 0146 10C8 013F 014E 014A 0169 0001 0001 0001 0162 0143 0148 013F 012F 0135 0173 0147 0001 012F 016B 014F 013A 0140 016D",
+      "lines": [
+        "IF THEY ATTACKED AGAIN",
+        "THERE WOULD BE MANY MORE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0148 014B 012B 012F 0199 01A6 0194 013F 0141 0150 012B 016A 0138 0163 0001 0001 0001 0B54 0999 0124 0140 016D 0126 012B 0169 014A",
+      "lines": [
+        "ANYWAY, STEGOS ALONE",
+        "MUST BE UNEASY"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018A 01CC 013F 0141 014E 0A6F 0C72 0162 0947 10EE 0139 016B 013C",
+      "lines": [
+        "OUR KIND WILL JOIN TOO"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "016F 0121 0021 0001 0AD5 012B 016B 0168",
+      "lines": [
+        "WOW, THANKS!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01AF 018B 019B 014E 0877 06A8 0172 1163 0139 016F 0131 014B 014F 0001 0124 012B 0173 0147 0134 0136 016B",
+      "lines": [
+        "I MUST NOT SPEAK OF THE PLAN",
+        "SIR!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0155 001C 0001 08FD 014E 018B 019F 0124 01C4 01A4 0164 0143 013F 014A",
+      "lines": [
+        "PHEW, A TIGHT-LIPPED GUY"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0963 0137 0FBD 0001 07F2 10F5 013F 0141 014E 0852 014B 0F7C 076F 014B 0168 016B 0001 0916 0882 0172 09E5 06FD 0131 015E 0137 013F",
+      "lines": [
+        "JUST NOW I ATTACKED THE",
+        "DINO HERD, WEAPONS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0BB8 012D 09E4 0143 013F 07F2 10F5 013F 0141 0172 0963 012B 0169 0F92 0145 0131 014B 0934 012D 015E 0139",
+      "lines": [
+        "I WILL NOW FINISH OFF THE",
+        "REST!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "013D 016C 0147 014F 0CA2 0D39 000A",
+      "lines": [
+        "NOW, CAPTAIN!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014A 0121 0001 0122 0124 0144 0001 0135 0143 012D 012B 0169 013A 0143 0148 0001 0001 0144 0124 0146 012D 0146 016B 013C",
+      "lines": [
+        "HEY, THAT GUY HAS BEEN",
+        "TAILING US"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0AB0 0B78 0172 0195 01BC 016B 0148 014F 0001 0001 0001 0001 0001 0001 0001 0001 0001 067F 0172 092D 0128 0146 012A 016B 014E 0140 000A 0009",
+      "lines": [
+        "SKIPPING THE SORTIE?!",
+        "WHAT ARE YOU THINKING"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "018C 0186 014E 01C4 01A4 014F 0BCE 012B 0169 0140 012C 0001 01A6 0183 0182 01C9 014F 0821 0134 016D 10AD 09F2 012C 0024",
+      "lines": [
+        "GAU IS ALWAYS LIKE THIS, BUT",
+        "TIARA TOO..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0A2B 0C13 0C40 09AE 0C55 0CF6 014B 014F 0139 0147 014B 0A04 014E 05E4 0DA1 09F2 0172 0DB0 115F 0137 0146 0134 0136 0124 015E 0139",
+      "lines": [
+        "MY GENES ARE ALREADY",
+        "IN THE DEVICE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "015B 012B 014E 0A6F 0C72 014B 0758 0137 0146 0162 0024",
+      "lines": [
+        "OTHER SPECIES TOO..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0C4D 0916 0882 0147",
+      "lines": [
+        "ATTACK!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014F 0121 0001 014F 0121 0024",
+      "lines": [
+        "HUFF... HUFF"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "012A 015E 0124 0169 014F 067F 0147 0162 09C6 0139 0001 01C4 01B0 01D3 0147 0001 0001 07E7 0FDD 014A 0A6F 0C72 014A 0173 0169 016D 0009",
+      "lines": [
+        "YOU KILL ANYTHING, A SAVAGE",
+        "VIOLENT RACE, NO?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "014A 0173 0164 0148 0129 0021",
+      "lines": [
+        "WHAT?!!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "10F1 0A69 0D06 014F 067F 0162 014A 012B 0143 013F 012B 0009",
+      "lines": [
+        "ANYTHING WHILE AWAY?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01CF 0197 014F 0133 016C 012B 0169 019F 01BE 0194 0C64 0BAE 076F 014E 06BE 0C64 014B 0148 016A 012B 012B 016B",
+      "lines": [
+        "I WILL NOW MODIFY THE",
+        "EGG MAKER"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0162 0143 0148 08FA 10E8 0168 0124 0162 014E 014B 013B 014D 0150 0024",
+      "lines": [
+        "MAKE IT MORE EFFICIENT..."
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0A2B 0DF0 093F 060B 0C55 0CF6 0147 0139 012B",
+      "lines": [
+        "AUTO RAIN DEVICE?"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0168 012B 0143 013F 014A",
+      "lines": [
+        "GOOD NEWS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0001 0133 0143 0141 014B 0162",
+      "lines": [
+        "AH, ONE HERE"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0001 0A3A 1129",
+      "lines": [
+        "SORRY"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "01BC 018F 012C 01B4 001C 0141 0163 0173 0001 0001 0001 0001 0001 0001 0001 0001 0001 10D1 012C 0CA7 0905 012D 014A 10D1 0B49 0AA3 0135 0143 000A",
+      "lines": [
+        "I AM P-CHAN,",
+        "AN EGG LOVING EATER!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0149 0173 014A 014B 07EF 0124 0E39 0B49 0AA3 0147 0162 10D1 014E 0A1E 014A 0169 0024",
+      "lines": [
+        "STRONG MEAT-EATERS: EASY EGGS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0147 0162 0001 0131 0143 0133 0126 0186 01BE 0184 013E 000A",
+      "lines": [
+        "BUT HE TASTES GOOD!"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0122 0124 0144 0169 10D1 0144 012F 016B 018D 018B 0184 0001 0001 0001 0001 0001 0001 0A1D 0143 0146 013F 0162 0173 014D",
+      "lines": [
+        "THEY HAD A MACHINE",
+        "FOR EGGS"
+      ],
+      "verification": "script dialogue in RAM stream (password-route stages)"
     }
   ]
 }
