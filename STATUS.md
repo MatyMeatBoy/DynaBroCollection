@@ -1,8 +1,12 @@
 # Work board — 2026-11-18
 
-## Published v0.1.6 test checkpoint
+## Published v0.1.7 test checkpoint
 
-The latest immutable package passed39 packaged checks. It fixes actual home Settings buttons, adds original-size visor positioning and native code-screen saving, and corrects title/story presentation. [Exact delivery identity and limits](docs/releases/v0.1.6-verification.md). Subsequent native title-menu Extras and level navigation are development work outside that package. Current ownership and pending work: [coordination board](docs/handoff/STATUS.md). Finish DB1 before resuming DB2.
+The new immutable package passed42 packaged checks. Native-title Extras, automatic Password navigation, canonical save migration, speech translation, ending punctuation and EMI progress are integrated. [Exact delivery identity and limits](docs/releases/v0.1.7-verification.md). Source checks:50 CTests and67 Python tests. DB1 baseline is ready for continued testing; full campaign and physical hardware acceptance remain open. DB2 native wide-view, original visor/effect rules and remaining English inventory are now active bounded work. [Current coordination board](docs/handoff/STATUS.md).
+
+## Historical v0.1.6 test checkpoint
+
+That immutable package passed39 packaged checks. It fixes actual home Settings buttons, adds original-size visor positioning and native code-screen saving, and corrects title/story presentation. [Exact delivery identity and limits](docs/releases/v0.1.6-verification.md). Subsequent native title-menu Extras and level navigation are development work outside that package. Current ownership and pending work: [coordination board](docs/handoff/STATUS.md). Finish DB1 before resuming DB2.
 
 ## Historical v0.1.4 test checkpoint
 

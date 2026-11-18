@@ -1,6 +1,6 @@
 # Current coordination board
 
-Updated 2026-11-18. User authorizes autonomous decisions while asleep. Finish DB1 readiness before resuming DB2 gameplay development.
+Updated 2026-11-18. User authorizes autonomous decisions while asleep. DB1 baseline0.1.7 is qualified and delivered; resume DB2 using its own original contracts.
 
 ## Protected deliveries and inputs
 
@@ -12,7 +12,7 @@ Original dumps and supplied patches under Dynabrothers/ are private, read-only a
 
 Root owns integration, shared adapter/CMake/SDK patches, build/dev links and release closure. All returned agent modules are frozen and owned by root again. Workers may use private copies only after explicit READY and SHA verification. Do not infer readiness from timestamps. No active worker source edits remain at this checkpoint.
 
-## Integrated development for 0.1.7
+## Integrated and published in 0.1.7
 
 - Native fifth Extras row in Enhanced title; four native rows preserved in Original. Host-only fifth index never reaches native dispatch.
 - Level catalogue, original Password navigation, cancellation/release/timeout guards; no guest PC jumps. Saved frontiers enable replay convenience, not achievement credit.
@@ -28,12 +28,14 @@ Root owns integration, shared adapter/CMake/SDK patches, build/dev links and rel
 
 Earlier verified work remains: audio timing/queue fixes, green same-window launcher settings, M30 mappings, original-size movable visor, coherent world projection and full-canvas actors, native rain/damage bounds, lightning visual-vs-damage distinction, title ground anchored at bottom/sky above, story side fade, guide and strategy examples.
 
-## Remaining work
+## Active work after 0.1.7
 
-1. Rebuild both games and launcher from the final integrated 0.1.7 source, verify exact upstream patches and shared DB2 ABI regression.
-2. Qualify final six-input language convergence, production launcher and packaged new Extras/save paths. Preserve exact binary/source/hash evidence.
-3. Close a new public portable checkpoint and separate personal ZIP only after packaged checks pass. Do not overwrite 0.1.6.
-4. Broaden campaign/achievement acceptance where meaningful. Physical M30/reporter-PC acceptance is distinct from local synthetic/native-input checks.
-5. After DB1 readiness, resume DB2 and apply proven concepts using DB2's own addresses, geometry and effect rules.
+0.1.7 source/tag04f62ce292629bf28c37f98db6b30a01bb7ebf17, public ZIP SHAba859c2abf364d74793ef0664c93fa0389901d4f06e50ac8f6965a9ca33ced1e,42 packaged cases PASS. Private personal ZIP SHA37defbe065cbd92bec60aca43cc459a17fcbc07cda7f4a14f7340d0e347b64ef; never upload. Both deliveries and older ones are immutable. Full anonymous public downloads verified.
 
-OptiPort main freshness checked at a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1. No claim of every bug or hardware platform being complete.
+Root owns shared source, integration, build/dev and new release closure. Three bounded READ-ONLY DB2 investigations are active: camera_continuity qualifies original/enhanced native views from a private frozen package copy; intro_background_fix inventories remaining English; progress_native verifies original visor/command/hazard bounds. No worker has shared edit/link authorization yet. Require an explicit scoped handoff before edits and READY/SHA before any future copy.
+
+DB2 source ABI regressions on the exact package match delivered0.1.6 guest/audio state. Current native visual qualification is pending. Initial original-ROM evidence places DB2 frame at[16,208)x[16,208),192x192, distinct from DB1; verify command/effect interior separately before implementation. Never copy DB1 addresses or sizes.
+
+Remaining: qualify and repair DB2 native extended view/actors/fallbacks, restore original-size movable visor with verified effect rules, complete guarded English repairs, extend appropriate Extras/guide/save contracts and package later verified milestones. Broaden DB1 campaign/achievement acceptance as useful; local input/mixer checks do not substitute for physical M30/reporter-PC audio confirmation.
+
+OptiPort main freshness checked at a328c5a1b5aabc62f29aa9f1b5a96a59ad2d4ee1. Feedback: https://github.com/MatyMeatBoy/OptiPort/issues/28#issuecomment-6976057576 . No claim of every bug or hardware platform being complete.

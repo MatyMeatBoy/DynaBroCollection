@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.7 — checkpoint de prueba
+
+- Extras integrado en el título de DB1, selección de niveles y navegación automática por Password con cancelación y timeout.
+- Guardados independientes del idioma, importación segura de revisiones anteriores y soporte del código especial EMI.
+- Ocho cuadros de diálogo gráfico traducidos, cinco signos del final reparados y logo inglés también en Original4:3.
+-42 comprobaciones del paquete;50 contratos nativos y67 pruebas Python. Descarga pública completa verificada y ZIP personal independiente.
+- DB2 conserva la base de0.1.6 en este archivo; su desarrollo continúa después del baseline de DB1.
+
 ## 0.1.6 — checkpoint de prueba
 
 - Launcher verde: Settings funciona desde ambos botones reales, ventana más grande con fallback y logo1+2 aprobado.
