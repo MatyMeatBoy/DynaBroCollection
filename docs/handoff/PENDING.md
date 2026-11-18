@@ -113,3 +113,6 @@ Writing 0xFF027D (WRITE_RAM8) after the KAIGAN password, before the briefing scr
 Second attempt (write 0xFF027D/7E before WAIT 1500, after password submit) also left the briefing at STAGE 2. RAM-write route is dead; remaining route is more password guesses or finding the real stage-index variable via a write watchpoint.
 
 Password ROULET (from tcrf search result) is valid: secret roulette stage loads straight into gameplay (no briefing). YOUKO/ANIME/FIGHT/DASH and HEIGEN/KYOUKO/TAISET/MOAINO/BATTAJ/KAMINA rejected by this script (5-letter words may need different entry).
+
+## Password sweep 2026-11-18 (all public lists)
+Full list verified from GameFAQs/kakusi.jp (Story 1-45, Practice 1-8, Original easy/normal/hard, secret stages). tools/db2_password_script.py now submits words under 6 letters via END (row 3 col 7). Briefings of stages 4,5,7,8,9,19,21,23,27,29,30,33,35,37-44 checked on screen; fixed stage 30 title (FUTURE) and stage 37/43 leftover kana. Secret stages ROULET/CRYSTL/MASIRI/HIMITU/BEEP/DAJO load; SHOKAI shows English character intros. Pending: DB1EN target fails to build in build/dev (s_quit_to_desktop undeclared in upstream runner/main.c after patch 0001 update) - not from this work; view remaining briefings; non-briefing Japanese.
