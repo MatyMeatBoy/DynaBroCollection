@@ -56,18 +56,30 @@ class TranslationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             translate(source, catalog)
     def test_real_catalog_entries_are_self_consistent(self):
+        from tools.translate_db2 import glyph16
         catalog = json.loads((ROOT / 'translations/db2special-en.json').read_text(encoding='utf-8'))
         entries = catalog['entries']
-        self.assertEqual(len(entries), 22)
+        self.assertGreaterEqual(len(entries), 22)
         used = set()
         for entry in entries:
             address, capacity = entry['address'], entry['capacity']
             before = bytes.fromhex(entry['before'])
-            english = entry['english'].encode('ascii')
             self.assertGreaterEqual(address, 512)
             self.assertEqual(len(before), capacity)
-            self.assertEqual(len(english), capacity)
-            self.assertTrue(all(x >= 32 or x == 1 for x in english))
+            if entry.get('encoding') == 'glyph16':
+                self.assertEqual(capacity % 2, 0)
+                self.assertEqual(len(glyph16(entry['english'], capacity // 2, entry.get('align', 'left'))), capacity)
+            else:
+                english = entry['english'].encode('ascii')
+                self.assertEqual(len(english), capacity)
+                self.assertTrue(all(x >= 32 or x == 1 for x in english))
             span = set(range(address, address + capacity))
             self.assertFalse(span & used, f'overlapping entries at {address:06X}')
+            used |= span
+        for entry in catalog.get('glyph_text', []):
+            before = bytes.fromhex(entry['before'])
+            self.assertEqual(len(before) % 2, 0)
+            self.assertTrue(entry['lines'] and all(line.isascii() for line in entry['lines']))
+            span = set(range(entry['address'], entry['address'] + len(before)))
+            self.assertFalse(span & used, f"overlapping glyph_text at {entry['address']:06X}")
             used |= span
