@@ -1153,6 +1153,1790 @@
       "before": "31373abadaca20b4d7ccdec521",
       "english": "17:DONT PICK!",
       "verification": "Original-mode stage name table; direct guard; scene capture pending"
+    },
+    {
+      "id": "briefing-220ff9",
+      "address": 2232313,
+      "capacity": 10,
+      "before": "40bdc3bade40cbdbcade",
+      "english": "STEGO PARK",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221004",
+      "address": 2232324,
+      "capacity": 21,
+      "before": "b1d2a6ccd7bec320bfb3b9dedda620cbdbb9dedb2e",
+      "english": "RAIN TO SPREAD GRASS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22101a",
+      "address": 2232346,
+      "capacity": 23,
+      "before": "ccb7b9deddc52040b6deb3b6deb340b6de20d4afc3b8d9",
+      "english": "A GRUMPY GAUGAU COMES  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221032",
+      "address": 2232370,
+      "capacity": 19,
+      "before": "cfc3dec62040cadfdc40b0a6c0d2d9c9c0de2e",
+      "english": "STORE POWER FIRST. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221046",
+      "address": 2232390,
+      "capacity": 18,
+      "before": "40c3a8d7c940a6c2b8afc320d1b6b4b3c321",
+      "english": "MAKE A TYRANNO!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221065",
+      "address": 2232421,
+      "capacity": 12,
+      "before": "b6b2b6deddc920bfb3b9dedd",
+      "english": "COAST MEADOW",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221072",
+      "address": 2232434,
+      "capacity": 20,
+      "before": "b6dcb2c020c4c1c6ca20b8bbb6de20cab4c5b22e",
+      "english": "DRY LAND: NO GRASS. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221087",
+      "address": 2232455,
+      "capacity": 21,
+      "before": "b1d9b8c420c2b6dad9b6d720b7aeb3d8adb3c0c1d3",
+      "english": "DINOS TIRE WALKING IT",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22109d",
+      "address": 2232477,
+      "capacity": 21,
+      "before": "cab2d7c5b22e20b1d2a620ccd7bed9c420b7dab2c5",
+      "english": "AND AVOID IT. MAKE IT",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2210b3",
+      "address": 2232499,
+      "capacity": 10,
+      "before": "c4c1c620c5d9c9c0de2e",
+      "english": "MAKE LUSH!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2210c9",
+      "address": 2232521,
+      "capacity": 11,
+      "before": "d4cfcadec920c0c6b6dedc",
+      "english": "ROCKY CREEK",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2210d5",
+      "address": 2232533,
+      "capacity": 21,
+      "before": "b1dac0c4c1c6ca20c5ddc4ded320b1d2a6ccd7bec3",
+      "english": "RAIN OFTEN ON BARREN ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2210eb",
+      "address": 2232555,
+      "capacity": 21,
+      "before": "beb2cbdebcd6b32e20ccd7bebdb7ded9c420bcafc1",
+      "english": "LAND TO FIX IT. TOO  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221101",
+      "address": 2232577,
+      "capacity": 23,
+      "before": "c6c5d9bfde2e2040cadfdc40b0b6dec5b8c5d7c5b2d6b3",
+      "english": "MUCH RAIN MAKES SWAMP. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221119",
+      "address": 2232601,
+      "capacity": 17,
+      "before": "c620bab3d8c2d6b820ccd7bed9c9c0de2e",
+      "english": "RAIN WISELY.     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221137",
+      "address": 2232631,
+      "capacity": 15,
+      "before": "40c0cfba40debcdeafb9ddc920bccf",
+      "english": "EGG LAB ISLAND ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221147",
+      "address": 2232647,
+      "capacity": 19,
+      "before": "40bdb6cedfdd40c0cfbadeca20d1beb2d7dd2e",
+      "english": "DUDS ARE INFERTILE.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22115b",
+      "address": 2232667,
+      "capacity": 20,
+      "before": "bcdeafb9dd20bcafcadfb22040bdb640c0cfbade",
+      "english": "A FAILED EXPERIMENT.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221170",
+      "address": 2232688,
+      "capacity": 16,
+      "before": "cfafc3d320c5ddc6d320b6b4d7c5b22e",
+      "english": "NO USE WAITING. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221181",
+      "address": 2232705,
+      "capacity": 18,
+      "before": "c0deb9c4de20c0cdded9c420b5b2bcb2d62e",
+      "english": "THEY TASTE GOOD!  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22119f",
+      "address": 2232735,
+      "capacity": 16,
+      "before": "40c5d240bcdedbb020cedeb8bcdeaeb3",
+      "english": "NAMEJIRO RANCH  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2211b0",
+      "address": 2232752,
+      "capacity": 24,
+      "before": "caddbcaeb840d3b0c4de40c620bdd9c42040c0cfbade40a6",
+      "english": "BREEDING MODE LAYS EGGS ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2211c9",
+      "address": 2232777,
+      "capacity": 23,
+      "before": "b3d0d4bdb8c5d9b9c4de2040c3a8d7c940b6de20bed2c3",
+      "english": "FASTER, BUT TYRANNO    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2211e1",
+      "address": 2232801,
+      "capacity": 18,
+      "before": "b2b6c5b2bfde2e20d0b6c0b6de20c0b8bbdd",
+      "english": "ATTACK. WITH MANY ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2211f4",
+      "address": 2232820,
+      "capacity": 19,
+      "before": "ccb4c0d720bcddb9deb740d3b0c4de40c0de21",
+      "english": "ALLIES USE ASSAULT!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221213",
+      "address": 2232851,
+      "capacity": 14,
+      "before": "40b6deb3b6deb340c920b7bcadb3",
+      "english": "GAUGAU AMBUSH ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221222",
+      "address": 2232866,
+      "capacity": 20,
+      "before": "c3b7c620b5bfdcdac0c4b72040bdc3ba40debcb6",
+      "english": "WITH ONLY STEGO LEFT",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221237",
+      "address": 2232887,
+      "capacity": 16,
+      "before": "b2c5b2c420cbc4c0cfd8d3c5b2bfde2e",
+      "english": "YOU ARE DOOMED. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221248",
+      "address": 2232904,
+      "capacity": 20,
+      "before": "40c4d8b9d740ca20b3c0da20c2ded6b220b3b4c6",
+      "english": "TRICERAS ARE TOUGH  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22125d",
+      "address": 2232925,
+      "capacity": 17,
+      "before": "40cadfdcb040d320d6b8c0cfd9c9c0de2e",
+      "english": "AND GAIN POWER.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22127b",
+      "address": 2232955,
+      "capacity": 9,
+      "before": "ccd5c920cdb2b9dedd",
+      "english": "SNOWFIELD",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221285",
+      "address": 2232965,
+      "capacity": 23,
+      "before": "d0c1cbdeb740bacfddc4de40ca20d0b6c0a620b1d4c2d9",
+      "english": "GUIDE COMMANDS LEAD    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22129d",
+      "address": 2232989,
+      "capacity": 21,
+      "before": "bac4b6dec3deb7d92e20b3d0d320b1dac1d320bab4",
+      "english": "ALLIES OVER SEA AND  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2212b3",
+      "address": 2233011,
+      "capacity": 22,
+      "before": "d7dad9b9c4de2040c0ded2b0bcde40ca20b5b5b7b22e",
+      "english": "WASTE, BUT DAMAGE IS  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2212ca",
+      "address": 2233034,
+      "capacity": 21,
+      "before": "c4b8c620c6b8bcaeb8ca20d0bddec6d6dcb2bfde2e",
+      "english": "BIG. BEWARE OF WATER.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2212eb",
+      "address": 2233067,
+      "capacity": 8,
+      "before": "d5b7c9b7aeb3bab8",
+      "english": "ICE PASS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2212f4",
+      "address": 2233076,
+      "capacity": 19,
+      "before": "b1bed7bddec620bfb3b9dedda620cbdbb9dec3",
+      "english": "SPREAD GRASS SLOWLY",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221308",
+      "address": 2233096,
+      "capacity": 22,
+      "before": "b6b8bcdec2c62040cadfdc40b0a620c0b8dcb4d6b32e",
+      "english": "AND STORE POWER WELL. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22131f",
+      "address": 2233119,
+      "capacity": 20,
+      "before": "c0c0debc20c3b7c9b7bcadb3c620b7a6c2b9db2e",
+      "english": "BUT WATCH FOR ENEMY ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221334",
+      "address": 2233140,
+      "capacity": 20,
+      "before": "d0c2b6d7c5b2d6b3c620c1adb3b2bdd9c9c0de21",
+      "english": "RAIDS. STAY HIDDEN! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221355",
+      "address": 2233173,
+      "capacity": 8,
+      "before": "c0deb2bec2bbdedd",
+      "english": "BIG SNOW",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22135e",
+      "address": 2233182,
+      "capacity": 20,
+      "before": "d5b7c9b5d4cfc9c0c0b6b2ca20bbd1b8c2d2c0b8",
+      "english": "BATTLES IN THE SNOWS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221373",
+      "address": 2233203,
+      "capacity": 21,
+      "before": "c2d7b2b9c4de20d5b7a620c4b6bcc320b6deddcade",
+      "english": "ARE COLD, HARD, BUT  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221389",
+      "address": 2233225,
+      "capacity": 21,
+      "before": "dbb32e20c2d2c0b220d5b7d320c5ddc4b6c5d9bba4",
+      "english": "MELT THE SNOW AND TRY",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22139f",
+      "address": 2233247,
+      "capacity": 17,
+      "before": "cad9ca20bfbacfc3de20b7c3d9b6d72e2e",
+      "english": "SPRING IS NEAR!  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2213bd",
+      "address": 2233277,
+      "capacity": 18,
+      "before": "bbb8d7bededdbedd20ceb8bcdeaeb3c1adb3",
+      "english": "CHERRY FRONT NORTH",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2213d0",
+      "address": 2233296,
+      "capacity": 21,
+      "before": "40d2c3b540c9c8c0deddca2040caafbeddb4dd402e",
+      "english": "A METEOR COSTS 8000. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2213e6",
+      "address": 2233318,
+      "capacity": 19,
+      "before": "c0b8bbdd20d3b4c3d32040caafbeddb4dd402e",
+      "english": "THE PRICE IS FIXED.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2213fa",
+      "address": 2233338,
+      "capacity": 19,
+      "before": "cadfdcb0ca20c5b6c5b620c0cfd7ddb9dac4de",
+      "english": "POWER BUILDS SLOW, ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22140e",
+      "address": 2233358,
+      "capacity": 21,
+      "before": "bcdeafc420b6decfddc3de20cfafc3dd40c8dd402e",
+      "english": "BE PATIENT AND WAIT. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22142f",
+      "address": 2233391,
+      "capacity": 9,
+      "before": "40d3d4b240c920bccf",
+      "english": "MOAI ISLE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221439",
+      "address": 2233401,
+      "capacity": 22,
+      "before": "d0c1cbdeb740bacfddc4de40c3de20c4c5d8c9bccfc6",
+      "english": "SEND HELP TO THE NEXT ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221450",
+      "address": 2233424,
+      "capacity": 23,
+      "before": "d0b6c0a620b5b8d8bad2212040ccdfc3d740ca20b3d0d3",
+      "english": "ISLE WITH A GUIDE CMD! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221468",
+      "address": 2233448,
+      "capacity": 21,
+      "before": "b1dac1d320c4cdded9b9c4de20c0ddc4deb8c3deca",
+      "english": "PTERA FLY OVER WATER ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22147e",
+      "address": 2233470,
+      "capacity": 21,
+      "before": "d6dcb22e20b5d3c620cfd3d8c620c2b6b3c9c0de2e",
+      "english": "BUT ARE WEAK ALONE.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22149f",
+      "address": 2233503,
+      "capacity": 14,
+      "before": "dcd7dcd72040cadeafc040bcdecf",
+      "english": "BATTA SWARM   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2214ae",
+      "address": 2233518,
+      "capacity": 21,
+      "before": "cbbab3b6dec020c6b8bcaeb8bcdeadb3ca20d0bdde",
+      "english": "FLYING CARNIVORES WIN",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2214c4",
+      "address": 2233540,
+      "capacity": 20,
+      "before": "cddec920c0c0b6b2b6de20d5b3d82e20bbb6c5a6",
+      "english": "NEAR WATER. EAT FISH",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2214d9",
+      "address": 2233561,
+      "capacity": 22,
+      "before": "c0cddec320c0b2d8aeb8b6b2ccb820c3deb7d9bfde2e",
+      "english": "TO RESTORE VITALITY.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2214f0",
+      "address": 2233584,
+      "capacity": 21,
+      "before": "c0b8bbdd20b1c2cfd9c420b6c5d8c2d6b2c9c0de2e",
+      "english": "GROUPS ARE STRONG!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221511",
+      "address": 2233617,
+      "capacity": 13,
+      "before": "20c4bbdebbdac02040b2beb740",
+      "english": " SEALED RUINS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22151f",
+      "address": 2233631,
+      "capacity": 21,
+      "before": "20b6b2b6deddbfdeb2c3de20b5b5b1d2ccd7becade",
+      "english": " HEAVY RAIN ON COAST ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221535",
+      "address": 2233653,
+      "capacity": 18,
+      "before": "c0deb2bab3bddeb2c3de20b5b5bbdcb7de2e",
+      "english": "CAUSES FLOODS.    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221548",
+      "address": 2233672,
+      "capacity": 19,
+      "before": "d0bddec6d6dcb220beb2ccdec2ca20c0c1cfc1",
+      "english": "WEAK-TO-WATER FOES ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22155c",
+      "address": 2233692,
+      "capacity": 17,
+      "before": "b5cededac32040c0ded2b0bcde40d6dd2e",
+      "english": "DROWN IN SECONDS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221579",
+      "address": 2233721,
+      "capacity": 8,
+      "before": "40b2beb740d2b2db",
+      "english": "MAZE    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221582",
+      "address": 2233730,
+      "capacity": 21,
+      "before": "beb2c1aeb3bcc020b2caded7ca20c3b7c9bcdddba6",
+      "english": "THORNS BLOCK ENEMY   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221598",
+      "address": 2233752,
+      "capacity": 21,
+      "before": "ccbeb8de2040caded8b9b0c4de40c4c5d9c9c0de2e",
+      "english": "PATH LIKE BARRICADES.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2215ae",
+      "address": 2233774,
+      "capacity": 20,
+      "before": "bab3b9deb7b6dec020c6b8bcaeb8bcdeadb3c5d7",
+      "english": "ATTACKERS WILL SMASH",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2215c3",
+      "address": 2233795,
+      "capacity": 16,
+      "before": "cab6b2bcc320bcddb9deb7bdd9bfde21",
+      "english": "THEM AND CHARGE!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2215df",
+      "address": 2233823,
+      "capacity": 9,
+      "before": "b7aec0deb220b2beb7",
+      "english": "BIG RUINS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2215e9",
+      "address": 2233833,
+      "capacity": 21,
+      "before": "b6b2b6deddbfdeb2c3de20cedeb3ccb3b5babecade",
+      "english": "A STORM ON THE COAST ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2215ff",
+      "address": 2233855,
+      "capacity": 15,
+      "before": "b5b5c2c5d0c3de20c5b6debbdad92e",
+      "english": "CAUSES TSUNAMI.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22160f",
+      "address": 2233871,
+      "capacity": 19,
+      "before": "b7bec2b6ded720c1aeb3b7beddca20c1aeafc4",
+      "english": "LONG FIGHTS: HARD. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221623",
+      "address": 2233891,
+      "capacity": 20,
+      "before": "c2d7b22e20bfafbab3c3de20bcaeb3ccdec0de21",
+      "english": "WIN QUICKLY!        ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221643",
+      "address": 2233923,
+      "capacity": 20,
+      "before": "c6ddcedfb0b8deddc0dedd20cdb7d2ddccdec0b2",
+      "english": "NINPO WALL CORPS    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221658",
+      "address": 2233944,
+      "capacity": 23,
+      "before": "caddbcaeb840d3b0c4de40c3de20bfb3bcaeb8bcdeadb3",
+      "english": "IN BREEDING MODE, GROW ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221670",
+      "address": 2233968,
+      "capacity": 23,
+      "before": "c0c1a620ccd4bcc32040cadfdcb040a620c0b8dcb4db2e",
+      "english": "HERBIVORES; GET POWER. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221688",
+      "address": 2233992,
+      "capacity": 21,
+      "before": "40cedfddcedfdd40c0c1b6de20bededdd2c2bdd9c4",
+      "english": "IF PONPONS ALL DIE,  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22169e",
+      "address": 2234014,
+      "capacity": 18,
+      "before": "cfb9c0de2e20b6dad7a620cfd3d9c9c0de21",
+      "english": "YOU LOSE! PROTECT!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2216bd",
+      "address": 2234045,
+      "capacity": 8,
+      "before": "bbcadeb820c1c0b2",
+      "english": "DESERT  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2216c6",
+      "address": 2234054,
+      "capacity": 21,
+      "before": "bcaeb8ccdec2bacfddc4dea620c2b6b4cade20bdc5",
+      "english": "PLANT COMMAND GROWS  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2216dc",
+      "address": 2234076,
+      "capacity": 21,
+      "before": "c1c6d320b8bba6b3b4d7dad92e20b5cac5ca20b8bb",
+      "english": "SAND GRASS. FLOWERS  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2216f2",
+      "address": 2234098,
+      "capacity": 18,
+      "before": "d6d820b4b2d6b3b6b6de20c0b6b2c9c0de2e",
+      "english": "FEED BETTER.      ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221705",
+      "address": 2234117,
+      "capacity": 23,
+      "before": "40cec840bcc0b2b8ddca20b5b2bcb8c0cdded7dacfbd2e",
+      "english": "BONEBODY IS TASTY!     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221729",
+      "address": 2234153,
+      "capacity": 13,
+      "before": "b2caded7c920cedeb3b4b2bedd",
+      "english": "THORN DEFENSE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221737",
+      "address": 2234167,
+      "capacity": 21,
+      "before": "b2caded7ca20b8bbc9c5b6cfc0ded62e20c0deb6d7",
+      "english": "THORNS ARE A KIND OF ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22174d",
+      "address": 2234189,
+      "capacity": 21,
+      "before": "cbc3ded8c620d6dcb2ddc0de2e20c1afc1acb2c4b7",
+      "english": "GRASS: WEAK TO SUN.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221763",
+      "address": 2234211,
+      "capacity": 21,
+      "before": "ca20d4d7b6b8c320b4b2d6b320c0afccdfd820b5b2",
+      "english": "YOUNG ONES ARE SOFT  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221779",
+      "address": 2234233,
+      "capacity": 21,
+      "before": "bcb2d62e20b7ca20d7b8d7b2c3de20badcbed9d62e",
+      "english": "THUNDER BREAKS THEM. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22179b",
+      "address": 2234267,
+      "capacity": 9,
+      "before": "b5bcdbc920bdb2d3dd",
+      "english": "FLOODGATE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2217a5",
+      "address": 2234277,
+      "capacity": 20,
+      "before": "b2afb7c620c0b8bbddc920b1d2a620ccd7bec3d3",
+      "english": "A BIG RAIN AT ONCE  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2217ba",
+      "address": 2234298,
+      "capacity": 20,
+      "before": "d5b7a620c4b6bdbac4b6de20c3deb7d9c9c0de2e",
+      "english": "MELTS THE SNOW.     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2217cf",
+      "address": 2234319,
+      "capacity": 22,
+      "before": "d5b3beb2c620c5afc3b7c0d72040cbdf40b0c1acdda6",
+      "english": "IF AHEAD SEND P-CHAN  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2217e6",
+      "address": 2234342,
+      "capacity": 20,
+      "before": "b5b8d8bad1c420bcaeb3ccdeb6de20cad4b2d62e",
+      "english": "FOR A QUICK WIN.    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221807",
+      "address": 2234375,
+      "capacity": 10,
+      "before": "40cab6be40c920b5bcdb",
+      "english": "DOC CASTLE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221812",
+      "address": 2234386,
+      "capacity": 15,
+      "before": "bab5d8c920b3b4ca20b1d9b9d9d62e",
+      "english": "ICE: WALKABLE. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221822",
+      "address": 2234402,
+      "capacity": 17,
+      "before": "d0ddc520bdcddeafc320c2ddc2d9d8dd2e",
+      "english": "ALL SLIP ABOUT.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221834",
+      "address": 2234420,
+      "capacity": 19,
+      "before": "40b1db40c0deb920c5b6c5b620bdbdcfc5b22e",
+      "english": "ALLO MOVES SLOWLY. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221848",
+      "address": 2234440,
+      "capacity": 20,
+      "before": "c0deb9c4de20cbc3ded8c3de20c4b9d9ddc0de2e",
+      "english": "BUT SUN MELTS ICE.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221869",
+      "address": 2234473,
+      "capacity": 11,
+      "before": "bcafc1c0b2c920c0c0b6b2",
+      "english": "SWAMP FIGHT",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221875",
+      "address": 2234485,
+      "capacity": 19,
+      "before": "cbc3ded8a620c2b6b4cade20b1afc4b2b3cfc6",
+      "english": "SUN DRIES THE SWAMP",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221889",
+      "address": 2234505,
+      "capacity": 20,
+      "before": "bcafc1d320c0c1cfc120c4ded7b220c4ded7b22e",
+      "english": "INSTANTLY. DRY, DRY.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22189e",
+      "address": 2234526,
+      "capacity": 24,
+      "before": "b7c6b2d7dd40d4c240ca20c4c2b9deb740d3b0c4de40c3de",
+      "english": "ANNOYING FOES? ASSAULT  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2218b7",
+      "address": 2234551,
+      "capacity": 13,
+      "before": "40ccb8dbc0dec0b740c1deac21",
+      "english": "MODE: ATTACK!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2218d1",
+      "address": 2234577,
+      "capacity": 7,
+      "before": "b6bbdeddc1c0b2",
+      "english": "VOLCANO",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2218d9",
+      "address": 2234585,
+      "capacity": 25,
+      "before": "40c4deb6dd40c440b2afcadfc24020b6bbdeddb6de20c3dec0",
+      "english": "BOOM! A VOLCANO BLEW     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2218f3",
+      "address": 2234611,
+      "capacity": 20,
+      "before": "d62e20babaca20c3deafb6b220cbc920b5d4cf2e",
+      "english": "UP! A HUGE FIRE PEAK",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221908",
+      "address": 2234632,
+      "capacity": 21,
+      "before": "b6bab3c920bfcadec3de20bcdebcdda6b5babecade",
+      "english": "A QUAKE NEAR THE CONE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22191e",
+      "address": 2234654,
+      "capacity": 20,
+      "before": "d6b3b6deddd8adb3b6de2040c4deaf40c4b8d92e",
+      "english": "RELEASES LAVA FLOWS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22193f",
+      "address": 2234687,
+      "capacity": 11,
+      "before": "b7aeb3bab8a620cfd3da21",
+      "english": "GUARD VALE!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22194b",
+      "address": 2234699,
+      "capacity": 21,
+      "before": "40cedfddcedfdd40c0c1b6de20bededdd2c2bcc0d7",
+      "english": "IF PONPONS ALL DIE,  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221961",
+      "address": 2234721,
+      "capacity": 21,
+      "before": "cfb9c5c9c0de2e20b6bab3b6d720c0bdb9d7dad9c4",
+      "english": "YOU LOSE. THE CRATER ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221977",
+      "address": 2234743,
+      "capacity": 21,
+      "before": "c0c0b6b2b6de20d7b8c620c5d9bfde2e20bcbededd",
+      "english": "HELPS YOU FIGHT.     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22198d",
+      "address": 2234765,
+      "capacity": 20,
+      "before": "40bacfddc4de40a620d5b3bab3c620c2b6b5b32e",
+      "english": "USE COMMANDS WELL.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2219ad",
+      "address": 2234797,
+      "capacity": 10,
+      "before": "d1ddb7b040d7ddc4de40",
+      "english": "MUNKI LAND",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2219b8",
+      "address": 2234808,
+      "capacity": 21,
+      "before": "d1ddb7b6de20b1c2cfd920d6b2bccfca20c0c9bcb2",
+      "english": "MUNKI GATHER, FUN!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2219ce",
+      "address": 2234830,
+      "capacity": 18,
+      "before": "c0c9bcb220d1ddb7bcdecf2e20c0cfbadeca",
+      "english": "MUNKI ISLAND FUN. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2219e1",
+      "address": 2234849,
+      "capacity": 21,
+      "before": "bfb3bcaeb8bcb620c2b8dac5b2b9c4de20c2b6b4d9",
+      "english": "ONLY HERBIVORE EGGS  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2219f7",
+      "address": 2234871,
+      "capacity": 23,
+      "before": "40bacfddc4de40a620d6b0b820b6ddb6deb4c3d0d6b321",
+      "english": "USE COMMANDS WISELY!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a1b",
+      "address": 2234907,
+      "capacity": 6,
+      "before": "d0ddc5c9cfc1",
+      "english": "TOWN  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a22",
+      "address": 2234914,
+      "capacity": 21,
+      "before": "d0ddc5b6debcafc3d920bdddc3deb2d920d5b6b2c5",
+      "english": "A JOYFUL TOWN WHERE  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a38",
+      "address": 2234936,
+      "capacity": 12,
+      "before": "d5b6b2c520d5d2c920cfc12e",
+      "english": "DREAM TOWN. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a45",
+      "address": 2234949,
+      "capacity": 21,
+      "before": "cbc3ded8ca20daddbfdeb8c3deb5babdc420bbd7c6",
+      "english": "USE SUN IN A ROW AND ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a5b",
+      "address": 2234971,
+      "capacity": 20,
+      "before": "b7aeb3d8aeb8c520b6ddcadec2c4c5d9c9c0de2e",
+      "english": "A STRONG DROUGHT!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a7b",
+      "address": 2235003,
+      "capacity": 15,
+      "before": "bfb3bcaeb8bcdeadb3c920bab3b4dd",
+      "english": "HERBIVORE PARK ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221a8b",
+      "address": 2235019,
+      "capacity": 21,
+      "before": "c3b7c620caafb9ddbbdac5b2d6b3c620baafbfd8c4",
+      "english": "BUILD ALLIES QUIETLY,",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221aa1",
+      "address": 2235041,
+      "capacity": 21,
+      "before": "c5b6cfa620ccd4bfb32e20cedeb3ccb3a620b5babe",
+      "english": "UNSEEN. A STORM WILL ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ab7",
+      "address": 2235063,
+      "capacity": 23,
+      "before": "cade2040bcdeaccf40c520b7d420d3b8bfdeb3c9b2b4ca",
+      "english": "BLOW AWAY THE WOODEN   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221acf",
+      "address": 2235087,
+      "capacity": 21,
+      "before": "ccafc4ccdec9c0de2e20b6d0c5d8c3ded320d6b22e",
+      "english": "HOUSES. THUNDER TOO. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221af1",
+      "address": 2235121,
+      "capacity": 12,
+      "before": "40cab6be40c92040cbded940",
+      "english": "DOC BUILDING",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221afe",
+      "address": 2235134,
+      "capacity": 23,
+      "before": "40bdc3bade40c0c1ca20b3cfb820c0bdb9c0debbc5b2c4",
+      "english": "HELP THE STEGOS WELL OR",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b16",
+      "address": 2235158,
+      "capacity": 22,
+      "before": "b6debc20bcc3bccfb3bfde2e20bed2d940bab0bd40a6",
+      "english": "THEY STARVE. PLAN THE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b2d",
+      "address": 2235181,
+      "capacity": 21,
+      "before": "d6b8b6ddb6deb4c320c4c1a620beb2cbdebcc5b2c4",
+      "english": "ATTACK COURSE, CLEAR ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b43",
+      "address": 2235203,
+      "capacity": 18,
+      "before": "c1adb3b5b3c620c0cfafc3bccfb3c9c0de2e",
+      "english": "OR GET STUCK.     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b61",
+      "address": 2235233,
+      "capacity": 8,
+      "before": "cab2b7aec920cfc1",
+      "english": "OLD TOWN",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b6a",
+      "address": 2235242,
+      "capacity": 21,
+      "before": "cec9b5a620d0c3d320b1dcc3d9c52e20dab2beb2c6",
+      "english": "STAY CALM AT FLAMES. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b80",
+      "address": 2235264,
+      "capacity": 21,
+      "before": "c0b2b5b3bcc320cbb6deb2a6b5bbb4db2e20d3b4d9",
+      "english": "LIMIT DAMAGE. REMOVE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221b96",
+      "address": 2235286,
+      "capacity": 21,
+      "before": "d3c9a6c5b8becade20cec9b5cac4cfd92e20b1d7b6",
+      "english": "FUEL AND FIRE STOPS. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221bac",
+      "address": 2235308,
+      "capacity": 20,
+      "before": "bcded220bcafc1a6c2b8d9c9d320bab3b6c3b72e",
+      "english": "SWAMPS HELP TOO.    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221bcd",
+      "address": 2235341,
+      "capacity": 19,
+      "before": "40b6deb3b6deb34020bbb2badec920b9afbedd",
+      "english": "GAUGAU LAST BATTLE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221be1",
+      "address": 2235361,
+      "capacity": 23,
+      "before": "c2b2c640d7b2caded940c420b9afc1acb8a6c2b9d9c4b7",
+      "english": "THE TIME HAS COME TO   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221bf9",
+      "address": 2235385,
+      "capacity": 21,
+      "before": "b6de20b7c02e20b5c4bac5d720b6dad7c9c0c0b6b2",
+      "english": "SETTLE THE SCORE WITH",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c0f",
+      "address": 2235407,
+      "capacity": 21,
+      "before": "a620bbb2badecfc3de20d0c4c4deb9d920c9c0de2e",
+      "english": "THE RIVAL. WATCH THE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c25",
+      "address": 2235429,
+      "capacity": 18,
+      "before": "40c1aedb40b7c1ca20bcddcadfddc0ded62e",
+      "english": "WATCH CHORO BASE. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c49",
+      "address": 2235465,
+      "capacity": 21,
+      "before": "40bdb6cedfdd40c0cfbadeca2040bdb640c0cfbade",
+      "english": "DUD EGGS CAN STILL   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c5f",
+      "address": 2235487,
+      "capacity": 19,
+      "before": "c0deb9c4de20b6b2bfdeb3c3deb7d9ddc0de2e",
+      "english": "BE REMODELED.      ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c73",
+      "address": 2235507,
+      "capacity": 19,
+      "before": "cbbbddc520c1b9b2c620b3ddbbded8bebddec6",
+      "english": "NEVER QUIT ON BAD  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221c87",
+      "address": 2235527,
+      "capacity": 20,
+      "before": "40cfafccdf40c5b2a620d6b0b820d0c3d0d6b32e",
+      "english": "TERRAIN: CHECK MAP. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ca7",
+      "address": 2235559,
+      "capacity": 13,
+      "before": "d0d7b2c92040cbded940b6deb2",
+      "english": "FUTURE CITY  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221cb5",
+      "address": 2235573,
+      "capacity": 20,
+      "before": "b6dac0cfc1c620d0c4ded8a620c4d8d3c4debe21",
+      "english": "REVIVE THE DRY TOWN!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221cca",
+      "address": 2235594,
+      "capacity": 21,
+      "before": "becfb2cadebcaec3deca20cbc3ded8d420b5b5b1d2",
+      "english": "TIGHT SPOTS: SUN OR  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ce0",
+      "address": 2235616,
+      "capacity": 21,
+      "before": "b6de20bab3b6c3b72e20bcdebcddca20daddbfdeb8",
+      "english": "HEAVY RAIN IS BEST.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221cf6",
+      "address": 2235638,
+      "capacity": 21,
+      "before": "c3deb5babdc420bcdedcdab6de20c3deb7d9bfde2e",
+      "english": "QUAKES CAUSE SLIDES! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d17",
+      "address": 2235671,
+      "capacity": 12,
+      "before": "b5b8bcdeaeb3c920c0c0b6b2",
+      "english": "ROOF BATTLE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d24",
+      "address": 2235684,
+      "capacity": 20,
+      "before": "bbddcbdeb7c92040bbd140c4deddc0c1c620b7a6",
+      "english": "WATCH THE 3 SAMDONS ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d39",
+      "address": 2235705,
+      "capacity": 23,
+      "before": "c2b9db2120cabcded2c92040cadfdc40b0a620d5b3bab3",
+      "english": "SPEND YOUR FIRST POWER ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d51",
+      "address": 2235729,
+      "capacity": 9,
+      "before": "c620c2b6b3c9c0de2e",
+      "english": "WISELY.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d5b",
+      "address": 2235739,
+      "capacity": 16,
+      "before": "2740bbb0d140c4dedd2040c2b5b24027",
+      "english": "SAMDON IS TOUGH!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d77",
+      "address": 2235767,
+      "capacity": 16,
+      "before": "40cab6be40c92040caafbdd9c0dc40b0",
+      "english": "HUSTLE TOWER    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221d88",
+      "address": 2235784,
+      "capacity": 23,
+      "before": "b6b840ccdbb140c6ca20b7aeb3c3b7b6decfc1b6cfb4c3",
+      "english": "STRONG FOES WAIT ON    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221da0",
+      "address": 2235808,
+      "capacity": 25,
+      "before": "40caafbdd940bcc3b2d9bfde2e2040cadfdcb040c920c2b6b2",
+      "english": "EACH FLOOR. THINK ABOUT  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221dba",
+      "address": 2235834,
+      "capacity": 23,
+      "before": "b6c0a620d6b8b6ddb6deb4c32040c3a8d7c940a620bbb2",
+      "english": "HOW TO USE POWER AND   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221dd2",
+      "address": 2235858,
+      "capacity": 19,
+      "before": "bcdeaeb3b6b2cfc3de20d0c1cbdeb8c9c0de21",
+      "english": "LEAD TYRANNO UP!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221df1",
+      "address": 2235889,
+      "capacity": 17,
+      "before": "bcadc2b9deb72140ccded7cedeb0bdde40",
+      "english": "SORTIE! BRAVOS   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e03",
+      "address": 2235907,
+      "capacity": 20,
+      "before": "b1b0b8c920bcadb3c0dedd2040ccded7cedeb040",
+      "english": "THE ARK TROOP BRAVOS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e18",
+      "address": 2235928,
+      "capacity": 19,
+      "before": "2020c1aeafc420c2d6b2bfde20d1c3b7c0de21",
+      "english": "TOUGH AND UNBEATEN!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e2c",
+      "address": 2235948,
+      "capacity": 21,
+      "before": "202020202020202028c9b3d8aeb82020b2afbcae29",
+      "english": "   (SAME ABILITIES)  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e42",
+      "address": 2235970,
+      "capacity": 14,
+      "before": "d4c2d7a620c4afc1d2d9c9c0de2e",
+      "english": "SCOLD THEM!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e5d",
+      "address": 2235997,
+      "capacity": 17,
+      "before": "40cadeafc040d3ddc920b7deacb8bcadb3",
+      "english": "BATTAMON STRIKES ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e6f",
+      "address": 2236015,
+      "capacity": 19,
+      "before": "d4c2d7d320ceddb7c0de20b7cbdebcb2bfde21",
+      "english": "THEY MEAN BUSINESS!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e83",
+      "address": 2236035,
+      "capacity": 18,
+      "before": "b2cfcfc3dec620c2b6afc3b7c020b2dbddc5",
+      "english": "USE EVERY COMMAND ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221e96",
+      "address": 2236054,
+      "capacity": 22,
+      "before": "40bacfddc440dea620b8bcbcc320c0c0b6b3c9c0de2e",
+      "english": "YOU LEARNED TO WIN!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221eb9",
+      "address": 2236089,
+      "capacity": 11,
+      "before": "c0b2b7b9dd20c4c2c6adb3",
+      "english": "ATMOS ENTRY",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ec5",
+      "address": 2236101,
+      "capacity": 20,
+      "before": "c3b7a620bdcddec3c0b5bcc320bcdeadb3d8aeb8",
+      "english": "BEAT ALL FOES, STOP ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221eda",
+      "address": 2236122,
+      "capacity": 22,
+      "before": "40baddc4dbb0d7b040a620c3b2bcbbbedb2120cad4b8",
+      "english": "THE GRAVITY CONTROL   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ef1",
+      "address": 2236145,
+      "capacity": 18,
+      "before": "bcaeb3ccdea620c2b9c5b2c420d3b4c2b7c3",
+      "english": "FINISH FAST, OR   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f04",
+      "address": 2236164,
+      "capacity": 21,
+      "before": "bccfb3c9c0de2e20bcdedcdaa620c5ddc4b6bed62e",
+      "english": "BURN UP. STOP SLIDES.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f25",
+      "address": 2236197,
+      "capacity": 11,
+      "before": "40bdc3bade20cca7b2c440",
+      "english": "STEGO FIGHT",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f31",
+      "address": 2236209,
+      "capacity": 18,
+      "before": "c4deddc520ceb3ceb3a620c2b6afc3c3ded3",
+      "english": "BY ANY MEANS,     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f44",
+      "address": 2236228,
+      "capacity": 23,
+      "before": "40bdc3bade40a620bdb8b42120c3b7c620d0c2b6d9c521",
+      "english": "SAVE STEGO! AVOID FOES!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f5c",
+      "address": 2236252,
+      "capacity": 23,
+      "before": "b2b7c9cbded9bac4b6de2040bdc3ba40dec920c0c0b6b2",
+      "english": "SURVIVING IS THE FIGHT ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f85",
+      "address": 2236293,
+      "capacity": 14,
+      "before": "c4c2c6adb3212040cab6be40b7c1",
+      "english": "DOC BASE RAID!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221f94",
+      "address": 2236308,
+      "capacity": 21,
+      "before": "40bdb0cadfb020cedebdc5b2c440ca20b7aeb3c3b7",
+      "english": "SUPER BOSS KNIGHT IS ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221faa",
+      "address": 2236330,
+      "capacity": 20,
+      "before": "c0de2120bededdb2dda620b1b2c3c620cfc4d3c6",
+      "english": "A MIGHTY FOE! FACING",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221fbf",
+      "address": 2236351,
+      "capacity": 16,
+      "before": "c0c0b6afc3d320b6c1d2cac5b2bfde2e",
+      "english": "ALL IS HOPELESS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221fd0",
+      "address": 2236368,
+      "capacity": 20,
+      "before": "c0b4c320c0b8dcb420bcdeb7a620cfc2c9c0de2e",
+      "english": "ENDURE AND WAIT.    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-221ff1",
+      "address": 2236401,
+      "capacity": 11,
+      "before": "bcc6b6ded0c920c0b2d8b8",
+      "english": "DEATH LAND ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222004",
+      "address": 2236420,
+      "capacity": 16,
+      "before": "babadba620b5c1c2b9c320b2c4ded22e",
+      "english": "STAY CALM, TRY! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222023",
+      "address": 2236451,
+      "capacity": 10,
+      "before": "b3c8b3c820b1b8b3b6dd",
+      "english": "EVIL MAZE ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22202e",
+      "address": 2236462,
+      "capacity": 19,
+      "before": "babaca2040cab6be40b6de20c2b8d8c0debcc0",
+      "english": "A DIMENSION MADE BY",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222042",
+      "address": 2236482,
+      "capacity": 12,
+      "before": "b2bcdeb9deddc920beb6b22e",
+      "english": "THE DOC.    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22204f",
+      "address": 2236495,
+      "capacity": 19,
+      "before": "cfdcd8c920d4c2d7ca20cab6b2bdd9bac4b6de",
+      "english": "FOES CAN BE SMASHED",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222063",
+      "address": 2236515,
+      "capacity": 8,
+      "before": "c3deb7d9c9c0de2e",
+      "english": "NEARBY. ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222077",
+      "address": 2236535,
+      "capacity": 18,
+      "before": "b6b9dec920b7aeb3d8adb320b8deddc0dedd",
+      "english": "SHADOW DINO ARMY  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22208a",
+      "address": 2236554,
+      "capacity": 21,
+      "before": "d4c2d7ca20b7aeb3d8adb3c0c1c920b6b9dec0de2e",
+      "english": "THEY ARE DINO SHADOWS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220a0",
+      "address": 2236576,
+      "capacity": 13,
+      "before": "bbc32e2e20c4deb3c3ded9b6c5",
+      "english": "NOW THEN...  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220bb",
+      "address": 2236603,
+      "capacity": 12,
+      "before": "40cab6be40c920b9deddb4b2",
+      "english": "DOC ILLUSION",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220c8",
+      "address": 2236616,
+      "capacity": 15,
+      "before": "c6ddcedfb0b8ddc920c9b3d8aeb8a6",
+      "english": "THE DOC CLONES ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220d8",
+      "address": 2236632,
+      "capacity": 21,
+      "before": "b7adb3bcadb3bcc02040cab6beb8dbb0dd40c0c1ca",
+      "english": "ABSORBED NINPO SKILLS",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220ee",
+      "address": 2236654,
+      "capacity": 16,
+      "before": "b9cab2c620cbdeddb6dd20c5c9c0de2e",
+      "english": "AND SENSE YOU.  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2220ff",
+      "address": 2236671,
+      "capacity": 18,
+      "before": "caafb9ddbbdac5b2d6b3c620b7a6c2b9db21",
+      "english": "STAY HIDDEN!      ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22211d",
+      "address": 2236701,
+      "capacity": 9,
+      "before": "b2bcdeb9dedd20b7c1",
+      "english": "ALT. BASE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222127",
+      "address": 2236711,
+      "capacity": 19,
+      "before": "40cab6be40ca20b6c2c3c920b3c1adb3bcdedd",
+      "english": "THE DOC MADE EVIL  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22213b",
+      "address": 2236731,
+      "capacity": 22,
+      "before": "ccdec0b2c920b7aeb3b1b82040b8dbb0dd40a6c2b8d8",
+      "english": "CLONES OF OLD ALIENS  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222158",
+      "address": 2236760,
+      "capacity": 21,
+      "before": "d1b6bcc920c0c0b6b2b6de20bbb2b9deddbbdad92e",
+      "english": "REPLAYING OLD BATTLES",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222179",
+      "address": 2236793,
+      "capacity": 20,
+      "before": "40cab6be4020b8deddc0dedd20bfb3bab3b9deb7",
+      "english": "DOC ARMY ALL-OUT    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22218e",
+      "address": 2236814,
+      "capacity": 18,
+      "before": "c4deb3d8aeb8b9dedda620cab6b2bddacade",
+      "english": "DESTROY THE POWER ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2221a1",
+      "address": 2236833,
+      "capacity": 20,
+      "before": "c0cfbadebfdeb3beb2b7ca20c3b2bcbdd9bfde2e",
+      "english": "SOURCE TO STOP EGGS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2221b6",
+      "address": 2236854,
+      "capacity": 20,
+      "before": "40b8dbb0dd40c0c1c920b3badeb7a620d6b8d0c3",
+      "english": "WATCH THE CLONES AND",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2221cb",
+      "address": 2236875,
+      "capacity": 17,
+      "before": "40c0b2ccdf40a620d0b7dcd2d9c9c0de21",
+      "english": "SPOT THEIR TYPE! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2221e9",
+      "address": 2236905,
+      "capacity": 17,
+      "before": "40d2b6debbdeb3d9bd4020c4b3bcdeaeb3",
+      "english": "MEGA SAURUS      ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2221fb",
+      "address": 2236923,
+      "capacity": 20,
+      "before": "bedeafc0b220d1c3b7c920bbb2bcadb3cdb2b7a6",
+      "english": "DESTROY THE ULTIMATE",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222210",
+      "address": 2236944,
+      "capacity": 20,
+      "before": "cab6b2bdd9c9c0de2120c4c6b6b820c0c0b6b421",
+      "english": "WEAPON! JUST FIGHT! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222225",
+      "address": 2236965,
+      "capacity": 20,
+      "before": "b8b2c4d2c5b9dacade2074686520656767bdd7d3",
+      "english": "OR EGGS WILL BE     ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22223a",
+      "address": 2236986,
+      "capacity": 13,
+      "before": "cab6b2bbdac320bccfb3bfde21",
+      "english": "SMASHED TOO! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222252",
+      "address": 2237010,
+      "capacity": 23,
+      "before": "bdc3badeb6de38cbb7c6c5afc0d740b8d8b140b0c0de21",
+      "english": "GET 8 STEGOS TO CLEAR! ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22226a",
+      "address": 2237034,
+      "capacity": 21,
+      "before": "b1d2a6ccd7bec320bfb3b9dedda6cbdbb9ded6b32e",
+      "english": "RAIN TO SPREAD GRASS.",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-222280",
+      "address": 2237056,
+      "capacity": 25,
+      "before": "40cadfdc40b0ca2040bdc3ba40dec920b6bddeb6de20b5b5b2",
+      "english": "POWER BUILDS FASTER      ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-22229a",
+      "address": 2237082,
+      "capacity": 13,
+      "before": "cec4de20c0b8bbddc0cfd9d62e",
+      "english": "WITH MORE!   ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2222a8",
+      "address": 2237096,
+      "capacity": 23,
+      "before": "bededdd2c2bdd9c42040b9deb0d1b5b0cade40b0c0de21",
+      "english": "ALL DEAD = GAME OVER!  ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2222ca",
+      "address": 2237130,
+      "capacity": 23,
+      "before": "bdcddec3c920c3b7a6c0b5becade40b8d8b140b0c0de21",
+      "english": "BEAT ALL FOES TO CLEAR!",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
+    },
+    {
+      "id": "briefing-2222e2",
+      "address": 2237154,
+      "capacity": 25,
+      "before": "40bdc3ba40dea6ccd4bcc32040cadfdc40b0b6dec0cfafc0d7",
+      "english": "GROW STEGOS, AND WHEN    ",
+      "verification": "stage briefing half-width text; guard exact; scene capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
