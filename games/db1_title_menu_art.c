@@ -75,7 +75,7 @@ static void draw(const GVDP *v,int line,uint32_t *out,int width,int left,
  }
 }
 int db1_title_menu_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,
- unsigned selected,Db1TitleMenuBackground background){
+ unsigned selected,int modal,Db1TitleMenuBackground background){
  if(!v||!out||!background||width<=0||width>ROW_CAP||selected>4||line<0||line>=224||
     !(v->reg[1]&64)||!(v->reg[12]&1)||(v->reg[12]&14)||
     (v->reg[16]&3)==2||((v->reg[16]>>4)&3)==2||(v->reg[11]&3)==1)return 0;
@@ -86,7 +86,7 @@ int db1_title_menu_art_row(const GVDP *v,int line,uint32_t *out,int width,int le
  unsigned char protected[ROW_CAP]={0};
  if(!other_sprites(v,line,width,left,protected))return 0;
  unsigned sat=(v->reg[5]&127)<<9;
- if(selected==4){
+ if(selected==4&&!modal){
   unsigned char cursor[ROW_CAP]={0};
   for(unsigned i=0;i<4;i++){
    unsigned a=sat+i*8,attr=word(v,a+4);
@@ -109,6 +109,9 @@ int db1_title_menu_art_row(const GVDP *v,int line,uint32_t *out,int width,int le
   }
  }
  static const unsigned letters[6]={0x30e,0x321,0x31d,0x31b,0x30a,0x31c};
- for(unsigned i=0;i<6;i++)draw(v,line,out,width,left,letters[i]|(selected==4?0x2000u:0u),136+(int)i*8,200,protected);
+ /* Modal (Extras panel open): fall back to the same unselected white bank
+  * every other row already uses, instead of staying on the hover-yellow
+  * bank. Matches how a row's highlight disappears once its action opens. */
+ for(unsigned i=0;i<6;i++)draw(v,line,out,width,left,letters[i]|((selected==4&&!modal)?0x2000u:0u),136+(int)i*8,200,protected);
  return 1;
 }
