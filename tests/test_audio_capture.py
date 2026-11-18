@@ -25,3 +25,15 @@ class AudioCaptureTests(unittest.TestCase):
     def test_accepts_ac_signal_after_silent_boot(self):
         signal=[0]*8000+[int(2000*math.sin(i*0.1)) for i in range(16000)]
         self.assertTrue(self.inspect(signal,signal)['signal_present'])
+
+    def test_rejects_mono_or_non_16_bit_captures(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for params in [(1, 2, 8000, 0, 'NONE', 'not compressed'), (2, 1, 8000, 0, 'NONE', 'not compressed')]:
+                with self.subTest(params=params):
+                    path = Path(directory) / 'capture.wav'
+                    with wave.open(str(path), 'wb') as output:
+                        output.setparams(params)
+                        output.writeframes(bytes(100))
+                    with self.assertRaises(ValueError):
+                        inspect_audio_capture(path)
+                    path.unlink()
