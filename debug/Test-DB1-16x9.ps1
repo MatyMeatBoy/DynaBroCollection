@@ -47,7 +47,11 @@ try {
         } finally { Pop-Location }
     }
     if ($states[0] -ne $states[1]) { throw 'Original/Enhanced guest state mismatch.' }
-    $identity = (Get-FileHash -LiteralPath $gameExe -Algorithm SHA256).Hash
+    # Avoid relying on optional PowerShell module autoload paths on another PC.
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($gameExe)
+    try { $identity = [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '') }
+    finally { $stream.Dispose(); $algorithm.Dispose() }
     @("PASS: identical CPU/RAM/VDP and audio state after 6100 frames.",
       "State: $($states[0])", "Executable SHA256: $identity",
       'Synthetic contracts also cover all 253 valid actor IDs, UI priority and host clipping.') |
