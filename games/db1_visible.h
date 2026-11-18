@@ -7,4 +7,8 @@ typedef struct { unsigned id; int x,y,sort_y; } Db1VisibleActor;
  * Duplicate occupancy references draw once. */
 unsigned db1_visible_actors(const Db1WorldContext *, int width, int height,
                            Db1VisibleActor out[256]);
+/* Presentation rectangle in native world-pixel coordinates, including added
+ * canvas rows (negative top is valid). No simulation activation is changed. */
+unsigned db1_visible_actors_rect(const Db1WorldContext *, int left, int top,
+                                int right, int bottom, Db1VisibleActor out[256]);
 #endif

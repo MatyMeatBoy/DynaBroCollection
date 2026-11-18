@@ -1,12 +1,14 @@
-# Dyna Brothers 1 + 2 — v0.1.3 test checkpoint
+# Dyna Brothers 1 + 2 — v0.1.4 test candidate
 
-[![Checkpoint 0.1.3](https://img.shields.io/badge/version-0.1.3%20checkpoint-orange)](docs/releases/v0.1.3-checkpoint.md)
+[![Candidate 0.1.4](https://img.shields.io/badge/version-0.1.4%20candidate-orange)](docs/releases/v0.1.4-checkpoint.md)
 [![DB1 expanded 16:9](https://img.shields.io/badge/DB1-expanded%2016%3A9-blue)](docs/releases/v0.1.3-checkpoint.md)
 [![Local achievements](https://img.shields.io/badge/local%20achievements-76%20%2B%2099-5c9b73)](docs/db1-achievement-contracts.md)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBrothers1-2/actions/workflows/source-checks.yml)
 [![Target Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.1.1-checkpoint.md)
 [![Translations partial](https://img.shields.io/badge/translations-partial-orange)](STATUS.md)
 [![Runtime license](https://img.shields.io/badge/runtime-PolyForm%20Noncommercial-5c6b7a)](THIRD_PARTY_NOTICES.md)
+
+Version0.1.4 is being qualified: Timer A audio, DB1 continuous weather/widescreen, automatic controls, same-window settings and Extras. [Candidate scope and limits](docs/releases/v0.1.4-checkpoint.md). DB2 current renderer is integrated; further DB2 work is paused at the user's request.
 
 Development milestone, **not a finished port**. Current scope and evidence are in [STATUS.md](STATUS.md).
 
@@ -32,7 +34,7 @@ Local launcher capture; [image/executable provenance](docs/images/launcher-v0.1.
 | [Contributing](CONTRIBUTING.md) | Reproduction and review expectations |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Runtime, UI, input and font attribution |
 
-The supplied Japanese dumps remain untouched in `D:/01Claude/Dynabrothers`. ROMs, extracted assets, generated game code, binaries and private test captures stay outside Git.
+The supplied Japanese dumps remain untouched in `D:/01Claude/Dynabrothers`. ROMs, raw extracted cartridge assets, generated game code, binaries and private test logs stay outside Git. Approved launcher art and selected gameplay guide screenshots are versioned with their provenance.
 
 ## What currently exists
 

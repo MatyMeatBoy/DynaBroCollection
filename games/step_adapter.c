@@ -1,3 +1,7 @@
+#include "progress_runtime.h"
+#include "extras_ui.h"
+#include <SDL.h>
+#include "menu_controls.h"
 /* Explicit-PC static operations use the shared MC68000 AOT ABI. */
 #include "genesis_runtime.h"
 #include "glue.h"
@@ -19,11 +23,14 @@
 #include "recomp_runtime_ui.h"
 static const char *const controller_choices[]={"Automatic","Custom SDL bindings","M30 Bluetooth / DirectInput","M30 Mini 2.4GHz receiver","M30 XInput"};
 static const RecompRuntimeUiItem language_items[]={
+    {"host.settings","Settings","Full Settings","Open the launcher settings in this game window.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
     {"dyna.english","Language","English translation (restart)",
      "Partial translation. Changes apply after restarting the application; the running game keeps its current language.",
      RECOMP_RUNTIME_UI_BOOL,0,1,1},
     {"controls.p1_profile","Controls","Player 1 layout","Automatic detects known M30 devices. Select an M30 preset for shared/generic IDs; Custom uses your SDL bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
     {"controls.p2_profile","Controls","Player 2 layout","Saved per connected device; does not overwrite another controller's bindings.",RECOMP_RUNTIME_UI_CHOICE,0,4,1,controller_choices,5},
+    {"dyna.save","Game","Save Game","Save the progress code shown by the original game.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {"dyna.extras","Extras","Extras","Level Selection and Game Guide.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
     {"dyna.achievements","Achievements","Achievement list","Local progress, badges and stage goals. Opens a paused list.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
 };
 #endif
@@ -40,6 +47,7 @@ static const GameRomAlias db1_aliases[]={
 #endif
 #ifdef DYNA_HAS_OVERLAY
 #include "db2overlay.h"
+#include "db2_video.h"
 #include "translation_identity.h"
 static const GameRomAlias english_prompts_alias={"English gameplay prompts (partial)",DYNA_DB2_ENGLISH_CRC};
 #endif
@@ -68,8 +76,14 @@ static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write1
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
     dyna_achievement_session_before(g_cpu.PC);
+    dyna_progress_runtime_before(g_cpu.PC,g_ram,sizeof g_ram,g_cpu.D,g_cpu.A);
+#ifdef DYNA_HAS_OVERLAY
+    if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e)db2_video_observe(g_cpu.PC);
+#endif
 #ifdef DYNA_HAS_JP
-    if(g_cpu.PC==0x1c40 || g_cpu.PC==0x1c44 || g_cpu.PC==0x19980 || g_cpu.PC==0x1b040)
+    if(g_cpu.PC==0x1c40 || g_cpu.PC==0x1c44 || g_cpu.PC==0x19980 || g_cpu.PC==0x1b040
+       || g_cpu.PC==0x1c5a4 || g_cpu.PC==0x1c9ce || g_cpu.PC==0x1caf6 || g_cpu.PC==0x1cb0c
+       || g_cpu.PC==0x1e024 || g_cpu.PC==0x1d7b6 || g_cpu.PC==0x1b42 || g_cpu.PC==0x1950 || g_cpu.PC==0x1bc04 || g_cpu.PC==0x5ff6 || g_cpu.PC==0x62fc || g_cpu.PC==0x132d8 || g_cpu.PC==0x13630)
         db1_video_observe(g_cpu.PC);
 #endif
     if(DYNA_ENTRY==0x200u && g_cpu.PC==0x9828u && getenv("DYNA_LZ_TRACE")) {
@@ -141,6 +155,8 @@ static void entry(void) {
     dyna_achievement_session_reset();
 #ifdef DYNA_HAS_JP
     db1_video_reset();
+#elif defined(DYNA_HAS_OVERLAY)
+    db2_video_reset();
 #endif
     const char *lookup=getenv("DYNA_AOT_LOOKUP");
     cached_lookup=!lookup||strcmp(lookup,"binary");
@@ -149,6 +165,7 @@ static void entry(void) {
     if(!dyna_language_apply(g_rom,DYNA_SIZE,&DYNA_LANGUAGE_IMAGE,dyna_language_english(),error,sizeof error)) {
         fprintf(stderr,"[language] %s\n",error);abort();
     }
+    dyna_progress_runtime_start(DYNA_ENTRY==0x738u?2:1,g_rom,DYNA_SIZE);
     dyna_language_started();
     fprintf(stderr,"[language] %s (translation remains partial)\n",dyna_language_english()?"English":"Japanese original");
     /* Both qualified dumps are Japan NTSC. DB2 reads $A10001 & $C0 at
@@ -192,7 +209,14 @@ static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
 static void settings(const char *path){
     dyna_language_settings_load(path);
+    dyna_progress_runtime_settings(path);
     dyna_achievement_session_init(path,DYNA_ENTRY==0x738u);
+    {
+        char assets[2048];char *base=SDL_GetBasePath();
+        snprintf(assets,sizeof assets,"%sassets/guide",base?base:"");SDL_free(base);
+        dyna_extras_ui_init(DYNA_ENTRY==0x738u?2:1,assets);
+    }
+    dyna_controller_defaults();
 #ifdef DYNA_HAS_JP
     g_app_config.integer_scale=1;
 #endif
@@ -202,18 +226,41 @@ static void settings(const char *path){
     app_config_load(path);
     dyna_controllers_load(path);
 }
-static const char *snapshot_reason(void){return "Saving and rewind are not available in this development build.";}
+static const char *snapshot_reason(void){return "Mid-battle save states and rewind are unavailable. Save Game stores native progress codes.";}
+static int game_ui_open(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_is_open();}
+static int game_ui_active(void){return dyna_extras_ui_is_open() || dyna_achievement_ui_active();}
+static void game_ui_input(int action,int down,int repeat) {
+ if(dyna_extras_ui_is_open())dyna_extras_ui_input(action,down,repeat);
+ else dyna_achievement_ui_input(action,down,repeat);
+}
+static void game_ui_render(uint32_t *pixels,int w,int h,int pitch) {
+ dyna_achievement_smoke_render(pixels,w,h,pitch);
+ dyna_extras_ui_render(pixels,w,h,pitch);
+}
+static int game_ui_action(const char *key) {
+ if(key && !strcmp(key,"dyna.extras")){dyna_extras_ui_open();return 1;}
+ if(dyna_progress_runtime_action(key))return 1;
+ return dyna_achievement_session_action(key);
+}
+static int menu_tick(uint32_t mask,int open,uint64_t now,int *blocked) {
+ static DynaMenuControls state;
+ int action=dyna_menu_controls_tick(&state,mask,open,now);
+ *blocked=dyna_menu_controls_blocks(&state,open);return action;
+}
 const GameSpec g_game_spec={
+    .menu_input_tick=menu_tick,
+    .input_filter=dyna_progress_runtime_input,
+    .pacing_default="accurate",.frame_rate_numerator=53693175,.frame_rate_denominator=3420*262,
     .native_aspect_width=4,.native_aspect_height=3,
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
     .region_label="NTSC-J (Japan)",
 #if RECOMP_LAUNCHER
-    .runtime_menu_items=language_items,.runtime_menu_item_count=4,
+    .runtime_menu_items=language_items,.runtime_menu_item_count=7,
     .runtime_menu_get=dyna_language_runtime_get,.runtime_menu_set=dyna_language_runtime_set,
-    .runtime_menu_action=dyna_achievement_session_action,
+    .runtime_menu_action=game_ui_action,
 #endif
-    .host_ui_open=dyna_achievement_ui_is_open,.host_ui_active=dyna_achievement_ui_active,
-    .host_ui_input=dyna_achievement_ui_input,.host_ui_render=dyna_achievement_smoke_render,
+    .host_ui_open=game_ui_open,.host_ui_active=game_ui_active,
+    .host_ui_input=game_ui_input,.host_ui_render=game_ui_render,
     .on_diagnostic_session=dyna_achievement_session_diagnostic,
     .on_frame_post=dyna_achievement_session_frame,
     .controller_prepare=dyna_controller_prepare,.controller_mask=dyna_controller_mask,
@@ -228,6 +275,7 @@ const GameSpec g_game_spec={
     .video=&db1_video,.video_default="16:9",
     .rom_aliases=db1_aliases,.num_rom_aliases=3,
 #elif defined(DYNA_HAS_OVERLAY)
+    .video=&db2_video,.video_default="16:9",
     .rom_aliases=&english_prompts_alias,.num_rom_aliases=1,
 #endif
 };

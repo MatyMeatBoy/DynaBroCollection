@@ -15,6 +15,24 @@ static Preference preferences[64];static unsigned preference_count;
 static char settings_file[1024];
 static const char *labels[]={"Automatic","Custom SDL bindings","M30 Bluetooth / DirectInput","M30 Mini 2.4GHz receiver","M30 XInput"};
 
+/* Run before settings are loaded: saved source and custom bindings take precedence. */
+void dyna_controller_defaults(void) {
+    const int buttons[GB_COUNT]={-1,-1,-1,-1,SDL_CONTROLLER_BUTTON_A,SDL_CONTROLLER_BUTTON_B,-1,SDL_CONTROLLER_BUTTON_START,SDL_CONTROLLER_BUTTON_X,SDL_CONTROLLER_BUTTON_Y,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,SDL_CONTROLLER_BUTTON_BACK};
+    for(unsigned p=0;p<INPUT_MAX_PLAYERS;++p) {
+        PlayerInput *pi=&g_input_map.p[p];pi->pad_type=PAD_6BUTTON;pi->deadzone_pct=25;
+        for(int b=0;b<GB_COUNT;++b) {
+            pi->pad[b].kind=GP_BIND_BUTTON;pi->pad[b].code=buttons[b];pi->pad[b].axis_dir=0;
+        }
+        const GenesisButton directions[]={GB_UP,GB_DOWN,GB_LEFT,GB_RIGHT,GB_C};
+        const int axes[]={SDL_CONTROLLER_AXIS_LEFTY,SDL_CONTROLLER_AXIS_LEFTY,SDL_CONTROLLER_AXIS_LEFTX,SDL_CONTROLLER_AXIS_LEFTX,SDL_CONTROLLER_AXIS_TRIGGERRIGHT};
+        const int signs[]={-1,1,-1,1,1};
+        for(unsigned b=0;b<5;++b) {
+            GamepadBind *bind=&pi->pad[directions[b]];bind->kind=GP_BIND_AXIS;bind->code=axes[b];bind->axis_dir=signs[b];
+        }
+    }
+    g_input_map.p[0].device=INPUT_DEV_BOTH;g_input_map.p[1].device=INPUT_DEV_NONE;
+}
+
 static void load_database(void) {
     char *base=SDL_GetBasePath();if(!base)return;
     char filename[1200];snprintf(filename,sizeof filename,"%sassets/gamecontrollerdb.txt",base);SDL_free(base);
@@ -73,7 +91,9 @@ static void remember(unsigned player,SDL_GameController *pad) {
     uint32_t hash=2166136261u;for(const unsigned char *p=(const unsigned char *)identity;*p;++p)hash=(hash^*p)*16777619u;
     snprintf(device->key,sizeof device->key,"%s-%08x",guid,hash);
     for(unsigned i=0;i<preference_count;++i)if(!strcmp(preferences[i].key,device->key))device->choice=preferences[i].profile;
-    fprintf(stderr,"[controllers] P%u %s: %s; Genesis pad follows the selected 3/6-button protocol\n",player+1,device->name,labels[device->choice?device->choice:device->automatic]);
+    fprintf(stderr,"[controllers] P%u %s: %s%s%s; Genesis pad follows the selected 3/6-button protocol\n",player+1,device->name,
+        labels[device->choice],device->choice==DYNA_PAD_AUTO?" -> ":"",
+        device->choice==DYNA_PAD_AUTO?(device->automatic==DYNA_PAD_CUSTOM?"SDL bindings (physical model not identified)":labels[device->automatic]):"");
 }
 void dyna_controller_removed(unsigned player) {
     if(player<INPUT_MAX_PLAYERS){memset(&devices[player],0,sizeof devices[player]);devices[player].id=-1;}
@@ -113,16 +133,15 @@ uint16_t dyna_controller_mask(unsigned player,SDL_GameController *pad,uint16_t n
     uint16_t mask=normal&(input_button_bit(GB_UP)|input_button_bit(GB_DOWN)|input_button_bit(GB_LEFT)|input_button_bit(GB_RIGHT));
     const GenesisButton logical[]={GB_A,GB_B,GB_C,GB_X,GB_Y,GB_Z,GB_START,GB_MODE};
     const int bluetooth[]={0,1,7,3,4,6,11,10},mini[]={2,1,5,3,0,4,9,8};
-    const int xbox[]={SDL_CONTROLLER_BUTTON_B,SDL_CONTROLLER_BUTTON_A,-1,SDL_CONTROLLER_BUTTON_Y,SDL_CONTROLLER_BUTTON_X,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,SDL_CONTROLLER_BUTTON_START,SDL_CONTROLLER_BUTTON_BACK};
+    const int xbox[]={SDL_CONTROLLER_BUTTON_A,SDL_CONTROLLER_BUTTON_B,-1,SDL_CONTROLLER_BUTTON_X,SDL_CONTROLLER_BUTTON_Y,SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,SDL_CONTROLLER_BUTTON_START,SDL_CONTROLLER_BUTTON_BACK};
+    int pct=g_input_map.p[player].deadzone_pct;if(pct<0)pct=0;if(pct>100)pct=100;
+    int deadzone=pct*32767/100;
     for(unsigned i=0;i<8;++i) {
         if(g_input_map.p[player].pad_type!=PAD_6BUTTON&&(logical[i]==GB_X||logical[i]==GB_Y||logical[i]==GB_Z||logical[i]==GB_MODE))continue;
-        int held=profile==DYNA_PAD_M30_XINPUT?(xbox[i]<0?SDL_GameControllerGetAxis(pad,SDL_CONTROLLER_AXIS_TRIGGERRIGHT)>8192:SDL_GameControllerGetButton(pad,(SDL_GameControllerButton)xbox[i])):
+        int held=profile==DYNA_PAD_M30_XINPUT?(xbox[i]<0?SDL_GameControllerGetAxis(pad,SDL_CONTROLLER_AXIS_TRIGGERRIGHT)>deadzone:SDL_GameControllerGetButton(pad,(SDL_GameControllerButton)xbox[i])):
             pressed(stick,(profile==DYNA_PAD_M30_MINI?mini:bluetooth)[i]);
         if(held)mask|=input_button_bit(logical[i]);
     }
-    int rx=SDL_GameControllerGetAxis(pad,SDL_CONTROLLER_AXIS_RIGHTX),ry=SDL_GameControllerGetAxis(pad,SDL_CONTROLLER_AXIS_RIGHTY);
-    if(rx<-8192)mask|=input_button_bit(GB_LEFT);if(rx>8192)mask|=input_button_bit(GB_RIGHT);
-    if(ry<-8192)mask|=input_button_bit(GB_UP);if(ry>8192)mask|=input_button_bit(GB_DOWN);
     return mask;
 }
 static int player_key(const char *key){return key&&!strcmp(key,"controls.p1_profile")?0:key&&!strcmp(key,"controls.p2_profile")?1:-1;}

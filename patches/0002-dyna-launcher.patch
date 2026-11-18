@@ -1,0 +1,993 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f33f8f2..b6a5bb7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -70,6 +70,20 @@ recomp_target_launcher_ui(recomp-ui-launcher CONSOLE all)
+ 
+ include(CTest)
+ if(BUILD_TESTING)
++    if(SNESRECOMP_SDL_BACKEND STREQUAL "SDL2")
++        add_executable(recomp-ui-host-surface-test
++            tests/host_surface_test.c
++            src/common/launcher_platform_sdl2.c
++            src/common/launcher_gl.c
++            src/common/launcher_boot_timing.c)
++        target_include_directories(recomp-ui-host-surface-test PRIVATE src src/common)
++        target_link_libraries(recomp-ui-host-surface-test PRIVATE ${RUI_SDL_TARGET} ${RUI_GL_LIBS})
++        add_test(NAME recomp-ui-host-surface COMMAND recomp-ui-host-surface-test)
++        add_executable(recomp-ui-host-surface-ui-test tests/host_surface_ui_test.cpp)
++        target_link_libraries(recomp-ui-host-surface-ui-test PRIVATE ${RUI_SDL_TARGET} ${RUI_GL_LIBS})
++        recomp_target_launcher_ui(recomp-ui-host-surface-ui-test CONSOLE genesis)
++        add_test(NAME recomp-ui-host-surface-ui COMMAND recomp-ui-host-surface-ui-test)
++    endif()
+     # Assertion-based checks must execute in Release builds too.
+     if(MSVC)
+         add_compile_options(/UNDEBUG)
+@@ -544,6 +558,16 @@ if(BUILD_TESTING)
+         NAME recomp-ui-genesis-seats
+         COMMAND $<TARGET_FILE:recomp-ui-genesis-seats-test>)
+ 
++    add_executable(recomp-ui-genesis-binding-snapshot-test
++        tests/genesis_binding_snapshot_test.c
++        src/consoles/genesis/genesis_binds.c)
++    target_include_directories(recomp-ui-genesis-binding-snapshot-test PRIVATE
++        src src/common)
++    target_link_libraries(recomp-ui-genesis-binding-snapshot-test PRIVATE
++        ${RUI_SDL_TARGET})
++    add_test(NAME recomp-ui-genesis-binding-snapshot
++        COMMAND $<TARGET_FILE:recomp-ui-genesis-binding-snapshot-test>)
++
+     # Netplay room seat ceiling (backend create_max_slots) is independent of
+     # the local controller cards: a GBA link title seats four online, two on
+     # LAN, and still draws one card. Plus dense bus positions from sparse
+diff --git a/docs/HOST_SDL2_SURFACE.md b/docs/HOST_SDL2_SURFACE.md
+new file mode 100644
+index 0000000..8a22183
+--- /dev/null
++++ b/docs/HOST_SDL2_SURFACE.md
+@@ -0,0 +1,38 @@
++# Full launcher UI in an existing SDL2 window
++
++`RECOMP_LAUNCHER_HAS_HOST_SDL2_RENDERER_SURFACE` advertises an optional borrowed
++SDL2 surface. Set both appended `RecompLauncherCGameInfo` fields:
++
++```c
++gi.host_sdl_window = game_window;       /* SDL_Window* */
++gi.host_sdl_renderer = game_renderer;   /* SDL_Renderer* for that window */
++gi.in_session = 1;                     /* Resume and Quit Game semantics */
++int result = recomp_launcher_run_window(title, &settings, &gi, assets,
++                                        current_rom, rom_out, sizeof rom_out);
++```
++
++Pause gameplay and audio before this synchronous call. It pumps SDL events and
++renders the same dashboard, settings, controller, and other enabled panels using
++Dear ImGui's SDLRenderer2 backend. It does not create a window or OpenGL context,
++launch a process, or destroy the supplied SDL objects. On return, resume gameplay
++and apply the edited settings; handle the ordinary launcher result codes.
++
++The platform saves and restores render target, logical size, integer scaling,
++scale, viewport, clip rectangle, draw color, and draw blend mode. The previous
++Dear ImGui context is restored too. Fonts and artwork use SDL textures while
++attached; standalone invocations continue using OpenGL. Window sizing preferences
++are not saved from the borrowed surface. `SDL_Quit` is never called for it.
++
++Pass both pointers or neither. Invalid pairs return `RESULT_UNAVAILABLE`; they
++never fall back to creating a second window. This capability accepts SDL2
++objects only. SDL3 builds reject supplied borrowed SDL2 pointers.
++
++Hosts supplying their own Dear ImGui should provide a compatible SDLRenderer2
++backend or leave recomp-ui to compile its bundled backend. If the host already
++links that backend, set CMake variable `RECOMP_UI_HOST_SDLRENDERER2=ON` to avoid
++duplicate symbols. SDL2 2.0.17 or newer is required by the renderer backend.
++
++`recomp-ui-host-surface-test` covers attachment, artwork upload, renderer state
++and ownership. `recomp-ui-host-surface-ui-test` renders and captures the full
++dashboard, settings and controller views with a software renderer and asserts
++that no second SDL window was created.
+diff --git a/recomp_ui.cmake b/recomp_ui.cmake
+index 3502c4f..09f3c13 100644
+--- a/recomp_ui.cmake
++++ b/recomp_ui.cmake
+@@ -200,6 +200,13 @@ function(recomp_target_launcher_ui TGT)
+             ${RUI_IMGUI}/backends/imgui_impl_opengl3.cpp)
+     endif()
+ 
++    if(NOT RECOMP_UI_SDL3 AND NOT RECOMP_UI_HOST_SDLRENDERER2)
++        # Host ImGui users may supply this backend themselves by setting
++        # RECOMP_UI_HOST_SDLRENDERER2. Otherwise compile one renderer backend.
++        list(APPEND _rui_imgui_sources
++            ${RUI_IMGUI}/backends/imgui_impl_sdlrenderer2.cpp)
++    endif()
++
+     target_sources(${TGT} PRIVATE
+         # console-agnostic launcher core (C) — src/common/
+         ${RUI_SRC}/common/launcher_model.c
+diff --git a/src/common/backends/imgui/launcher_imgui.cpp b/src/common/backends/imgui/launcher_imgui.cpp
+index 602438d..6246adc 100644
+--- a/src/common/backends/imgui/launcher_imgui.cpp
++++ b/src/common/backends/imgui/launcher_imgui.cpp
+@@ -47,12 +47,14 @@
+   #define LNG_ImplSDL_Shutdown       ImGui_ImplSDL3_Shutdown
+ #else
+   #include "imgui_impl_sdl2.h"
++  #include "imgui_impl_sdlrenderer2.h"
+   #define LNG_ImplSDL_InitForOpenGL  ImGui_ImplSDL2_InitForOpenGL
+   #define LNG_ImplSDL_NewFrame       ImGui_ImplSDL2_NewFrame
+   #define LNG_ImplSDL_ProcessEvent   ImGui_ImplSDL2_ProcessEvent
+   #define LNG_ImplSDL_Shutdown       ImGui_ImplSDL2_Shutdown
+ #endif
+ #include "imgui_impl_opengl3.h"
++static bool s_renderer_surface = false;
+ 
+ #include <atomic>
+ #if defined(_MSC_VER)
+@@ -1553,8 +1555,16 @@ void apply_scale(const LauncherTheme& th, float scale, const char* font_path,
+                                                         : "provider");
+         }
+     }
+-    ImGui_ImplOpenGL3_DestroyFontsTexture();
+-    ImGui_ImplOpenGL3_CreateFontsTexture();
++#if !defined(LNG_SDL3)
++    if (s_renderer_surface) {
++        ImGui_ImplSDLRenderer2_DestroyFontsTexture();
++        ImGui_ImplSDLRenderer2_CreateFontsTexture();
++    } else
++#endif
++    {
++        ImGui_ImplOpenGL3_DestroyFontsTexture();
++        ImGui_ImplOpenGL3_CreateFontsTexture();
++    }
+ 
+     ImGuiStyle style; ImGui::StyleColorsDark(&style);
+     style.WindowRounding = th.radius_lg; style.ChildRounding = th.radius_lg;
+@@ -3401,6 +3411,10 @@ void draw_source_selectables(LauncherModel* m, int p) {
+                            !strcmp(src_prof->id, "snes");
+     const bool n64_prof = src_prof && src_prof->id &&
+                           !strcmp(src_prof->id, "n64");
++    if (src_prof && src_prof->id && !strcmp(src_prof->id, "genesis")) {
++        if (ImGui::Selectable(ui_text("Automatic (Keyboard + Gamepad)"), m->s.player_src[p] == 3))
++            launcher_model_set_source(m, p, 3, 0, nullptr, nullptr);
++    }
+     if (ImGui::Selectable(ui_text("None"), m->s.player_src[p] == 0)) {
+         launcher_model_set_source(m, p, 0, 0, nullptr, nullptr);
+         if (psx) launcher_binds_refresh(m);
+@@ -3691,6 +3705,8 @@ void draw_player_panel(LauncherModel* m, const LauncherTheme& th, int p, float w
+         draw_source_selectables(m, p);
+         ImGui::EndCombo();
+     }
++    if (ImGui::IsItemHovered())
++        ImGui::SetTooltip("%s", launcher_model_player_src_label(m, p));
+     ImGui::Dummy(ImVec2(0, px(4)));
+     // Configure + connection status share ONE half/half row (Configure left,
+     // status right) so the card stays short — that keeps the memory cards below
+@@ -5811,11 +5827,14 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
+         ImGui::PushStyleColor(ImGuiCol_Text, col(th.accent2));
+         ImGui::Text("%s %d", ui_text("CONTROLLER - PLAYER"), p + 1); ImGui::PopStyleColor(); ImGui::Spacing();
+         row_label("Input source", th);
+-        ImGui::SetNextItemWidth(px(200));
++        const char* source_label = launcher_model_player_src_label(m, p);
++        ImGui::SetNextItemWidth(std::min(ImGui::GetContentRegionAvail().x,
++            std::max(px(200), ImGui::CalcTextSize(source_label).x + ImGui::GetFrameHeight() + px(16))));
+         if (ImGui::BeginCombo("##csrc", ui_text(launcher_model_player_src_label(m, p)))) {
+             draw_source_selectables(m, p);
+             ImGui::EndCombo();
+         }
++        if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", source_label);
+         /* SNES: Save / Rename / Delete for the selected controller.
+          *
+          * Same three actions PSX offers, writing into this console's own
+@@ -6602,7 +6621,8 @@ void draw_controller_config_view(LauncherModel* m, const LauncherTheme& th) {
+         // earlier version did, and because that question was N64-only, a SNES
+         // player on a controller was shown the KEYBOARD row and Auto Map
+         // listened for keys, so pressing the controller did nothing at all.
+-        const bool pad_src = has_pad && m->s.player_src[p] == 2;
++        const bool pad_src = has_pad && (m->s.player_src[p] == 2 ||
++            (m->s.player_src[p] == 3 && m->s.player_gamepad_instance[p] != 0));
+ 
+         // Heading uses accent2 so each console's title tints in ITS logo colour
+         // (N64 blue; single-accent consoles set accent2 == accent).
+@@ -15176,7 +15196,11 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+     } commit_binding(launch_commit);
+     launcher_boot_timing_mark("rui:backend_run:begin");
+     IMGUI_CHECKVERSION();
+-    ImGui::CreateContext();
++    ImGuiContext* previous_context = ImGui::GetCurrentContext();
++    ImGuiContext* launcher_context = ImGui::CreateContext();
++    ImGui::SetCurrentContext(launcher_context);
++    s_renderer_surface = p->renderer != nullptr;
++    launcher_texture_set_sdl_renderer(p->renderer);
+     s_mod_binding_capture = {};
+     ImGuiIO& io = ImGui::GetIO();
+     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+@@ -15210,12 +15234,20 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+     std::atomic_signal_fence(std::memory_order_seq_cst);
+ #endif
+     g_th = th;
++    #if !defined(LNG_SDL3)
++    if (s_renderer_surface) {
++        ImGui_ImplSDL2_InitForSDLRenderer(p->window, p->renderer);
++        ImGui_ImplSDLRenderer2_Init(p->renderer);
++    } else
++    #endif
++    {
+     LNG_ImplSDL_InitForOpenGL(p->window, p->gl);
+ #ifdef LNG_GLES2
+     ImGui_ImplOpenGL3_Init("#version 100");   // GLES 2 GLSL (host ANGLE backend)
+ #else
+     ImGui_ImplOpenGL3_Init("#version 330");
+ #endif
++    }
+     launcher_boot_timing_mark("rui:imgui_gl_ready");
+ 
+     // Box art: per-game path from the ABI when given (multi-variant repos
+@@ -15436,6 +15468,7 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+             // PSX: keep Input source labels on concrete pad names (live SDL name
+             // or saved [gamepads] registry), never the generic "Gamepad" placeholder.
+             launcher_binds_sync_psx_pad_sources(m, g_pads, g_pad_count);
++            launcher_model_sync_genesis_pad_sources(m, g_pads, g_pad_count);
+ 
+             // SNES: same purpose, from this console's own profile store. Run every
+             // frame so a pad plugged in after start-up picks up its label too.
+@@ -15491,6 +15524,10 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+ 
+         }
+ 
++#if !defined(LNG_SDL3)
++        if (s_renderer_surface) ImGui_ImplSDLRenderer2_NewFrame();
++        else
++#endif
+         ImGui_ImplOpenGL3_NewFrame();
+         /* Suspend ImGui's GAMEPAD navigation while a bind capture is open.
+          *
+@@ -15548,11 +15585,21 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+             launch_commit.job.start();
+         }
+ 
+-        glViewport(0, 0, p->pixel_w, p->pixel_h);
+         const LngColor bg = th->background;
+-        glClearColor(bg.r, bg.g, bg.b, bg.a);
+-        glClear(GL_COLOR_BUFFER_BIT);
+-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
++#if !defined(LNG_SDL3)
++        if (s_renderer_surface) {
++            SDL_SetRenderDrawColor(p->renderer, (Uint8)(bg.r*255), (Uint8)(bg.g*255),
++                                    (Uint8)(bg.b*255), (Uint8)(bg.a*255));
++            SDL_RenderClear(p->renderer);
++            ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), p->renderer);
++        } else
++#endif
++        {
++            glViewport(0, 0, p->pixel_w, p->pixel_h);
++            glClearColor(bg.r, bg.g, bg.b, bg.a);
++            glClear(GL_COLOR_BUFFER_BIT);
++            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
++        }
+         if (launch_commit.job.pending()) {
+             if (launcher_debug_step_pending(p)) launch_commit.close_requested = true;
+         } else if (m->setup_preparing) {
+@@ -15590,9 +15637,16 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+     launcher_texture_free(&g_wordmark);
+     for (int i = 0; i < 5; ++i) launcher_texture_free(&g_cart[i]);
+     launcher_texture_free(&g_tpak);
++#if !defined(LNG_SDL3)
++    if (s_renderer_surface) ImGui_ImplSDLRenderer2_Shutdown();
++    else
++#endif
+     ImGui_ImplOpenGL3_Shutdown();
+     LNG_ImplSDL_Shutdown();
+-    ImGui::DestroyContext();
++    ImGui::DestroyContext(launcher_context);
++    ImGui::SetCurrentContext(previous_context);
++    launcher_texture_set_sdl_renderer(nullptr);
++    s_renderer_surface = false;
+     launcher_boot_timing_mark("rui:backend_closed");
+ 
+     /* In session, closing the window is "back to the game", the same as
+diff --git a/src/common/launcher_binds.c b/src/common/launcher_binds.c
+index 336adee..5796dc1 100644
+--- a/src/common/launcher_binds.c
++++ b/src/common/launcher_binds.c
+@@ -992,7 +992,7 @@ void launcher_binds_load(LauncherModel* m, const char* config_path_in, const cha
+         m->zapper_mouse     = zm != 0;
+         m->zapper_crosshair = zc != 0;
+     } else if (is_genesis_profile(m)) {
+-        rui_genesis_binds_init(genesis_binds_file_path());   // overlay settings.ini [input.pN] onto engine defaults
++        rui_genesis_binds_init_snapshot(genesis_binds_file_path(), m->input_binding_snapshot);
+     } else if (is_gb_profile(m)) {
+         rui_gb_binds_init(gb_binds_file_path());   // load/generate keybinds.ini [controls] (gb-recompiled format)
+     } else {
+diff --git a/src/common/launcher_debug.c b/src/common/launcher_debug.c
+index 9e7891a..c0f5cc2 100644
+--- a/src/common/launcher_debug.c
++++ b/src/common/launcher_debug.c
+@@ -44,15 +44,24 @@ void launcher_debug_init(void) {
+     if (g_active) fprintf(stderr, "[dbg] script: %d commands\n", g_cmd_count);
+ }
+ 
+-bool launcher_capture_png(const char* path, int w, int h) {
++static bool capture_surface_png(LauncherPlatform* p, const char* path, int w, int h) {
+     if (w <= 0 || h <= 0) return false;
+     unsigned char* px = (unsigned char*)malloc((size_t)w * h * 4);
+     if (!px) return false;
+ 
++#if !defined(LNG_SDL3)
++    if (p && p->renderer) {
++        if (SDL_RenderReadPixels(p->renderer, NULL, SDL_PIXELFORMAT_RGBA32, px, w * 4) != 0) {
++            free(px); return false;
++        }
++    } else
++#endif
++    {
+     glPixelStorei(GL_PACK_ALIGNMENT, 1);
+     // RGBA/UNSIGNED_BYTE is portable to GLES default framebuffers; RGB reads
+     // can fail with GL_INVALID_OPERATION on ANGLE. Keep the saved PNG RGB.
+     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, px);
++    }
+     for (size_t i = 0; i < (size_t)w * h; ++i) {
+         px[i * 3] = px[i * 4];
+         px[i * 3 + 1] = px[i * 4 + 1];
+@@ -62,14 +71,14 @@ bool launcher_capture_png(const char* path, int w, int h) {
+     // GL origin is bottom-left; PNG wants top-down. Flip rows in place.
+     const size_t stride = (size_t)w * 3;
+     unsigned char* row = (unsigned char*)malloc(stride);
+-    if (row) {
++    if (row && !(p && p->renderer)) {
+         for (int y = 0; y < h / 2; ++y) {
+             unsigned char* a = px + (size_t)y * stride;
+             unsigned char* b = px + (size_t)(h - 1 - y) * stride;
+             memcpy(row, a, stride); memcpy(a, b, stride); memcpy(b, row, stride);
+         }
+-        free(row);
+     }
++    free(row);
+ 
+     int ok = stbi_write_png(path, w, h, 3, px, (int)stride);
+     free(px);
+@@ -78,6 +87,10 @@ bool launcher_capture_png(const char* path, int w, int h) {
+     return ok != 0;
+ }
+ 
++bool launcher_capture_png(const char* path, int w, int h) {
++    return capture_surface_png(NULL, path, w, h);
++}
++
+ // Synthesize a click at logical window coords: warp the cursor (so backends
+ // that sample SDL_GetMouseState see it) and push button events (so backends
+ // that consume the event queue see it). Covers both ImGui and Clay.
+@@ -305,7 +318,7 @@ static bool launcher_debug_step_impl(LauncherPlatform* p, LauncherModel* m) {
+     } else if (strncmp(c, "wait:", 5) == 0) {
+         g_wait_frames = atoi(c + 5);
+     } else if (strncmp(c, "shot:", 5) == 0) {
+-        launcher_capture_png(c + 5, p->pixel_w, p->pixel_h);
++        capture_surface_png(p, c + 5, p->pixel_w, p->pixel_h);
+     } else if (strcmp(c, "quit") == 0) {
+         return true;
+     } else {
+diff --git a/src/common/launcher_gl.c b/src/common/launcher_gl.c
+index bd42ba3..acd4b3c 100644
+--- a/src/common/launcher_gl.c
++++ b/src/common/launcher_gl.c
+@@ -4,6 +4,8 @@
+ #include <stdint.h>
+ 
+ #include "launcher_sdlcompat.h"   // GL header for the active SDL version
++static void* s_sdl_renderer;
++void launcher_texture_set_sdl_renderer(void* renderer) { s_sdl_renderer = renderer; }
+ 
+ #ifndef GL_CLAMP_TO_EDGE
+ #define GL_CLAMP_TO_EDGE 0x812F   // GL 1.2 token; runtime driver supports it
+@@ -44,8 +46,10 @@ static LauncherTexture load_impl(const char* path, int colorkey_tol) {
+     int w = 0, h = 0, comp = 0;
+     // Bound optional user images before allocating/uploading them.
+     if(!stbi_info(path,&w,&h,&comp) || w<=0 || h<=0 || (uint64_t)w*h>16*1024*1024)return t;
+-    GLint limit=0;glGetIntegerv(GL_MAX_TEXTURE_SIZE,&limit);
+-    if(w>limit || h>limit)return t;
++    if (!s_sdl_renderer) {
++        GLint limit=0;glGetIntegerv(GL_MAX_TEXTURE_SIZE,&limit);
++        if(w>limit || h>limit)return t;
++    }
+     unsigned char* pixels = stbi_load(path, &w, &h, &comp, 4); // force RGBA
+     if (!pixels) return t;
+ 
+@@ -61,6 +65,24 @@ static LauncherTexture load_impl(const char* path, int colorkey_tol) {
+         }
+     }
+ 
++#if !defined(LNG_SDL3)
++    if (s_sdl_renderer) {
++        SDL_Renderer* renderer = (SDL_Renderer*)s_sdl_renderer;
++        SDL_Texture* tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32,
++                                             SDL_TEXTUREACCESS_STATIC, w, h);
++        if (tex && SDL_UpdateTexture(tex, NULL, pixels, w * 4) != 0) {
++            SDL_DestroyTexture(tex); tex = NULL;
++        }
++        stbi_image_free(pixels);
++        if (!tex) return t;
++        SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
++#if SDL_VERSION_ATLEAST(2, 0, 12)
++        SDL_SetTextureScaleMode(tex, SDL_ScaleModeLinear);
++#endif
++        t.id = (uintptr_t)tex; t.w = w; t.h = h; t.sdl_renderer = renderer;
++        return t;
++    }
++#endif
+     GLuint tex = 0;
+     glGenTextures(1, &tex);
+     glBindTexture(GL_TEXTURE_2D, tex);
+@@ -88,6 +110,13 @@ LauncherTexture launcher_texture_load_colorkey(const char* path, int tolerance)
+ 
+ void launcher_texture_free(LauncherTexture* t) {
+     if (t && t->id) {
++#if !defined(LNG_SDL3)
++        if (t->sdl_renderer) {
++            SDL_DestroyTexture((SDL_Texture*)t->id);
++            t->id = 0; t->sdl_renderer = NULL;
++            return;
++        }
++#endif
+         GLuint id = (GLuint)t->id;
+         glDeleteTextures(1, &id);
+         t->id = 0;
+diff --git a/src/common/launcher_gl.h b/src/common/launcher_gl.h
+index 2215b80..0c756a6 100644
+--- a/src/common/launcher_gl.h
++++ b/src/common/launcher_gl.h
+@@ -9,15 +9,19 @@
+ #define LAUNCHER_NG_GL_H
+ 
+ #include <stdbool.h>
++#include <stdint.h>
+ 
+ #ifdef __cplusplus
+ extern "C" {
+ #endif
+ 
+ typedef struct {
+-    unsigned int id;   // GL texture name (0 = not loaded)
++    uintptr_t    id;   // GL texture name or SDL_Texture* (0 = not loaded)
+     int          w, h;
++    void*        sdl_renderer; // marks SDL ownership independently of active backend
+ } LauncherTexture;
++// Select SDL2 texture upload for the borrowed host renderer; NULL restores GL.
++void launcher_texture_set_sdl_renderer(void* renderer);
+ 
+ // Load an image file into a freshly created GL texture (linear filtered,
+ // clamped). Returns a texture with id==0 on failure. Requires a current GL
+diff --git a/src/common/launcher_model.c b/src/common/launcher_model.c
+index f2c1c9f..f71c37c 100644
+--- a/src/common/launcher_model.c
++++ b/src/common/launcher_model.c
+@@ -423,6 +423,7 @@ void launcher_model_init(LauncherModel* m,
+         }
+ 
+         m->pad_mode_supported   = game->pad_mode_supported != 0;
++        m->input_binding_snapshot = game->input_binding_snapshot;
+         m->pad_mode_selectable  = game->pad_mode_selectable != 0;
+         m->locked_pad_mode      = clampi(game->locked_pad_mode, 0, 2);
+         m->lock_device          = game->lock_device != 0;
+@@ -4791,7 +4792,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
+ 
+ void launcher_model_cycle_player_src(LauncherModel* m, int player) {
+     player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
+-    m->s.player_src[player] = (m->s.player_src[player] + 1) % 3;  // None/Kbd/Pad
++    const SystemProfile* prof = (const SystemProfile*)m->profile;
++    const int count = prof && prof->id && !strcmp(prof->id, "genesis") ? 4 : 3;
++    m->s.player_src[player] = (m->s.player_src[player] + 1) % count;
+     apply_default_pad_mode_for_source(m, player);
+ }
+ 
+@@ -4809,7 +4812,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
+                                uint32_t pad_id, const char* pad_name,
+                                const char* pad_guid) {
+     player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
+-    m->s.player_src[player] = clampi(kind, 0, 2);
++    const SystemProfile* prof = (const SystemProfile*)m->profile;
++    const int genesis = prof && prof->id && !strcmp(prof->id, "genesis");
++    m->s.player_src[player] = clampi(kind, 0, genesis ? 3 : 2);
+     if (kind == 2) {
+         m->player_pad_id[player] = pad_id;
+         m->s.player_gamepad_instance[player] = pad_id + 1;
+@@ -5051,6 +5056,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
+ 
+ const char* launcher_model_player_src_label(const LauncherModel* m, int player) {
+     player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
++    const SystemProfile* prof = (const SystemProfile*)m->profile;
++    if (m->s.player_src[player] == 3 && prof && prof->id && !strcmp(prof->id, "genesis")) {
++        static char labels[LNG_MAX_PLAYERS][128];
++        snprintf(labels[player], sizeof(labels[player]), "Automatic: %s + Keyboard",
++                 m->player_pad_name[player][0] ? m->player_pad_name[player] : "no gamepad");
++        return labels[player];
++    }
+     int src = clampi(m->s.player_src[player], 0, 2);
+     if (src == 2) {
+         // Never show the generic "Gamepad" placeholder when we have a concrete
+@@ -5068,6 +5080,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
+     return kSrcNames[src];
+ }
+ 
++void launcher_model_sync_genesis_pad_sources(LauncherModel* m,
++    const LauncherPad* pads, int pad_count) {
++    if (!m) return;
++    const SystemProfile* prof = (const SystemProfile*)m->profile;
++    if (!prof || !prof->id || strcmp(prof->id, "genesis")) return;
++    // Engine routes the ordered open controller list to the same player index.
++    // Source 3 retains automatic intent, including when nothing is connected.
++    for (int p = 0; p < m->player_count && p < LNG_MAX_PLAYERS; ++p) {
++        if (m->s.player_src[p] != 2 && m->s.player_src[p] != 3) continue;
++        const LauncherPad* pad = pads && p < pad_count ? &pads[p] : NULL;
++        m->player_pad_id[p] = pad ? pad->id : 0;
++        m->s.player_gamepad_instance[p] = pad ? pad->id + 1 : 0;
++        safe_copy(m->player_pad_name[p], sizeof(m->player_pad_name[p]),
++                  pad ? pad->name : "");
++        safe_copy(m->s.player_gamepad_guid[p], sizeof(m->s.player_gamepad_guid[p]),
++                  pad ? pad->guid : "");
++    }
++}
++
+ const char* launcher_button_name(LngButton b) {
+     if (b < 0 || b >= LNG_BTN_COUNT) return "?";
+     return kButtonNames[b];
+diff --git a/src/common/launcher_model.h b/src/common/launcher_model.h
+index de53037..7df2c5b 100644
+--- a/src/common/launcher_model.h
++++ b/src/common/launcher_model.h
+@@ -20,6 +20,7 @@
+ #define LAUNCHER_NG_MODEL_H
+ 
+ #include "recomp_launcher.h"   // RecompLauncherCSettings, RecompLauncherCGameInfo
++#include "launcher_input.h"   // plain controller enumeration records; no SDL
+ 
+ #include <stdbool.h>
+ #include <stddef.h>
+@@ -411,6 +412,8 @@ typedef struct {
+     const char* assist_tools_note;
+     bool has_virtual_stylus;
+     bool settings_bindings;
++    int (*input_binding_snapshot)(int player, int button, int* key,
++                                   int* kind, int* code, int* axis_dir);
+     const char* const* assist_binding_labels;
+     int assist_binding_count;
+     int assist_direct_pad_bind_action;
+@@ -1326,6 +1329,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
+ const char* launcher_model_scale_label(const LauncherModel* m);        // "3x"
+ const char* launcher_model_freq_label(const LauncherModel* m);         // "44100 Hz"
+ const char* launcher_model_player_src_label(const LauncherModel* m, int player);
++// Genesis source 3 means keyboard + automatic gamepad (native INPUT_DEV_BOTH).
++// Hydrates effective devices only; never changes source intent or bindings.
++void launcher_model_sync_genesis_pad_sources(LauncherModel* m,
++    const LauncherPad* pads, int pad_count);
+ const char* launcher_button_name(LngButton b);
+ const char* launcher_hotkey_name(LngHotkey h);
+ const char* launcher_view_name(LngView v);
+diff --git a/src/common/launcher_ng_capi.c b/src/common/launcher_ng_capi.c
+index a2eb587..d56221f 100644
+--- a/src/common/launcher_ng_capi.c
++++ b/src/common/launcher_ng_capi.c
+@@ -192,8 +192,17 @@ int recomp_launcher_run_window(const char* window_title,
+                                           sizeof(window_size_path)))
+         launcher_window_size_load(window_size_path, &window_width, &window_height);
+     LauncherPlatform plat = {0};
+-    if (!launcher_platform_open(&plat, window_title ? window_title : "Launcher",
+-                                window_width, window_height)) {
++    int opened = 0;
++    if (game && (game->host_sdl_window || game->host_sdl_renderer)) {
++#if !defined(LNG_SDL3)
++        opened = launcher_platform_attach_sdl2(&plat,
++            (SDL_Window*)game->host_sdl_window, (SDL_Renderer*)game->host_sdl_renderer);
++#endif
++    } else {
++        opened = launcher_platform_open(&plat, window_title ? window_title : "Launcher",
++                                        window_width, window_height);
++    }
++    if (!opened) {
+         // Window/GL init failed — tell the caller to boot as if the launcher was
+         // skipped, exactly like the old launcher's UNAVAILABLE path.
+         return RECOMP_LAUNCHER_RESULT_UNAVAILABLE;
+@@ -223,7 +232,8 @@ int recomp_launcher_run_window(const char* window_title,
+ 
+     LngAction act = launcher_backend_run(&plat, &model, &theme);
+ 
+-    launcher_window_size_save(window_size_path, plat.logical_w, plat.logical_h);
++    if (!plat.borrowed_surface)
++        launcher_window_size_save(window_size_path, plat.logical_w, plat.logical_h);
+     launcher_platform_close(&plat);
+     launcher_boot_timing_mark("rui:platform_closed");
+     /* A verified regional handoff must not persist the foreign disc or any
+diff --git a/src/common/launcher_platform.h b/src/common/launcher_platform.h
+index 524f73c..8db9f92 100644
+--- a/src/common/launcher_platform.h
++++ b/src/common/launcher_platform.h
+@@ -30,6 +30,17 @@ extern "C" {
+ typedef struct LauncherPlatform {
+     SDL_Window*   window;
+     SDL_GLContext gl;
++    SDL_Renderer* renderer; // non-null only for a borrowed SDL2 host surface
++    bool borrowed_surface;
++#if !defined(LNG_SDL3)
++    SDL_Texture* saved_target;
++    SDL_Rect saved_viewport, saved_clip;
++    float saved_scale_x, saved_scale_y;
++    int saved_logical_w, saved_logical_h;
++    SDL_bool saved_clip_enabled, saved_integer_scale;
++    Uint8 saved_r, saved_g, saved_b, saved_a;
++    SDL_BlendMode saved_blend;
++#endif
+ 
+     // Logical (DPI-independent) UI size — what layout & hit-testing use.
+     int   logical_w, logical_h;
+@@ -56,6 +67,12 @@ typedef struct LauncherPlatform {
+ // Returns false if SDL/GL initialization fails (caller boots as if skipped).
+ bool launcher_platform_open(LauncherPlatform* p, const char* title,
+                             int logical_w, int logical_h);
++#if !defined(LNG_SDL3)
++// Borrow a live host surface. No window/context/SDL subsystem is created or
++// destroyed. Close restores renderer state before returning to gameplay.
++bool launcher_platform_attach_sdl2(LauncherPlatform* p, SDL_Window* window,
++                                   SDL_Renderer* renderer);
++#endif
+ 
+ // Apply an image file as the window / taskbar icon. The launcher and the game
+ // it boots are one product to the player, so the launcher must not sit in the
+diff --git a/src/common/launcher_platform_sdl2.c b/src/common/launcher_platform_sdl2.c
+index 2595ce3..3965e24 100644
+--- a/src/common/launcher_platform_sdl2.c
++++ b/src/common/launcher_platform_sdl2.c
+@@ -390,13 +390,38 @@ static float x11_desktop_scale(void) {
+ }
+ #endif
+ 
++bool launcher_platform_attach_sdl2(LauncherPlatform* p, SDL_Window* window,
++                                   SDL_Renderer* renderer) {
++    if (!p || !window || !renderer || SDL_GetRenderer(window) != renderer) return false;
++    memset(p, 0, sizeof(*p));
++    p->window = window; p->renderer = renderer; p->borrowed_surface = true;
++    p->saved_target = SDL_GetRenderTarget(renderer);
++    SDL_RenderGetViewport(renderer, &p->saved_viewport);
++    SDL_RenderGetClipRect(renderer, &p->saved_clip);
++    p->saved_clip_enabled = SDL_RenderIsClipEnabled(renderer);
++    SDL_RenderGetScale(renderer, &p->saved_scale_x, &p->saved_scale_y);
++    SDL_RenderGetLogicalSize(renderer, &p->saved_logical_w, &p->saved_logical_h);
++    p->saved_integer_scale = SDL_RenderGetIntegerScale(renderer);
++    SDL_GetRenderDrawColor(renderer, &p->saved_r, &p->saved_g, &p->saved_b, &p->saved_a);
++    SDL_GetRenderDrawBlendMode(renderer, &p->saved_blend);
++    SDL_SetRenderTarget(renderer, NULL);
++    SDL_RenderSetLogicalSize(renderer, 0, 0);
++    SDL_RenderSetIntegerScale(renderer, SDL_FALSE);
++    SDL_RenderSetScale(renderer, 1, 1);
++    SDL_RenderSetViewport(renderer, NULL);
++    SDL_RenderSetClipRect(renderer, NULL);
++    launcher_platform_refresh_metrics(p);
++    return true;
++}
++
+ void launcher_platform_refresh_metrics(LauncherPlatform* p) {
+     int win_w = 0, win_h = 0;
+     float s = 1.0f, forced;
+     if (!p || !p->window) return;
+ 
+     SDL_GetWindowSize(p->window, &win_w, &win_h);
+-    SDL_GL_GetDrawableSize(p->window, &p->pixel_w, &p->pixel_h);
++    if (p->renderer) SDL_GetRendererOutputSize(p->renderer, &p->pixel_w, &p->pixel_h);
++    else SDL_GL_GetDrawableSize(p->window, &p->pixel_w, &p->pixel_h);
+ 
+     // SDL2 has no SDL_GetWindowDisplayScale. Derive the content scale from the
+     // drawable/window ratio, which is what ALLOW_HIGHDPI exposes.
+@@ -442,11 +467,25 @@ void launcher_platform_refresh_metrics(LauncherPlatform* p) {
+ }
+ 
+ void launcher_platform_present(LauncherPlatform* p) {
+-    if (p && p->window) SDL_GL_SwapWindow(p->window);
++    if (p && p->renderer) SDL_RenderPresent(p->renderer);
++    else if (p && p->window) SDL_GL_SwapWindow(p->window);
+ }
+ 
+ void launcher_platform_close(LauncherPlatform* p) {
+     if (!p) return;
++    if (p->borrowed_surface) {
++        SDL_Renderer* r = p->renderer;
++        SDL_SetRenderTarget(r, p->saved_target);
++        SDL_RenderSetLogicalSize(r, p->saved_logical_w, p->saved_logical_h);
++        SDL_RenderSetIntegerScale(r, p->saved_integer_scale);
++        SDL_RenderSetScale(r, p->saved_scale_x, p->saved_scale_y);
++        SDL_RenderSetViewport(r, &p->saved_viewport);
++        SDL_RenderSetClipRect(r, p->saved_clip_enabled ? &p->saved_clip : NULL);
++        SDL_SetRenderDrawColor(r, p->saved_r, p->saved_g, p->saved_b, p->saved_a);
++        SDL_SetRenderDrawBlendMode(r, p->saved_blend);
++        memset(p, 0, sizeof(*p));
++        return;
++    }
+     if (p->gl)     { SDL_GL_DeleteContext(p->gl); p->gl = NULL; }
+     if (p->window) { SDL_DestroyWindow(p->window); p->window = NULL; }
+     SDL_GL_ResetAttributes();   // leave a clean slate for the game's SDL usage
+diff --git a/src/consoles/genesis/genesis_binds.c b/src/consoles/genesis/genesis_binds.c
+index eb4d422..a3a6661 100644
+--- a/src/consoles/genesis/genesis_binds.c
++++ b/src/consoles/genesis/genesis_binds.c
+@@ -265,12 +265,30 @@ static void gen_write_player(const char* path, int player) {
+ 
+ // ---- public API ----------------------------------------------------------------
+ 
+-void rui_genesis_binds_init(const char* path) {
++void rui_genesis_binds_init_snapshot(const char* path,
++    int (*snapshot)(int player, int button, int* key,
++                    int* kind, int* code, int* axis_dir)) {
+     for (int player = 0; player < RUI_GEN_MAX_PLAYERS; ++player) gen_seed_defaults(player);
++    if (snapshot) {
++        for (int p = 0; p < RUI_GEN_MAX_PLAYERS; ++p) {
++            for (int b = 0; b < GEN_NBTN; ++b) {
++                int key = s_key[p][b];
++                GenPadBind pad = s_pad[p][b];
++                if (snapshot(p, b, &key, &pad.kind, &pad.code, &pad.axis_dir)) {
++                    s_key[p][b] = key;
++                    s_pad[p][b] = pad;
++                }
++            }
++        }
++    }
+     gen_load_ini(path);
+     s_init = 1;
+ }
+ 
++void rui_genesis_binds_init(const char* path) {
++    rui_genesis_binds_init_snapshot(path, NULL);
++}
++
+ static void gen_ensure_init(const char* path) {
+     if (!s_init) rui_genesis_binds_init(path);
+ }
+diff --git a/src/consoles/genesis/genesis_binds.h b/src/consoles/genesis/genesis_binds.h
+index 68aa362..550f96f 100644
+--- a/src/consoles/genesis/genesis_binds.h
++++ b/src/consoles/genesis/genesis_binds.h
+@@ -47,6 +47,11 @@ extern "C" {
+ // `path`. Does NOT create or rewrite the file: the defaults here mirror the
+ // engine's byte-for-byte, so an absent file means both sides already agree.
+ void rui_genesis_binds_init(const char* path);
++// Host effective title bindings seed the fallback before saved INI overrides.
++// A null callback retains generic engine defaults. No settings writes.
++void rui_genesis_binds_init_snapshot(const char* path,
++    int (*snapshot)(int player, int button, int* key,
++                    int* kind, int* code, int* axis_dir));
+ 
+ // Current keyboard binding (SDL_Scancode as int; 0 = unbound) for player
+ // (0..3), rebind-spec button b. Auto-initializes from `path` on first use.
+diff --git a/src/recomp_launcher.h b/src/recomp_launcher.h
+index bc60540..cac392e 100644
+--- a/src/recomp_launcher.h
++++ b/src/recomp_launcher.h
+@@ -1275,7 +1275,7 @@ struct RecompLauncherCSettings {
+     int  enable_audio;      // bool
+     int  audio_freq;        // Hz (the Sample rate row; SystemProfile.hide_audio_freq hides it)
+     int  volume;            // 0..100
+-    int  player_src[RECOMP_LAUNCHER_MAX_PLAYERS];  // 0 none, 1 keyboard, 2 gamepad
++    int  player_src[RECOMP_LAUNCHER_MAX_PLAYERS];  // 0 none, 1 keyboard, 2 gamepad, 3 Genesis automatic (both)
+     int  deadzone[RECOMP_LAUNCHER_MAX_PLAYERS];    // 0..100
+     int  skip_launcher;     // bool: boot straight to the game next time
+     int  msu1_enabled;      // bool
+@@ -2502,7 +2502,26 @@ typedef struct RecompLauncherCGameInfo {
+                     char* error, size_t error_size);
+     void (*rom_read_free)(void* ctx, uint8_t* bytes);
+     void* rom_read_ctx;
++    /* Optional effective Genesis bindings after title defaults and saved input
++     * settings are loaded. Indices are zero-based, button order is Genesis
++     * Up/Down/Left/Right/A/B/C/Start/X/Y/Z/Mode. Return 1 when handled.
++     * key is an SDL scancode; kind/code/axis_dir use the native pad grammar
++     * (none=0, button=1, axis=2). Read-only; never persist from this callback. */
++    int (*input_binding_snapshot)(int player, int button, int* key,
++                                   int* kind, int* code, int* axis_dir);
++    /* Optional borrowed SDL2 surface for the SAME full launcher UI inside a
++     * running host window. Supply both SDL_Window* and its SDL_Renderer*.
++     * This synchronous call pumps SDL events and presents until Play/Resume/
++     * Quit; pause the game first. No extra window or GL context is created.
++     * Window, renderer and SDL remain host-owned; renderer state is restored.
++     * Null keeps the standalone OpenGL window. Unsupported pairs fail with
++     * RESULT_UNAVAILABLE. Never pass SDL3 objects to this SDL2-only contract. */
++    void* host_sdl_window;
++    void* host_sdl_renderer;
+ } RecompLauncherCGameInfo;
++#define RECOMP_LAUNCHER_HAS_HOST_SDL2_RENDERER_SURFACE 1
++#define RECOMP_LAUNCHER_HAS_INPUT_BINDING_SNAPSHOT 1
++#define RECOMP_LAUNCHER_HAS_GENESIS_AUTO_SOURCE 1
+ #define RECOMP_LAUNCHER_HAS_ROM_READER 1
+ #define RECOMP_LAUNCHER_HAS_NATIVE_SAVE_PATH_PROVIDER 1
+ #define RECOMP_LAUNCHER_HAS_VSYNC_VRR 1
+diff --git a/tests/genesis_binding_snapshot_test.c b/tests/genesis_binding_snapshot_test.c
+new file mode 100644
+index 0000000..8a5f8e2
+--- /dev/null
++++ b/tests/genesis_binding_snapshot_test.c
+@@ -0,0 +1,33 @@
++#include "consoles/genesis/genesis_binds.h"
++#include <stdio.h>
++#include <string.h>
++
++static int host_binding(int p, int b, int* key, int* kind, int* code, int* dir) {
++    if (p || b != 6) return 0; // Genesis C = right trigger
++    *key = 6; *kind = RUI_GEN_BIND_AXIS; *code = 5; *dir = 1;
++    return 1;
++}
++int main(void) {
++    const char* path = "genesis_binding_snapshot_test.ini";
++    remove(path);
++    rui_genesis_binds_init_snapshot(path, host_binding);
++    int kind, code, dir;
++    rui_genesis_binds_get_pad(path, 0, 6, &kind, &code, &dir);
++    if (kind != RUI_GEN_BIND_AXIS || code != 5 || dir != 1 ||
++        rui_genesis_binds_get_key(path, 0, 6) != 6) return 1;
++    FILE* f = fopen(path, "rb");
++    if (f) { fclose(f); return 2; } // initialization never creates settings
++    f = fopen(path, "wb");
++    if (!f) return 3;
++    fputs("[input.p1]\npad.C = button:9\nkey.C = 42\n", f); fclose(f);
++    rui_genesis_binds_init_snapshot(path, host_binding);
++    rui_genesis_binds_get_pad(path, 0, 6, &kind, &code, &dir);
++    if (kind != RUI_GEN_BIND_BUTTON || code != 9 ||
++        rui_genesis_binds_get_key(path, 0, 6) != 42) return 4;
++    remove(path);
++    rui_genesis_binds_init(path);
++    rui_genesis_binds_get_pad(path, 0, 6, &kind, &code, &dir);
++    if (kind != RUI_GEN_BIND_BUTTON || code != 2) return 5;
++    puts("ok: host snapshot, explicit INI precedence, no writes, generic fallback");
++    return 0;
++}
+diff --git a/tests/genesis_seats_test.c b/tests/genesis_seats_test.c
+index c9af4c1..19731f4 100644
+--- a/tests/genesis_seats_test.c
++++ b/tests/genesis_seats_test.c
+@@ -10,6 +10,7 @@
+  * Includes the model translation unit (as launcher_pad_mode_test.c does). */
+ #include "launcher_model.c"
+ #include "consoles/genesis/genesis_binds.h"
++#include "launcher_input.h"
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -54,6 +55,43 @@ static int genesis_player_count(int num_players) {
+ }
+ 
+ int main(void) {
++    LauncherModel* automatic = (LauncherModel*)calloc(1, sizeof(LauncherModel));
++    automatic->profile = launcher_system_by_id("genesis");
++    automatic->player_count = 2;
++    launcher_model_set_source(automatic, 0, 3, 0, NULL, NULL);
++    expect_int(automatic->s.player_src[0], 3, "automatic survives source setter");
++    LauncherPad pad = {0};
++    pad.id = 17;
++    strcpy(pad.name, "Xbox One S Controller");
++    strcpy(pad.guid, "generic-xinput");
++    launcher_model_sync_genesis_pad_sources(automatic, &pad, 1);
++    expect_int(automatic->s.player_src[0], 3, "connected pad preserves automatic intent");
++    expect_int(automatic->s.player_gamepad_instance[0], 18, "automatic adopts connected pad");
++    expect_int(strstr(launcher_model_player_src_label(automatic, 0), pad.name) != NULL, 1,
++               "automatic label reports actual OS controller name");
++    launcher_model_sync_genesis_pad_sources(automatic, NULL, 0);
++    expect_int(automatic->s.player_gamepad_instance[0], 0, "disconnect clears effective pad");
++    pad.id = 29;
++    launcher_model_sync_genesis_pad_sources(automatic, &pad, 1);
++    expect_int(automatic->s.player_gamepad_instance[0], 30, "hotplug adopts new instance");
++    launcher_model_set_source(automatic, 0, 1, 0, NULL, NULL);
++    launcher_model_sync_genesis_pad_sources(automatic, &pad, 1);
++    expect_int(automatic->s.player_src[0], 1, "explicit keyboard is never auto-adopted");
++    expect_int(automatic->s.player_gamepad_instance[0], 0, "explicit keyboard holds no pad");
++    expect_int(automatic->s.player_src[1], 0, "disabled second player stays disabled");
++    launcher_model_set_source(automatic, 0, 2, 0, NULL, NULL);
++    automatic->s.deadzone[0] = 37;
++    strcpy(automatic->pad_binds[0][4], "Custom button");
++    launcher_model_sync_genesis_pad_sources(automatic, &pad, 1);
++    expect_int(automatic->s.player_src[0], 2, "explicit gamepad retains intent");
++    expect_int(automatic->s.player_gamepad_instance[0], 30, "explicit gamepad gets live device");
++    expect_int(automatic->s.deadzone[0], 37, "device hydration preserves custom deadzone");
++    expect_int(strcmp(automatic->pad_binds[0][4], "Custom button"), 0,
++               "device hydration preserves custom binding display");
++    automatic->profile = launcher_system_by_id("snes");
++    launcher_model_set_source(automatic, 0, 3, 0, NULL, NULL);
++    expect_int(automatic->s.player_src[0], 2, "automatic vocabulary is Genesis-only");
++    free(automatic);
+     const SystemProfile* p = launcher_system_by_id("genesis");
+     expect_int(p ? p->controller.max_players : -1, RUI_GEN_MAX_PLAYERS,
+                "profile ceiling equals the Genesis bind store width");
+diff --git a/tests/host_surface_test.c b/tests/host_surface_test.c
+new file mode 100644
+index 0000000..45d7f2e
+--- /dev/null
++++ b/tests/host_surface_test.c
+@@ -0,0 +1,48 @@
++#ifndef SDL_MAIN_HANDLED
++#define SDL_MAIN_HANDLED
++#endif
++#include "launcher_platform.h"
++#include "launcher_gl.h"
++#include <stdio.h>
++#include <stdint.h>
++
++#define CHECK(x) do { if (!(x)) { fprintf(stderr,"FAIL line %d: %s\n",__LINE__,SDL_GetError());return 1;} } while(0)
++int main(void) {
++    SDL_SetHint(SDL_HINT_VIDEODRIVER,"dummy");
++    CHECK(SDL_Init(SDL_INIT_VIDEO)==0);
++    SDL_Window *window=SDL_CreateWindow("Host",0,0,640,480,SDL_WINDOW_HIDDEN);
++    CHECK(window);
++    Uint32 id=SDL_GetWindowID(window);
++    SDL_Renderer *renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
++    CHECK(renderer);
++    CHECK(SDL_RenderSetLogicalSize(renderer,320,224)==0);
++    SDL_SetRenderDrawColor(renderer,12,23,34,45);
++    LauncherPlatform p={0};
++    CHECK(launcher_platform_attach_sdl2(&p,window,renderer));
++    CHECK(p.window==window && p.renderer==renderer && p.borrowed_surface);
++    CHECK(!p.gl && p.pixel_w==640 && p.pixel_h==480);
++    launcher_texture_set_sdl_renderer(renderer);
++    // A two-pixel, uncompressed 32-bit TGA exercises upload without any GL context.
++    const unsigned char image[]={0,0,2,0,0,0,0,0,0,0,0,0,2,0,1,0,32,0x28,
++        0,0,255,255,0,255,0,255};
++    FILE *f=fopen("host_surface_test.tga","wb");CHECK(f);
++    CHECK(fwrite(image,1,sizeof image,f)==sizeof image);fclose(f);
++    LauncherTexture t=launcher_texture_load("host_surface_test.tga");
++    CHECK(t.id && t.w==2 && t.h==1);
++    Uint32 format=0;int access=0,w=0,h=0;
++    CHECK(SDL_QueryTexture((SDL_Texture*)(uintptr_t)t.id,&format,&access,&w,&h)==0);
++    CHECK(w==2 && h==1);
++    launcher_texture_free(&t);CHECK(!t.id);
++    launcher_texture_set_sdl_renderer(NULL);
++    remove("host_surface_test.tga");
++    launcher_platform_present(&p);
++    launcher_platform_close(&p);
++    CHECK(SDL_GetWindowFromID(id)==window && SDL_GetRenderer(window)==renderer);
++    SDL_RenderGetLogicalSize(renderer,&w,&h);CHECK(w==320 && h==224);
++    Uint8 r,g,b,a;SDL_GetRenderDrawColor(renderer,&r,&g,&b,&a);
++    CHECK(r==12 && g==23 && b==34 && a==45);
++    CHECK(SDL_WasInit(SDL_INIT_VIDEO));
++    SDL_DestroyRenderer(renderer);SDL_DestroyWindow(window);SDL_Quit();
++    puts("ok: borrowed host window, SDL texture upload, renderer state and SDL lifetime");
++    return 0;
++}
+diff --git a/tests/host_surface_ui_test.cpp b/tests/host_surface_ui_test.cpp
+new file mode 100644
+index 0000000..b977d5e
+--- /dev/null
++++ b/tests/host_surface_ui_test.cpp
+@@ -0,0 +1,45 @@
++#ifndef SDL_MAIN_HANDLED
++#define SDL_MAIN_HANDLED
++#endif
++#include "recomp_launcher.h"
++#include "launcher_system.h"
++#include "imgui.h"
++#include <SDL.h>
++#include <cstdio>
++
++#define CHECK(x) do { if (!(x)) { std::fprintf(stderr,"FAIL line %d: %s\n",__LINE__,SDL_GetError());return 1;} } while(0)
++int main() {
++    SDL_SetHint(SDL_HINT_VIDEODRIVER,"dummy");
++    CHECK(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER)==0);
++    SDL_Window* window=SDL_CreateWindow("Host game",0,0,1100,880,SDL_WINDOW_HIDDEN);
++    CHECK(window);
++    Uint32 id=SDL_GetWindowID(window);
++    SDL_Renderer* renderer=SDL_CreateRenderer(window,-1,SDL_RENDERER_SOFTWARE);
++    CHECK(renderer);
++    SDL_RenderSetLogicalSize(renderer,320,224);
++    ImGuiContext* host_context=ImGui::CreateContext();
++    RecompLauncherCSettings settings={};
++    settings.player_src[0]=3;settings.pad_mode[0]=1;
++    RecompLauncherCGameInfo game={};
++    launcher_profile_apply_genesis(&game);
++    game.name="Borrowed host settings test";
++    game.in_session=1;game.num_players=2;
++    game.config_path="host_surface_ui_fixture.ini";
++    game.keybinds_path="host_surface_ui_fixture.ini";
++    game.host_sdl_window=window;game.host_sdl_renderer=renderer;
++    SDL_setenv("LNG_SCRIPT","wait:2;shot:host_surface_dashboard.png;view:settings;wait:2;shot:host_surface_settings.png;view:controller;wait:2;shot:host_surface_controller.png;quit",1);
++    char rom[1024]={};
++    int result=recomp_launcher_run_window("Same window",&settings,&game,nullptr,nullptr,rom,sizeof rom);
++    CHECK(result==RECOMP_LAUNCHER_RESULT_QUIT);
++    CHECK(ImGui::GetCurrentContext()==host_context);
++    CHECK(SDL_GetWindowFromID(id)==window && SDL_GetRenderer(window)==renderer);
++    int w,h;SDL_RenderGetLogicalSize(renderer,&w,&h);CHECK(w==320 && h==224);
++    SDL_Window* next=SDL_CreateWindow("Window ID sentinel",0,0,16,16,SDL_WINDOW_HIDDEN);
++    CHECK(next && SDL_GetWindowID(next)==id+1); // launcher never created another SDL window
++    SDL_DestroyWindow(next);
++    ImGui::DestroyContext(host_context);
++    SDL_DestroyRenderer(renderer);SDL_DestroyWindow(window);SDL_Quit();
++    std::remove("host_surface_ui_fixture.ini");
++    std::puts("ok: full settings/controller/dashboard rendered in borrowed window; no extra window");
++    return 0;
++}

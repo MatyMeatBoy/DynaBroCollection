@@ -26,7 +26,7 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
-    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False):
+    def run(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -35,6 +35,8 @@ def main():
         if replay:command+=['--replay',str(replay)]
         if widescreen:command+=['--widescreen',widescreen]
         if ui:command+=['--achievement-ui-test']
+        if audio:command+=['--require-audio-signal']
+        if host_settings:command+=['--audio','--host-settings-test']
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         if hint:env.update(DYNA_IRQ_SELFTEST='1',DYNA_IRQ_VERIFY='1')
         elif irq:env['DYNA_IRQ_VERIFY']='1'
@@ -48,7 +50,8 @@ def main():
         cases[name]=dict(passed=report['passed'],frames=report['measurement']['frames'],
             binary_sha256=report['binary_sha256'],rom_sha256=report['rom_sha256'],
             state_fnv1a64=report['measurement']['state_fnv1a64'],audio_state_fnv1a64=report['measurement']['audio_state_fnv1a64'],
-            screenshots=report['screenshots'],replay_executions=report.get('replay_executions'))
+            screenshots=report['screenshots'],replay_executions=report.get('replay_executions'),
+            audio_analysis=report.get('audio_analysis'),scope=report.get('scope'))
         print(name+': pass',flush=True)
     run('db1-en','DynaBrothers1AOT.exe',db1,8900,ROOT/'games/db1/scenes/map-labels.input')
     run('db1-ja','DynaBrothers1AOT.exe',english['db1'],8900,ROOT/'games/db1/scenes/map-labels.input','ja')
@@ -99,6 +102,14 @@ def main():
         if process.returncode or len(results)!=1 or not results[0].read_text(encoding='utf-8-sig').startswith('PASS:'):
             raise RuntimeError('Portable PowerShell debug entry point failed; inspect portable-debug-script.log')
         cases['portable-debug-script']=dict(passed=True,windows_powershell=True,development_path_excluded=True)
+    if tuple(map(int,version.split('.'))) >= (0,1,4):
+        run('db1-audio-signal','DynaBrothers1AOT.exe',db1,6100,payload/'debug/db1-16x9.input',audio=True)
+        run('db1-lightning','DynaBrothers1AOT.exe',db1,8000,ROOT/'games/db1/scenes/lightning-diagnostic.input',widescreen='16:9')
+        run('host-settings-same-window','DynaBrothers1AOT.exe',db1,300,host_settings=True)
+        integration=subprocess.run([str(payload/'DynaBrothersLauncher.exe'),'--integration-info'],env=portable_windows_env(dict(os.environ)),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        info=json.loads(integration.stdout)
+        if integration.returncode or info.get('schema_version')!=1 or len(info.get('games',[]))!=2:raise RuntimeError('Launcher integration metadata failed')
+        cases['launcher-integration-info']=dict(passed=True,schema_version=1)
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',

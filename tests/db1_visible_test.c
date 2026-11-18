@@ -34,6 +34,14 @@ int main(void) {
         ram[0x6f34+(cell/24)*80+(cell%24)*2+(id-1)%2]=(uint8_t)id;
     }
     assert(db1_visible_actors(&c,768,208,actors)==253);
+    /* Integer-fill canvas can expose rows above and below the original frame. */
+    memset(ram,0,sizeof ram);
+    for(unsigned id=1;id<=253;id++) {
+        unsigned cell=(id-1)/2;
+        ram[0x6f34+(cell/16)*80+(cell%16)*2+(id-1)%2]=(uint8_t)id;
+    }
+    assert(db1_visible_actors(&c,768,208,actors)<253);
+    assert(db1_visible_actors_rect(&c,0,-23,768,247,actors)==253);
     memset(ram,0,sizeof ram);
     ram[0x7bd4]=15;ram[0x7bd5]=12;
     ram[0x204]=255;ram[0x205]=240;ram[0x207]=4;

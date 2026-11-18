@@ -89,9 +89,14 @@ def main():
         run('clone-ui', ['git', 'clone', '--no-checkout', 'https://github.com/mstan/recomp-ui.git', ui])
         run('pin-ui', ['git', 'checkout', '--detach', UI_SHA], cwd=ui)
     ui_head = subprocess.check_output(['git', '-C', str(ui), 'rev-parse', 'HEAD'], text=True).strip()
-    ui_dirty = subprocess.check_output(['git', '-C', str(ui), 'status', '--porcelain', '--untracked-files=normal'], text=True)
-    if ui_head != UI_SHA or ui_dirty:
-        raise RuntimeError('Shared UI differs from the qualified clean pin; existing work was preserved')
+    if ui_head != UI_SHA:
+        raise RuntimeError('Shared UI differs from the qualified pin; existing work was preserved')
+    ui_patch = ROOT / 'patches/0002-dyna-launcher.patch'
+    ui_applied = subprocess.run(['git','apply','--reverse','--check',str(ui_patch)],cwd=ui,capture_output=True).returncode == 0
+    if not ui_applied:
+        run('check-ui-adapter',['git','apply','--check',ui_patch],cwd=ui)
+        run('apply-ui-adapter',['git','apply',ui_patch],cwd=ui)
+    verify_engine_checkout(ui,UI_SHA,ui_patch)
     controllers = ROOT / 'upstream/controller-db'
     if not controllers.exists():
         run('clone-controller-db', ['git', 'clone', '--no-checkout', 'https://github.com/mdqinc/SDL_GameControllerDB.git', controllers])

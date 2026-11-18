@@ -1,0 +1,76 @@
+{
+  "game": "Dyna Brothers 1",
+  "language": "English partial translation",
+  "stage": "Initial default battlefield reached by Start/Start/A; no level number forced",
+  "binary_sha256": "1e47fcf602be109ddc2bba43169681a130d74f252c738dd43a74751e076ffb6e",
+  "rom_sha256": "ad9a90450d46b860dfd38772fa19655576e4244bf7c4df4c2fdb8d7786c1c261",
+  "input_script": "db1-captures.input",
+  "input_script_sha256": "7382df05441667bc1e3366c094c951d34c29bee574a7372cee7b8d75229f4c49",
+  "probe_passed": true,
+  "frames": 10000,
+  "renderer": "actual engine screenshot command; 320x224 native 4:3, no image generation or postprocessing",
+  "fixture": {
+    "after_frame": 6000,
+    "write": "WRITE_RAM32 0xFF7BD6 0x00999999",
+    "purpose": "extra power for ordinary guest menu egg creation and Rain",
+    "limits": "Unearned resources. Not campaign play, a measured optimal build, combat proof or tutorial completion. Guest ROM/code and actor records not modified."
+  },
+  "captures": [
+    {
+      "key": "db1-units",
+      "file": "db1-units.png",
+      "sha256": "93b42f09c8a31f58c6d5a20d7d41afaaebddc8ac8153d35057b3e9da19bb85b5",
+      "frame": 6060,
+      "kind": "native-engine-resource-fixture",
+      "description": "Native egg-creation chooser above the live starting base. Extra-power setup; unit roles come from Sega profiles, not this image."
+    },
+    {
+      "key": "db1-hud",
+      "file": "db1-hud.png",
+      "sha256": "e161dc55a1c2776e80e0011cb2ac35406b4ff6d06d623c1dd56380c11b07e4c0",
+      "frame": 6000,
+      "kind": "unmodified-gameplay-overview",
+      "description": "Unmodified first battlefield at frame 6000, before the power fixture. Native minimap, power and command icons visible. Overview only; no visible extinction countdown is claimed."
+    },
+    {
+      "key": "db1-hazards",
+      "file": "db1-hazards.png",
+      "sha256": "ba524866a8eded848303e90b14ffba9859805446bd12088bba9f808197803c6b",
+      "frame": 9491,
+      "kind": "native-engine-resource-fixture",
+      "description": "Native Rain command selected; grass/water boundary visible. Extra-power setup. No starvation, tsunami or extinction event demonstrated."
+    },
+    {
+      "key": "db1-basic-1",
+      "file": "db1-basic-1.png",
+      "sha256": "c1239ab077dee8858bbbf6b272963e9d7994fd86fd77ef52d36a10a6f85b3014",
+      "frame": 9461,
+      "kind": "native-engine-resource-fixture",
+      "description": "Native Rain dispatched on the first battlefield with dinosaurs and grass visible. Extra-power setup."
+    },
+    {
+      "key": "db1-basic-2",
+      "file": "db1-basic-2.png",
+      "sha256": "6363df5bc9f63255abc8ba37f866175499e260920b204c6e0393a5089f7f9ade",
+      "frame": 8180,
+      "kind": "native-engine-resource-fixture",
+      "description": "Live dinosaurs near the starting base after native egg creation and incubation. Extra-power setup; no incoming enemy shown."
+    },
+    {
+      "key": "db1-advanced-1",
+      "file": "db1-advanced-1.png",
+      "sha256": "348dad7f0b3ec4d30799be721361c266b5776c760660365c929f65e881521b65",
+      "frame": 8181,
+      "kind": "native-engine-resource-fixture",
+      "description": "Base and ground cover after native egg creation. Extra-power setup. Economy inspection overview, not an idle-guard starvation demonstration."
+    },
+    {
+      "key": "db1-advanced-2",
+      "file": "db1-advanced-2.png",
+      "sha256": "f783e6ab5b6643827d9893855bef15e2458e1ab94da13e1359914620f8b78f0a",
+      "frame": 9381,
+      "kind": "native-engine-resource-fixture",
+      "description": "Live base with several dinosaurs and grass/water boundary. Extra-power setup. Route-planning overview, not a recorded successful attack."
+    }
+  ]
+}

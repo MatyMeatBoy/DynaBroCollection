@@ -1,0 +1,41 @@
+# Diagnostic power fixture, not an unmodified campaign or earned resources.
+# All menus and spell dispatch use original guest controller flow; no PC jump.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 300
+WAIT 1200
+WRITE_RAM32 0xFF7BD6 0x00999999
+WAIT 60
+SCREENSHOT lightning-before.png
+# Initial command cursor is (2,0). Select skull/disasters at (0,1).
+PRESS LEFT 12
+WAIT 30
+PRESS LEFT 12
+WAIT 30
+PRESS DOWN 12
+WAIT 30
+PRESS C 12
+WAIT 90
+SCREENSHOT lightning-menu.png
+# First disaster entry: original 4696 -> 120F4 -> 132D8 dispatch.
+PRESS C 12
+WAIT 20
+SCREENSHOT lightning-020.png
+WAIT 30
+SCREENSHOT lightning-050.png
+WAIT 30
+SCREENSHOT lightning-080.png
+WAIT 40
+SCREENSHOT lightning-120.png
+WAIT 60
+SCREENSHOT lightning-180.png
+WAIT 120
+SCREENSHOT lightning-300.png
+WAIT 240
+SCREENSHOT lightning-540.png
+WAIT 500
+SCREENSHOT lightning-after.png

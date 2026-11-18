@@ -1,5 +1,5 @@
 diff --git a/runner/game_spec.h b/runner/game_spec.h
-index a135a9b..6b2a352 100644
+index a135a9b..314b927 100644
 --- a/runner/game_spec.h
 +++ b/runner/game_spec.h
 @@ -26,6 +26,8 @@
@@ -47,22 +47,150 @@ index a135a9b..6b2a352 100644
      const char *short_name;          /* "Sonic1" — shows up in info / ping */
      /* Box-art file staged next to the exe under assets/img/, e.g.
       * "boxart-sonic3.tga". NULL => the shared "boxart.tga" (single-boxart
+@@ -106,6 +130,9 @@ typedef struct GameSpec {
+      * per game once validated (RKA: on; Sonics ship with full disasm
+      * coverage and keep it off so a miss stays a loud regression). */
+     int         tier3_floor_default;
++    /* Optional product-qualified pacing and exact physical tick ratio. */
++    const char *pacing_default;
++    unsigned frame_rate_numerator,frame_rate_denominator;
+ 
+     /* Optional statically-recompiled Z80 coprocessor backend. The generated
+      * function executes exactly one instruction from the explicit Z80 PC and
+@@ -295,6 +322,9 @@ typedef struct GameSpec {
+      * use this to swap interpreter execution for native execution
+      * one function at a time during divergence hunting. NULL+0 is
+      * legal and means "no overrides". */
++    /* Optional game-owned host menu chord and repeat policy. */
++    uint16_t (*input_filter)(unsigned player,uint16_t mask);
++    int (*menu_input_tick)(uint32_t mask,int open,uint64_t now,int *blocked);
+ } GameSpec;
+ 
+ /*
 diff --git a/runner/game_video.h b/runner/game_video.h
-index 5a2722d..bd8c620 100644
+index 5a2722d..d32edaa 100644
 --- a/runner/game_video.h
 +++ b/runner/game_video.h
-@@ -76,6 +76,9 @@ typedef struct GameVideo {
+@@ -76,6 +76,28 @@ typedef struct GameVideo {
       * Never enters disk states, deterministic RB images, or netplay digests. */
      size_t (*presentation_state_save)(void *dst, size_t capacity);
      int (*presentation_state_load)(const void *src, size_t size, int apply);
 +    /* Fixed pixel canvases can opt into the user's integer scaling setting.
 +     * Window-sized adapters retain fractional presentation by default. */
 +    int integer_scale_supported;
++    /* Optional integer-fill canvas. Called explicitly by the host after ordinary
++     * frame preparation, only when integer scaling is selected. Outputs are
++     * host pixels only; never publish guest activation or mutate guest state.
++     * Return the positive physical integer scale to accept; zero declines.
++     * Both callbacks are required for opt-in. */
++    int (*canvas_geometry)(int drawable_w, int drawable_h, int native_w,
++                           int native_h, int *width, int *height);
++    /* Called once after genuine native rows complete, before upload/capture.
++     * Native rows occupy [native_top,native_top+native_height). Fill every added
++     * row from actual world geometry; may reposition presentation HUD/actors.
++     * No guest execution, VDP evaluation, provider retention, or status changes.
++     * All storage belongs to the runner and is valid only during this call. */
++    void (*canvas_complete)(const struct GVDP *vdp, uint32_t *pixels, int stride,
++                            int width, int height, int native_top,
++                            int native_height);
++    /* Optional post-composition transaction, including non-integer frames.
++     * May replace an unsupported whole frame using owned native row copies. */
++    void (*frame_complete)(const struct GVDP *vdp,uint32_t *pixels,int stride,
++                           int width,int height,int native_top,int native_height);
  } GameVideo;
  
  /* Host-local derived frame plan, never deterministic machine/snapshot state.
+@@ -84,6 +106,9 @@ typedef struct GameVideoFrame {
+     const GameVideo *adapter,*owner;
+     int requested_width,width;
+     int viewport; /* qualified simulation/view policy, not local row ownership */
++    int requested_height,height,native_top;
++    int canvas; /* host-only integer-fill ownership */
++    int canvas_scale;
+ } GameVideoFrame;
+ 
+ static inline int game_video_has_viewport(const GameVideo *video)
+@@ -99,7 +124,8 @@ static inline int game_video_viewport_enabled(const GameVideo *video)
+ static inline GameVideoFrame game_video_prepare_frame(const GameVideo *video,
+     int drawable_w,int drawable_h,int native_w,int native_h)
+ {
+-    GameVideoFrame frame={video,NULL,0,0,0};
++    GameVideoFrame frame={0};
++    frame.adapter=video;
+     if(!video || native_w<=0 || native_h<=0)return frame;
+     /* Width may publish simulation state. Always do it before local ownership
+      * or texture eligibility, including when the selected renderer declines. */
+@@ -120,6 +146,7 @@ static inline GameVideoFrame game_video_prepare_frame(const GameVideo *video,
+ static inline void game_video_native_fallback(GameVideoFrame *frame)
+ {
+     frame->owner=NULL;frame->width=0;
++    frame->height=frame->native_top=frame->canvas=frame->canvas_scale=0;
+ }
+ 
+ static inline int game_video_output_width(const GameVideoFrame *frame,int native_w)
+@@ -127,6 +154,60 @@ static inline int game_video_output_width(const GameVideoFrame *frame,int native
+     return frame->owner && frame->width>0 ? frame->width : native_w;
+ }
+ 
++/* Largest original integer scale, with additional world rather than enlarged
++ * pixels. Ceil dimensions cover the drawable; centered presentation crops at
++ * most scale-1 physical pixels in added world. Smaller displays use scale 1. */
++static inline int game_video_integer_canvas(int drawable_w,int drawable_h,
++    int base_w,int base_h,int *width,int *height)
++{
++    if(drawable_w<=0 || drawable_h<=0 || base_w<=0 || base_h<=0 ||
++       !width || !height)return 0;
++    int scale=drawable_w/base_w;
++    if(drawable_h/base_h<scale)scale=drawable_h/base_h;
++    if(scale<1)scale=1;
++    *width=drawable_w/scale+(drawable_w%scale!=0);
++    *height=drawable_h/scale+(drawable_h%scale!=0);
++    if(*width<base_w)*width=base_w;
++    if(*height<base_h)*height=base_h;
++    return scale;
++}
++
++static inline int game_video_prepare_canvas(GameVideoFrame *frame,
++    int drawable_w,int drawable_h,int native_w,int native_h)
++{
++    const GameVideo *owner=frame->owner;
++    int width=game_video_output_width(frame,native_w),height=native_h;
++    if(!owner || !owner->canvas_geometry || !owner->canvas_complete ||
++       native_w<=0 || native_h<=0)return 0;
++    int scale=owner->canvas_geometry(drawable_w,drawable_h,native_w,native_h,&width,&height);
++    if(scale<=0 || width<native_w || height<native_h)return 0;
++    frame->width=width;
++    frame->requested_height=frame->height=height;
++    frame->native_top=(height-native_h)/2;
++    frame->canvas=1;
++    frame->canvas_scale=scale;
++    return 1;
++}
++
++static inline int game_video_output_height(const GameVideoFrame *frame,int native_h)
++{
++    return frame->owner && frame->height>0 ? frame->height : native_h;
++}
++
++static inline int game_video_complete_canvas(const GameVideoFrame *frame,
++    const struct GVDP *vdp,uint32_t *pixels,int stride,int capacity_height,
++    int native_w,int native_h)
++{
++    int width=game_video_output_width(frame,native_w);
++    int height=game_video_output_height(frame,native_h);
++    if(!frame->canvas || !frame->owner || !frame->owner->canvas_complete ||
++       !pixels || stride<width || capacity_height<height || native_h<=0 ||
++       frame->native_top+native_h>height)return 0;
++    frame->owner->canvas_complete(vdp,pixels,stride,width,height,
++                                  frame->native_top,native_h);
++    return 1;
++}
++
+ /* Synchronous original-row provider has the same current-row memoization
+  * contract as GameVideoNativeRow. Returns the actual initialized row width.
+  * An oversized local plan falls back to the complete original row; it never
 diff --git a/runner/gamepad.c b/runner/gamepad.c
-index c57d756..fe64626 100644
+index c57d756..a2a5b09 100644
 --- a/runner/gamepad.c
 +++ b/runner/gamepad.c
 @@ -15,6 +15,7 @@
@@ -119,6 +247,51 @@ index c57d756..fe64626 100644
  }
  
  int gamepad_player_connected(int player)
+@@ -191,6 +197,7 @@ uint32_t gamepad_overlay_mask(void)
+     if (!c) return 0;
+     static const struct { SDL_GameControllerButton button; uint32_t bit; } map[] = {
+         { SDL_CONTROLLER_BUTTON_BACK, GP_OVERLAY_BACK },
++        { SDL_CONTROLLER_BUTTON_START, GP_OVERLAY_START },
+         { SDL_CONTROLLER_BUTTON_RIGHTSTICK, GP_OVERLAY_R3 },
+         { SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, GP_OVERLAY_RB },
+         { SDL_CONTROLLER_BUTTON_DPAD_UP, GP_OVERLAY_UP },
+@@ -207,6 +214,18 @@ uint32_t gamepad_overlay_mask(void)
+     return mask;
+ }
+ 
++uint32_t gamepad_menu_mask(void)
++{
++    uint32_t mask=gamepad_overlay_mask();SDL_GameController *c=s_pad[0];
++    if(!c)return mask;
++    int dz=player_deadzone(0);
++    int x=SDL_GameControllerGetAxis(c,SDL_CONTROLLER_AXIS_LEFTX);
++    int y=SDL_GameControllerGetAxis(c,SDL_CONTROLLER_AXIS_LEFTY);
++    if(x < -dz)mask|=GP_OVERLAY_LEFT;if(x > dz)mask|=GP_OVERLAY_RIGHT;
++    if(y < -dz)mask|=GP_OVERLAY_UP;if(y > dz)mask|=GP_OVERLAY_DOWN;
++    return mask;
++}
++
+ int gamepad_consume_quicksave(void)
+ {
+     if (!s_pending_save) return 0;
+diff --git a/runner/gamepad.h b/runner/gamepad.h
+index 88a0379..20bf84f 100644
+--- a/runner/gamepad.h
++++ b/runner/gamepad.h
+@@ -61,8 +61,12 @@ enum {
+     GP_OVERLAY_RB = 1u << 2, GP_OVERLAY_UP = 1u << 3,
+     GP_OVERLAY_DOWN = 1u << 4, GP_OVERLAY_LEFT = 1u << 5,
+     GP_OVERLAY_RIGHT = 1u << 6, GP_OVERLAY_A = 1u << 7,
+-    GP_OVERLAY_B = 1u << 8, GP_OVERLAY_X = 1u << 9
++    GP_OVERLAY_B = 1u << 8, GP_OVERLAY_X = 1u << 9,
++    GP_OVERLAY_START = 1u << 10
+ };
+ uint32_t gamepad_overlay_mask(void);
++/* Physical menu buttons and left-stick directions at P1's configured deadzone.
++ * Does not change the existing button-only overlay contract. */
++uint32_t gamepad_menu_mask(void);
+ 
+ #endif /* RUNNER_GAMEPAD_H */
 diff --git a/runner/glue.c b/runner/glue.c
 index 9678eef..7db2d0e 100644
 --- a/runner/glue.c
@@ -306,10 +479,15 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..9422bd7 100644
+index df30a08..dceeeea 100644
 --- a/runner/main.c
 +++ b/runner/main.c
-@@ -389,7 +389,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
+@@ -1,3 +1,4 @@
++#include "genesis_runtime.h"
+ #include "video/genesis_frame_pixels.h"
+ #include "video/genesis_hd_gpu.h"
+ #include "video/genesis_raster_jobs.h"
+@@ -389,7 +390,7 @@ static int runtime_ui_get(void *p, const RecompRuntimeUiItem *i, int *out) {
      else if (!strcmp(i->key,"video.internal_resolution")) {
          *out=0;for(int n=0;n<7;++n)if(s_hd_scales[n]==g_app_config.internal_scale)*out=n;
      }
@@ -318,7 +496,7 @@ index df30a08..9422bd7 100644
  }
  static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
      RuntimeUiContext *c = (RuntimeUiContext *)p;
-@@ -438,7 +438,7 @@ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
+@@ -438,15 +439,17 @@ static int runtime_ui_set(void *p, const RecompRuntimeUiItem *i, int v) {
              s_frame_texture_filtered = mode != SDL_ScaleModeNearest;
      } else if (!strcmp(i->key, RECOMP_RUNTIME_UI_KEY_VOLUME)) {
          g_app_config.volume = v; audio_set_master_volume(v);
@@ -327,7 +505,17 @@ index df30a08..9422bd7 100644
  }
  static void runtime_ui_save(void *p) {
      (void)p;
-@@ -454,6 +454,9 @@ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
+     if(!app_config_save(exe_relative("settings.ini")))
+         fprintf(stderr,"[NOTE] Could not save runtime settings.ini\n");
+ }
++static int s_open_full_settings;
+ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
+     RuntimeUiContext *c = (RuntimeUiContext *)p;
++    if(!strcmp(i->key,"host.settings")){s_open_full_settings=1;recomp_runtime_ui_close(c->ui);return 1;}
+     if (!strcmp(i->key, RECOMP_RUNTIME_UI_KEY_RESUME)) { recomp_runtime_ui_close(c->ui); return 1; }
+     if (g_game_spec.state_size && (!strcmp(i->key,"states.save") || !strcmp(i->key,"states.load"))) {
+         char path[32]; snprintf(path,sizeof path,"native_save_%d.bin",s_quickstate_slot);
+@@ -454,6 +457,9 @@ static int runtime_ui_action(void *p, const RecompRuntimeUiItem *i) {
          if (ok) recomp_runtime_ui_close(c->ui);
          return ok;
      }
@@ -337,12 +525,27 @@ index df30a08..9422bd7 100644
      return 0;
  }
  static int runtime_ui_key(SDL_Keycode k) {
-@@ -461,6 +464,51 @@ static int runtime_ui_key(SDL_Keycode k) {
+@@ -461,6 +467,74 @@ static int runtime_ui_key(SDL_Keycode k) {
      case SDLK_LEFT:return RECOMP_RUNTIME_UI_INPUT_LEFT; case SDLK_RIGHT:return RECOMP_RUNTIME_UI_INPUT_RIGHT;
      case SDLK_RETURN:case SDLK_SPACE:return RECOMP_RUNTIME_UI_INPUT_ACCEPT; case SDLK_ESCAPE:return RECOMP_RUNTIME_UI_INPUT_BACK; default:return -1; }
  }
 +static int s_screen_width,s_screen_height;
 +static void update_render_logical_size(SDL_Renderer *renderer);
++static void poll_host_menu_controls(void) {
++ if(!g_game_spec.menu_input_tick)return;
++ int host=g_game_spec.host_ui_open && g_game_spec.host_ui_open();
++ int open=host || recomp_runtime_ui_is_open(s_runtime_ui.ui),blocked=0;
++ int action=g_game_spec.menu_input_tick(gamepad_menu_mask(),open,SDL_GetTicks64(),&blocked);
++ if(action>=0) {
++  if(host && g_game_spec.host_ui_input)g_game_spec.host_ui_input(action,1,0);
++  else recomp_runtime_ui_handle_input(s_runtime_ui.ui,action,1,0);
++ }
++ /* Re-evaluate closing controls before a guest frame can observe them. */
++ host=g_game_spec.host_ui_open && g_game_spec.host_ui_open();
++ open=host || recomp_runtime_ui_is_open(s_runtime_ui.ui);
++ if(!open)g_game_spec.menu_input_tick(gamepad_menu_mask(),0,SDL_GetTicks64(),&blocked);
++ input_set_gameplay_blocked(blocked || open);
++}
 +static int host_ui_modal(SDL_Renderer *renderer,SDL_Texture *texture,int *running)
 +{
 +    if(!g_game_spec.host_ui_open || !g_game_spec.host_ui_open() ||
@@ -360,7 +563,7 @@ index df30a08..9422bd7 100644
 +            if(event.type==SDL_KEYDOWN || event.type==SDL_KEYUP) {
 +                input=runtime_ui_key(event.key.keysym.sym);
 +                down=event.type==SDL_KEYDOWN;repeat=event.key.repeat;
-+            } else if(event.type==SDL_CONTROLLERBUTTONDOWN || event.type==SDL_CONTROLLERBUTTONUP) {
++            } else if(!g_game_spec.menu_input_tick && (event.type==SDL_CONTROLLERBUTTONDOWN || event.type==SDL_CONTROLLERBUTTONUP)) {
 +                down=event.type==SDL_CONTROLLERBUTTONDOWN;
 +                switch(event.cbutton.button) {
 +                case SDL_CONTROLLER_BUTTON_DPAD_UP:input=RECOMP_RUNTIME_UI_INPUT_UP;break;
@@ -374,25 +577,34 @@ index df30a08..9422bd7 100644
 +            }
 +            if(input>=0)g_game_spec.host_ui_input(input,down,repeat);
 +        }
++        poll_host_menu_controls();
 +        if(!*running || !g_game_spec.host_ui_open())break;
 +        memcpy(s_present_buf,s_framebuf,(size_t)s_frame_stride*s_screen_height*sizeof(uint32_t));
 +        g_game_spec.host_ui_render(s_present_buf,s_screen_width,s_screen_height,s_frame_stride*4);
 +        SDL_Rect src={0,0,s_screen_width,s_screen_height};
 +        SDL_UpdateTexture(texture,&src,s_present_buf,s_frame_stride*4);
 +        update_render_logical_size(renderer);
-+        SDL_RenderClear(renderer);SDL_RenderCopy(renderer,texture,&src,NULL);SDL_RenderPresent(renderer);
++        SDL_Rect dst,*target=NULL;
++        if(s_video_frame.canvas) {
++            int dw=0,dh=0;SDL_GetRendererOutputSize(renderer,&dw,&dh);
++            int scale=s_video_frame.canvas_scale;
++            dst=(SDL_Rect){(dw-src.w*scale)/2,(dh-src.h*scale)/2,src.w*scale,src.h*scale};target=&dst;
++        }
++        SDL_RenderClear(renderer);SDL_RenderCopy(renderer,texture,&src,target);SDL_RenderPresent(renderer);
 +        SDL_Delay(16);
 +    }
-+    input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
++    if(g_game_spec.menu_input_tick)poll_host_menu_controls();
++    else input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
 +    return 1;
 +}
  #endif
  
  static void widescreen_setup(void)
-@@ -573,6 +621,12 @@ static void set_interlace_display_mode(const char *value)
+@@ -573,6 +647,13 @@ static void set_interlace_display_mode(const char *value)
  
  static int display_logical_height(void)
  {
++    if(s_video_frame.canvas)return s_video_frame.height;
 +    if(!s_video_frame.viewport && g_game_spec.native_aspect_width &&
 +       g_game_spec.native_aspect_height && s_screen_height<=240) {
 +        unsigned width=s_screen_width==256?320u:(unsigned)s_screen_width;
@@ -402,7 +614,22 @@ index df30a08..9422bd7 100644
      if (netplay_peer_view_active())
          return s_screen_height / 2;
      if (s_screen_height > 240 && s_interlace_display_mode == INTERLACE_DISPLAY_TV)
-@@ -613,7 +667,8 @@ static void update_render_logical_size(SDL_Renderer *renderer)
+@@ -595,6 +676,14 @@ static void update_render_logical_size(SDL_Renderer *renderer)
+     static int s_last_h = 0;
+     static int s_trace_w = 0, s_trace_h = 0;
+     static int s_last_integer = -1;
++    if(s_video_frame.canvas) {
++        SDL_RenderSetLogicalSize(renderer,0,0);
++        SDL_RenderSetIntegerScale(renderer,SDL_FALSE);
++        SDL_RenderSetScale(renderer,1,1);
++        SDL_RenderSetViewport(renderer,NULL);
++        s_last_renderer=NULL;
++        return;
++    }
+     int w;
+     int h;
+ 
+@@ -613,7 +702,8 @@ static void update_render_logical_size(SDL_Renderer *renderer)
  
      /* The custom renderer sizes its canvas from the window, so it keeps the
       * fractional fill. */
@@ -412,16 +639,127 @@ index df30a08..9422bd7 100644
      if (renderer != s_last_renderer || w != s_last_w || h != s_last_h || integer != s_last_integer) {
          /* SDL never scales below 1x, so a window smaller than the frame
           * would crop it; integer mode keeps the window at least 1x. */
-@@ -2197,7 +2252,7 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -708,7 +798,9 @@ static void own_scanline_sink(void *u, int line, const uint32_t *argb, int width
+ {
+     (void)u;
+     if (line < 0 || line >= MAX_SCREEN_HEIGHT) return;
+-    uint32_t *row = s_framebuf + line * MAX_SCREEN_WIDTH;
++    int output_line=line+(s_video_frame.canvas?s_video_frame.native_top:0);
++    if(output_line>=MAX_SCREEN_HEIGHT)return;
++    uint32_t *row = s_framebuf + output_line * MAX_SCREEN_WIDTH;
+     s_screen_width = game_video_draw_row(&s_video_frame, &g_machine.vdp, line,
+         width, row, MAX_SCREEN_WIDTH, provided_native_row, (void *)argb);
+ }
+@@ -753,7 +845,9 @@ static void own_custom_row(void *user, const GVDP *vdp, int line, int native_w,
+     (void)user;
+     if (line < 0 || line >= MAX_SCREEN_HEIGHT) return;
+     /* The machine supplies actual H32/H40/margin/canvas row geometry. */
+-    uint32_t *row = s_framebuf + line * MAX_SCREEN_WIDTH;
++    int output_line=line+(s_video_frame.canvas?s_video_frame.native_top:0);
++    if(output_line>=MAX_SCREEN_HEIGHT)return;
++    uint32_t *row = s_framebuf + output_line * MAX_SCREEN_WIDTH;
+     s_screen_width = game_video_draw_presented_row(&s_video_frame, vdp, line, native_w,
+         row, MAX_SCREEN_WIDTH, native_row, native_ctx, raster);
+     const GameVideo *adapter=s_video_frame.adapter;
+@@ -773,6 +867,11 @@ static void custom_video_prepare(void)
+         SDL_GetRendererOutputSize(s_video_renderer, &dw, &dh);
+     genesis_replay_viewport(&dw,&dh);
+     s_video_frame = game_video_prepare_frame(g_game_spec.video, dw, dh, 320, 224);
++    if(g_app_config.integer_scale) {
++        GameVideoFrame fixed=s_video_frame;
++        if(game_video_prepare_canvas(&s_video_frame,dw,dh,320,224) &&
++           s_video_frame.height>MAX_SCREEN_HEIGHT)s_video_frame=fixed;
++    }
+     if (!s_video_renderer || !s_video_frame.owner) {
+         game_video_native_fallback(&s_video_frame);
+         return;
+@@ -786,7 +885,8 @@ static void custom_video_prepare(void)
+      * Never invoke one at a smaller local width: preserve its logical request
+      * and use exact native presentation when this host cannot fit it. */
+     if (SDL_GetRendererInfo(s_video_renderer, &info) == 0 && info.max_texture_width > 0 &&
+-        width > info.max_texture_width) {
++        (width > info.max_texture_width || (info.max_texture_height>0 &&
++          game_video_output_height(&s_video_frame,224)>info.max_texture_height))) {
+         game_video_native_fallback(&s_video_frame);
+         return;
+     }
+@@ -1116,7 +1216,7 @@ static void collect_sim_input(GenesisSimInput *in)
+             pad_mask |= input_current_mask(port) &
+                         (GPAD_X | GPAD_Y | GPAD_Z | GPAD_MODE);
+ #endif
+-        in->pad[port] = pad_mask;
++        in->pad[port] = g_game_spec.input_filter?g_game_spec.input_filter((unsigned)port,pad_mask):pad_mask;
+     }
+     for (int p = 2; p < GENESIS_SIM_MAX_PLAYERS; p++)
+         if (!input_gameplay_blocked())
+@@ -2153,6 +2253,17 @@ static int live_post_drain(void *ctx)
+  * soft return to a netplay waiting room (soft_return = 1). Returns the
+  * launcher's result: 0 PLAY, 1 closed, 2 unavailable. On PLAY a netplay launch
+  * is folded into *netplay_config_v (a GenesisNetplayConfig). */
++#ifdef RECOMP_LAUNCHER_HAS_INPUT_BINDING_SNAPSHOT
++static int runtime_binding_snapshot(int player,int button,int *key,int *kind,int *code,int *axis_dir)
++{
++ if(player<0 || player>=INPUT_MAX_PLAYERS || button<0 || button>=GB_COUNT || !key || !kind || !code || !axis_dir)return 0;
++ *key=g_input_map.p[player].key[button];
++ *kind=g_input_map.p[player].pad[button].kind;
++ *code=g_input_map.p[player].pad[button].code;
++ *axis_dir=g_input_map.p[player].pad[button].axis_dir;
++ return 1;
++}
++#endif
+ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char *picked,
+                                size_t picked_cap, const char **rom_path_io,
+                                const char *settings_ini, const char *rom_cfg_path,
+@@ -2189,6 +2300,9 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+         for (int p = 0; p < INPUT_MAX_PLAYERS; p++) {
+             int dev = g_input_map.p[p].device;
+             ls.player_src[p] = (dev == INPUT_DEV_NONE)    ? 0
++#ifdef RECOMP_LAUNCHER_HAS_GENESIS_AUTO_SOURCE
++                             : dev == (INPUT_DEV_KEYBOARD|INPUT_DEV_GAMEPAD) ? 3
++#endif
+                              : (dev & INPUT_DEV_KEYBOARD) ? 1 : 2;
+             ls.pad_mode[p]   = (g_input_map.p[p].pad_type == PAD_6BUTTON) ? 1 : 0;
+             ls.deadzone[p]   = g_input_map.p[p].deadzone_pct;
+@@ -2197,7 +2311,19 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
          RecompLauncherCGameInfo gi;
          memset(&gi, 0, sizeof gi);
          gi.name                 = g_game_spec.display_name;
 -        gi.region               = "NTSC-U (USA)";
++#ifdef RECOMP_LAUNCHER_HAS_HOST_SDL2_RENDERER_SURFACE
++        if(soft_return==2 && s_video_renderer) {
++            gi.host_sdl_renderer=s_video_renderer;
++            gi.host_sdl_window=SDL_RenderGetWindow(s_video_renderer);
++        }
++#endif
++#ifdef RECOMP_LAUNCHER_HAS_IN_SESSION
++        gi.in_session=soft_return==2;
++#endif
++#ifdef RECOMP_LAUNCHER_HAS_INPUT_BINDING_SNAPSHOT
++        gi.input_binding_snapshot=runtime_binding_snapshot;
++#endif
 +        gi.region               = g_game_spec.region_label?g_game_spec.region_label:"NTSC-U (USA)";
          gi.expected_crc         = g_game_spec.expected_rom_crc32;
          gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
  #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
-@@ -2484,6 +2539,9 @@ static void replay_view(GenesisReplayView *v,int apply)
+@@ -2338,12 +2464,11 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+ #endif
+             for (int p = 0; p < gi.num_players; p++) {
+                 int src = ls.player_src[p];
+-                /* The UI's source vocabulary has no combined keyboard/pad
+-                 * entry. Keep that native choice when its displayed keyboard
+-                 * source was left selected; choosing None/Gamepad still edits it. */
+-                if (!(src == 1 && g_input_map.p[p].device ==
+-                      (INPUT_DEV_KEYBOARD | INPUT_DEV_GAMEPAD)))
+-                    g_input_map.p[p].device = (src == 1) ? INPUT_DEV_KEYBOARD
++                g_input_map.p[p].device =
++#ifdef RECOMP_LAUNCHER_HAS_GENESIS_AUTO_SOURCE
++                    src == 3 ? INPUT_DEV_KEYBOARD|INPUT_DEV_GAMEPAD :
++#endif
++                    (src == 1) ? INPUT_DEV_KEYBOARD
+                                                 : (src == 2) ? INPUT_DEV_GAMEPAD
+                                                 : INPUT_DEV_NONE;
+                 g_input_map.p[p].pad_type     = (ls.pad_mode[p] == 1) ? PAD_6BUTTON : PAD_3BUTTON;
+@@ -2484,6 +2609,9 @@ static void replay_view(GenesisReplayView *v,int apply)
  
  int main(int argc, char *argv[])
  {
@@ -431,7 +769,32 @@ index df30a08..9422bd7 100644
      cmd_server_owner_review_init(getenv("GENESIS_OWNER_REVIEW"));
      init_exe_dir(argv[0]);
      const char *user_dir=getenv("GENESIS_USER_DIR");
-@@ -3055,8 +3113,10 @@ int main(int argc, char *argv[])
+@@ -2524,6 +2652,7 @@ int main(int argc, char *argv[])
+      * set), --no-launcher / GENESIS_NO_LAUNCHER forces it off (headless). */
+     int force_launcher = 0;
+     int no_launcher    = 0;
++    int fullscreen_cli = 0;
+     const char *custom_video_cli = NULL;
+ 
+     /* --- Paced-native spike (option 2) ---
+@@ -2612,6 +2741,8 @@ int main(int argc, char *argv[])
+             force_launcher = 1;
+         } else if (strcmp(argv[i], "--replay-diagnostic") == 0 && i+1<argc) {
+             replay_path=argv[++i];no_launcher=1;
++        } else if (strcmp(argv[i], "--fullscreen") == 0) {
++            fullscreen_cli = 1;
+         } else if (strcmp(argv[i], "--no-launcher") == 0) {
+             no_launcher = 1;
+         } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
+@@ -2724,6 +2855,7 @@ int main(int argc, char *argv[])
+     app_config_defaults();
+     app_config_load(settings_ini);   /* also seeds g_input_map controller bindings */
+     if (g_game_spec.load_settings) g_game_spec.load_settings(settings_ini);
++    if(fullscreen_cli)g_app_config.fullscreen=1;
+ #if GENESIS_HAS_RECOMP_NET && RECOMP_LAUNCHER
+     {
+         /* Content identity for the lobby: the ROM's SHA-256, when a ROM is
+@@ -3055,8 +3187,10 @@ int main(int argc, char *argv[])
       * Adaptive mode then has a 16:9 window to follow on the first frame. */
      int win_scale = g_app_config.window_scale;
      if (win_scale < 1) win_scale = 1; else if (win_scale > 8) win_scale = 8;
@@ -443,7 +806,7 @@ index df30a08..9422bd7 100644
      if (custom_video_on) {
          win_w = (win_h * 16 + 4) / 9;
      } else if (ws_armed()) {
-@@ -3190,7 +3250,7 @@ int main(int argc, char *argv[])
+@@ -3190,7 +3324,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -452,7 +815,7 @@ index df30a08..9422bd7 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3261,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3335,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }
@@ -467,7 +830,17 @@ index df30a08..9422bd7 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
-@@ -3324,6 +3392,8 @@ int main(int argc, char *argv[])
+@@ -3317,13 +3459,17 @@ int main(int argc, char *argv[])
+     /* --target-fps wins over debug.ini, which wins over default 59.94. */
+     double target_fps = (target_fps_cli > 0.0)     ? target_fps_cli :
+                         (target_fps_from_ini > 0.0) ? target_fps_from_ini :
+-                                                       (60000.0 / 1001.0);  /* NTSC */
++                        (g_game_spec.frame_rate_numerator && g_game_spec.frame_rate_denominator) ?
++                        (double)g_game_spec.frame_rate_numerator/g_game_spec.frame_rate_denominator :
++                                                       (60000.0 / 1001.0);
+     fprintf(stderr, "[pacer] target frame rate: %.4f fps\n", target_fps);
+     int debug_port = debug_port_cli ? debug_port_cli :
+                      (debug_port_from_ini ? debug_port_from_ini :
                        DEFAULT_DEBUG_PORT);
      if (s_debug_enabled)
          cmd_server_init(debug_port);
@@ -476,15 +849,35 @@ index df30a08..9422bd7 100644
  
  #ifdef GENESIS_COSIM
      /* Differential co-simulation: bring up the lockstep TCP server + checkpoint
-@@ -3621,6 +3691,24 @@ session_begin:;
+@@ -3345,7 +3491,7 @@ int main(int argc, char *argv[])
+      * tables fix made the per-instruction cycle counts exact). */
+     {
+         const char *chosen = pacing_cli ? pacing_cli :
+-                             (pacing_from_ini[0] ? pacing_from_ini : NULL);
++                             (pacing_from_ini[0] ? pacing_from_ini : g_game_spec.pacing_default);
+         if (chosen) {
+             if (strcmp(chosen, "accurate") == 0)
+                 g_pacing_mode = GLUE_PACING_CYCLE_ACCURATE;
+@@ -3540,6 +3686,10 @@ session_begin:;
+     const Uint64 perf_frequency = SDL_GetPerformanceFrequency();
+     FramePacer frame_pacer;
+     frame_pacer_init(&frame_pacer, perf_frequency, target_fps);
++    if(target_fps_cli<=0.0 && target_fps_from_ini<=0.0 &&
++       g_game_spec.frame_rate_numerator && g_game_spec.frame_rate_denominator)
++        frame_pacer_init_ratio(&frame_pacer,perf_frequency,
++            g_game_spec.frame_rate_denominator,g_game_spec.frame_rate_numerator);
+     PresentationClock presentation_clock={0};
+     uint32_t *interpolation_image=NULL;size_t interpolation_capacity=0;
+     uint64_t presentation_count=0,interpolation_count=0;
+@@ -3621,6 +3771,24 @@ session_begin:;
                  cancel_load_hold();
                  recomp_runtime_ui_open(s_runtime_ui.ui); continue;
              }
-+            if(ev.type==SDL_CONTROLLERBUTTONDOWN && ev.cbutton.button==SDL_CONTROLLER_BUTTON_BACK &&
++            if(!g_game_spec.menu_input_tick && ev.type==SDL_CONTROLLERBUTTONDOWN && ev.cbutton.button==SDL_CONTROLLER_BUTTON_BACK &&
 +               !recomp_runtime_ui_is_open(s_runtime_ui.ui)) {
 +                cancel_load_hold();recomp_runtime_ui_open(s_runtime_ui.ui);continue;
 +            }
-+            if(recomp_runtime_ui_is_open(s_runtime_ui.ui) &&
++            if(!g_game_spec.menu_input_tick && recomp_runtime_ui_is_open(s_runtime_ui.ui) &&
 +               (ev.type==SDL_CONTROLLERBUTTONDOWN || ev.type==SDL_CONTROLLERBUTTONUP)) {
 +                int k=-1;
 +                switch(ev.cbutton.button) {
@@ -501,10 +894,44 @@ index df30a08..9422bd7 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3736,6 +3824,12 @@ session_begin:;
+@@ -3735,7 +3903,45 @@ session_begin:;
+         }
  
  #if RECOMP_LAUNCHER
-         input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
+-        input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
++        static int settings_smoke_started;
++        const char *settings_smoke=getenv("GENESIS_HOST_SETTINGS_TEST");
++        if(settings_smoke && *settings_smoke && !settings_smoke_started && g_frame_count>=30) {
++            settings_smoke_started=1;s_open_full_settings=1;
++            if(g_game_spec.on_diagnostic_session)g_game_spec.on_diagnostic_session();
++        }
++        if(s_open_full_settings) {
++            char chosen[1024];const char *same_rom=rom_path;
++            s_open_full_settings=0;input_set_gameplay_blocked(1);cancel_load_hold();audio_set_playback_enabled(0);
++            if(g_game_spec.menu_input_tick){int blocked;g_game_spec.menu_input_tick(gamepad_menu_mask(),1,SDL_GetTicks64(),&blocked);}
++            uint8_t *check_ram=NULL;M68KState check_cpu;GVDP *check_vdp=NULL;
++            Uint32 check_window=SDL_GetWindowID(window);
++            if(settings_smoke && *settings_smoke) {
++                check_ram=malloc(sizeof g_ram);check_vdp=malloc(sizeof *check_vdp);
++                if(!check_ram || !check_vdp)abort();
++                memcpy(check_ram,g_ram,sizeof g_ram);check_cpu=g_cpu;*check_vdp=g_machine.vdp;
++            }
++            int settings_result=run_recomp_launcher(g_game_spec.display_name,rom_path,chosen,sizeof chosen,&same_rom,
++                                settings_ini,rom_cfg_path,NULL,2);
++            if(check_ram) {
++                if(memcmp(check_ram,g_ram,sizeof g_ram)||memcmp(&check_cpu,&g_cpu,sizeof g_cpu)||
++                   memcmp(check_vdp,&g_machine.vdp,sizeof *check_vdp)||SDL_GetWindowFromID(check_window)!=window || SDL_GetRenderer(window)!=renderer) {
++                    fprintf(stderr,"[host-settings-test] FAIL guest state or host surface changed\n");abort();
++                }
++                fprintf(stderr,"[host-settings-test] PASS same game window/renderer; CPU/RAM/VDP unchanged\n");free(check_ram);free(check_vdp);
++            }
++            if(settings_result==1){running=0;window_close_requested=1;break;}
++            if(g_game_spec.video)app_config_apply_video(g_game_spec.video);
++            if(!g_game_spec.menu_input_tick)input_set_gameplay_blocked(0);audio_set_playback_enabled(!turbo && !cmd_server_is_paused());
++            frame_pacer_reset(&frame_pacer);presentation_clock_reset(&presentation_clock);
++        }
++        if(g_game_spec.menu_input_tick)poll_host_menu_controls();
++        else input_set_gameplay_blocked(recomp_runtime_ui_is_open(s_runtime_ui.ui));
 +        if(host_ui_modal(renderer,texture,&running)) {
 +            audio_set_playback_enabled(!turbo && !cmd_server_is_paused());
 +            frame_pacer_reset(&frame_pacer);
@@ -514,7 +941,21 @@ index df30a08..9422bd7 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -4180,6 +4274,7 @@ session_begin:;
+@@ -3898,6 +4104,13 @@ session_begin:;
+            * the existing interlace display modes (tv squash / raw) take over
+            * from here, same as the clownmdemu path. */
+           s_screen_height = gvdp_output_height(&g_machine.vdp);
++          if(completed && game_video_complete_canvas(&s_video_frame,&g_machine.vdp,
++             s_framebuf,s_frame_stride,MAX_SCREEN_HEIGHT,gvdp_screen_width(&g_machine.vdp),s_screen_height))
++              s_screen_height=game_video_output_height(&s_video_frame,s_screen_height);
++          if(completed && s_video_frame.owner && s_video_frame.owner->frame_complete)
++              s_video_frame.owner->frame_complete(&g_machine.vdp,s_framebuf,s_frame_stride,
++                  s_screen_width,s_screen_height,s_video_frame.canvas?s_video_frame.native_top:0,
++                  gvdp_output_height(&g_machine.vdp));
+           if (!completed) {                        /* reverse-debug quit */
+               fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
+                   "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
+@@ -4180,6 +4393,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -522,7 +963,7 @@ index df30a08..9422bd7 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4283,7 @@ session_begin:;
+@@ -4188,7 +4402,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -531,7 +972,7 @@ index df30a08..9422bd7 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4294,14 @@ session_begin:;
+@@ -4199,12 +4413,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -547,6 +988,22 @@ index df30a08..9422bd7 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
+@@ -4288,7 +4504,14 @@ session_begin:;
+             }
+             peer_view_was_active = peer_view_is_active;
+         }
+-        SDL_RenderCopy(renderer, frame_texture, &src, NULL);
++        SDL_Rect canvas_dest,*display_dest=NULL;
++        if(s_video_frame.canvas) {
++            int dw=0,dh=0;SDL_GetRendererOutputSize(renderer,&dw,&dh);
++            int scale=s_video_frame.canvas_scale;
++            canvas_dest=(SDL_Rect){(dw-src.w*scale)/2,(dh-src.h*scale)/2,src.w*scale,src.h*scale};
++            display_dest=&canvas_dest;
++        }
++        SDL_RenderCopy(renderer, frame_texture, &src, display_dest);
+ #if GENESIS_HAS_RECOMP_NET
+         /* Process the peer INPUT and emit our CONFIRM before the blocking
+          * present, so confirmation delivery overlaps vsync as well. */
 diff --git a/runner/native_interrupt_frame.h b/runner/native_interrupt_frame.h
 index 1cb9d42..02f9ae5 100644
 --- a/runner/native_interrupt_frame.h
@@ -585,6 +1042,106 @@ index 11c9641..03d3e34 100644
 +unsigned genesis_native_pending_interrupt(void);
 +void genesis_native_ack_interrupt(unsigned level);
  #endif
+diff --git a/runner/rb_state.c b/runner/rb_state.c
+index 7294574..e37e7e0 100644
+--- a/runner/rb_state.c
++++ b/runner/rb_state.c
+@@ -41,8 +41,10 @@ _Static_assert(sizeof(g_ram) == 0x10000, "work RAM size changed");
+ #if UINTPTR_MAX == 0xFFFFFFFFFFFFFFFFu
+ /* 64-bit layouts (the host pointers inside are scrubbed by machine_rb_save). */
+ _Static_assert(sizeof(GVDP) == 65824, "GVDP changed: review machine_rb_save (pointers) and rb_state");
+-_Static_assert(sizeof(GenesisBus) == 24664, "GenesisBus changed: review machine_rb_save and rb_state");
+-_Static_assert(sizeof(GenesisMachine) == 90576, "GenesisMachine changed: review machine_rb_save and rb_state");
++/* Timer A reload/phase state is scalar guest state copied by machine_rb_save;
++ * size-checked rollback loads reject images from the previous layout. */
++_Static_assert(sizeof(GenesisBus) == 24688, "GenesisBus changed: review machine_rb_save and rb_state");
++_Static_assert(sizeof(GenesisMachine) == 90600, "GenesisMachine changed: review machine_rb_save and rb_state");
+ #endif
+ 
+ /* ---- sections ---------------------------------------------------------------- */
+diff --git a/runner/video/genesis_bus.c b/runner/video/genesis_bus.c
+index d0e1647..3860044 100644
+--- a/runner/video/genesis_bus.c
++++ b/runner/video/genesis_bus.c
+@@ -89,10 +89,11 @@ extern void glue_charge_68k_stall(uint32_t cycles);
+  *
+  * The audio chips themselves are rendered later from the stamped write queue,
+  * so this small synchronous model exists solely for CPU-visible status reads.
+- * It deliberately models BUSY as always clear; only timer flag B is currently
+- * needed by supported software. */
++ * BUSY remains clear. Timer A is also CPU-visible: Dyna Brothers polls its
++ * overflow bit to drive the sound sequencer rather than using Z80 IRQs. */
+ #define MASTER_CYCLES_PER_FRAME  (262ull * 3420ull)
+ #define YM_TIMER_B_MASTER_TICK   (16ull * 144ull * 7ull)
++#define YM_TIMER_A_MASTER_TICK   (144ull * 7ull)
+ 
+ static uint64_t ym_abs_z80_stamp(void)
+ {
+@@ -108,6 +109,11 @@ static uint64_t ym_abs_68k_stamp(void)
+ 
+ static void ym_timer_update(GenesisBus *b, uint64_t now)
+ {
++    if (b->ym_timer_a_running && b->ym_timer_a_period && now >= b->ym_timer_a_deadline) {
++        if (b->ym_mode & 0x04u) b->ym_status |= 0x01u;
++        uint64_t periods=(now-b->ym_timer_a_deadline)/b->ym_timer_a_period+1u;
++        b->ym_timer_a_deadline+=periods*b->ym_timer_a_period;
++    }
+     if (!b->ym_timer_b_running || b->ym_timer_b_period == 0 ||
+         now < b->ym_timer_b_deadline)
+         return;
+@@ -134,7 +140,11 @@ static void ym_write_side_effect(GenesisBus *b, uint8_t port, uint8_t val,
+     if (bank != 0) return;              /* timers live in register bank 0 */
+ 
+     uint8_t reg = b->ym_addr[0];
+-    if (reg == 0x26u) {
++    if (reg == 0x24u || reg == 0x25u) {
++        if (reg == 0x24u) b->ym_timer_a=(uint16_t)((b->ym_timer_a&3u)|((unsigned)val<<2));
++        else b->ym_timer_a=(uint16_t)((b->ym_timer_a&0x3fcu)|(val&3u));
++        b->ym_timer_a_period=(uint64_t)(1024u-b->ym_timer_a)*YM_TIMER_A_MASTER_TICK;
++    } else if (reg == 0x26u) {
+         b->ym_timer_b = val;
+         b->ym_timer_b_period =
+             (uint64_t)(256u - (unsigned)val) * YM_TIMER_B_MASTER_TICK;
+@@ -145,6 +155,13 @@ static void ym_write_side_effect(GenesisBus *b, uint8_t port, uint8_t val,
+         if (val & 0x10u) b->ym_status &= 0xfeu;
+         if (val & 0x20u) b->ym_status &= 0xfdu;
+         b->ym_mode = val;
++        if (val & 0x01u) {
++            if (!b->ym_timer_a_running) {
++                if (!b->ym_timer_a_period) b->ym_timer_a_period=(uint64_t)(1024u-b->ym_timer_a)*YM_TIMER_A_MASTER_TICK;
++                b->ym_timer_a_deadline=now+b->ym_timer_a_period;
++            }
++            b->ym_timer_a_running=1;
++        } else b->ym_timer_a_running=0;
+         if (val & 0x02u) {
+             /* Loading starts a stopped timer. A flag acknowledgement that
+              * leaves it loaded must preserve the running timer's phase. */
+diff --git a/runner/video/genesis_bus.h b/runner/video/genesis_bus.h
+index 242774c..290695d 100644
+--- a/runner/video/genesis_bus.h
++++ b/runner/video/genesis_bus.h
+@@ -40,8 +40,8 @@ typedef struct GenesisBus {
+ 
+     /* YM2612 timer/status state. Audio register writes are rendered later by
+      * the cycle-stamped mixer, but the emulated CPUs must observe timer flags
+-     * synchronously while polling $4000/$A04000 (RKA's Z80 driver uses timer
+-     * B as its music tick). */
++     * synchronously while polling $4000/$A04000 (Dyna Brothers uses timer A;
++     * RKA uses timer B as its music tick). */
+     uint8_t  ym_addr[2];                /* address latch for ports 0/1         */
+     uint8_t  ym_timer_b;                /* register $26                        */
+     uint8_t  ym_mode;                   /* register $27                        */
+@@ -49,6 +49,10 @@ typedef struct GenesisBus {
+     uint8_t  ym_timer_b_running;
+     uint64_t ym_timer_b_deadline;       /* absolute scheduler master cycles    */
+     uint64_t ym_timer_b_period;         /* cached period in master cycles      */
++    uint16_t ym_timer_a;                /* registers $24:$25, 10-bit reload     */
++    uint8_t  ym_timer_a_running;
++    uint64_t ym_timer_a_deadline;
++    uint64_t ym_timer_a_period;
+ 
+     /* Controllers / I-O. */
+     uint16_t pad[2];                    /* live button state (GPAD_* bits, 12) */
 diff --git a/runner/video/genesis_vdp.c b/runner/video/genesis_vdp.c
 index 353ada4..013fb5e 100644
 --- a/runner/video/genesis_vdp.c
@@ -643,3 +1200,67 @@ index 1695d09..d43a139 100644
      uint8_t shadow_op[GVDP_MAX_WIDTH], hilite_op[GVDP_MAX_WIDTH];
      uint32_t host_palette[GVDP_HOST_PALETTE_SIZE];
  } GVDPRasterRow;
+diff --git a/tests/runtime/game_video_frame_test.c b/tests/runtime/game_video_frame_test.c
+index 0ee2d9b..f8cda2a 100644
+--- a/tests/runtime/game_video_frame_test.c
++++ b/tests/runtime/game_video_frame_test.c
+@@ -43,6 +43,16 @@ static void reset(int view,int own,int requested_width)
+     for(int i=0;i<512;++i)original[i]=(uint32_t)i*0x10203u+0xff000000u;
+     for(int i=0;i<1026;++i)output[i]=0xdeadbeefu;
+ }
++static int canvas_calls;
++static int geometry(int dw,int dh,int nw,int nh,int *w,int *h)
++{CHECK(nw==320&&nh==224);return game_video_integer_canvas(dw,dh,398,224,w,h);}
++static void fill_canvas(const struct GVDP *v,uint32_t *pixels,int stride,
++    int w,int h,int top,int nh)
++{
++    (void)v;++canvas_calls;CHECK(top==(h-nh)/2);
++    for(int y=0;y<h;++y)if(y<top||y>=top+nh)
++        for(int x=0;x<w;++x)pixels[y*stride+x]=0xff001100u+(unsigned)y;
++}
+ int main(void)
+ {
+     const GameVideo modern={configure,enabled,width,eager,overlay,lazy,owner,NULL,NULL,NULL,NULL,NULL,NULL};
+@@ -111,6 +121,42 @@ int main(void)
+     CHECK(overlay_calls==1&&fetch_calls==1);
+     plan=game_video_prepare_frame(NULL,0,0,320,224);CHECK(!plan.owner&&!plan.adapter);
+     CHECK(game_video_draw_row(&plan,NULL,37,512,output+1,256,fetch,original)==0);
++    /* Integer canvas extends both axes, while native rows/status remain 224.
++     * In particular 1440p must keep scale 6 even though ceil(2560/6)=427. */
++    const int resolutions[][5]={{1920,1080,4,480,270},{2560,1440,6,427,240},
++        {3840,2160,9,427,240},{1280,720,3,427,240},{398,224,1,398,224}};
++    GameVideo canvas_video={0};canvas_video.renderer_enabled=owner;
++    canvas_video.scanline_lazy=complete;canvas_video.canvas_geometry=geometry;
++    canvas_video.canvas_complete=fill_canvas;
++    uint32_t *canvas_pixels=calloc(480*270,sizeof *canvas_pixels);CHECK(canvas_pixels);
++    for(unsigned n=0;n<sizeof resolutions/sizeof *resolutions;++n) {
++        reset(0,1,0);plan=game_video_prepare_frame(&canvas_video,0,0,320,224);
++        CHECK(game_video_prepare_canvas(&plan,resolutions[n][0],resolutions[n][1],320,224));
++        CHECK(plan.canvas_scale==resolutions[n][2]&&plan.width==resolutions[n][3]);
++        CHECK(plan.height==resolutions[n][4]&&!plan.requested_width&&!plan.viewport);
++        CHECK(plan.width*plan.canvas_scale>=resolutions[n][0]);
++        CHECK(plan.height*plan.canvas_scale>=resolutions[n][1]);
++        CHECK(plan.width*plan.canvas_scale-resolutions[n][0]<plan.canvas_scale);
++        CHECK(plan.height*plan.canvas_scale-resolutions[n][1]<plan.canvas_scale);
++        for(int y=0;y<270;++y)for(int x=0;x<480;++x)canvas_pixels[y*480+x]=0x12345678u;
++        int calls=canvas_calls;
++        CHECK(!game_video_complete_canvas(&plan,NULL,canvas_pixels,plan.width-1,270,320,224));
++        CHECK(!game_video_complete_canvas(&plan,NULL,canvas_pixels,480,plan.height-1,320,224));
++        CHECK(canvas_calls==calls);
++        CHECK(game_video_complete_canvas(&plan,NULL,canvas_pixels,480,270,320,224));
++        CHECK(canvas_calls==calls+1&&!fetch_calls&&!lazy_calls&&!overlay_calls);
++        for(int y=0;y<plan.height;++y)for(int x=0;x<plan.width;++x)
++            CHECK(canvas_pixels[y*480+x]==(y<plan.native_top||y>=plan.native_top+224?
++                0xff001100u+(unsigned)y:0x12345678u));
++        game_video_native_fallback(&plan);
++        CHECK(!plan.canvas&&!plan.canvas_scale&&!plan.native_top&&game_video_output_height(&plan,224)==224);
++        CHECK(!game_video_complete_canvas(&plan,NULL,canvas_pixels,480,270,320,224));
++    }
++    free(canvas_pixels);
++    reset(1,0,768);plan=game_video_prepare_frame(&legacy,0,0,320,224);
++    CHECK(!game_video_prepare_canvas(&plan,2560,1440,320,224));
++    CHECK(plan.width==768&&game_video_output_height(&plan,224)==224);
++    CHECK(!game_video_integer_canvas(0,1440,398,224,&seen_width,&requested));
+     printf("Game video frame: %u geometry/view/ownership cases, legacy/eager/lazy/overlay/complete-native/fallback contracts pass\n",cases);
+     return 0;
+ }

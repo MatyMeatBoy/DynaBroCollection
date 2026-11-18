@@ -48,7 +48,8 @@ def stage(candidate):
     sys.path.insert(0,str(ROOT))
     from tools.build import verify_engine_checkout, ENGINE_SHA, UI_SHA, CONTROLLER_DB_SHA
     verify_engine_checkout(ROOT/'upstream/segagenesisrecomp',ENGINE_SHA,ROOT/'patches/0001-explicit-pc-mainloop.patch')
-    for name,expected in [('recomp-ui',UI_SHA),('controller-db',CONTROLLER_DB_SHA)]:
+    verify_engine_checkout(ROOT/'upstream/recomp-ui',UI_SHA,ROOT/'patches/0002-dyna-launcher.patch')
+    for name,expected in [('controller-db',CONTROLLER_DB_SHA)]:
         if git('-C',str(ROOT/'upstream'/name),'rev-parse','HEAD')!=expected or git('-C',str(ROOT/'upstream'/name),'status','--porcelain'):
             raise RuntimeError('Unqualified package dependency: '+name)
     revision=git('rev-parse','HEAD');version=project_version()
@@ -110,6 +111,7 @@ def stage(candidate):
         engine_commit=git('-C',str(ROOT/'upstream/segagenesisrecomp'),'rev-parse','HEAD'),
         engine_patch_sha256=digest(ROOT/'patches/0001-explicit-pc-mainloop.patch'),
         ui_commit=git('-C',str(ROOT/'upstream/recomp-ui'),'rev-parse','HEAD'),
+        ui_patch_sha256=digest(ROOT/'patches/0002-dyna-launcher.patch'),
         controller_database_commit=git('-C',str(ROOT/'upstream/controller-db'),'rev-parse','HEAD'),
         embedded_build_info=embedded,
         target='Windows x64',compiler=subprocess.check_output([str(BIN/'gcc.exe'),'--version'],text=True).splitlines()[0],
@@ -137,6 +139,7 @@ def close(candidate,qa_path,releases,revision=1):
         'db1-wide-original','db1-wide-expanded','db1-wide-state-equality',
         'db1-achievements-ui','db2-achievements-ui','achievement-assets',
         'DynaDb1VideoTest','DynaDb1visibleTest','portable-debug-script'})
+    if tuple(map(int,version.split('.'))) >= (0,1,4):required.update({'db1-audio-signal','db1-lightning','host-settings-same-window','launcher-integration-info'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'

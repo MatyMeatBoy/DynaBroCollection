@@ -1,0 +1,51 @@
+# Resource-only diagnostic: unearned power; all species and commands dispatched by original guest controller flow.
+WAIT 1999
+PRESS START 12
+WAIT 2000
+PRESS START 12
+WAIT 500
+PRESS A 12
+WAIT 1500
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-hud.png
+WRITE_RAM32 0xFF7BD6 0x00999999
+PRESS C 12
+WAIT 60
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-units.png
+PRESS C 12
+WAIT 60
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/egg-created.png
+PRESS RIGHT 12
+WAIT 20
+PRESS RIGHT 12
+WAIT 20
+PRESS RIGHT 12
+WAIT 20
+PRESS C 12
+WAIT 60
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/defender-egg.png
+PRESS LEFT 12
+WAIT 20
+PRESS C 12
+WAIT 60
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/attacker-egg.png
+PRESS B 12
+WAIT 60
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/command-return.png
+WAIT 1800
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-basic-2.png
+WAIT 1
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-advanced-1.png
+WAIT 1200
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-advanced-2.png
+
+PRESS LEFT 12
+WAIT 30
+PRESS LEFT 12
+WAIT 30
+PRESS C 12
+WAIT 20
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-basic-1.png
+WAIT 30
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/db1-hazards.png
+WAIT 150
+SCREENSHOT D:/01Claude/Dynabrothers1+2/local/guide-db1-captures/rain-late.png

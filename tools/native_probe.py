@@ -10,6 +10,7 @@ import sys
 import time
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 from tools.windows_environment import portable_windows_env
+from tools.audio_capture import inspect_audio_capture
 
 
 def prepare_scene_script(script, output):
@@ -51,8 +52,11 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--audio', action='store_true')
+    parser.add_argument('--require-audio-signal', action='store_true', help='Require sustained non-DC mixer output (implies --audio)')
+    parser.add_argument('--pacing', choices=['default','accurate','fiber'], default='default')
     parser.add_argument('--language', choices=['en', 'ja'], help='Seed the isolated profile language preference')
     parser.add_argument('--widescreen', help='Explicit game presentation mode (off, fit, stage or W:H)')
+    parser.add_argument('--host-settings-test', action='store_true', help='Open embedded settings and intentionally Quit Game after captures')
     parser.add_argument('--achievement-ui-test', action='store_true', help='Exercise the paused achievement list with real SDL events')
     parser.add_argument('--lookup', choices=['binary', 'cached'], help='Compare native descriptor lookup policies')
     parser.add_argument('--cpu-core', type=int, help='Pin a Windows measurement to one logical processor')
@@ -60,6 +64,7 @@ def main():
     parser.add_argument('--portable-env', action='store_true', help='Exclude development DLL directories from the child environment')
     parser.add_argument('--timeout', type=int, default=180)
     args = parser.parse_args()
+    if args.require_audio_signal or args.host_settings_test: args.audio = True
     if args.replay and args.script:
         parser.error('Replay supplies its own inputs; do not combine with a scene script')
     output = args.output.resolve()
@@ -72,6 +77,7 @@ def main():
         (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
     env = dict(os.environ)
     env.pop('DYNA_ACHIEVEMENT_UI_TEST', None)
+    env.pop('GENESIS_HOST_SETTINGS_TEST', None)
     if args.achievement_ui_test:
         args.audio = True
         env['DYNA_ACHIEVEMENT_UI_TEST'] = str(output / 'achievements.bmp')
@@ -84,13 +90,18 @@ def main():
         env = portable_windows_env(env)
     elif Path('C:/msys64/ucrt64/bin').exists():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
-    argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher', '--pacing', 'accurate']
+    argv = [str(args.binary.resolve()), str(args.rom.resolve()), '--no-launcher']
+    if args.pacing != 'default': argv += ['--pacing', args.pacing]
     if args.widescreen:
         argv += ['--widescreen', args.widescreen]
     if args.replay:
         argv += ['--replay-diagnostic', str(args.replay.resolve())]
+    if args.host_settings_test:
+        env.update(GENESIS_HOST_SETTINGS_TEST='1', LNG_TEST_HIDDEN='1',
+                   LNG_SCRIPT='wait:3;shot:'+(output/'same-window.png').as_posix()+';view:controller;wait:3;shot:'+(output/'controls.png').as_posix()+';quit')
     if args.audio:
-        env.update(LNG_SCRIPT='1', LNG_TEST_HIDDEN='1')
+        env['LNG_TEST_HIDDEN']='1'
+        if not args.host_settings_test: env['LNG_SCRIPT']='1'
         argv += ['--measure-runtime', str(args.frames), '--runtime-uncapped', '--wav', str(output / 'audio.wav')]
     else:
         argv += ['--benchmark', str(args.frames)]
@@ -139,7 +150,21 @@ def main():
             failures.append('Requested language was not applied')
     summaries = re.findall(r'GENESISRECOMP_BENCHMARK (\{[^\n]+\})', log)
     measurement = json.loads(summaries[-1]) if summaries else None
+    audio_analysis = None
+    if args.audio:
+        try:
+            audio_analysis = inspect_audio_capture(output / 'audio.wav')
+            if args.require_audio_signal and not audio_analysis['signal_present']:
+                failures.append('No sustained non-DC mixer signal')
+        except (OSError, ValueError, EOFError) as error:
+            failures.append('Audio capture analysis failed: ' + str(error))
     complete = bool(code == 0 and not failures and measurement and measurement.get('complete') and measurement.get('frames') == args.frames)
+    if args.host_settings_test:
+        captures.extend([output/'same-window.png',output/'controls.png'])
+        failures.extend(missing_captures(captures))
+        marker='[host-settings-test] PASS same game window/renderer; CPU/RAM/VDP unchanged'
+        if marker not in log: failures.append('Missing integrated host settings preservation evidence')
+        complete=bool(code==2 and not failures and marker in log and measurement and measurement.get('frames')==30 and not measurement.get('complete'))
     matched = re.findall(r'\[feedback-replay\] all (\d+) recorded executions matched', log)
     if args.replay:
         complete = bool(code == 0 and not failures and matched and measurement and measurement.get('frames') == int(matched[-1]))
@@ -151,8 +176,9 @@ def main():
                   cpu_core=args.cpu_core,
                   replay_executions=int(matched[-1]) if matched else None,
                   portable_environment=args.portable_env,
+                  pacing_request=args.pacing, audio_analysis=audio_analysis,
                   measurement=measurement, screenshots=[p.name for p in output.glob('*.png')],
-                  scope='Finite execution only; visual/translation correctness and campaign acceptance are separate')
+                  scope=('Controlled Quit at 30 frames verifies host surface and guest immutability; finite benchmark intentionally incomplete' if args.host_settings_test else 'Finite execution only; visual/translation correctness and campaign acceptance are separate'))
     (output / 'probe.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     print(json.dumps(report, indent=2))
     raise SystemExit(0 if complete else 1)

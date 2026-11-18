@@ -10,7 +10,7 @@ Start here before changing this checkout. Active workspace: `D:/01Claude/Dynabro
 | db1_world_geometry | DB1 continuous world, clouds, lightning, shake, HUD provenance | games/db1_video.c; games/db1_visible.c/.h; corresponding tests | Implemented; regression tests pass; integrated visual spell capture pending |
 | db1_scene_widescreen | Native code/password contracts and progress persistence | games/progress_store.c/.h; games/progress_session.c/.h; corresponding tests; docs/research/progress-and-level-selection.md | Implemented; root integration pending |
 | extras_guide | Pixel Extras compositor and guide content | games/extras_ui.c/.h; games/guide_content.c/.h; corresponding tests; docs/research/game-guide-evidence.md | Implemented; root integration and actual captures pending |
-| DB2 helper, unclaimed | DB2 renderer and game-specific research | See DB2.md; create games/db2_video.c/.h and tests/db2_video_test.c | Ready to hand off; claim before editing |
+| DB2 helper (paused by user) | Current DB2 renderer integrated; no further DB2 work authorized for now | games/db2_video.c/.h; tests/db2_video_test.c; docs/research/db2-video-integration.md | Integration complete in source; full visual qualification pending; STOP DB2 development |
 
 Use a separate build directory per helper (`build/db2-helper`), separate evidence/profile directories, and no concurrent links to root's build/dev executables. Read existing changes rather than assuming HEAD is the current implementation. Send integration requests to root instead of editing shared files. Root alone commits shared integration/pushes/packages. Record before/after evidence and leave a precise file list.
 
@@ -49,3 +49,18 @@ Fresh focused CTest run passed DB1 video layers (including weather regressions),
 ### Suggested message to the DB2 helper
 
 Read docs/handoff/README.md and docs/handoff/DB2.md in D:/01Claude/Dynabrothers1+2. Claim only the DB2 renderer scope in the ownership board, use build/db2-helper, and implement games/db2_video.c/.h with regression tests using existing verified decoder modules. Do not modify shared CMake, step_adapter, runner, SDK, DB1 or packaging; send root the needed integration diff/instructions. Prioritize genuine continuous 16:9 terrain, all visible actors/effects without duplicated pixels under HUD, preserving original logic and clock. Record actual native evidence, unsupported scenes, and precise test results. Do not publish ROMs or overwrite any release.
+
+
+## Latest user steering
+
+- User explicitly authorized a new test release once the principal audio/widescreen/control fixes are verified, including a portable ZIP. This supersedes the earlier note that publishing the next version had not been requested. Do all checks and publish when ready; no redundant permission question.
+- User explicitly requested: integrate the current DB2 work and do not work on DB2 further for now. Renderer modules and root hooks are present; do not resume DB2 development or probes without user steering. Keep unqualified cases documented and avoid claiming all DB2 effects/scenes are finished.
+- Shared settings now use a borrowed SDL renderer/window SDK path; this needs the exact SDK patch, full integration regression and release package evidence. Agent host-surface tests alone are not proof of the actual game modal path.
+- Progress runtime/store/session/replay are now linked. Save Game action is in the host in-game menu. Saved levels are ROM-specific; native password-screen replay is queued without direct PC jumps. Native title-menu insertion and automatic screen navigation are still incomplete. Tutorials have text/examples; matching engine capture assets remain incomplete.
+
+
+## Candidate verification update
+
+v0.1.4 source candidate now includes all current modules. Seven real DB1 guide PNGs and their power-fixture provenance are present. Native lightning reproduction is fixed at the exact user-visible rectangle: see docs/db1-lightning-rendering.md. Shared host settings actual-game probe preserved window/renderer and CPU/RAM/VDP; controlled Quit intentionally exits an incomplete finite benchmark, reported separately. Original/enhanced1200 paced boot frames match state/audio and approximately20.029s against20.0258s ideal. Main launcher visually inspected through Computer Use with logo aspect preserved and both game cards; closed normally afterward.
+
+Still required before publication: clean-source rebuild, package qualification (including sustained audio signal and native lightning), archive closure and uploaded digest verification. Full native level replay/physical controllers/audio and comprehensive scene acceptance remain separate limitations. DB2 remains paused.
