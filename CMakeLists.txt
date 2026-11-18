@@ -89,7 +89,7 @@ function(add_dyna target prefix rom crc entry vint hint)
         "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/video"
         "${RUNNER_ROOT}/external/ymfm/src" "${RUNNER_ROOT}/external/superzazu"
         "${RUNNER_ROOT}/external/clowncommon" "${RECOMP_ROOT}/recompiler/src"
-        "${CMAKE_SOURCE_DIR}/generated/${prefix}" "C:/msys64/ucrt64/include")
+        "${CMAKE_SOURCE_DIR}/generated/${prefix}")
     target_compile_definitions(${target} PRIVATE
         INCLUDE_GENERATED_CODE=1 ENABLE_RECOMPILED_CODE=1 OWN_BACKEND=1 GEN_ENABLE_TRACE=1
         DEFAULT_DEBUG_PORT=4390 DYNA_NAME="${target}" DYNA_CRC=${crc}

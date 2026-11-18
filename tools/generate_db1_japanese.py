@@ -28,7 +28,9 @@ def generate(source: Path, root: Path):
     (output / 'covered.txt').write_text('\n'.join(covered))
     (output / 'entries.txt').write_text('\n'.join(entries))
     env = dict(os.environ)
-    if Path('C:/msys64/ucrt64/bin').exists():
+    if env.get('DYNA_TOOLCHAIN_BIN'):
+        env['PATH'] = env['DYNA_TOOLCHAIN_BIN'] + os.pathsep + env['PATH']
+    elif Path('C:/msys64/ucrt64/bin').exists():
         env['PATH'] = 'C:/msys64/ucrt64/bin;' + env['PATH']
     subprocess.run([str(root / 'build/recompiler/M68kStepRecomp.exe'), str(source), str(output), 'db1jp', '0',
                     '--entries-file', str(output / 'entries.txt'), '--covered-entries-file', str(output / 'covered.txt')], env=env, check=True)
