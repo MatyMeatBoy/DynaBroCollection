@@ -490,7 +490,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..be4ea30 100644
+index df30a08..d6243a4 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -752,7 +752,16 @@ index df30a08..be4ea30 100644
          gi.expected_crc         = g_game_spec.expected_rom_crc32;
          gi.has_expected_crc     = g_game_spec.expected_rom_crc32 != 0;
  #ifdef RECOMP_LAUNCHER_HAS_ROM_REVISIONS
-@@ -2338,12 +2464,11 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+@@ -2259,6 +2385,8 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
+         /* Point the launcher's bind bridge at the engine's OWN
+          * settings.ini (not a separate keybinds.ini) so key/pad
+          * rebinds land where app_config_load() reads them. */
++        gi.config_path          = settings_ini;
++        gi.rom_cache_path       = rom_cfg_path;
+         gi.keybinds_path        = settings_ini;
+         /* SRAM panel: the engine names its battery file
+          * <rom-basename>.srm next to the exe (runner_sram_init_and_load,
+@@ -2338,12 +2466,11 @@ static int run_recomp_launcher(const char *ltitle, const char *initial_rom, char
  #endif
              for (int p = 0; p < gi.num_players; p++) {
                  int src = ls.player_src[p];
@@ -770,7 +779,7 @@ index df30a08..be4ea30 100644
                                                  : (src == 2) ? INPUT_DEV_GAMEPAD
                                                  : INPUT_DEV_NONE;
                  g_input_map.p[p].pad_type     = (ls.pad_mode[p] == 1) ? PAD_6BUTTON : PAD_3BUTTON;
-@@ -2484,6 +2609,9 @@ static void replay_view(GenesisReplayView *v,int apply)
+@@ -2484,6 +2611,9 @@ static void replay_view(GenesisReplayView *v,int apply)
  
  int main(int argc, char *argv[])
  {
@@ -780,7 +789,7 @@ index df30a08..be4ea30 100644
      cmd_server_owner_review_init(getenv("GENESIS_OWNER_REVIEW"));
      init_exe_dir(argv[0]);
      const char *user_dir=getenv("GENESIS_USER_DIR");
-@@ -2524,6 +2652,7 @@ int main(int argc, char *argv[])
+@@ -2524,6 +2654,7 @@ int main(int argc, char *argv[])
       * set), --no-launcher / GENESIS_NO_LAUNCHER forces it off (headless). */
      int force_launcher = 0;
      int no_launcher    = 0;
@@ -788,7 +797,7 @@ index df30a08..be4ea30 100644
      const char *custom_video_cli = NULL;
  
      /* --- Paced-native spike (option 2) ---
-@@ -2612,6 +2741,8 @@ int main(int argc, char *argv[])
+@@ -2612,6 +2743,8 @@ int main(int argc, char *argv[])
              force_launcher = 1;
          } else if (strcmp(argv[i], "--replay-diagnostic") == 0 && i+1<argc) {
              replay_path=argv[++i];no_launcher=1;
@@ -797,7 +806,7 @@ index df30a08..be4ea30 100644
          } else if (strcmp(argv[i], "--no-launcher") == 0) {
              no_launcher = 1;
          } else if (strcmp(argv[i], "--port") == 0 && i + 1 < argc) {
-@@ -2724,6 +2855,7 @@ int main(int argc, char *argv[])
+@@ -2724,6 +2857,7 @@ int main(int argc, char *argv[])
      app_config_defaults();
      app_config_load(settings_ini);   /* also seeds g_input_map controller bindings */
      if (g_game_spec.load_settings) g_game_spec.load_settings(settings_ini);
@@ -805,7 +814,7 @@ index df30a08..be4ea30 100644
  #if GENESIS_HAS_RECOMP_NET && RECOMP_LAUNCHER
      {
          /* Content identity for the lobby: the ROM's SHA-256, when a ROM is
-@@ -3055,8 +3187,10 @@ int main(int argc, char *argv[])
+@@ -3055,8 +3189,10 @@ int main(int argc, char *argv[])
       * Adaptive mode then has a 16:9 window to follow on the first frame. */
      int win_scale = g_app_config.window_scale;
      if (win_scale < 1) win_scale = 1; else if (win_scale > 8) win_scale = 8;
@@ -817,7 +826,7 @@ index df30a08..be4ea30 100644
      if (custom_video_on) {
          win_w = (win_h * 16 + 4) / 9;
      } else if (ws_armed()) {
-@@ -3190,7 +3324,7 @@ int main(int argc, char *argv[])
+@@ -3190,7 +3326,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -826,7 +835,7 @@ index df30a08..be4ea30 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3335,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3337,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }
@@ -841,7 +850,7 @@ index df30a08..be4ea30 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
-@@ -3317,13 +3459,17 @@ int main(int argc, char *argv[])
+@@ -3317,13 +3461,17 @@ int main(int argc, char *argv[])
      /* --target-fps wins over debug.ini, which wins over default 59.94. */
      double target_fps = (target_fps_cli > 0.0)     ? target_fps_cli :
                          (target_fps_from_ini > 0.0) ? target_fps_from_ini :
@@ -860,7 +869,7 @@ index df30a08..be4ea30 100644
  
  #ifdef GENESIS_COSIM
      /* Differential co-simulation: bring up the lockstep TCP server + checkpoint
-@@ -3345,7 +3491,7 @@ int main(int argc, char *argv[])
+@@ -3345,7 +3493,7 @@ int main(int argc, char *argv[])
       * tables fix made the per-instruction cycle counts exact). */
      {
          const char *chosen = pacing_cli ? pacing_cli :
@@ -869,7 +878,7 @@ index df30a08..be4ea30 100644
          if (chosen) {
              if (strcmp(chosen, "accurate") == 0)
                  g_pacing_mode = GLUE_PACING_CYCLE_ACCURATE;
-@@ -3540,6 +3686,10 @@ session_begin:;
+@@ -3540,6 +3688,10 @@ session_begin:;
      const Uint64 perf_frequency = SDL_GetPerformanceFrequency();
      FramePacer frame_pacer;
      frame_pacer_init(&frame_pacer, perf_frequency, target_fps);
@@ -880,7 +889,7 @@ index df30a08..be4ea30 100644
      PresentationClock presentation_clock={0};
      uint32_t *interpolation_image=NULL;size_t interpolation_capacity=0;
      uint64_t presentation_count=0,interpolation_count=0;
-@@ -3621,6 +3771,24 @@ session_begin:;
+@@ -3621,6 +3773,24 @@ session_begin:;
                  cancel_load_hold();
                  recomp_runtime_ui_open(s_runtime_ui.ui); continue;
              }
@@ -905,7 +914,7 @@ index df30a08..be4ea30 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3735,7 +3903,46 @@ session_begin:;
+@@ -3735,7 +3905,46 @@ session_begin:;
          }
  
  #if RECOMP_LAUNCHER
@@ -953,7 +962,7 @@ index df30a08..be4ea30 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -3898,6 +4105,13 @@ session_begin:;
+@@ -3898,6 +4107,13 @@ session_begin:;
             * the existing interlace display modes (tv squash / raw) take over
             * from here, same as the clownmdemu path. */
            s_screen_height = gvdp_output_height(&g_machine.vdp);
@@ -967,7 +976,7 @@ index df30a08..be4ea30 100644
            if (!completed) {                        /* reverse-debug quit */
                fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
                    "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
-@@ -4180,6 +4394,7 @@ session_begin:;
+@@ -4180,6 +4396,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -975,7 +984,7 @@ index df30a08..be4ea30 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4403,7 @@ session_begin:;
+@@ -4188,7 +4405,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -984,7 +993,7 @@ index df30a08..be4ea30 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4414,14 @@ session_begin:;
+@@ -4199,12 +4416,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -1000,7 +1009,7 @@ index df30a08..be4ea30 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
-@@ -4288,7 +4505,14 @@ session_begin:;
+@@ -4288,7 +4507,14 @@ session_begin:;
              }
              peer_view_was_active = peer_view_is_active;
          }
