@@ -136,3 +136,5 @@ Update: all 45 Story + Practice 1-6 briefings now verified on screen (CITY neede
 7. Native-speaker review: send the English strings in translations/db2special-en.json (grep "english") to a reviewer; look for wording, truncation at box edges, line breaks.
 8. Controller test: connect a physical pad, run each build, verify menu navigation, password entry (A/C/START) and in-game commands.
 9. Packaging: rebuild the candidate package from current `work/dynabrothers` (local/candidate-next is stale) after items 1-3.
+
+- NEW: tests/db1_title_menu_art_test.c:31 calls db1_title_menu_art_row with 7 args but it now takes 8 (DB1 title menu art change by another branch). Fix the test call (or signature), then rerun ctest (54 expected).
