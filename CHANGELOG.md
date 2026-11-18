@@ -1,3 +1,12 @@
+# v0.3.0 beta
+
+- Launcher: fixed a cartridge-reveal visual bug where the hover/focus animation slid the cartridge sideways across the box art instead of rising out of its top edge ("una parada y una cruzada" report); fixed the launcher's own diagnostic capture tool missing the Manual button from its screenshot list (the live app was unaffected); the home screen's version text now reads "Alpha"/version consistently with the rest of the UI.
+- Manual viewer: long translation notes (ad pages, rule tables) could overflow the fixed-size text panel and get cut off mid-sentence; the viewer now measures each note and shrinks its font just enough to show the whole thing.
+- ROM integrity: confirmed the existing CRC32 guard (Japanese-original and English-translation revisions, both games) is exercised by the packaged regression suite and rejects any other ROM cleanly.
+- `tools/verify_checkpoint.py` now runs its 45 packaged regression checks in parallel (~3x faster, same results).
+- DB1/DB2 string-level translation is complete at the catalog level; remaining gaps are tile-graphics text (not ROM strings) and a handful of screens whose text is already translated but unconfirmed on screen because no reliable scripted repro reaches them (QUIT dialog, results, Dyna Fight, Sega Channel, endings) — see `docs/handoff/PENDING.md` for the full honest accounting.
+- Promoted to public BETA: translation and rendering fixes from v0.2.0/v0.2.1 have held up, and the remaining open items are either cosmetic, environment-dependent, or need a human with real hardware/input rather than more scripted work.
+
 # v0.2.1 alpha
 
 - New Settings > Manual viewer in the launcher: a book-sized, GDI-drawn open booklet with a staple-bound spine, PDF-reader pagination (cover alone, then real facing pairs), and a JP/EN toggle. Auto-detects whether a DB2 scan is a single page or an already-joined two-page spread and renders each correctly. Fully gamepad-reachable (D-pad to the Manual button, then LEFT/RIGHT/A/BACK inside the viewer).
