@@ -457,3 +457,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
  target_compile_options(DynaPngTransparencyTest PRIVATE -O3 -Wall -Wextra -Werror=stringop-overflow)
 endif()
 add_test(NAME png_transparency_bounds_contract COMMAND DynaPngTransparencyTest)
+
+add_executable(DynaDb2VisorTest tests/db2_visor_test.c games/db2_visor.c)
+target_include_directories(DynaDb2VisorTest PRIVATE games)
+target_compile_options(DynaDb2VisorTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME db2_visor_contract COMMAND DynaDb2VisorTest)
