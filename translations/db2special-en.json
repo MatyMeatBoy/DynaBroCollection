@@ -4044,5 +4044,144 @@
       ],
       "verification": "glyph-ID string; guard exact; scene capture pending"
     }
+  ],
+  "ram_text": [
+    {
+      "words": "0168 0137 0001 0133 014E 0A42 08B3 012C 0126 015E 012F 0124 0131 0150 0001 0001 0001 0ECB 0B43 085F 0C50 0B49 0AA3 014E 0730 0BAE 0140 0143 000A",
+      "lines": [
+        "OK! IF THIS EXPERIMENT",
+        "WORKS, BREEDER IS DONE!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0C50 0172 0B49 0159 0146 0149 0173 0149 0173 10D1 0172 09DA 0160 0173 0147 0139 0001 0168 014D",
+      "lines": [
+        "EATS GRASS, LAYS EGGS",
+        "OK?"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0141 0163 0173 0148 1072 014B 10E9 0144 0173 0140 016D 001C 014A 000A",
+      "lines": [
+        "IT BETTER BE USEFUL!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0122 013F 016A 015E 0128 0140 000A",
+      "lines": [
+        "OF COURSE!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0147 014F 0934 012F 013E 0143 000A",
+      "lines": [
+        "LET US GO!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "016F 0121 001C 000A 0BAE 08F9 0147 0139 012B 0009 01AF 018B 019B",
+      "lines": [
+        "WOW! SUCCESS, DOC?"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0124 0164 0001 015E 0140 0F6C 012B 0169 0173 013E 0024",
+      "lines": [
+        "NO, NOT YET SURE..."
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "014A 0173 0140 0121 0001 0133 0124 0144 014F 0121 000A 0009",
+      "lines": [
+        "WHAT IS THIS THING?!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0146 0173 0147 0A65 013D 0126 0138 0163 014D 001C 012B 0143 000A 000A",
+      "lines": [
+        "HE LOOKS SO WEAK!!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "01B0 018B 0162 0173 000A 0BB8 0C8E 0188 01AD 01CB 018E 001C 06EE 0F9D 014E 013F 0161 014B 014F 0001 0133 0124 0144 0169 012C 0F0C 10B7 014A 014E 0140 000A",
+      "lines": [
+        "YOU FOOL! FOR BIO ENERGY",
+        "WE NEED THESE GUYS!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "018A 0184 0001 0146 0161 001C 000A 0164 016B 0784 0122 0173 014E 012B 000A 0009",
+      "lines": [
+        "HEY YOU! WANNA FIGHT?!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0173 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021 0021",
+      "lines": [
+        "HMMMMMMMMMMMMMMMM"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0126 012C 001C 0143 000A 000A 0133 0124 0144 01AA 01C1 0164 012C 0143 0146 000A",
+      "lines": [
+        "GRAAH!! HE MOCKS ME!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0168 0137 0001 0133 0124 0144 014E 103E 0C10 014F 01AA 01C1 0138 016D 001C 0024",
+      "lines": [
+        "OK, HIS NAME IS NAMEJIRO..."
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0126 016B 013B 0127 001C 0001 0162 0126 0124 0124 0143 000A",
+      "lines": [
+        "SHUT UP! ENOUGH!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0122 0001 0C94 0146 000A 0149 0133 0158 0934 012F 000A 0009",
+      "lines": [
+        "HEY WAIT! WHERE TO?!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "07F2 10F5 0149 0162 0172 01B6 01A3 0DBD 0139 0130 016C 0127 0001 0001 0001 0001 0001 018A 01CC 0195 01BE 00D1 0B6D 0147 0138 0165 001C 0156 0173 0140 000A",
+      "lines": [
+        "KNOCKING DOWN DINOS?",
+        "ME ALONE IS ENOUGH!"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0122 001C 0122 0001 0934 0143 0141 0163 0143 013F 0024",
+      "lines": [
+        "AWW, HE LEFT..."
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    },
+    {
+      "words": "0133 0124 0144 0A2B 0F6C 014E 10E9 0B2C 0172 0F6C 012B 0143 0148 0169 0173 0168 0126 0140 014A",
+      "lines": [
+        "HE KNOWS NOT HIS PLACE"
+      ],
+      "verification": "script dialogue in RAM stream; matched by content hash"
+    }
   ]
 }
