@@ -1,3 +1,16 @@
+diff --git a/runner/app_config.c b/runner/app_config.c
+index 1f3f7f8..6a10de0 100644
+--- a/runner/app_config.c
++++ b/runner/app_config.c
+@@ -29,7 +29,7 @@ int app_config_set_video_default(const char *mode)
+ void app_config_defaults(void)
+ {
+     g_app_config.window_scale     = 2;
+-    g_app_config.fullscreen       = 0;
++    g_app_config.fullscreen       = 1; /* Borderless unless the profile overrides it. */
+     g_app_config.linear_filter    = 0;
+     g_app_config.internal_scale   = 1;
+     g_app_config.integer_scale    = 0;
 diff --git a/runner/cmd_server.c b/runner/cmd_server.c
 index 754fb08..5d48def 100644
 --- a/runner/cmd_server.c
