@@ -25,6 +25,7 @@ def main():
              'used throughout this project), so concurrent cases do not fight over the real '
              'OS foreground window, mouse or keyboard -- there is no UI automation here to race.')
     args=parser.parse_args();payload=args.candidate.resolve()/'DynaBrothers'
+    if (payload/'data').is_dir():payload=payload/'data'
     args.output.mkdir(parents=True,exist_ok=False)
     db1=find_by_hash(args.inputs,DB1_SHA,{'.md','.bin'});db2=find_by_hash(args.inputs,DB2_SHA,{'.md','.bin'})
     english={}
