@@ -3,6 +3,8 @@
 #include "video/genesis_vdp.h"
 #include "video/genesis_dac.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 enum { MAX_LABELS=4, MODE_TOP=0x17f, MODE_BOTTOM=0x18f };
 static const char *const words[MAX_LABELS]={"PRACTICE","STORY","ORIGINAL","VERSUS"};
@@ -13,6 +15,8 @@ typedef struct {
  uint8_t ink[16];         /* CRAM index per scanline */
  uint8_t back[16];        /* plate colour per scanline */
  uint8_t shadow;
+ int ncells,row,word;
+ uint16_t top[24],bot[24]; /* the original plate art, to find what (clouds) is drawn over it */
 } Label;
 static Label labels[MAX_LABELS];
 static int label_count,english;
@@ -49,10 +53,12 @@ void db2_menu_labels_frame(const GVDP *v){
   unsigned fill=rd(v,at+12);                 /* plate fill right after モード */
   int start=c;
   while(start>0&&(rd(v,base+(unsigned)(r*wt+start-1)*2)&2047)!=(fill&2047)&&c-start<14)start--;
-  Label *l=found+n++;memset(l,0,sizeof *l);
+  Label *l=found+n++;memset(l,0,sizeof *l);l->row=r;
   int sx=((start*8+hs)%pw+pw)%pw;if(sx>=320+64)sx-=pw;
   int sy=((r*8-vs)%ph+ph)%ph;if(sy>=224+32)sy-=ph;
   l->x0=sx;l->x1=sx+(c+6-start)*8;l->y0=sy;l->fill=fill;
+  l->ncells=c+6-start>24?24:c+6-start;
+  for(int k=0;k<l->ncells;k++){l->top[k]=(uint16_t)rd(v,at+2u*(unsigned)(start+k-c));l->bot[k]=(uint16_t)rd(v,below+2u*(unsigned)(start+k-c));}
   /* Stone texture inside the plate frame (tile 265, e.g. both ends of the
    * たいけつ plate); the frame edge tile is only a fallback. */
   for(int rr=0;rr<ht;rr++)for(int cc=0;cc<wt;cc++){unsigned nm=rd(v,base+(unsigned)(rr*wt+cc)*2);if((nm&2047)==0x265){l->fill=nm;rr=ht;break;}}
@@ -92,8 +98,26 @@ void db2_menu_labels_frame(const GVDP *v){
    l->back[yy]=(uint8_t)best;
   }
  }
- if(n!=MAX_LABELS)return;
- for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)if(found[j].y0<found[i].y0){Label t=found[i];found[i]=found[j];found[j]=t;}
+ {static int tr=-1;if(tr<0){const char *e=getenv("DYNA_TRACE_LABELS");tr=e&&e[0]=='1';}
+  if(tr){fprintf(stderr,"[labels] n=%d",n);for(int i=0;i<n;i++)fprintf(stderr," (r=%d x0=%d y0=%d)",found[i].row,found[i].x0,found[i].y0);fprintf(stderr,"\n");}}
+ /* The plates are streamed into the plane as the camera scrolls, so only some
+  * are present mid-transition. They sit on fixed nametable rows 3,6,9,12. */
+ if(n!=MAX_LABELS){
+  int kept=0;
+  for(int i=0;i<n;i++){int idx=found[i].row>=3&&(found[i].row-3)%3==0?(found[i].row-3)/3:-1;if(idx<0||idx>=MAX_LABELS)continue;found[i].word=idx;labels[kept++]=found[i];}
+  label_count=kept;return;
+ }
+ for(int i=0;i<n;i++)found[i].word=i;
+ for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)if(found[j].row<found[i].row){Label t=found[i];found[i]=found[j];found[j]=t;}
+ /* VERSUS (4th plate): its authored lettering has one-row yellow highlights
+  * that read as stray lines on the English glyphs; keep it a clean green. */
+ {Label *vs_label=found+3;
+  for(int pass=0;pass<2;pass++)for(int yy=1;yy<15;yy++)if(vs_label->ink[yy-1]==vs_label->ink[yy+1]&&vs_label->ink[yy]!=vs_label->ink[yy-1])vs_label->ink[yy]=vs_label->ink[yy-1];
+  /* rows whose ink is not green-dominant take the nearest green row */
+  uint8_t green[16];
+  for(int yy=0;yy<16;yy++){uint32_t c=genesis_dac_cram_to_argb(v->cram[vs_label->ink[yy]&63],0);unsigned r=(c>>16)&255,g=(c>>8)&255,b=c&255;green[yy]=g>=r&&g>=b;}
+  for(int yy=0;yy<16;yy++)if(!green[yy]){for(int d=1;d<16;d++){if(yy-d>=0&&green[yy-d]){vs_label->ink[yy]=vs_label->ink[yy-d];break;}if(yy+d<16&&green[yy+d]){vs_label->ink[yy]=vs_label->ink[yy+d];break;}}}
+ }
  memcpy(labels,found,sizeof labels);label_count=n;
 }
 
@@ -134,7 +158,8 @@ void db2_menu_labels_row(const GVDP *v,int line,uint32_t *out,int width,int orig
  for(int k=0;k<label_count;k++){
   const Label *l=labels+k;
   if(line<l->y0||line>=l->y0+16)continue;
-  int yy=line-l->y0,len=(int)strlen(words[k]);
+  const char *word=words[l->word];
+  int yy=line-l->y0,len=(int)strlen(word);
   int tx=l->x0+((l->x1-l->x0)-len*16)/2;
   uint32_t ink=genesis_dac_cram_to_argb(v->cram[l->ink[yy]&63],0);
   uint32_t shadow=genesis_dac_cram_to_argb(v->cram[l->shadow&63],0);
@@ -143,8 +168,15 @@ void db2_menu_labels_row(const GVDP *v,int line,uint32_t *out,int width,int orig
    /* Plate: the stone fill tile the plates use around their lettering. */
    unsigned i=tile_index(v,l->fill,(x-l->x0)&7,yy&7);
    uint32_t c=i?genesis_dac_cram_to_argb(v->cram[i&63],0):out[dx];
-   if(glyph_on(words[k],len,x-tx,yy))c=ink;
-   else if(outline_on(words[k],len,x-tx,yy))c=shadow;
+   if(glyph_on(word,len,x-tx,yy))c=ink;
+   else if(outline_on(word,len,x-tx,yy))c=shadow;
+   /* Sprites (clouds) pass in front of the plate like they do in front of the
+    * authored plates: a pixel that is not the original plate art stays. */
+   {int cell=(x-l->x0)>>3;
+    if(cell>=0&&cell<l->ncells){
+     unsigned oi=tile_index(v,yy<8?l->top[cell]:l->bot[cell],(x-l->x0)&7,yy&7);
+     if(oi&&out[dx]!=genesis_dac_cram_to_argb(v->cram[oi&63],0))continue;
+    }}
    out[dx]=c;
   }
  }

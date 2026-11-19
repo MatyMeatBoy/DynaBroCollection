@@ -6128,6 +6128,220 @@
         "FOR EGGS"
       ],
       "verification": "script dialogue in RAM stream (password-route stages)"
+    },
+    {
+      "words": "0124 0128 0124 000A",
+      "lines": [
+        "YEAH!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "013D 016C 0147 014F 01BC 019F 01D3 014E 0C40 09AE 0140 0131 0001 0001 0001 0001 0001 074A 0CD1 014B 0BE2 1040 0139 016B 0168 0173",
+      "lines": [
+        "I'LL JUST EXPLAIN THE BUTTONS",
+        "QUICKLY, OK?"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "015E 013A 00E3 01BC 019F 01D3 0147 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0888 0D6A 0147 0021 0139",
+      "lines": [
+        "FIRST, THE C BUTTON",
+        "CONFIRMS!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "018E 01C3 018A 000A 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0193 01BE 01D3 01A9 0A42 0934 014E 0148 012D 014F 0133 016C 0140 013E 0143 000A",
+      "lines": [
+        "ROAR!",
+        "USE IT TO RUN COMMANDS!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0A21 014B 00E2 01BC 019F 01D3 014F 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 018D 01C3 01D3 019B 01CB 000A",
+      "lines": [
+        "NEXT, THE B BUTTON",
+        "CANCELS!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0756 05E3 0143 013F 0A1E 0148 012B 014B 09E8 0126 0173 0140 0168 014D",
+      "lines": [
+        "USE IT WHEN YOU SLIP UP"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "00E2 01BC 019F 01D3 0172 0661 0137 013F 015E 015E 0001 0FBD 08FE 01BC 019F 01D3 0147 06A8 104C 0172 0DF0 012B 0139 0133 0148 0162 0001 0147 012D 016B 0173 0164 0143 000A",
+      "lines": [
+        "B + D-PAD SCROLLS THE",
+        "SCREEN TOO!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "00E1 01BC 019F 01D3 014F 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0B30 0FB3 06A8 104C 0158 014E 0BDA 016A 0C98 0128 0147 001C 0139 000A",
+      "lines": [
+        "A BUTTON SWITCHES TO THE",
+        "INFO SCREEN!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "018D 01C3 01C9 014E 05CC 0CF6 0148 012B 0001 0124 016D 0173 014A 0B30 0FB3 012C 0001 08AB 0169 016C 016B 012B 0169 0001 0708 10B1 0137 0146 012F 016C 0168 014A 001C",
+      "lines": [
+        "YOU CAN SEE UNIT POSITIONS",
+        "AND LOTS MORE, SO USE IT!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0DB3 0D06 0147 093F 09D2 0162 0147 012D 016B 0162 0173 000A",
+      "lines": [
+        "YOU CAN SURRENDER TOO!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0148 0166 001C 016F 0131 0147 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 0001 016C 0173 0137 0165 0126 01C2 001C 01A9 0199 019F 001C 01A8 0140 0168 001C 0173 000A",
+      "lines": [
+        "SO, WITHOUT FURTHER ADO,",
+        "PRACTICE MODE STARTS NOW!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "016C 0173 0137 0165 0126 01C2 001C 01A9 012C 09EF 015E 016B 0168 001C",
+      "lines": [
+        "PRACTICE MODE IS STARTING!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0005 0005 0005 0122 016C 0009",
+      "lines": [
+        "...HUH?"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0149 012A 0162 0001 0199 01A6 0194 0147 0139 0005 0005 0005",
+      "lines": [
+        "HI, I'M STEGO..."
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "015C 012F 013F 0141 0ECB 0B43 085F 0C50 0B49 0AA3 014F 0001 0001 0001 0001 0001 0001 0CEF 104C 014E 0C50 0172 0B49 0159 0146 0D07 0756 0172 0C5D 0164 0139 0173 0140",
+      "lines": [
+        "WE BREEDER HERBIVORES EAT",
+        "GRASS TO MAKE MORE FRIENDS"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0ECB 0143 013F 0C50 0172 013F 012F 0135 0173 0B49 0159 016B 0148 0001 0001 0001 0001 08B5 0784 014B 014A 0143 0146 0024",
+      "lines": [
+        "EAT LOTS OF LUSH GRASS AND",
+        "GET LIVELY..."
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "10D1 0172 09DA 0160 0168 000A",
+      "lines": [
+        "WE LAY EGGS!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0147 0162 0001 0C50 012C 0B49 0159 0169 016C 014A 0124 0148 0001 0001 0001 0001 0001 0792 0128 0A00 014B 0137 0141 0163 0126 012B 0169",
+      "lines": [
+        "BUT IF WE CAN'T EAT GRASS,",
+        "WE'LL STARVE!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "060B 0172 093F 0169 013B 0146 0C50 08B6 0172 090D 0132 0146 014D",
+      "lines": [
+        "MAKE RAIN, GROW THE GRASS"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "00F4 0108 0105 00E5 0107 0107 014F 0001 015C 012F 013F 0141 012B 0169 0001 0001 0001 0BB8 0C8E 0188 01AD 01CB 018E 001C 0172 07BB 0A7D 0137 0146",
+      "lines": [
+        "THE EGG TAKES LIFE ENERGY",
+        "FROM US AND"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "01B1 01CF 001C 0172 0CFF 0128 016B 0173 0140",
+      "lines": [
+        "STORES UP POWER!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "060B 0172 0155 0169 013B 013F 016A 0001 10D1 0172 0C2F 0C64 0139 016B 014B 014F 0001 01B1 01CF 001C 012C 0F0C 10B7 0140 0168",
+      "lines": [
+        "MAKING RAIN OR CREATING EGGS",
+        "TAKES POWER!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0140 012B 0169 0001 014F 0138 0161 014F 0001 0001 0001 0001 0001 0001 0001 0001 0001 015C 012F 013F 0141 0172 013F 012F 0135 0173 0C5D 0164 0137 0146 014D",
+      "lines": [
+        "SO AT FIRST,",
+        "MAKE LOTS OF US!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "013D 016C 0138 0163 0122 0001 012C 0173 0150 0143 0146 012F 0140 0135 0124",
+      "lines": [
+        "OK, DO YOUR BEST!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "0001 018D 01C3 01D3 019B 01CB 000A",
+      "lines": [
+        "  CANCEL!"
+      ],
+      "skip": 0,
+      "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
     }
   ]
 }

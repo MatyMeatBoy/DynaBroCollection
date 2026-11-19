@@ -335,13 +335,16 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  gvdp_compose_span(pixels,a,b,s,o,hi,sh,hl,w,r?r->backdrop:(snapshot.reg[7]&63),shadow);
  for(int x=0;x<w;x++){unsigned p=pixels[x];out[x]=genesis_dac_cram_to_argb(snapshot.cram[p&63],p>=128?2:p>=64?1:0);}
 }
+static int sky_row(const uint32_t *row);
 static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNativeRow native,void *ctx,const GVDPRasterRow *r){
  background=genesis_dac_cram_to_argb(v->cram[v->reg[7]&63],0);
  int supported=nw==320&&w>=320&&w<=LIMIT&&r&&r->display&&raster_enabled(v);
  if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);if(supported)capture(v);}
  const uint32_t *p=native(ctx);
  if(y>=0&&y<224&&nw==320){memcpy(native_image[y],p,sizeof native_image[y]);native_valid[y]=1;}
- if(y==0){memset(wide_valid,0,sizeof wide_valid);wide_w=w;db2_wide_menu_frame(v);db2_menu_labels_frame(v);}
+ if(y==0){memset(wide_valid,0,sizeof wide_valid);wide_w=w;
+  {static int sky_hold;if(nw==320&&sky_row(native_image[0]))sky_hold=90;else if(sky_hold)--sky_hold;db2_wide_menu_set_sprite_gate(sky_hold>0);}
+  db2_wide_menu_frame(v);db2_menu_labels_frame(v);}
  if(y>=0&&y<224&&nw==320&&w>320&&w<=LIMIT&&w==wide_w){
   uint32_t *row=wide_image[y];int left=(w-320)/2;
   for(int x=0;x<w;x++)row[x]=background;
@@ -459,10 +462,13 @@ static int panel_stretch(uint32_t *pixels,int stride,int w,int top){
  * title does; otherwise rows without art fade the native edge into the
  * backdrop over eight lines (DB1 intro fade, vertical). */
 static int sky_row(const uint32_t *row){
- uint32_t c=row[160];unsigned same=0;
- for(int x=0;x<320;x++)same+=row[x]==c;
- unsigned r=(c>>16)&255,g=(c>>8)&255,b=c&255;
- return same>=280&&b>=96&&b>=r&&r+g+b>=200;
+ /* Blue sky, with the white of clouds / dither, across nearly the whole line. */
+ unsigned sky=0;
+ for(int x=0;x<320;x++){
+  unsigned r=(row[x]>>16)&255,g=(row[x]>>8)&255,b=row[x]&255;
+  sky+=(b>=r&&b>=g&&b>=150&&b>=r+24)||(r>=200&&g>=200&&b>=200);
+ }
+ return sky>=282;
 }
 /* A flat, confetti-dotted backdrop touching both native edges (stage
  * briefing): the same colour fills at least 70% of the 12 outer pixels per side. */
@@ -494,10 +500,28 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
   return;
  }
  if(top<=0)return;
- if(native_valid[0]&&native_valid[223]&&sky_row(native_image[0])){
-  for(int y=h-1;y>=top+bottom;y--)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(y-bottom)*stride,(size_t)w*sizeof *pixels);
-  for(int y=0;y<top+bottom;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(top+bottom)*stride,(size_t)w*sizeof *pixels);
-  return;
+ {
+  /* Title / main menu: the scenery is anchored to the bottom of the canvas (the
+   * stone and the ground reach the bottom edge) and the sky is generated above
+   * it. The scene is remembered for a while so the camera move between the title
+   * and the menu keeps the same framing while the logo scrolls through row 0. */
+  static int sky_hold;static uint32_t sky_base;
+  if(native_valid[0]&&native_valid[223]){
+   if(sky_row(native_image[0])){sky_hold=120;sky_base=native_image[0][2];}
+   else if(sky_hold>0)--sky_hold;
+  }
+  if(sky_hold>0&&native_valid[0]&&native_valid[223]){
+   int shift=bottom;
+   for(int y=h-1;y>=top+shift;y--)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(y-shift)*stride,(size_t)w*sizeof *pixels);
+   int rows=top+shift;
+   for(int y=0;y<rows;y++){
+    int d=rows-y;                       /* 1 = the row right above native line 0 */
+    uint32_t *row=pixels+(size_t)y*stride;
+    if(d<=24&&sky_row(native_image[d-1])){memcpy(row,pixels+(size_t)(rows+d-1)*stride,(size_t)w*sizeof *row);continue;}
+    for(int x=0;x<w;x++)row[x]=sky_base;
+   }
+   return;
+  }
  }
  /* Intro (art authored past the 4:3 window): like the DB1 intro, the sides
   * stay backdrop and the original left/right borders fade into it over
@@ -515,9 +539,13 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
 }
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
+ /* Leaving a native modal screen (pause, Info View): the first frames can still
+  * be rejected while the guest restores its camera state; the frame from before
+  * the modal is re-presented for those instead of dropping the wide view. */
+ {static int prev_modal;int modal=(g_ram[0x286]&0x88)!=0;if(prev_modal&&!modal)held_misses=0;prev_modal=modal;}
  if(trace_frames&&v){
   unsigned hb=((unsigned)snapshot.reg[13]&63)<<10;
-  fprintf(stderr,"[db2-frame] n=%u ok=%d reasons=%02X ready=%d scene=%d ramscroll=%d,%d vdp_hs=%d,%d vs=%d,%d ring=%u,%u cell=%u,%u\n",trace_ok_frames+trace_fallback_frames,!rejected&&ready,frame_reasons,ready,world_scene,(int)(int16_t)word(g_ram+0x2bf8),(int)(int16_t)word(g_ram+0x2bfa),(int)(word(snapshot.vram+hb)&1023),(int)(word(snapshot.vram+hb+2)&1023),snapshot.vsram[0]&1023,snapshot.vsram[1]&1023,camera.ring_x,camera.ring_y,camera.cell_x,camera.cell_y,off_x,off_y);
+  fprintf(stderr,"[db2-frame] g286=%02X n=%u ok=%d reasons=%02X ready=%d scene=%d ramscroll=%d,%d vdp_hs=%d,%d vs=%d,%d ring=%u,%u cell=%u,%u\n",g_ram[0x286],trace_ok_frames+trace_fallback_frames,!rejected&&ready,frame_reasons,ready,world_scene,(int)(int16_t)word(g_ram+0x2bf8),(int)(int16_t)word(g_ram+0x2bfa),(int)(word(snapshot.vram+hb)&1023),(int)(word(snapshot.vram+hb+2)&1023),snapshot.vsram[0]&1023,snapshot.vsram[1]&1023,camera.ring_x,camera.ring_y,camera.cell_x,camera.cell_y,off_x,off_y);
  }
  if(!rejected&&ready){
   for(int y=0;y<h;y++)memcpy(held[y],pixels+(size_t)y*stride,(size_t)w*sizeof *pixels);
@@ -540,11 +568,11 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
    --trace_budget;trace_signature=signature;trace_seen|=frame_reasons;
   }
  }
- if(held_valid&&held_w==w&&held_h==h&&world_scene==WORLD_BATTLE&&++held_misses<=HOLD_FRAMES){
+ if(held_valid&&held_w==w&&held_h==h&&world_scene==WORLD_BATTLE&&!(g_ram[0x286]&0x88)&&++held_misses<=HOLD_FRAMES+2){
   for(int y=0;y<h;y++)memcpy(pixels+(size_t)y*stride,held[y],(size_t)w*sizeof *pixels);
   return;
  }
- held_valid=0;
+ if(!(g_ram[0x286]&0x88)&&held_misses>HOLD_FRAMES+2)held_valid=0;
  /* All rows are restored together, including rows drawn before an unknown
   * effect appeared. No callback/provider/runner pointer is retained. */
  for(int y=0;y<h;y++){

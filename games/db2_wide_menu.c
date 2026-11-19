@@ -29,8 +29,31 @@ enum { EDGE_PERIOD=4 };
 static uint8_t col_art[2][128],row_art[2][128];
 static int occupancy_ready,extended_used;
 
+/* Title/main-menu clouds are sprites that respawn beyond the 4:3 window and sit
+ * there until they start drifting; on a wide canvas that showed them popping in
+ * at the margins. While the gate is on, a margin sprite is drawn only once it
+ * has actually moved in the last few frames. */
+static int sprite_gate;
+static int16_t prev_sx[80],prev_sy[80];
+static uint8_t moved_recent[80];
+void db2_wide_menu_set_sprite_gate(int on){sprite_gate=on!=0;}
+static void track_sprites(const GVDP *v){
+ unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0},live[80]={0};
+ for(int n=0;n<80;n++){
+  if(link>=80||seen[link])break;seen[link]=1;live[link]=1;
+  unsigned p=base+link*8;
+  int sy=(int)(rd(v,p)&511)-128,sx=(int)(rd(v,p+6)&511)-128;
+  int dx=sx-prev_sx[link],dy=sy-prev_sy[link];
+  if((dx||dy)&&dx>=-8&&dx<=8&&dy>=-8&&dy<=8)moved_recent[link]=12;
+  else if(moved_recent[link])--moved_recent[link];
+  prev_sx[link]=(int16_t)sx;prev_sy[link]=(int16_t)sy;
+  unsigned next=v->vram[(p+3)&0xffff]&127;if(!next)break;link=next;
+ }
+ for(int i=0;i<80;i++)if(!live[i])moved_recent[i]=0;
+}
 void db2_wide_menu_frame(const GVDP *v){
  occupancy_ready=0;extended_used=0;if(!v)return;
+ track_sprites(v);
  int wt=cells(v->reg[16]&3),ht=cells((v->reg[16]>>4)&3);if(wt*ht>4096)ht=4096/wt;
  for(int plane=0;plane<2;plane++){
   unsigned base=plane?((unsigned)v->reg[4]&7)<<13:((unsigned)v->reg[2]&0x38)<<10;
@@ -143,6 +166,7 @@ static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,
  unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0};
  for(int n=0;n<80;n++){
   if(link>=80||seen[link])return;seen[link]=1;
+  unsigned link_index=link;
   unsigned p=base+link*8;
   int sy=(int)(rd(v,p)&511)-128;
   unsigned size=v->vram[(p+2)&0xffff],next=v->vram[(p+3)&0xffff]&127;
@@ -151,9 +175,11 @@ static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,
   int hc=(int)((size>>2)&3)+1,vc=(int)(size&3)+1;
   if(line>=sy&&line<sy+vc*8&&sx>-128){
    int ry=line-sy;if(attr&0x1000)ry=vc*8-1-ry;
+   int gated=sprite_gate&&!moved_recent[link_index];
    for(int c=0;c<hc*8;c++){
     int x=sx+c;
     if(x>=0&&x<320)continue;              /* native columns stay authentic */
+    if(gated)continue;
     int dx=x+left;if(dx<0||dx>=w||o[dx])continue;
     int rx=c;if(attr&0x800)rx=hc*8-1-rx;
     unsigned tile=((attr&2047)+(unsigned)(rx>>3)*(unsigned)vc+(unsigned)(ry>>3))&2047;
