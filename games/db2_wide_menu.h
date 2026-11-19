@@ -23,6 +23,7 @@ uint8_t db2_wide_menu_plane_pixel(const struct GVDP *v, int plane, int x, int li
 uint32_t db2_wide_menu_blend(uint32_t pixel, uint32_t backdrop, unsigned weight);
 /* True when this frame continued authored art past the 4:3 window (intro). */
 int db2_wide_menu_extended(void);
+void db2_wide_menu_set_sprite_gate(int on);
 /* While on, plane B outside the window/letterbox is generated from the confetti
  * tiles of the outer columns (stage briefing). */
 void db2_wide_menu_mirror(const struct GVDP *v, int on);

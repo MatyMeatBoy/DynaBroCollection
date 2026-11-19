@@ -55,7 +55,7 @@ static int verify(const GlyphText *t,unsigned i)
 
 /* Script dialogue lives in a RAM stream (decompressed from a ROM script), so it is
  * identified by the FNV-1a32 of its original Japanese words, not by a ROM address. */
-typedef struct{uint16_t prefix[6];uint16_t cells;uint8_t nlines;const char *line[6];}RamText;
+typedef struct{uint16_t prefix[6];uint16_t cells;uint8_t nlines;int8_t skip;const char *line[6];}RamText;
 static const RamText ram_table[]={
 #include "db2_ram_text_table.inc"
 };
@@ -84,7 +84,8 @@ static int ram_observe(uint32_t a1,uint32_t a0)
  unsigned stride=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
  if(!stride)return 1;
  unsigned skip=0,prev=0;
- while(skip<cells){unsigned w=ram_word(start+2*skip);if(!w||(w&1)||w>=0x120||w<=prev)break;prev=w;skip++;}
+ if(t->skip>=0)skip=(unsigned)t->skip;
+ else while(skip<cells){unsigned w=ram_word(start+2*skip);if(!w||(w&1)||w>=0x120||w<=prev)break;prev=w;skip++;}
  unsigned abs_cell=(a1-start)/2;
  if(abs_cell<skip)return 1;
  unsigned cell=abs_cell-skip,line=cell/stride,col=cell%stride;

@@ -1,3 +1,12 @@
+# v0.4.1
+
+- DB2 Practice/Story tutorial dialogue is now English: the ovi's opening cutscene and the full explanation (button controls, "THE EGG" rules, grass/egg/power lines, CANCEL, mid-stage surrender, "practice mode starts now") -- 25 new RAM-script catalog entries (`ram_text` can now pin the number of leading control cells with `skip`).
+- DB2 title screen and main menu on a taller 16:9 canvas: the scenery is anchored to the bottom (the stone and ground reach the bottom edge instead of leaving junk tile rows), the sky above is generated from the real sky rows, and the framing is kept through the title-to-menu camera move.
+- Title/menu clouds no longer pop in at the screen margins while they are still parked off-screen (margin sprites show only once they move), and the stuck SEGA CHANNEL logo after skipping the title animation is gone.
+- Menu labels: English labels are applied during the title-to-menu scroll (plates ordered by nametable row), clouds now pass in front of the translated plates like they do over PASSWORD/OPTIONS, and VERSUS is a clean green with no stray yellow rows.
+- DB2 gameplay: pausing and returning from the Info View keep the widened frame instead of dropping to the 4:3-style fallback for a couple of frames.
+- Repo cleanup: scratch/old candidate artifacts under `local/` removed; version bumped.
+
 # v0.4.0
 
 - DB2 Info View (button A inside a stage): the map screen is now English -- TERRAIN MAP / CHARACTER MAP / EGG MAP titles, the TIRING / DAMAGE / DEADLY / SPECIAL AREA and BURNS / NOBURN legend, the TRIBE / EGG / GIVEUP and ALLY / FOE bars, the OK? / REALLY? confirmation, and the unit-name table (STEGO, TRICE, ALO, TYRAN, PTERA, P-CHAN, BLACK/BRAVO variants, bosses). 55 new catalog entries (DB2 Special English ROM CRC32 is now DE76C2B8).
