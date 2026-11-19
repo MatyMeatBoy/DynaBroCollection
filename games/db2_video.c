@@ -464,13 +464,33 @@ static int sky_row(const uint32_t *row){
  unsigned r=(c>>16)&255,g=(c>>8)&255,b=c&255;
  return same>=280&&b>=96&&b>=r&&r+g+b>=200;
 }
-static void vertical_finish(uint32_t *pixels,int stride,int w,int h,int top){
+/* A flat, confetti-dotted backdrop touching both native edges (stage
+ * briefing): the same colour fills at least 70% of the 12 outer pixels per side. */
+static int flat_edges(void){
+ uint32_t c=0;unsigned best=0;
+ for(int y=0;y<224;y++)if(!native_valid[y])return 0;
+ for(int y=0;y<224;y+=7){uint32_t k=native_image[y][2];unsigned n=0;
+  for(int yy=0;yy<224;yy++)for(int x=0;x<12;x++)n+=native_image[yy][x]==k;
+  if(n>best){best=n;c=k;}}
+ unsigned l=0,r=0;
+ for(int y=0;y<224;y++)for(int x=0;x<12;x++){l+=native_image[y][x]==c;r+=native_image[y][319-x]==c;}
+ return l*100u>=224u*12u*70u&&r*100u>=224u*12u*70u;
+}
+static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top){
  int bottom=h-(top+224);
  if(top<0||bottom<0)return;
  if(!db2_wide_menu_extended()&&panel_stretch(pixels,stride,w,top)){
   /* Lines above/below continue the stretched first/last line. */
   for(int y=0;y<top;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)top*stride,(size_t)w*sizeof *pixels);
   for(int y=top+224;y<h;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(top+223)*stride,(size_t)w*sizeof *pixels);
+  return;
+ }
+ if(v&&w>320&&!db2_wide_menu_extended()&&flat_edges()){
+  int left=(w-320)/2;
+  db2_wide_menu_mirror(v,1);
+  for(int y=0;y<h;y++){int src=y-top;uint32_t *row=pixels+(size_t)y*stride;
+   if(src>=0&&src<224)db2_wide_menu_row(v,src,row,w,left,1);else db2_wide_menu_row(v,src,row,w,left,0);}
+  db2_wide_menu_mirror(v,0);
   return;
  }
  if(top<=0)return;
@@ -534,7 +554,7 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
   if(source>=0&&source<224&&native_valid[source]){memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);{db2_bio_overlay_row(v,source,out,w,(w-320)/2);db2_menu_labels_row(v,source,out,w,(w-320)/2);}}
   else if(w>320)db2_wide_menu_row(v,source,out,w,(w-320)/2,0);
  }
- vertical_finish(pixels,stride,w,h,top);
+ vertical_finish(v,pixels,stride,w,h,top);
 }
 static void overlay_scanline(const GVDP *v,int line,uint32_t *out,int width){
  db2_bio_overlay_scanline(v,line,out,width);

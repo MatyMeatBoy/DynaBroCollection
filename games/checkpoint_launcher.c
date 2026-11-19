@@ -709,7 +709,7 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     direct_launch=options.game!=0;
     if(options.rom && !options.setup)options.no_launcher=1;
     WNDCLASSW type={0};type.lpfnWndProc=procedure;type.hInstance=instance;
-    type.hCursor=LoadCursorW(NULL,IDC_ARROW);type.lpszClassName=L"DynaBrothersCheckpoint";
+    type.hCursor=LoadCursorW(NULL,IDC_ARROW);type.hIcon=LoadIconW(instance,MAKEINTRESOURCEW(1));type.lpszClassName=L"DynaBrothersCheckpoint";
     if(!RegisterClassW(&type))return 1;
     dpi=GetDpiForSystem();
     int fw,fh;DynaHubRect bounds;frame_extents(dpi,&fw,&fh);

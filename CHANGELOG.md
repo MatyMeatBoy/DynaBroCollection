@@ -1,3 +1,10 @@
+# v0.4.0
+
+- DB2 Info View (button A inside a stage): the map screen is now English -- TERRAIN MAP / CHARACTER MAP / EGG MAP titles, the TIRING / DAMAGE / DEADLY / SPECIAL AREA and BURNS / NOBURN legend, the TRIBE / EGG / GIVEUP and ALLY / FOE bars, the OK? / REALLY? confirmation, and the unit-name table (STEGO, TRICE, ALO, TYRAN, PTERA, P-CHAN, BLACK/BRAVO variants, bosses). 55 new catalog entries (DB2 Special English ROM CRC32 is now DE76C2B8).
+- DB2 stage briefing (STAGE n) screens now fill 16:9: the confetti backdrop colour continues in the side and top/bottom margins while the original pattern and panels stay untouched in the centre.
+- Per-game icons: the launcher and DynaBrothers.exe carry the stone "1+2" logo, DB1's executable the stone "1", DB2's the stone "2" (exe icon and in-game window icon).
+- Verified on screen this pass: the lab/briefing dialogue chain and the Info View screen; in-stage Practice/Story gameplay produced no further untranslated RAM text in the traced routes.
+
 # v0.3.0 beta
 
 - Launcher: fixed a cartridge-reveal visual bug where the hover/focus animation slid the cartridge sideways across the box art instead of rising out of its top edge ("una parada y una cruzada" report); fixed the launcher's own diagnostic capture tool missing the Manual button from its screenshot list (the live app was unaffected); the home screen's version text now reads "Alpha"/version consistently with the rest of the UI.
