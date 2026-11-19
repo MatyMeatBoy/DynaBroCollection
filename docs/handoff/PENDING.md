@@ -1,5 +1,7 @@
 # Pending work queue
 
+**Update 2026-11-19 (v0.4.1, merged, unpackaged): DB2 Practice/Story tutorial dialogue translated, title/menu wide fixes, pause/Info View hold. Open polish and release steps: `docs/handoff/v0.4.1-notes.md`.**
+
 **Update 2026-11-19 (v0.4.0): Info View (item 2 of the v0.3.2 handoff) is translated via 55 `entries` (labels 0x43C24-0x43CF7 and unit names 0xFF86-0x10113; they are half-width katakana ROM strings, not tile graphics). Briefing screens fill 16:9 (flat backdrop colour, `db2_video.c` `flat_edges` + `db2_wide_menu_mirror`). Per-game icons added (`assets/icons/`). Still needing a human: in-stage event dialogue beyond what the traced routes reach (no untranslated RAM text appeared), practice numbers on screen, launcher flicker with a real pad, save upgrade into `data/`, native-speaker wording review. Unit names ｶﾞﾊ@ｸ / @ﾏ@ｻ / ｼ@ﾝ@ﾔ (0x10120-0x1013B, kanji pairs) and ﾁｮﾛ@ｷﾁ were deliberately left untouched.**
 
 **Status after v0.3.2 (2026-11-19): the only open goal is DB2 dialogue translation (v0.4).** Widescreen (gameplay, intro, title, menus, submenus), main-menu English labels, numbered practice titles, the single-exe package layout and the launcher flicker are done; see `docs/handoff/HANDOFF-2026-11-19.md` for what changed, how to continue the dialogue work, and the few items that only need on-screen/physical confirmation.
