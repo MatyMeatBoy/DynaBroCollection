@@ -1,4 +1,10 @@
-# Pending work queue (clean list, audited 2026-11-18 ~17:05)
+# Pending work queue
+
+**Status after v0.3.2 (2026-11-19): the only open goal is DB2 dialogue translation (v0.4).** Widescreen (gameplay, intro, title, menus, submenus), main-menu English labels, numbered practice titles, the single-exe package layout and the launcher flicker are done; see `docs/handoff/HANDOFF-2026-11-19.md` for what changed, how to continue the dialogue work, and the few items that only need on-screen/physical confirmation.
+
+---
+
+## Earlier queue (audited 2026-11-18 ~17:05; superseded where the header above says done)
 
 **DB1/DB2 string-level translation status (2026-11-18, late pass)**: effectively complete at the catalog level (DB2 Special: 704 entries across `entries`/`glyph_text`/`ram_text`). Everything reachable through the ROM's own text-patching mechanism and normal menu navigation is translated and mostly verified on screen. What remains is NOT "more translation" but a different technical problem: (a) text baked as TILE GRAPHICS, not ROM strings -- the Original-mode "STAGE n" briefing title card and kanji stage names, and the main-menu row icons -- which needs a new host overlay (same approach as `games/db2_bio_overlay.c`), real engineering work, not string patching (item 2/3 below); (b) a handful of screens (QUIT dialog, results, Dyna Fight, Sega Channel, endings) whose TEXT IS ALREADY in the translation catalog (e.g. "QUIT GAME *sYES NO" is in `translations/db2special-en.json`) but have never been visually confirmed on screen, because no scripted input sequence found so far reliably reaches them -- tried three separate repro attempts this pass (see item 4), all dead ends, not a translation gap; (c) a native-speaker wording review and physical-hardware/controller acceptance, which need a human, not more scripting. Consider the translatable-by-string-patching surface done; (a)/(b)/(c) are the honest remainder.
 
