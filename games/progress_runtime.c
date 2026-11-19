@@ -1,5 +1,6 @@
 /* Host persistence bridge. Guest code capture remains immutable. */
 #include "progress_runtime.h"
+#include "achievements.h"
 #include "db1_progress_migration.h"
 #include "progress_session.h"
 #include "db1_level_catalog.h"
@@ -84,11 +85,28 @@ static int identity(const uint8_t *rom,size_t size,char text[65]) {
  (void)rom;(void)size;(void)text;return 0;
 #endif
 }
-static size_t count(void *u,unsigned game){(void)u;return ready&&game==store.game?(game==1?db1_level_catalog_count(&session):dyna_progress_session_count(&session)):0;}
+static void refresh_db1_clears(void) {
+ static const uint32_t final_stage_ids[]={183310,183264,183282,183302};
+ session.db1_cleared_modes=0;
+ for(size_t i=0;i<dyna_achievements_count();i++){
+  const DynaAchievementItem *achievement=dyna_achievements_item(i);
+  if(!achievement || !achievement->unlocked_at)continue;
+  for(unsigned mode=0;mode<sizeof final_stage_ids/sizeof final_stage_ids[0];mode++)
+   if(achievement->id==final_stage_ids[mode])session.db1_cleared_modes|=1u<<mode;
+ }
+}
+static size_t count(void *u,unsigned game){
+ (void)u;
+ if(!ready || game!=store.game)return 0;
+ if(game!=1)return dyna_progress_session_count(&session);
+ refresh_db1_clears();
+ return db1_level_catalog_count(&session);
+}
 static int item(void *u,unsigned game,size_t i,DynaExtrasLevel *out) {
  (void)u;static char title[80],detail[120];
  if(!out || !ready || game!=store.game || i>255)return 0;
  if(game==1){
+  refresh_db1_clears();
   Db1LevelCatalogItem entry;
   if(!db1_level_catalog_item(&session,(unsigned)i,&entry))return 0;
   snprintf(title,sizeof title,"%s",entry.label);
@@ -104,6 +122,7 @@ static int item(void *u,unsigned game,size_t i,DynaExtrasLevel *out) {
 static int launch(void *u,unsigned game,size_t i) {
  (void)u;if(!ready || game!=store.game || i>255)return 0;
  if(game==1){
+  refresh_db1_clears();
   Db1LevelCatalogItem entry;DynaProgressCode generated;
   if(!db1_level_catalog_item(&session,(unsigned)i,&entry) ||
      !db1_level_catalog_request_code(&session,entry.mode,entry.stage,&generated) ||

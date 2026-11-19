@@ -141,7 +141,9 @@ static int retire(void *user,unsigned *cycles) {
             --pad_trace_remaining;
         }
     }
-    if(g_cpu.PC==0x3bb0 || g_cpu.PC==0x3bb4 || g_cpu.PC==0x734e ||
+    if(g_cpu.PC==0x3b64 || g_cpu.PC==0x3b66 || g_cpu.PC==0x3c70 ||
+       g_cpu.PC==0x3c78 || g_cpu.PC==0x3bb0 ||
+       g_cpu.PC==0x3bb4 || g_cpu.PC==0x7308 || g_cpu.PC==0x734e ||
        g_cpu.PC==0xf794 || g_cpu.PC==0xf728 ||
        g_cpu.PC==0x146c0 || g_cpu.PC==0x15220)db2_video_observe(g_cpu.PC);
     if(g_cpu.PC==0x5b278){static int trace2=-1;if(trace2<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace2=t&&t[0]=='1';}
@@ -328,6 +330,7 @@ static void settings(const char *path){
     dyna_visor_settings_bind(db1_video_set_visor_offset_tiles);
 #elif defined(DYNA_HAS_OVERLAY)
     dyna_visor_settings_bind(db2_video_visor_offset);
+    dyna_free_hud_bind(db2_video_free_hud);
 #else
     dyna_visor_settings_bind(NULL);
 #endif

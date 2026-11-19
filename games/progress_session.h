@@ -6,6 +6,7 @@ typedef struct {
     const uint8_t *rom;size_t rom_size;
     DynaProgressCode current;
     int has_current;
+    unsigned db1_cleared_modes; /* Bit per numbered campaign, from verified victories. */
 } DynaProgressSession;
 int dyna_progress_session_init(DynaProgressSession *,DynaProgressStore *,const uint8_t *rom,size_t rom_size);
 void dyna_progress_session_reset(DynaProgressSession *);

@@ -4,7 +4,8 @@
 #include "video/genesis_vdp.h"
 typedef uint32_t (*Db1TitleMenuBackground)(const GVDP *,int x,int line);
 /* Root calls only for a mature Enhanced title menu. Coordinates are native;
- * left locates native x0 within this output row. selected0..4,4 is Extras.
+ * left locates native x0 within this output row. Selection uses the rows
+ * returned by db1_title_menu_selection, including a pending wrap.
  * Reads live glyphs/SAT/CRAM, writes only owned opaque pixels, never VDP data.
  * Background must preserve TitleArt's anchored plane B geometry. Returns1
  * when the row belongs to this identified menu overlay,0 otherwise. */

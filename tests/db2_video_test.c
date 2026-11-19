@@ -1,4 +1,5 @@
 #include "db2_video.h"
+#include "db2_wide_menu.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
 #include "video/genesis_dac.h"
@@ -58,7 +59,91 @@ static void owned_sprite_mode(unsigned source,unsigned attr,unsigned size,int x,
 static void owned_sprite_contract(unsigned source,unsigned attr,unsigned size,int x,int y,int expected){
  owned_sprite_mode(source,attr,size,x,y,expected,3);
 }
+static uint32_t menu_pattern(int x,int y){
+ int column=(x+(y&16?80:0))%112;
+ if(column<0)column+=112;
+ return column<36&&(y&15)<8?0xff7099ffu:0xff5277ccu;
+}
+static void menu_pattern_contract(void){
+ setup();v.reg[1]=64;v.reg[12]=1;
+ for(int y=0;y<224;y++){
+  for(int x=0;x<320;x++)original[x]=menu_pattern(x,y);
+  if(y>=32&&y<192)original[38]=0xfffd1300u;
+  row(y,427);
+  memcpy(canvas+(size_t)(y+8)*480,out,427*sizeof *out);
+ }
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[0]==menu_pattern(-53,-8));
+ assert(canvas[239*480+426]==menu_pattern(373,231));
+ assert(canvas[48*480+53+38]==0xfffd1300u);
+ assert(canvas[48*480+426]==menu_pattern(373,40));
+
+ setup();v.reg[1]=64;v.reg[12]=1;
+ for(int y=0;y<224;y++){
+  for(int x=0;x<320;x++)original[x]=x<16?0xff50532du:0xffaaa980u;
+  if(y>=128)original[7]=y==168?0xff585831u:0xffaaa980u;
+  if(y>=16&&y<=205)
+   for(int x=16;x<304;x++)original[x]=y==16||y==205?0xffeecc11u:0xff26663bu;
+  if(y==80){original[24]=0xff22ff00u;original[319]=0xff575700u;}
+  row(y,427);
+  memcpy(canvas+(size_t)(y+8)*480,out,427*sizeof *out);
+ }
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[0]==0xff50532du);
+ assert(canvas[239*480+426]==0xffaaa980u);
+ assert(canvas[88*480+53+24]==0xff22ff00u);
+ assert(canvas[88*480+372]==0xff575700u);
+ assert(canvas[88*480+373]==0xff575700u);
+ assert(canvas[88*480+426]==0xffaaa980u);
+ assert(canvas[176*480+426]==0xff585831u);
+
+ setup();v.reg[1]=64;v.reg[12]=1;
+ for(int y=0;y<224;y++){
+  for(int x=0;x<320;x++)original[x]=0xff929257u;
+  if(y==40)original[0]=0xff575700u;
+  if(y>=16&&y<=205)
+   for(int x=17;x<304;x++)original[x]=y==16||y==22||y==205?0xffffff00u:
+       y<136?(x<160?0xff003131u:0xff005731u):0xff575731u;
+  if(y==145)original[120]=0xffcececeu;
+  row(y,427);
+  memcpy(canvas+(size_t)(y+8)*480,out,427*sizeof *out);
+ }
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[30*480+153]==0xffffff00u);
+ assert(canvas[43*480+90]==0xff005731u);
+ assert(canvas[153*480+90]==0xff005731u);
+ assert(canvas[153*480+173]==0xffcececeu);
+ assert(canvas[153*480+426]==0xff929257u);
+}
 int main(void){
+ menu_pattern_contract();
+ /* Recycled right-margin clouds enter at the viewport edge before reaching
+  * the native coordinates. The left margin keeps guest coordinates. */
+ memset(&v,0,sizeof v);v.reg[1]=64;v.reg[5]=0x78;v.reg[12]=1;
+ v.cram[1]=0xeee;memset(v.vram+32,0x11,32);
+ w16(v.vram+0xf000,128);w16(v.vram+0xf004,0x8001);
+ w16(v.vram+0xf006,480);
+ db2_wide_menu_set_sprite_gate(1);db2_wide_menu_frame(&v);
+ assert(db2_wide_menu_row(&v,0,out,480,80,1)&&out[479]==0xff000000u);
+ w16(v.vram+0xf006,479);db2_wide_menu_frame(&v);
+ assert(db2_wide_menu_row(&v,0,out,480,80,1));
+ assert(out[476]==0xff000000u&&out[477]==0xffffffffu&&out[479]==0xffffffffu);
+ w16(v.vram+0xf006,109);db2_wide_menu_frame(&v);
+ w16(v.vram+0xf006,108);db2_wide_menu_frame(&v);
+ assert(db2_wide_menu_row(&v,0,out,480,80,1));
+ assert(out[59]==0xff000000u&&out[60]==0xffffffffu);
+ memset(&v,0,sizeof v);v.reg[1]=64;v.reg[5]=0x6c;v.reg[12]=1;
+ v.cram[17]=0xeee;memset(v.vram+0x780*32,0x11,32*32);
+ w16(v.vram+0xd800,128);w16(v.vram+0xd802,0x0f01);
+ w16(v.vram+0xd804,0x2780);w16(v.vram+0xd806,431);
+ w16(v.vram+0xd808,128);w16(v.vram+0xd80a,0x0f00);
+ w16(v.vram+0xd80c,0x2790);w16(v.vram+0xd80e,464);
+ db2_wide_menu_frame(&v);
+ w16(v.vram+0xd806,430);db2_wide_menu_frame(&v);
+ assert(db2_wide_menu_row(&v,0,out,480,80,1));
+ assert(out[413]==0xffffffffu&&out[414]==0xffffffffu&&out[445]==0xffffffffu);
+ assert(out[446]==0xff000000u);
+ db2_wide_menu_set_sprite_gate(0);
  /* Demo ownership is explicit and independent of campaign/player acceptance. */
  setup();db2_video_observe(0xf794);assert(db2_video.raster_enabled(&v));
  db2_video_observe(0xf728);assert(!db2_video.raster_enabled(&v));
@@ -68,6 +153,7 @@ int main(void){
  for(unsigned mode=0;mode<=2;mode++)owned_sprite_mode(6,0x82f4,10,260,178,367,mode);
  owned_sprite_mode(6,0x82f4,10,260,178,367,0x82);
  owned_sprite_mode(6,0x82f4,10,100,20,150,5);
+ owned_sprite_mode(6,0x82f4,10,236,202,343,3); /* Mode changes before the SAT hand moves. */
  owned_sprite_contract(12,0x86e1,5,258,62,365); /* Minimap owner follows HUD. */
  owned_sprite_contract(13,0x8372,5,258,62,365);
  owned_sprite_contract(10,0x96e8,5,192,16,242); /* Right corner stays192-wide. */
@@ -97,6 +183,8 @@ int main(void){
  assert(out[295]==genesis_dac_cram_to_argb(v.cram[63],0));
  uint8_t saved[65536];memcpy(saved,g_ram,sizeof saved);row(10,398);assert(!memcmp(saved,g_ram,sizeof saved));
  g_ram[0x286]=128;row(11,398);assert(calls==4&&out[39]==original[0]);
+ w32(g_ram+0x6c,0x442c);assert(db2_video.raster_enabled(&v));
+ w32(g_ram+0x6c,0x412c0);assert(!db2_video.raster_enabled(&v));
  g_ram[0x286]=0;r.plane_a[20]=0x41;row(0,398);assert(calls==5);r.plane_a[20]=0;
  row(0,398);int w,h;assert(db2_video.canvas_geometry(1920,1080,320,224,&w,&h)==4&&w==480&&h==270);
  memset(canvas,0,sizeof canvas);db2_video.canvas_complete(&v,canvas,480,480,270,23,224);
@@ -106,7 +194,28 @@ int main(void){
  assert(canvas[0]==0xffffffff);
  assert(db2_video.canvas_geometry(2560,1440,320,224,&w,&h)==6&&w==427&&h==240);
  assert(db2_video.canvas_geometry(3840,2160,320,224,&w,&h)==9&&w==427&&h==240);
- db2_video_observe(0x734e);assert(!db2_video.raster_enabled(&v));
+ db2_video_observe(0x734e);assert(db2_video.raster_enabled(&v));
+ db2_video_observe(0x7308);assert(!db2_video.raster_enabled(&v));
+ setup();
+ w16(g_ram+0x2a5a,0xe002);w16(g_ram+0x2a5c,0xe01c);
+ w16(g_ram+0x2a5e,8);w16(g_ram+0x2a60,112);
+ g_ram[0x286]=8;r.plane_a[220]=0;r.plane_a[16]=0x43;
+ db2_video_observe(0x734e);assert(db2_video.raster_enabled(&v));
+ row(0,427);row(25,427);
+ assert(out[16]==genesis_dac_cram_to_argb(v.cram[3],0));
+ assert(out[200]==genesis_dac_cram_to_argb(v.cram[63],0));
+ db2_video.canvas_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[16]==genesis_dac_cram_to_argb(v.cram[3],0));
+ db2_video_free_hud(1);row(0,427);assert(out[16]==genesis_dac_cram_to_argb(v.cram[63],0));
+ row(25,427);assert(out[16]==genesis_dac_cram_to_argb(v.cram[3],0));
+ db2_video_free_hud(0);
+ canvas[8*480+201]=0xffba5713u;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ g_ram[0x286]=0x88;w32(g_ram+0x6c,0x442c);
+ r.display=0;row(0,427);
+ canvas[8*480+201]=0;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[8*480+201]==0xffba5713u); /* First pause raster missed the latch. */
  /* A 41st actor, absent from all native SAT/cache entries, is still drawn
   * beyond the original right edge. All animation bytes are guest-derived. */
  setup();w32(g_rom+0x78810,0x1000);w32(g_rom+0x78814,0x1100);w32(g_rom+0x78804,0x1200);

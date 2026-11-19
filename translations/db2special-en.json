@@ -4153,6 +4153,400 @@
       "before": "40bdb6cedfdd405fc0cfbade",
       "english": "SKAPON_EGG__",
       "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "db2-results-retry-yes",
+      "address": 363562,
+      "capacity": 20,
+      "before": "bbb2c1aeb3beddbdd93f202a73bdd92020bcc5b2",
+      "english": "TRY AGAIN? *sYES  NO",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-retry-no",
+      "address": 363584,
+      "capacity": 20,
+      "before": "bbb2c1aeb3beddbdd93f2020bdd9202a73bcc5b2",
+      "english": "TRY AGAIN?  YES *sNO",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-rematch-yes",
+      "address": 363606,
+      "capacity": 21,
+      "before": "c0b2bedda6c2c2deb9d93f202a73cab22020b2b2b4",
+      "english": "REMATCH? *sYES   NO  ",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-rematch-no",
+      "address": 363628,
+      "capacity": 21,
+      "before": "c0b2bedda6c2c2deb9d93f2020cab2202a73b2b2b4",
+      "english": "REMATCH?   YES *sNO  ",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-dinosaurs-extinct",
+      "address": 365104,
+      "capacity": 21,
+      "before": "b7aeb3d8adb320c0c1ca20bededdd2c220bccfbcc0",
+      "english": "DINOS WENT EXTINCT.  ",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-ponpons-extinct",
+      "address": 365126,
+      "capacity": 21,
+      "before": "40cedfddcedfdd40b6de20bededdd2c220bccfbcc0",
+      "english": "PONPONS WENT EXTINCT.",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-egg-destroyed",
+      "address": 365148,
+      "capacity": 19,
+      "before": "54686520456767b6de20cab6b220bbdacfbcc0",
+      "english": "THE EGG WAS BROKEN.",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-results-surrender",
+      "address": 365168,
+      "capacity": 18,
+      "before": "bab3bbdd20bdd9c4ca20c5bbb9c5b22e2e2e",
+      "english": "YOU GAVE UP...    ",
+      "verification": "Results renderer string slot; original terminator and selection controls preserved"
+    },
+    {
+      "id": "db2-stage-versus-01",
+      "address": 2148204,
+      "capacity": 22,
+      "before": "014101240135012f0146012b016f012401240137015e",
+      "english": "CUTE ISLAND",
+      "encoding": "glyph16",
+      "align": "center",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-01",
+      "address": 2149560,
+      "capacity": 12,
+      "before": "09ef015e016a014e0aee0dc7",
+      "english": "ISLET",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-02",
+      "address": 2149574,
+      "capacity": 12,
+      "before": "014e0153014e01530fff0cef",
+      "english": "BASIN",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-03",
+      "address": 2149588,
+      "capacity": 16,
+      "before": "0aee0135014a01520137012c013f0dc7",
+      "english": "DIAMOND",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-04",
+      "address": 2149606,
+      "capacity": 14,
+      "before": "0150013f0155016901240ca710e6",
+      "english": "MONARCH",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-05",
+      "address": 2149622,
+      "capacity": 12,
+      "before": "019a018d019a018d0d0e0a15",
+      "english": "TOOTH",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-06",
+      "address": 2149636,
+      "capacity": 12,
+      "before": "01aa01c10ff20b2c014e0951",
+      "english": "SLUGS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-07",
+      "address": 2149650,
+      "capacity": 16,
+      "before": "0a89014e012201610141016301730dc7",
+      "english": "CANDYKEY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-08",
+      "address": 2149668,
+      "capacity": 10,
+      "before": "09f80135013706ee0e47",
+      "english": "CHECK",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-easy-09",
+      "address": 2149680,
+      "capacity": 16,
+      "before": "013501530137012408cf016c105a0ccb",
+      "english": "DEADWOOD",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-01",
+      "address": 2149716,
+      "capacity": 10,
+      "before": "00d40144014e0aee0dc7",
+      "english": "4 ISL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-04",
+      "address": 2149760,
+      "capacity": 14,
+      "before": "09160161016801a901c9019401d3",
+      "english": "DRAGON",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-05",
+      "address": 2149776,
+      "capacity": 12,
+      "before": "10b301350173014e0d400ff7",
+      "english": "SUNK",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-06",
+      "address": 2149790,
+      "capacity": 6,
+      "before": "0e26014e00eb",
+      "english": "K??",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-07",
+      "address": 2149798,
+      "capacity": 14,
+      "before": "014a0144012b0137014e05ad1034",
+      "english": "BAD DRM",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-08",
+      "address": 2149814,
+      "capacity": 10,
+      "before": "0d06065b0fe906320bfe",
+      "english": "FRONT",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-normal-10",
+      "address": 2149844,
+      "capacity": 14,
+      "before": "0dbf014e06d90728012401430139",
+      "english": "ICE CTY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-02",
+      "address": 2149872,
+      "capacity": 8,
+      "before": "0a3e0cef0db409f4",
+      "english": "BOGS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-03",
+      "address": 2149882,
+      "capacity": 16,
+      "before": "015e013f015e013f01b001a3019f0dc7",
+      "english": "HOP KEY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-05",
+      "address": 2149914,
+      "capacity": 16,
+      "before": "07e70a91000a01bc019901aa018401a8",
+      "english": "BOSS HIT",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-06",
+      "address": 2149932,
+      "capacity": 14,
+      "before": "0ca70cf30122017301490aee0cf3",
+      "english": "2 PONDS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-07",
+      "address": 2149948,
+      "capacity": 8,
+      "before": "100206c608f80640",
+      "english": "HELL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-09",
+      "address": 2149974,
+      "capacity": 10,
+      "before": "0130016b016a014e08d0",
+      "english": "LAKE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-hard-10",
+      "address": 2149986,
+      "capacity": 14,
+      "before": "069a112f014a09fe0f6c012b016c",
+      "english": "FORKS",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Full-width native title; original 16-bit glyphs and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-01",
+      "address": 2150002,
+      "capacity": 14,
+      "before": "019d01c901be01c1084f014e0dc7",
+      "english": "BEANKEY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-02",
+      "address": 2150018,
+      "capacity": 12,
+      "before": "0153016f01330147092810b5",
+      "english": "BIWAKO",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-03",
+      "address": 2150032,
+      "capacity": 8,
+      "before": "0b5911130cef0c93",
+      "english": "WOOD",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-04",
+      "address": 2150042,
+      "capacity": 16,
+      "before": "0126012d0126012d01b701a601c90dc7",
+      "english": "PTERAKEY",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-05",
+      "address": 2150060,
+      "capacity": 10,
+      "before": "0b851149014e012a0b2b",
+      "english": "CANAL",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-06",
+      "address": 2150072,
+      "capacity": 16,
+      "before": "01b001a3019f016201730fb105cf1056",
+      "english": "BUGSIEGE",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-08",
+      "address": 2150118,
+      "capacity": 16,
+      "before": "01b601c901bc001c0ca800d207d20da0",
+      "english": "BRAVO 2",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-09",
+      "address": 2150108,
+      "capacity": 8,
+      "before": "07f210f50fa80b2c",
+      "english": "TOMB",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
+    },
+    {
+      "id": "db2-stage-sega-channel-10",
+      "address": 2150136,
+      "capacity": 12,
+      "before": "01af018b019b014e07700cef",
+      "english": "DR LAB",
+      "encoding": "glyph16",
+      "align": "left",
+      "verification": "Sega Channel Stage List pointer table and native 16-bit text slot; exact bytes and NUL validated"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
@@ -5006,6 +5400,195 @@
     }
   ],
   "ram_text": [
+    {
+      "id": "db2-sega-channel-intro-20",
+      "words": "0140 0124 013F 0124 0001 0133 0173 014A 01C2 001C 01A9 012C 0001 0001 0001 0001 0001 0122 016B 0173 0164 0143 013F 0169",
+      "skip": 0,
+      "lines": [
+        "IF THIS MODE WAS HERE,"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-21",
+      "words": "0141 0163 0173 0148 0166 001C 0148 012B 014A 0001 0122 012B 0173 0164 016D",
+      "skip": 0,
+      "lines": [
+        "YOU SHOULD HAVE TOLD ME!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-22",
+      "words": "015B 014A 0001 0124 012F 0147 001C 0143",
+      "skip": 0,
+      "lines": [
+        "HERE WE GO!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-23",
+      "words": "012A 001C 001C 001C 0143",
+      "skip": 0,
+      "lines": [
+        "YEAH!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-01",
+      "words": "0124 0128 0124 0143 0148",
+      "skip": 0,
+      "lines": [
+        "YEAH!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-02",
+      "words": "01B4 001C 0141 0163 0173 0147 001C 0139",
+      "skip": 0,
+      "lines": [
+        "I'M P-CHAN!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-03",
+      "words": "0133 014E 01C2 001C 01A9 014F 019B 018C 01A1 01C3 01D3 01AD 01CB 0140 0131 014E 0001 0199 01BA 0197 01C3 01CB 01C2 001C 01A9 0140 0168 001C 0173",
+      "skip": 0,
+      "lines": [
+        "THIS IS A SPECIAL MODE FOR",
+        "SEGA CHANNEL PLAYERS."
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-04",
+      "words": "0149 0129 0162 0001 0199 01A6 0194 0147 0139",
+      "skip": 0,
+      "lines": [
+        "HI, I'M STEGO!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-05",
+      "words": "0133 014E 019B 018C 01A1 01C3 01D3 01AD 01CB 0199 01BA 0197 01C3 01CB 014F 01BF 01AB 0199 01A8 001C 01CA 001C 01C2 001C 01A9 014B 014A 0143 0146 016B 0173 0140 0168",
+      "skip": 0,
+      "lines": [
+        "SEGA CHANNEL SPECIAL PLAYS LIKE A",
+        "SHORT STORY CAMPAIGN."
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-06",
+      "words": "01B7 001C 001C 001C 001C 001C 001C 001C 01A3",
+      "skip": 0,
+      "lines": [
+        "SCREEEEEECH!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-07",
+      "words": "01B7 01A6 01C9 014E 01A7 01C2 0162 0144 0124 0146 016B 0162 0173",
+      "skip": 0,
+      "lines": [
+        "THERE'S A PTERA DEMO TOO!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-08",
+      "words": "013D 016C 0140 0131 0138 0163 014A 0124 013C",
+      "skip": 0,
+      "lines": [
+        "THAT'S NOT ALL!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-09",
+      "words": "01B1 0199 01CF 001C 01A9 0172 0915 0128 014A 012F 0143 013F 0143 0146",
+      "skip": 0,
+      "lines": [
+        "FORGET THE PASSWORDS."
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-10",
+      "words": "018F 01CA 0182 0137 013F 0199 01A6 001C 0198 014A 0169 0001 0001 0001 0001 0001 0001 0149 0133 012B 0169 0147 0162 09EF 0161 0169 016C 016B 0173 0140 013C",
+      "skip": 0,
+      "lines": [
+        "IF YOU'VE CLEARED A STAGE,",
+        "YOU CAN START THERE AGAIN!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-11",
+      "words": "013D 016C 012B 0169 0001 012A 015E 0131 014A 0173 0148 012B 0162 0001 0001 0001 0001 0144 0124 0146 016B 0169 0137 0124 013E",
+      "skip": 0,
+      "lines": [
+        "I HEAR THERE ARE BONUSES",
+        "INCLUDED TOO!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-12",
+      "words": "012A 015E 0131 0193 001C 01AA 001C 0147 014F",
+      "skip": 0,
+      "lines": [
+        "THE BONUS CORNER:"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-13",
+      "words": "0C10 06B3 0001 0603 0137 01B1 0199 01CF 001C 01A9 0147 0137 012B 0001 01B7 01CC 0184 0147 012D 014A 012B 0143 013F 0199 01A6 001C 0198 012C 0147 012D 016B 0168",
+      "skip": 0,
+      "lines": [
+        "PLAY THE STAGES THAT USED TO",
+        "REQUIRE A SECRET PASSWORD."
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-14",
+      "words": "0182 01AB 01C1 01C2 001C 01A9 0164 01BF 01AB 0192 001C 01C0 0162 0144 0124 0146 016B 0162 0173",
+      "skip": 0,
+      "lines": [
+        "ANIMATIONS AND MINI-GAMES TOO!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-15",
+      "words": "013D 016C 0147 014F 0001 0192 001C 01C0 0199 019F 001C 01A8 0140 0168 001C 0173",
+      "skip": 0,
+      "lines": [
+        "NOW LET'S START THE GAME!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-16",
+      "words": "0122 016C 0001 0182 01CD 014F",
+      "skip": 0,
+      "lines": [
+        "WHERE'S ARO?"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-17",
+      "words": "0122 0001 0124 0131 014D",
+      "skip": 0,
+      "lines": [
+        "WHOOPS!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-18",
+      "words": "0141 0167 0143 0148 0001 0C94 0146 001C 001C 0143 000A",
+      "skip": 0,
+      "lines": [
+        "WAIT FOR ME!"
+      ]
+    },
+    {
+      "id": "db2-sega-channel-intro-19",
+      "words": "067F 0147 0AE1 0A6A 014B 0001 09EF 0161 016B 0173 0164 001C 0143 000A",
+      "skip": 0,
+      "lines": [
+        "WHY START WITHOUT ME?!"
+      ]
+    },
     {
       "words": "0168 0137 0001 0133 014E 0A42 08B3 012C 0126 015E 012F 0124 0131 0150 0001 0001 0001 0ECB 0B43 085F 0C50 0B49 0AA3 014E 0730 0BAE 0140 0143 000A",
       "lines": [

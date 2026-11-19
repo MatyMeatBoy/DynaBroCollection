@@ -3,6 +3,7 @@
 #include "db1_scenes.h"
 #include "db1_title_art.h"
 #include "db1_title_menu_art.h"
+#include "db1_title_menu.h"
 #include "db1_menu_layout.h"
 #include "db1_hazard_effects.h"
 #include "db1_intro_fade.h"
@@ -20,7 +21,10 @@ static Db1HazardEffects hazards;
 static int visor_offset_tiles;
 static int title_menu_selection=-1;
 static int title_menu_modal;
-void db1_video_set_title_menu_selection(int selected){title_menu_selection=selected>=0&&selected<=4?selected:-1;}
+void db1_video_set_title_menu_selection(int selected){
+ title_menu_selection=(selected>=0&&selected<=4)||
+     (selected>=DB1_TITLE_PENDING_ROW&&selected<=DB1_TITLE_PENDING_ROW+3)?selected:-1;
+}
 void db1_video_set_title_menu_modal(int modal){title_menu_modal=modal!=0;}
 static Db1VisorLayout frame_visor;
 void db1_video_set_visor_offset_tiles(int tiles){visor_offset_tiles=tiles;}
@@ -72,7 +76,7 @@ void db1_video_observe(unsigned pc) {
     db1_hazard_effects_observe(&hazards,pc);
     if(pc==0x1950 || pc==0x1c44 || pc==0x1c5a4)db1_hazard_effects_reset(&hazards);
     spell_effect=db1_hazard_effects_screen_sprites(&hazards);
-    fullplane_effect=db1_hazard_effects_full_plane_a(&hazards);
+    fullplane_effect=hazards.active&(DB1_HAZARD_LIGHTNING|DB1_HAZARD_TSUNAMI);
 }
 static int word(const uint8_t *p){unsigned v=((unsigned)p[0]<<8)|p[1];return v<32768?(int)v:(int)v-65536;}
 static int world_active(void){return (battle || db1_scenes_kind()==DB1_SCENE_STAGE_INTRO)&&!map_overlay;}
@@ -107,7 +111,7 @@ static unsigned vword(const GVDP *v,unsigned p) {
 static int wrap_coord(int value,int period){int r=value%period;return r<0?r+period:r;}
 /* Lightning 132D8..13630 writes authored clouds/bolts across plane A and uses
  * cell-row Hscroll. Sample that plane directly; none of it is a relocated HUD. */
-static uint8_t authored_plane_a(const GVDP *v,int x,int y) {
+static uint8_t authored_plane_a(const GVDP *v,int x,int y,int cloud_only) {
     static const int dimensions[4]={32,64,0,128};
     int wt=dimensions[v->reg[16]&3],ht=dimensions[(v->reg[16]>>4)&3];
     if(!wt || !ht)return 0;
@@ -122,10 +126,14 @@ static uint8_t authored_plane_a(const GVDP *v,int x,int y) {
     int xx=wrap_coord(x-(int)hs,wt*8),yy=wrap_coord(y+vs,ht*8);
     unsigned base=(v->reg[2]&0x38)<<10;
     unsigned attr=vword(v,base+2*((unsigned)(yy/8)*wt+(unsigned)xx/8));
+    unsigned tile=attr&2047;
+    /* 13346..133C0 writes eight full rows of high-priority cloud tiles.
+     * Other rows can still contain HUD or map data outside the native view. */
+    if(cloud_only&&(yy>=64||!(attr&0x8000)||tile<0x153||tile>0x166))return 0;
     unsigned px=(unsigned)xx&7,py=(unsigned)yy&7;
     if(attr&0x800)px=7-px;
     if(attr&0x1000)py=7-py;
-    unsigned bits=v->vram[((attr&2047)*32+py*4+px/2)&65535];
+    unsigned bits=v->vram[(tile*32+py*4+px/2)&65535];
     unsigned color=(bits>>(px&1?0:4))&15;
     return (uint8_t)(color|((attr>>9)&48)|(color?64:0)|((attr>>8)&128));
 }
@@ -262,12 +270,10 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
         int x=source+shift;if(x>=0&&x<w)b[x]=raster->plane_b[source];
     }
     if(fullplane) {
-        /* Lightning/tsunami replace the original 320px screen, including its
-         * HUD; the weather fill below now also covers the widened margins
-         * so the hazard clouds/waves span the full wide canvas instead of
-         * stopping at the native screen edge. */
-        if(line>=0 && line<224)for(int source=0;source<320;source++) {
-            int x=source+shift;if(x>=0&&x<w)a[x]=authored_plane_a(vdp,source,line);
+        if(line>=0&&line<224)for(int x=0;x<w;x++){
+            int source=x-shift,margin=source<0||source>=320;
+            if(!margin||(fullplane&DB1_HAZARD_LIGHTNING))
+                a[x]=authored_plane_a(vdp,source,line,margin);
         }
     }else if(raster && intro) {
         /* STAGE nn START remains one screen-centered foreground. */

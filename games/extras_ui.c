@@ -16,7 +16,9 @@ typedef struct {uint32_t *p;int w,h,stride;} Canvas;
 #define INK 0xffeeeeeeu
 #define GOLD 0xffffff66u
 #define BLACK 0xff000000u
-#define PURPLE 0xff440066u
+#define EMBER 0xff751f2bu
+#define SHADE 0xff2b131du
+#define COPPER 0xffffa044u
 #define GREEN 0xff006644u
 static DynaExtrasLevelProvider provider;
 static DynaExtrasUiState state;
@@ -147,7 +149,15 @@ void dyna_extras_ui_input(int semantic,int down,int repeat){
 void dyna_extras_ui_render(uint32_t *pixels,int w,int h,int pitch_bytes){
  if(!opened||!pixels||w<160||h<144||w>8192||h>8192||pitch_bytes<0||pitch_bytes%4||pitch_bytes/4<w)return;
  Canvas c={pixels,w,h,pitch_bytes/4};int width=w-16;if(width>752)width=752;int x=(w-width)/2,top=8,bottom=h-8;
- frame(&c,x,top,width,bottom-top,game_id==1?PURPLE:GREEN);
+ if(game_id==1){
+  rect(&c,0,0,w,h,SHADE);
+  for(int y=2;y<h;y+=8)
+   for(int col=(y&8)?2:6;col<w;col+=8)
+    rect(&c,col,y,2,2,0xff562432u);
+  bubble(&c,x,top,width,bottom-top,COPPER);
+  bubble(&c,x+2,top+2,width-4,bottom-top-4,SHADE);
+  bubble(&c,x+5,top+5,width-10,bottom-top-10,EMBER);
+ }else frame(&c,x,top,width,bottom-top,GREEN);
  char heading[128];const char *title=state.screen==0?"EXTRAS":state.screen==1?"LEVEL SELECTION":state.screen==2?"GAME GUIDE":dyna_guide_section_name(state.section);
  snprintf(heading,sizeof heading,"DYNA BROTHERS %s / %s",game_id==1?"1":"2",title?title:"GUIDE");
  text(&c,x+13,top+13,width-26,heading,GOLD);rect(&c,x+12,top+25,width-24,1,INK);
@@ -168,6 +178,13 @@ void dyna_extras_ui_render(uint32_t *pixels,int w,int h,int pitch_bytes){
  unsigned n=selection_count();if(state.selected>=n)state.selected=n?n-1:0;
  if(!n){wrapped(&c,x+16,top+48,width-32,3,"NO LEVELS AVAILABLE",0,INK);text(&c,x+13,bottom-17,width-26,"BACK: EXTRAS",GOLD);return;}
  int rows=(h-(state.screen==1&&notice[0]?146:112))/22;if(rows<1)rows=1;unsigned first=state.selected>=(unsigned)rows?state.selected-(unsigned)rows+1:0;
+ if(state.screen==1 && n>(unsigned)rows){
+  int track=rows*22,thumb=track*rows/(int)n;
+  if(thumb<4)thumb=4;
+  int offset=(track-thumb)*(int)first/(int)(n-(unsigned)rows);
+  rect(&c,x+width-11,top+35,2,track,SHADE);
+  rect(&c,x+width-11,top+35+offset,2,thumb,COPPER);
+ }
  for(unsigned r=0;r<(unsigned)rows&&first+r<n;r++){
   unsigned i=first+r;const char *label=NULL;DynaExtrasLevel item={0};int available=1;
   if(state.screen==0)label=i==0?"LEVEL SELECTION":"GAME GUIDE";
@@ -175,8 +192,11 @@ void dyna_extras_ui_render(uint32_t *pixels,int w,int h,int pitch_bytes){
   else if(provider.item&&provider.item(provider.userdata,game_id,i,&item)){label=item.title;available=item.available;}
   if(!label)label="UNAVAILABLE";
   int y=top+39+(int)r*22;
-  if(i==state.selected){rect(&c,x+11,y-4,width-22,18,BLACK);text(&c,x+16,y,width-32,">",GOLD);}
-  text(&c,x+28,y,width-43,label,available?INK:GOLD);
+  if(i==state.selected){
+   rect(&c,x+11,y-4,width-25,18,game_id==1?SHADE:BLACK);
+   text(&c,x+16,y,width-32,">",GOLD);
+  }
+  text(&c,x+28,y,width-43,label,i==state.selected?GOLD:available?INK:0xffe0ada2u);
  }
  if(state.screen==1&&provider.item){DynaExtrasLevel item={0};if(provider.item(provider.userdata,game_id,state.selected,&item))wrapped(&c,x+15,bottom-44,width-30,2,item.detail,0,INK);}
  text(&c,x+13,bottom-17,width-26,"UP/DOWN SELECT  A OPEN  B BACK",GOLD);

@@ -36,6 +36,18 @@ static unsigned luma(const GVDP *v,unsigned i){
  uint32_t c=genesis_dac_cram_to_argb(v->cram[i&63],0);
  return ((c>>16)&255)*3+((c>>8)&255)*6+(c&255);
 }
+static void flatten_versus_ink(const GVDP *v,Label *label){
+ unsigned votes[64]={0},chosen=0;
+ for(int y=0;y<16;y++){
+  unsigned ink=label->ink[y]&63;
+  if(!ink)continue;
+  uint16_t color=v->cram[ink];
+  unsigned r=(color>>1)&7,g=(color>>5)&7,b=(color>>9)&7;
+  votes[ink]+=g>r&&g>b?17u:1u;
+  if(votes[ink]>votes[chosen])chosen=ink;
+ }
+ if(chosen)memset(label->ink,(int)chosen,sizeof label->ink);
+}
 
 void db2_menu_labels_frame(const GVDP *v){
  label_count=0;
@@ -51,6 +63,7 @@ void db2_menu_labels_frame(const GVDP *v){
   for(int k=0;k<6&&ok;k++)ok=(rd(v,at+2u*k)&2047)==MODE_TOP+k&&(rd(v,below+2u*k)&2047)==MODE_BOTTOM+k;
   if(!ok)continue;
   unsigned fill=rd(v,at+12);                 /* plate fill right after モード */
+  if(!(fill&2047))continue;                  /* the right end is still streaming in */
   int start=c;
   while(start>0&&(rd(v,base+(unsigned)(r*wt+start-1)*2)&2047)!=(fill&2047)&&c-start<14)start--;
   Label *l=found+n++;memset(l,0,sizeof *l);l->row=r;
@@ -102,23 +115,18 @@ void db2_menu_labels_frame(const GVDP *v){
   if(tr){fprintf(stderr,"[labels] n=%d",n);for(int i=0;i<n;i++)fprintf(stderr," (r=%d x0=%d y0=%d)",found[i].row,found[i].x0,found[i].y0);fprintf(stderr,"\n");}}
  /* The plates are streamed into the plane as the camera scrolls, so only some
   * are present mid-transition. They sit on fixed nametable rows 3,6,9,12. */
- if(n!=MAX_LABELS){
-  int kept=0;
-  for(int i=0;i<n;i++){int idx=found[i].row>=3&&(found[i].row-3)%3==0?(found[i].row-3)/3:-1;if(idx<0||idx>=MAX_LABELS)continue;found[i].word=idx;labels[kept++]=found[i];}
-  label_count=kept;return;
+ unsigned seen=0;
+ for(int i=0;i<n;i++){
+  Label *label=found+i;
+  int row=label->row-3;
+  if(row<0||row%3||row/3>=MAX_LABELS)continue;
+  label->word=row/3;
+  unsigned mask=1u<<label->word;
+  if(seen&mask)continue;
+  seen|=mask;
+  if(label->word==3)flatten_versus_ink(v,label);
+  labels[label_count++]=*label;
  }
- for(int i=0;i<n;i++)found[i].word=i;
- for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)if(found[j].row<found[i].row){Label t=found[i];found[i]=found[j];found[j]=t;}
- /* VERSUS (4th plate): its authored lettering has one-row yellow highlights
-  * that read as stray lines on the English glyphs; keep it a clean green. */
- {Label *vs_label=found+3;
-  for(int pass=0;pass<2;pass++)for(int yy=1;yy<15;yy++)if(vs_label->ink[yy-1]==vs_label->ink[yy+1]&&vs_label->ink[yy]!=vs_label->ink[yy-1])vs_label->ink[yy]=vs_label->ink[yy-1];
-  /* rows whose ink is not green-dominant take the nearest green row */
-  uint8_t green[16];
-  for(int yy=0;yy<16;yy++){uint32_t c=genesis_dac_cram_to_argb(v->cram[vs_label->ink[yy]&63],0);unsigned r=(c>>16)&255,g=(c>>8)&255,b=c&255;green[yy]=g>=r&&g>=b;}
-  for(int yy=0;yy<16;yy++)if(!green[yy]){for(int d=1;d<16;d++){if(yy-d>=0&&green[yy-d]){vs_label->ink[yy]=vs_label->ink[yy-d];break;}if(yy+d<16&&green[yy+d]){vs_label->ink[yy]=vs_label->ink[yy+d];break;}}}
- }
- memcpy(labels,found,sizeof labels);label_count=n;
 }
 
 /* 16x16 masks in the style of the authored PASSWORD / OPTIONS plates:
@@ -165,18 +173,17 @@ void db2_menu_labels_row(const GVDP *v,int line,uint32_t *out,int width,int orig
   uint32_t shadow=genesis_dac_cram_to_argb(v->cram[l->shadow&63],0);
   for(int x=l->x0;x<l->x1;x++){
    int dx=x+origin_x;if(dx<0||dx>=width)continue;
-   /* Plate: the stone fill tile the plates use around their lettering. */
-   unsigned i=tile_index(v,l->fill,(x-l->x0)&7,yy&7);
-   uint32_t c=i?genesis_dac_cram_to_argb(v->cram[i&63],0):out[dx];
+   int cell=(x-l->x0)>>3;
+   if(cell>=l->ncells)continue;
+   unsigned old=tile_index(v,yy<8?l->top[cell]:l->bot[cell],(x-l->x0)&7,yy&7);
+   /* Keep transparent plate edges and scenery (including sprites) intact. */
+   if(!old||out[dx]!=genesis_dac_cram_to_argb(v->cram[old&63],0))continue;
+   unsigned fill=tile_index(v,l->fill,(x-l->x0)&7,yy&7);
+   if(!fill)fill=l->back[yy];
+   if(!fill)continue;
+   uint32_t c=genesis_dac_cram_to_argb(v->cram[fill&63],0);
    if(glyph_on(word,len,x-tx,yy))c=ink;
    else if(outline_on(word,len,x-tx,yy))c=shadow;
-   /* Sprites (clouds) pass in front of the plate like they do in front of the
-    * authored plates: a pixel that is not the original plate art stays. */
-   {int cell=(x-l->x0)>>3;
-    if(cell>=0&&cell<l->ncells){
-     unsigned oi=tile_index(v,yy<8?l->top[cell]:l->bot[cell],(x-l->x0)&7,yy&7);
-     if(oi&&out[dx]!=genesis_dac_cram_to_argb(v->cram[oi&63],0))continue;
-    }}
    out[dx]=c;
   }
  }

@@ -525,7 +525,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..c5acb42 100644
+index df30a08..0bd5e98 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -853,7 +853,7 @@ index df30a08..c5acb42 100644
          if (gi.num_players > INPUT_MAX_PLAYERS) gi.num_players = INPUT_MAX_PLAYERS;
          gi.platform             = "SEGA GENESIS";  /* infers the genesis profile */
 -        gi.theme                = "genesis";
-+        gi.theme                = "dyna";
++        gi.theme                = gi.in_session ? "dyna-ember" : "dyna";
 +#ifdef RECOMP_LAUNCHER_HAS_BRAND_LOGO_PATH
 +        char dyna_brand_path[1200];char *dyna_base=SDL_GetBasePath();
 +        snprintf(dyna_brand_path,sizeof dyna_brand_path,"%sassets/img/dyna-logo-1plus2-v1.png",dyna_base?dyna_base:"");
@@ -953,6 +953,15 @@ index df30a08..c5acb42 100644
      /* Scripted launcher tests must stay hidden after the handoff to gameplay. */
      int test_hidden = getenv("LNG_SCRIPT") && getenv("LNG_TEST_HIDDEN");
      Uint32 win_flags = ((benchmark_frames || test_hidden) ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN)
+@@ -3176,7 +3371,7 @@ int main(int argc, char *argv[])
+         s_runtime_ui.window = window; s_runtime_ui.renderer = renderer; s_runtime_ui.texture = texture;
+         s_runtime_ui.view_mode = s_ws_user_on ? RECOMP_RUNTIME_UI_VIEW_FIXED_16_9 : RECOMP_RUNTIME_UI_VIEW_NATIVE;
+         if (game_video_viewport_enabled(g_game_spec.video)) s_runtime_ui.view_mode = RECOMP_RUNTIME_UI_VIEW_ADAPTIVE;
+-        cfg.menu.title = g_game_spec.display_name; cfg.menu.subtitle = "Genesis runtime settings"; cfg.menu.theme = "genesis";
++        cfg.menu.title = g_game_spec.display_name; cfg.menu.subtitle = "Genesis runtime settings"; cfg.menu.theme = "dyna-ember";
+         cfg.menu.callbacks.context = &s_runtime_ui; cfg.menu.callbacks.get_value = runtime_ui_get;
+         cfg.menu.callbacks.set_value = runtime_ui_set; cfg.menu.callbacks.run_action = runtime_ui_action;
+         cfg.menu.callbacks.save = runtime_ui_save;
 @@ -3190,7 +3385,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }

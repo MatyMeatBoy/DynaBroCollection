@@ -3,6 +3,7 @@
 #include <stdint.h>
 enum { DB1_TITLE_UP=1,DB1_TITLE_DOWN=2,DB1_TITLE_CONFIRM=4,
  DB1_TITLE_START=8,DB1_TITLE_OTHER=16 };
+enum { DB1_TITLE_PENDING_ROW=16 };
 typedef struct {
  unsigned enabled,entered,active,native_selection,extras,anchor;
  unsigned released,previous,modal,pending,target,button,pulse,ack,wait;
@@ -20,6 +21,8 @@ void db1_title_menu_before(Db1TitleMenu *,uint32_t pc,unsigned native_selection)
  * input passes through; otherwise guest_buttons is the exclusive pad mask. */
 int db1_title_menu_frame(Db1TitleMenu *,unsigned input,int *override,unsigned *guest_buttons);
 int db1_title_menu_active(const Db1TitleMenu *);
+/* Returns native row 0..3, Extras row 4, or a native wrap destination plus
+ * DB1_TITLE_PENDING_ROW while the renderer waits for the matching SAT row. */
 int db1_title_menu_selection(const Db1TitleMenu *,unsigned *selected);
 /* Notify after the host modal closes. Preserves Extras, requires release. */
 void db1_title_menu_host_closed(Db1TitleMenu *);

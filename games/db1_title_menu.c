@@ -94,7 +94,10 @@ int db1_title_menu_frame(Db1TitleMenu *s,unsigned input,int *override,unsigned *
 int db1_title_menu_active(const Db1TitleMenu *s){return s&&s->enabled&&s->active;}
 int db1_title_menu_selection(const Db1TitleMenu *s,unsigned *selected){
  if(!db1_title_menu_active(s))return 0;
- if(selected)*selected=s->extras?4:s->native_selection;
+ if(selected){
+  if(s->pending)*selected=DB1_TITLE_PENDING_ROW+s->target;
+  else *selected=s->extras?4:s->native_selection;
+ }
  return 1;
 }
 void db1_title_menu_host_closed(Db1TitleMenu *s){

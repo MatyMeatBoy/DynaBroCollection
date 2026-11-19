@@ -18,7 +18,9 @@
 #define RMDIR(p) rmdir(p)
 #endif
 static int token,callbacks,last,forwarded;
+static int hud_calls,hud_last;
 static void apply(int v){callbacks++;last=v;}
+static void apply_hud(int enabled){hud_calls++;hud_last=enabled;}
 static int count(void *ctx){assert(ctx==&token);return 1;}
 static int package(void *ctx,int i,RecompLauncherCModPackage *o){assert(ctx==&token);if(i||!o)return 0;memset(o,0,sizeof *o);strcpy(o->id,"custom-widescreen");o->option_count=1;return 1;}
 static int feature(void *ctx,int i,RecompLauncherCModFeature *o){assert(ctx==&token);if(i||!o)return 0;memset(o,0,sizeof *o);strcpy(o->package_id,"custom-widescreen");strcpy(o->id,"widescreen");o->option_count=1;return 1;}
@@ -156,6 +158,33 @@ int main(void){
  FILE *bounded_file=fopen(display,"wb");assert(bounded_file&&fwrite(badbytes,1,1024,bounded_file)==1024&&!fclose(bounded_file));
  assert(dyna_visor_runtime_set("db2.visor_offset_tiles",2));
  readfile(display,combined,sizeof combined);assert(strlen(combined)==1024&&!memcmp(combined+sizeof own-1,badbytes+sizeof own-1,1024-(sizeof own-1)));
+ writefile(display,"db1.visor_offset_tiles=3\ndb2.visor_offset_tiles=2\n");
+ dyna_visor_settings_load(settings,2);
+ assert(dyna_visor_runtime_get("db2.free_hud",&value)&&value==1);
+ dyna_free_hud_bind(apply_hud);
+ assert(hud_calls==1&&hud_last==1);
+ const RecompLauncherCModProvider *db2_mods=dyna_visor_mods(&base);
+ RecompLauncherCModOption hud={0};
+ assert(db2_mods->option_get(db2_mods->ctx,"custom-widescreen",2,&hud));
+ assert(!strcmp(hud.id,"free_hud")&&hud.type==RECOMP_MOD_OPTION_BOOLEAN);
+ assert(!strcmp(hud.value,"true")&&!strcmp(hud.default_value,"true"));
+ assert(db2_mods->feature_option_get(db2_mods->ctx,"custom-widescreen","widescreen",2,&hud));
+ assert(!strcmp(hud.id,"free_hud")&&!strcmp(hud.value,"true"));
+ assert(db2_mods->set_option(db2_mods->ctx,"custom-widescreen","free_hud","false"));
+ assert(hud_calls==2&&hud_last==0);
+ assert(!dyna_visor_runtime_set("db2.free_hud",2));
+ assert(!db2_mods->feature_set_option(db2_mods->ctx,"custom-widescreen","widescreen","free_hud","bad"));
+ assert(hud_calls==2&&hud_last==0);
+ dyna_visor_settings_load(settings,2);
+ assert(dyna_visor_runtime_get("db2.free_hud",&value)&&value==0);
+ readfile(display,combined,sizeof combined);
+ assert(!strcmp(combined,"db1.visor_offset_tiles=3\ndb2.visor_offset_tiles=2\ndb2.free_hud=0\n"));
+ assert(db2_mods->feature_set_option(db2_mods->ctx,"custom-widescreen","widescreen","free_hud","true"));
+ assert(hud_calls==4&&hud_last==1);
+ dyna_visor_settings_load(settings,1);
+ assert(!dyna_visor_runtime_get("db2.free_hud",&value));
+ assert(hud_calls==5&&hud_last==0);
+ dyna_free_hud_bind(NULL);
  int prior=callbacks;dyna_visor_settings_load(settings,3);assert(callbacks==prior&&dyna_visor_mods(&base)==&base);
  assert(!dyna_visor_runtime_get("db1.visor_offset_tiles",&value)&&!dyna_visor_runtime_set("db1.visor_offset_tiles",1));
  dyna_visor_settings_bind(NULL);assert(!remove(display)&&!RMDIR(dir));

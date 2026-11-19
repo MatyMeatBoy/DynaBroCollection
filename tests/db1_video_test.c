@@ -216,14 +216,15 @@ int main(void){
     /* Native lightning 132D8 authors the entire A plane, not the normal 6x6
      * weather mask. It must not be split into old-world and relocated HUD. */
     memset(&raster,0,sizeof raster);raster.display=1;
-    memset(vdp.vram+0x2be*32,0x22,32);
+    memset(vdp.vram+0x153*32,0x22,32);
     vdp.reg[2]=0x30;vdp.reg[16]=1;vdp.reg[11]=0;vdp.vsram[0]=0;
     be16(vdp.vram+0xd000,0);
-    for(unsigned x=0;x<64;x++)be16(vdp.vram+0xc000+x*2,0x82be);
+    for(unsigned x=0;x<64;x++)be16(vdp.vram+0xc000+x*2,0x8153);
     db1_video_observe(0x132d8);draw(0);
     assert(out[world_x(210)]==genesis_dac_cram_to_argb(vdp.cram[2],0));
     assert(out[world_x(319)]==genesis_dac_cram_to_argb(vdp.cram[2],0));
-    assert(out[world_x(320)]!=genesis_dac_cram_to_argb(vdp.cram[2],0));
+    assert(out[0]==genesis_dac_cram_to_argb(vdp.cram[2],0));
+    assert(out[397]==genesis_dac_cram_to_argb(vdp.cram[2],0));
     db1_video_observe(0x13630);draw(0);
     assert(out[world_x(210)]!=genesis_dac_cram_to_argb(vdp.cram[2],0));
     /* Camera changes are committed as one frame: transient RAM writes during

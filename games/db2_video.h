@@ -5,6 +5,7 @@ extern const GameVideo db2_video;
 void db2_video_observe(unsigned pc);
 void db2_video_reset(void);
 void db2_video_visor_offset(int tiles);
+void db2_video_free_hud(int enabled);
 int db2_video_visor_requested(void);
 /* Diagnostic only (see evidence/db2-visor-research/coherence.md step 1):
  * producer_epoch counts completed cache/gather producer passes (0x15220

@@ -49,8 +49,8 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  gi.expected_crc=game==1?0x360c1b20u:0xba3554bcu;gi.has_expected_crc=1;
  RecompLauncherCRomRevision revisions[6]={0};
  const char *crc1[]={"360C1B20","2740C64E","C1E5C0DA","3BE23E09","950A8FC3","38B20F8F"};
- const char *crc2[]={"BA3554BC","DAC9BAFC","DE76C2B8"};
- gi.num_rom_revisions=game==1?6:3;
+ const char *crc2[]={"BA3554BC","DAC9BAFC","DE76C2B8","70156BA7"};
+ gi.num_rom_revisions=game==1?6:4;
  for(int i=0;i<gi.num_rom_revisions;i++){revisions[i].label=i?"English translation":"Japanese original";revisions[i].crc32_hex=game==1?crc1[i]:crc2[i];revisions[i].supported=1;}
  gi.rom_revisions=revisions;gi.rom_noun="ROM";
  static const char *const patterns[]={"*.md","*.bin","*.gen","*.68k"};gi.rom_patterns=patterns;gi.num_rom_patterns=4;

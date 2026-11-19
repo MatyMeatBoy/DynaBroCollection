@@ -5,7 +5,7 @@
 #define PASSWORD_ENTRIES 97u
 static const unsigned stages[5]={8,20,20,20,17};
 static const char *const names[5]={"Practice","Normal","Hard","Back","Alien"};
-typedef struct {unsigned frontier[4];uint32_t saved[5];} Access;
+typedef struct {unsigned frontier[4],start_modes;uint32_t saved[5];} Access;
 const char *db1_level_catalog_mode_name(unsigned mode){return mode<5?names[mode]:NULL;}
 static int session_valid(const DynaProgressSession *s){
  if(!s||!s->store||!s->rom||s->store->game!=1||s->store->count>DYNA_PROGRESS_LIMIT||
@@ -19,7 +19,9 @@ static int session_valid(const DynaProgressSession *s){
 static int target_valid(unsigned mode,unsigned stage){return mode<5&&stage>=1&&stage<=stages[mode];}
 static int collect(const DynaProgressSession *s,Access *a){
  if(!session_valid(s))return 0;
- memset(a,0,sizeof *a);a->frontier[0]=a->frontier[1]=a->frontier[2]=1;
+ memset(a,0,sizeof *a);
+ for(unsigned mode=0;mode<4;mode++)
+  if(s->db1_cleared_modes&(1u<<mode))a->start_modes=(2u<<mode)-1;
  for(unsigned i=0;i<s->store->count;i++){
   const DynaProgressCode *c=&s->store->codes[i];char text[9];
   /* Public session validator rechecks exact mode/stage/length/table bytes.
@@ -31,8 +33,10 @@ static int collect(const DynaProgressSession *s,Access *a){
  return 1;
 }
 static int allowed(const Access *a,unsigned mode,unsigned stage){
- return target_valid(mode,stage)&&(mode==4?
-        (a->saved[4]&(UINT32_C(1)<<(stage-1)))!=0:stage<=a->frontier[mode]);
+ if(!target_valid(mode,stage))return 0;
+ if(mode==4)return (a->saved[4]&(UINT32_C(1)<<(stage-1)))!=0;
+ if(stage==1)return (a->start_modes&(1u<<mode))!=0 || (mode==3&&a->frontier[3]!=0);
+ return stage<=a->frontier[mode];
 }
 static int native_code(const DynaProgressSession *s,unsigned mode,unsigned stage,DynaProgressCode *out){
  if(!target_valid(mode,stage))return 0;

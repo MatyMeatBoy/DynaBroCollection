@@ -1,4 +1,5 @@
 #include "../games/db1_title_menu_art.h"
+#include "../games/db1_title_menu.h"
 #include "video/genesis_dac.h"
 #include <assert.h>
 #include <limits.h>
@@ -34,6 +35,10 @@ int main(void){
  for(unsigned i=0;i<6;i++)assert(out[1+136+8*i]==genesis_dac_cram_to_argb(v.cram[i+1],0));
  assert(out[1+137]==0xff123456u&&out[0]==0xff123456u&&out[321]==0xff123456u);
  assert(!memcmp(&before,&v,sizeof v)&&!backgrounds);
+ fill();assert(db1_title_menu_art_row(&v,200,out+1,320,0,DB1_TITLE_PENDING_ROW,0,bg));
+ assert(out[1+136]==genesis_dac_cram_to_argb(v.cram[1],0)); /* Native target already visible. */
+ fill();assert(db1_title_menu_art_row(&v,200,out+1,320,0,DB1_TITLE_PENDING_ROW+3,0,bg));
+ assert(out[1+136]==genesis_dac_cram_to_argb(v.cram[17],0)); /* Still hiding the old cursor. */
  fill();assert(db1_title_menu_art_row(&v,200,out+1,427,53,4,0,bg));
  assert(out[1+53+136]==genesis_dac_cram_to_argb(v.cram[17],0));
  assert(out[1+53+143]==genesis_dac_cram_to_argb(v.cram[18],0));
@@ -49,6 +54,11 @@ int main(void){
  assert(out[1+202]==(0xff100000u|(202u<<8)|151u));
  assert(backgrounds==2&&out[1+117]==0xff123456u); /* Never erase rectangles. */
  assert(!memcmp(&before,&v,sizeof v));
+ setup();sprite(4,136,152,0x230e,0);
+ out[1+136]=genesis_dac_cram_to_argb(v.cram[17],0);
+ assert(db1_title_menu_art_row(&v,152,out+1,320,0,4,0,bg));
+ assert(out[1+136]==genesis_dac_cram_to_argb(v.cram[1],0));
+ setup();
  fill();memcpy(saved,out,sizeof out);
  assert(!db1_title_menu_art_row(&v,151,out+1,320,0,0,0,bg));assert(!memcmp(saved,out,sizeof out));
  setup();sprite(4,116,151,0x350,0);pix(0x350,0,0,4);

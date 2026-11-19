@@ -15,13 +15,15 @@ static void saved(DynaProgressStore *store,unsigned mode,unsigned stage){DynaPro
 static void check_code(DynaProgressSession *s,unsigned mode,unsigned stage){
  DynaProgressCode c;assert(db1_level_catalog_request_code(s,mode,stage,&c));
  assert(c.mode==mode&&c.stage==stage&&c.length==4&&c.source_pc==0);
- assert(!memcmp(c.code,rom+0x1e87eu+4*index_for(mode,stage),4));
+ assert(!memcmp(c.code,s->rom+0x1e87eu+4*index_for(mode,stage),4));
 }
 static void synthetic(void){
  for(unsigned i=0;i<97;i++){unsigned n=i;for(unsigned j=0;j<4;j++){rom[0x1e87eu+4*i+j]=(uint8_t)(2+4*(n%26));n/=26;}}
  DynaProgressStore store;DynaProgressSession s;Db1LevelCatalogItem item;
  assert(dyna_progress_init(&store,1,hash)&&dyna_progress_session_init(&s,&store,rom,sizeof rom));
- assert(db1_level_catalog_count(&s)==3);
+ assert(db1_level_catalog_count(&s)==0);
+ s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==2);check_code(&s,0,1);check_code(&s,1,1);
+ s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==3);
  const char *names[]={"Practice","Normal","Hard","Back","Alien"};
  for(unsigned mode=0;mode<5;mode++)assert(!strcmp(db1_level_catalog_mode_name(mode),names[mode]));
  assert(!db1_level_catalog_mode_name(5));
@@ -78,7 +80,9 @@ static void original_table(const char *path){
  unsigned char *bytes=malloc((size_t)length);assert(bytes);assert(fread(bytes,1,(size_t)length,f)==(size_t)length);assert(!fclose(f));
  DynaProgressStore store;DynaProgressSession s;DynaProgressCode c;char text[9];
  assert(dyna_progress_init(&store,1,hash)&&dyna_progress_session_init(&s,&store,bytes,(size_t)length));
- assert(db1_level_catalog_count(&s)==3);
+ assert(db1_level_catalog_count(&s)==0);
+ s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==2);check_code(&s,0,1);check_code(&s,1,1);
+ s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==3);
  for(unsigned mode=0;mode<3;mode++)assert(db1_level_catalog_request_code(&s,mode,1,&c)&&c.source_pc==0);
  c=(DynaProgressCode){0};c.mode=3;c.stage=1;c.length=4;c.source_pc=0x28f1a;memcpy(c.code,bytes+0x1e87eu+60*4,4);
  assert(dyna_progress_session_text(&s,&c,text)&&!strcmp(text,"MHRI"));assert(dyna_progress_add(&store,&c));

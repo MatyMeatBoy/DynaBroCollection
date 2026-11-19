@@ -19,6 +19,11 @@ uint32_t db2_wide_menu_blend(uint32_t pixel,uint32_t backdrop,unsigned weight){
  return result;
 }
 static int cells(unsigned bits){return bits==0?32:bits==1?64:bits==3?128:32;}
+static int reflect(int coordinate,int size){
+ int phase=coordinate%(2*size);
+ if(phase<0)phase+=2*size;
+ return phase<size?phase:2*size-1-phase;
+}
 
 /* Per-frame column occupancy (whole plane height). A margin column whose name
  * entries are all zero has no art; it repeats the nearest edge block of the
@@ -35,7 +40,11 @@ static int occupancy_ready,extended_used;
  * has actually moved in the last few frames. */
 static int sprite_gate;
 static int16_t prev_sx[80],prev_sy[80];
+static int16_t right_spawn[80];
+static uint16_t prev_shape[80];
+static uint8_t prev_live[80];
 static uint8_t moved_recent[80];
+static uint8_t moved_x_recent[80];
 void db2_wide_menu_set_sprite_gate(int on){sprite_gate=on!=0;}
 static void track_sprites(const GVDP *v){
  unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0},live[80]={0};
@@ -43,13 +52,23 @@ static void track_sprites(const GVDP *v){
   if(link>=80||seen[link])break;seen[link]=1;live[link]=1;
   unsigned p=base+link*8;
   int sy=(int)(rd(v,p)&511)-128,sx=(int)(rd(v,p+6)&511)-128;
+  unsigned shape=(rd(v,p+4)&2047)|((v->vram[(p+2)&0xffff]&15)<<11);
   int dx=sx-prev_sx[link],dy=sy-prev_sy[link];
-  if((dx||dy)&&dx>=-8&&dx<=8&&dy>=-8&&dy<=8)moved_recent[link]=12;
+  if(!prev_live[link]||dx<-8||dx>8)moved_x_recent[link]=0;
+  else if(dx)moved_x_recent[link]=8;
+  else if(moved_x_recent[link])--moved_x_recent[link];
+  int recycled=!prev_live[link]||shape!=prev_shape[link]||dx<-8||dx>8||dy<-8||dy>8;
+  if(recycled){
+   moved_recent[link]=0;
+   right_spawn[link]=sprite_gate&&sx>320&&sx<=383?(int16_t)sx:0;
+  }else if(dx||dy)moved_recent[link]=12;
   else if(moved_recent[link])--moved_recent[link];
+  prev_shape[link]=(uint16_t)shape;
   prev_sx[link]=(int16_t)sx;prev_sy[link]=(int16_t)sy;
   unsigned next=v->vram[(p+3)&0xffff]&127;if(!next)break;link=next;
  }
- for(int i=0;i<80;i++)if(!live[i])moved_recent[i]=0;
+ memcpy(prev_live,live,sizeof prev_live);
+ for(int i=0;i<80;i++)if(!live[i]||!sprite_gate)right_spawn[i]=0;
 }
 void db2_wide_menu_frame(const GVDP *v){
  occupancy_ready=0;extended_used=0;if(!v)return;
@@ -84,11 +103,11 @@ static int remap(const uint8_t *art,int pc,int n,int center,int visible){
  int q=(right-1)%EDGE_PERIOD;return (e-EDGE_PERIOD+1+q+n)%n;
 }
 
-static int last_tile,mirror_on;
+static Db2MenuMargins margins;
 static unsigned pool[4*28],pool_n;
-void db2_wide_menu_mirror(const GVDP *v,int on){
- mirror_on=on;pool_n=0;
- if(!on||!v)return;
+void db2_wide_menu_margins(const GVDP *v,Db2MenuMargins mode){
+ margins=mode;pool_n=0;
+ if((mode!=DB2_MENU_FLAT&&mode!=DB2_MENU_BRIEFING)||!v)return;
  int wt=cells(v->reg[16]&3);unsigned base=((unsigned)v->reg[4]&7)<<13;
  static const int cols[4]={0,1,38,39};
  for(int i=0;i<4;i++)for(int cy=0;cy<28;cy++)pool[pool_n++]=rd(v,base+((unsigned)(cy*wt+cols[i])<<1));
@@ -99,6 +118,10 @@ void db2_wide_menu_mirror(const GVDP *v,int on){
  pool[0]=best;pool_n=1;
 }
 uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
+ if(margins==DB2_MENU_PANORAMA&&plane==1){
+  x=reflect(x,320);
+  line=reflect(line,224);
+ }
  int wt=cells(v->reg[16]&3),ht=cells((v->reg[16]>>4)&3);
  /* 128-cell planes are only valid with 32-cell height and vice versa. */
  if(wt*ht>4096)ht=4096/wt;
@@ -106,12 +129,12 @@ uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
  /* Confetti backdrop (stage briefing): outside the window every 8x8 cell takes a
   * tile drawn from the real confetti tiles of the outer columns, chosen by a
   * fixed hash so the continuation is stable but never an echo of the edge. */
- if(mirror_on&&plane==1&&(x<0||x>=320||line<0||line>=224)){
+ if((margins==DB2_MENU_FLAT||margins==DB2_MENU_BRIEFING)&&plane==1&&
+    (x<0||x>=320||line<0||line>=224)){
   int cx=x>=0?x>>3:-((-x+7)>>3),cy=line>=0?line>>3:-((-line+7)>>3);
   unsigned h=(unsigned)cx*2654435761u^(unsigned)cy*40503u*2246822519u;h^=h>>15;h*=2246822519u;h^=h>>13;
   unsigned name=pool_n?pool[h%(unsigned)pool_n]:0;
   int tx=((x%8)+8)%8,ty=((line%8)+8)%8;
-  last_tile=name!=0;
   if(name&0x800)tx=7-tx;
   if(name&0x1000)ty=7-ty;
   unsigned bb=v->vram[((name&2047)*32+(unsigned)ty*4+(unsigned)tx/2)&0xffff];
@@ -140,7 +163,6 @@ uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
   py=(remap(row_art[plane],py>>3,ht,center,28)<<3)|(py&7);
  }
  unsigned name=rd(v,base+((unsigned)((py>>3)*wt+(px>>3))<<1));
- last_tile=name!=0;
  int tx=px&7,ty=py&7;
  if(name&0x800)tx=7-tx;
  if(name&0x1000)ty=7-ty;
@@ -164,6 +186,8 @@ static int window_side(const GVDP *v,int line,int x){
 
 static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,uint8_t *hi){
  unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0};
+ int cloud_x=0,cloud_y=0,cloud_spawn=0,cloud_piece=0,cloud_moved=0;
+ unsigned cloud_pattern=0;
  for(int n=0;n<80;n++){
   if(link>=80||seen[link])return;seen[link]=1;
   unsigned link_index=link;
@@ -173,12 +197,37 @@ static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,
   unsigned attr=rd(v,p+4);
   int sx=(int)(rd(v,p+6)&511)-128;
   int hc=(int)((size>>2)&3)+1,vc=(int)(size&3)+1;
+  int spawn=right_spawn[link_index],right=w-left;
+  int moved=moved_recent[link_index];
+  unsigned pattern=attr&2047;
+  /* The title's clouds use adjacent 32px pieces. The guest parks individual
+   * pieces at x=336 until it needs them in 4:3. Derive their margin positions
+   * from the moving first piece so the wide reveal keeps the cloud together. */
+  if(sprite_gate&&(attr&0xe000)==0x2000&&(size&15)==15&&
+     (pattern==0x780||pattern==0x7a0)){
+   cloud_pattern=pattern;cloud_x=sx;cloud_y=sy;cloud_spawn=spawn;
+   cloud_piece=0;cloud_moved=moved;
+  }else if(cloud_pattern&&sy==cloud_y&&(attr&0xe000)==0x2000&&
+           (size&15)==15&&pattern==cloud_pattern+16u*(unsigned)(cloud_piece+1)&&
+           cloud_piece<(cloud_pattern==0x780?1:2)){
+   ++cloud_piece;
+   if(cloud_x>=256){sx=cloud_x+cloud_piece*32;spawn=cloud_spawn;moved=cloud_moved;}
+  }else cloud_pattern=0;
+  /* Map this cloud's lifecycle from the wide edge back to native x=320.
+   * Once it reaches the native area its original SAT position takes over. */
+  int anchor=cloud_pattern&&cloud_x>=256?cloud_x:sx;
+  if(sprite_gate&&anchor>320&&spawn>320&&spawn<right)
+   sx+=320+(anchor-320)*(right-320)/(spawn-320)-anchor;
   if(line>=sy&&line<sy+vc*8&&sx>-128){
    int ry=line-sy;if(attr&0x1000)ry=vc*8-1-ry;
-   int gated=sprite_gate&&!moved_recent[link_index];
+   int gated=sprite_gate&&!moved;
+   /* The briefing parks its waiting actors in these slots. They enter the
+    * presentation when the guest advances them toward the center. */
+   if(margins==DB2_MENU_BRIEFING&&!moved_x_recent[link_index]&&
+      (sx==-32||sx==319||sx==320))gated=1;
    for(int c=0;c<hc*8;c++){
     int x=sx+c;
-    if(x>=0&&x<320)continue;              /* native columns stay authentic */
+    if(x>=0&&x<320&&(margins!=DB2_MENU_PANORAMA||(line>=0&&line<224)))continue;
     if(gated)continue;
     int dx=x+left;if(dx<0||dx>=w||o[dx])continue;
     int rx=c;if(attr&0x800)rx=hc*8-1-rx;
@@ -198,14 +247,14 @@ int db2_wide_menu_row(const GVDP *v,int line,uint32_t *out,int w,int left,int na
  if(!v||!out||w<=320||w>MAX_W||left<0||left+320>w)return 0;
  if(!(v->reg[12]&1))return 0;        /* H40 only */
  if(!(v->reg[1]&0x40)){for(int x=0;x<w;x++)if(!native_row||x<left||x>=left+320)out[x]=0xff000000u;return 1;}
- uint8_t a[MAX_W]={0},b[MAX_W]={0},s[MAX_W]={0},o[MAX_W]={0},hi[MAX_W]={0},z[MAX_W]={0},px[MAX_W],art[MAX_W]={0};
+ uint8_t a[MAX_W]={0},b[MAX_W]={0},s[MAX_W]={0},o[MAX_W]={0},hi[MAX_W]={0},z[MAX_W]={0},px[MAX_W];
  for(int dx=0;dx<w;dx++){
   int x=dx-left;
   if(native_row&&x>=0&&x<320)continue;
-  b[dx]=db2_wide_menu_plane_pixel(v,1,x,line);art[dx]=(uint8_t)last_tile;
-  if(!mirror_on&&!window_side(v,line,x)){a[dx]=db2_wide_menu_plane_pixel(v,0,x,line);art[dx]|=(uint8_t)last_tile;}
+  if(margins!=DB2_MENU_SPRITES)b[dx]=db2_wide_menu_plane_pixel(v,1,x,line);
+  if(margins==DB2_MENU_PLANES&&!window_side(v,line,x))a[dx]=db2_wide_menu_plane_pixel(v,0,x,line);
  }
- if(!mirror_on)sprites(v,line,left,w,s,o,hi);
+ if(margins!=DB2_MENU_FLAT&&margins!=DB2_MENU_BACKGROUND)sprites(v,line,left,w,s,o,hi);
  int shadow=(v->reg[12]&8)!=0;
  gvdp_compose_span(px,a,b,s,o,hi,z,z,w,(uint8_t)(v->reg[7]&63),shadow);
  for(int dx=0;dx<w;dx++){

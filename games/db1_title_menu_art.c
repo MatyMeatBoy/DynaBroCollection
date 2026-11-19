@@ -1,4 +1,5 @@
 #include "db1_title_menu_art.h"
+#include "db1_title_menu.h"
 #include "video/genesis_dac.h"
 #include <string.h>
 #define ROW_CAP 8192
@@ -74,19 +75,48 @@ static void draw(const GVDP *v,int line,uint32_t *out,int width,int left,
    out[(size_t)dx]=genesis_dac_cram_to_argb(v->cram[((attr>>9)&48)+n],GENESIS_DAC_NORMAL);
  }
 }
+static void unhighlight_native_row(const GVDP *v,int line,uint32_t *out,
+ int width,int left,int row_y){
+ unsigned sat=(v->reg[5]&127)<<9,index=4;
+ int row=line-row_y;
+ if(row<0||row>=8)return;
+ for(unsigned guard=0;guard<76&&index>=4&&index<80;guard++){
+  unsigned a=sat+index*8,attr=word(v,a+4);
+  int x=(int)(word(v,a+6)&511)-128,y=(int)(word(v,a)&511)-128;
+  if(y==row_y&&x>=128&&x<=184&&!(v->vram[(a+2)&65535]&15)&&
+     (attr&0x6000)==0x2000&&(attr&2047)>=0x30a&&(attr&2047)<=0x323){
+   for(int col=0;col<8;col++){
+    int64_t dx=(int64_t)left+x+col;
+    unsigned n=pattern(v,attr,col,row);
+    if(n&&dx>=0&&dx<width&&
+       out[dx]==genesis_dac_cram_to_argb(v->cram[16+n],GENESIS_DAC_NORMAL))
+     out[dx]=genesis_dac_cram_to_argb(v->cram[n],GENESIS_DAC_NORMAL);
+   }
+  }
+  index=v->vram[(a+3)&65535]&127;
+ }
+}
 int db1_title_menu_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,
  unsigned selected,int modal,Db1TitleMenuBackground background){
- if(!v||!out||!background||width<=0||width>ROW_CAP||selected>4||line<0||line>=224||
+ int pending=selected>=DB1_TITLE_PENDING_ROW&&selected<=DB1_TITLE_PENDING_ROW+3;
+ if(!v||!out||!background||width<=0||width>ROW_CAP||(selected>4&&!pending)||line<0||line>=224||
     !(v->reg[1]&64)||!(v->reg[12]&1)||(v->reg[12]&14)||
     (v->reg[16]&3)==2||((v->reg[16]>>4)&3)==2||(v->reg[11]&3)==1)return 0;
  int old_y=0;
  if(!identify(v,&old_y))return 0;
+ /* RAM acknowledges before the replacement cursor reaches the SAT. Keep
+  * Extras visible until the old row no longer owns the native cursor. */
+ if(pending){
+  unsigned target=selected-DB1_TITLE_PENDING_ROW;
+  selected=old_y==151+12*(int)target?target:4;
+ }
  if(!(line>=200&&line<=207)&&
     !(selected==4&&((line>=old_y&&line<=old_y+8)||(line>=199&&line<=207))))return 0;
  unsigned char protected[ROW_CAP]={0};
  if(!other_sprites(v,line,width,left,protected))return 0;
  unsigned sat=(v->reg[5]&127)<<9;
  if(selected==4&&!modal){
+  unhighlight_native_row(v,line,out,width,left,old_y+1);
   unsigned char cursor[ROW_CAP]={0};
   for(unsigned i=0;i<4;i++){
    unsigned a=sat+i*8,attr=word(v,a+4);

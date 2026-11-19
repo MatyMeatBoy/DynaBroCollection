@@ -40,7 +40,9 @@ int main(void){
  step(&s,0,1,0);assert(!step(&s,DB1_TITLE_CONFIRM,0,DB1_TITLE_CONFIRM));
  enter(&s,0);step(&s,DB1_TITLE_UP,1,0);step(&s,0,1,0);
  assert(!step(&s,DB1_TITLE_UP,1,DB1_TITLE_UP)); /* Original0->3 wrap. */
+ assert(db1_title_menu_selection(&s,&selected)&&selected==DB1_TITLE_PENDING_ROW+3);
  db1_title_menu_before(&s,0x1cb30,3);
+ assert(db1_title_menu_selection(&s,&selected)&&selected==DB1_TITLE_PENDING_ROW+3);
  step(&s,DB1_TITLE_UP|DB1_TITLE_CONFIRM,1,DB1_TITLE_UP);
  step(&s,DB1_TITLE_UP,1,DB1_TITLE_UP);
  for(unsigned i=0;i<3;i++)step(&s,DB1_TITLE_UP,1,0);
@@ -50,7 +52,9 @@ int main(void){
  assert(db1_title_menu_selection(&s,&selected)&&selected==3);
  assert(!step(&s,DB1_TITLE_CONFIRM,0,DB1_TITLE_CONFIRM));
  enter(&s,3);step(&s,DB1_TITLE_DOWN,1,0);step(&s,0,1,0);
- step(&s,DB1_TITLE_DOWN,1,DB1_TITLE_DOWN);db1_title_menu_before(&s,0x1cb30,0);
+ step(&s,DB1_TITLE_DOWN,1,DB1_TITLE_DOWN);
+ assert(db1_title_menu_selection(&s,&selected)&&selected==DB1_TITLE_PENDING_ROW);
+ db1_title_menu_before(&s,0x1cb30,0);
  step(&s,0,1,DB1_TITLE_DOWN);step(&s,0,1,DB1_TITLE_DOWN);
  for(unsigned i=0;i<4;i++)step(&s,0,1,0);
  assert(db1_title_menu_selection(&s,&selected)&&selected==0);

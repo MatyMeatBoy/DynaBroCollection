@@ -536,26 +536,34 @@ int index=(int)item->CtlID-101;if(index<0||index>1)return 0;
         HGDIOBJ old_brush=SelectObject(item->hDC,brush),old_pen=SelectObject(item->hDC,pen);
         RoundRect(item->hDC,r.left+2,r.top+2,r.right-2,r.bottom-2,scale(30),scale(30));
         SelectObject(item->hDC,old_brush);SelectObject(item->hDC,old_pen);DeleteObject(brush);DeleteObject(pen);
-        int height=r.bottom;
-        int box_w=scale(70);
-        RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
-        image_paint(item->hDC,box_art[index],box);
-        if(cart_art[index]&&card_reveal[index]>0.01){
-            /* Lift the cartridge straight up and out of the box's open top
-             * edge, growing as it rises, instead of sliding sideways across
-             * the middle of the cover art (which used to look like the
-             * cartridge was crossing/cutting through the box). */
-            int cart_w=box.right-box.left-scale(8);
-            int cart_h=(int)(card_reveal[index]*scale(16));
-            int cart_bottom=box.top+scale(4)-(int)(card_reveal[index]*scale(28));
-            RECT cart={box.left+scale(4),cart_bottom-cart_h,box.left+scale(4)+cart_w,cart_bottom};
-            image_paint(item->hDC,cart_art[index],cart);
+        int height=r.bottom,width=r.right-r.left;
+        int image_top=scale(12),image_bottom=height-scale(84);
+        int gap=scale(12),available_width=width-scale(28)-gap;
+        int box_h=(image_bottom-image_top)*7/8;
+        int width_limited=available_width*10/23;
+        if(box_h>width_limited)box_h=width_limited;
+        if(box_h>0){
+            int box_w=box_h*42/58,art_w=box_h*16/10;
+            int box_x=r.left+(width-box_w-gap-art_w)/2;
+            int box_y=image_bottom-box_h;
+            RECT box={box_x,box_y,box_x+box_w,image_bottom};
+            if(box_art[index]&&cart_art[index]&&card_reveal[index]>0){
+                int cart_w=box_w*9/10,cart_h=(cart_w*90+519)/520;
+                int cart_x=box_x+(box_w-cart_w)/2;
+                double reveal=card_reveal[index];
+                double eased=reveal*reveal*(3.0-2.0*reveal);
+                int cart_y=box_y-(int)(eased*cart_h);
+                RECT cart={cart_x,cart_y,cart_x+cart_w,cart_y+cart_h};
+                image_paint(item->hDC,cart_art[index],cart);
+            }
+            image_paint(item->hDC,box_art[index],box);
+            RECT art={box.right+gap,box_y,box.right+gap+art_w,image_bottom};
+            image_paint(item->hDC,game_art[index],art);
         }
-        RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
         r.left+=scale(20);r.right-=scale(20);r.top=height-scale(80);r.bottom=height-scale(28);
-        draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+        draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
 
-        r.top=height-scale(26);r.bottom=height-scale(5);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_LEFT);return TRUE;
+        r.top=height-scale(26);r.bottom=height-scale(5);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_CENTER);return TRUE;
     
     return 0;
 }
@@ -644,8 +652,11 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
                 else if(action==DYNA_MENU_ACCEPT){manuals_show_translation=!manuals_show_translation;InvalidateRect(window,NULL,TRUE);}
                 else if(action==DYNA_MENU_BACK)manuals_close(window);
             }
+            POINT pointer;
+            HWND hovered=GetCursorPos(&pointer)?WindowFromPoint(pointer):NULL;
             for(int i=0;i<2;i++){
-                int hovered=GetFocus()==cards[i];double target=hovered?1.0:0.0;double before=card_reveal[i];
+                int active=cards[i]&&(GetFocus()==cards[i]||hovered==cards[i]);
+                double target=active?1.0:0.0;double before=card_reveal[i];
                 double step=0.18;
                 if(card_reveal[i]<target){card_reveal[i]+=step;if(card_reveal[i]>target)card_reveal[i]=target;}
                 else if(card_reveal[i]>target){card_reveal[i]-=step;if(card_reveal[i]<target)card_reveal[i]=target;}

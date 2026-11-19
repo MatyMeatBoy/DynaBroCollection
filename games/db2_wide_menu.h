@@ -6,8 +6,7 @@ struct GVDP;
  * main menu, submenus, briefings). The authentic 320-pixel image stays exact in
  * the centre; the columns left and right of it are composed from the guest's
  * own plane A/B name tables (with the live per-line/per-cell scroll) and the
- * sprites positioned there. Nothing is invented: a column only shows what the
- * guest's planes and SAT already contain beyond the 4:3 window.
+ * sprites positioned there.
  *
  * line: native raster line (may be outside 0..223 for the letterbox rows).
  * out/w: one canvas row; left: x of native column 0 inside the canvas.
@@ -24,7 +23,17 @@ uint32_t db2_wide_menu_blend(uint32_t pixel, uint32_t backdrop, unsigned weight)
 /* True when this frame continued authored art past the 4:3 window (intro). */
 int db2_wide_menu_extended(void);
 void db2_wide_menu_set_sprite_gate(int on);
-/* While on, plane B outside the window/letterbox is generated from the confetti
- * tiles of the outer columns (stage briefing). */
-void db2_wide_menu_mirror(const struct GVDP *v, int on);
+typedef enum {
+    DB2_MENU_PLANES,
+    DB2_MENU_FLAT,
+    DB2_MENU_BRIEFING,
+    DB2_MENU_SPRITES,
+    DB2_MENU_BACKGROUND,
+    DB2_MENU_PANORAMA
+} Db2MenuMargins;
+/* Select which layers continue into the margins. Flat and Briefing use the
+ * dominant plane-B tile. Background samples plane B with its live scroll.
+ * Panorama continues the edges of the Special introduction's authored map
+ * and composites the live sprites over it. */
+void db2_wide_menu_margins(const struct GVDP *v, Db2MenuMargins mode);
 #endif
