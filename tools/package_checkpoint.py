@@ -38,6 +38,12 @@ def validate_build_info(text,revision,version=None):
         raise RuntimeError('Packaged executable does not identify the clean checkpoint source')
 
 
+def content(root):
+    """Package layout: DynaBrothers.exe + data/ + roms/ at the root; everything
+    the launcher and games need lives in data/. Older candidates are flat."""
+    return root/'data' if (root/'data').is_dir() else root
+
+
 def inventory(folder):
     return {p.relative_to(folder).as_posix():dict(size=p.stat().st_size,sha256=digest(p))
             for p in sorted(folder.rglob('*')) if p.is_file() and p.name!='PACKAGE.json'}
@@ -57,11 +63,11 @@ def stage(candidate):
     if not readme.is_file():raise RuntimeError('Missing checkpoint readme: '+str(readme))
     env=dict(os.environ);env['PATH']=str(BIN)+';'+env.get('PATH','')
     subprocess.run([str(BIN/'cmake.exe'),'--build',str(ROOT/'build/dev'),'--target',
-        'DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT',
+        'DynaBrothers','DynaBrothersLauncher','DynaBrothers1AOT','DynaBrothers2AOT',
         *[Path(name).stem for name in DIAGNOSTICS],'--parallel','6'],env=env,check=True)
     if git('status','--porcelain'):raise RuntimeError('Source changed while building the checkpoint')
     candidate.mkdir(parents=True,exist_ok=False)
-    payload=candidate/'DynaBrothers';payload.mkdir()
+    root=candidate/'DynaBrothers';root.mkdir();payload=root/'data';payload.mkdir()
     build=ROOT/'build/dev'
     for target in EXECUTABLES:
         source=build/target
@@ -113,6 +119,13 @@ def stage(candidate):
     for name,source in sources.items():shutil.copy2(source,licenses/name)
     shutil.copy2(ROOT/'THIRD_PARTY_NOTICES.md',licenses/'DynaBrothers-notices.md')
     shutil.copy2(readme,payload/'READ-ME.md')
+    stub=build/'DynaBrothers.exe'
+    if stub.read_bytes()[:2]!=b'MZ':raise RuntimeError('Invalid executable: DynaBrothers.exe')
+    shutil.copy2(stub,root/'DynaBrothers.exe')
+    (root/'roms').mkdir()
+    (root/'roms'/'PUT-YOUR-ROMS-HERE.txt').write_text(
+        'Place your own Dyna Brothers / Dyna Brothers 2 Special dumps (.md/.bin) in this folder,\n'
+        'then start DynaBrothers.exe. ROM images are not included.\n',encoding='ascii')
     manifest=dict(version=version,channel='checkpoint',status='candidate',source_commit=revision,
         engine_commit=git('-C',str(ROOT/'upstream/segagenesisrecomp'),'rev-parse','HEAD'),
         engine_patch_sha256=digest(ROOT/'patches/0001-explicit-pc-mainloop.patch'),
@@ -121,9 +134,9 @@ def stage(candidate):
         controller_database_commit=git('-C',str(ROOT/'upstream/controller-db'),'rev-parse','HEAD'),
         embedded_build_info=embedded,
         target='Windows x64',compiler=subprocess.check_output([str(BIN/'gcc.exe'),'--version'],text=True).splitlines()[0],
-        system_libraries=sorted(system),files=inventory(payload),proprietary_input_images_included=False,
-        single_entry_point=True,primary_executable='DynaBrothersLauncher.exe',
-        internal_executables=['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe'])
+        system_libraries=sorted(system),files=inventory(root),proprietary_input_images_included=False,
+        single_entry_point=True,primary_executable='DynaBrothers.exe',launcher_executable='data/DynaBrothersLauncher.exe',
+        internal_executables=['data/DynaBrothers1AOT.exe','data/DynaBrothers2AOT.exe'])
     (payload/'PACKAGE.json').write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     print(json.dumps(dict(candidate=str(candidate),source_commit=revision,files=len(manifest['files'])),indent=2))
 
@@ -132,14 +145,14 @@ def close(candidate,qa_path,releases,revision=1):
     if type(revision) is not int or not 1 <= revision <= 999:
         raise ValueError('Checkpoint revision must be an integer from 1 to 999')
     if (candidate/'CLOSED.json').exists():raise RuntimeError('Checkpoint is already closed; preserve delivered bytes')
-    payload=candidate/'DynaBrothers';manifest_path=payload/'PACKAGE.json'
+    payload=candidate/'DynaBrothers';manifest_path=content(payload)/'PACKAGE.json'
     manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
     version=package_version(manifest['version'])
     if inventory(payload)!=manifest['files']:raise RuntimeError('Staged package changed after its identity was recorded')
     qa=json.loads(qa_path.read_text(encoding='utf-8'))
     if not qa.get('passed'):raise RuntimeError('Packaged native regressions have not passed')
     for name,sha in qa['binaries'].items():
-        if digest(payload/name)!=sha:raise RuntimeError('QA belongs to another executable')
+        if digest(content(payload)/name)!=sha:raise RuntimeError('QA belongs to another executable')
     required={'db1-en','db1-ja','db2-en','db2-ja','replay-record','replay-play','hint'}
     if revision >= 2 or tuple(map(int,version.split('.'))) >= (0,1,2):required.update({'db1-practice','db1-alien','db1-credits'})
     if tuple(map(int,version.split('.'))) >= (0,1,2):required.add('db2-unpause')
@@ -165,7 +178,7 @@ def close(candidate,qa_path,releases,revision=1):
         for file in sorted(payload.rglob('*')):
             if file.is_file():archive.write(file,'DynaBrothers/'+file.relative_to(payload).as_posix())
     shutil.copytree(payload,portable)
-    if inventory(portable)!=inventory(payload) or digest(portable/'PACKAGE.json')!=digest(manifest_path):
+    if inventory(portable)!=inventory(payload) or digest(content(portable)/'PACKAGE.json')!=digest(manifest_path):
         raise RuntimeError('Portable folder differs from the closed ZIP inputs')
     report=dict(status='closed',archive=str(destination.resolve()),portable_folder=str(portable.resolve()),sha256=digest(destination),size=destination.stat().st_size,
         source_commit=manifest['source_commit'])

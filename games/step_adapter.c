@@ -69,6 +69,7 @@ static const GameRomAlias db1_aliases[]={
 #ifdef DYNA_HAS_OVERLAY
 #include "db2overlay.h"
 #include "db2_video.h"
+#include "db2_menu_labels.h"
 #include "translation_identity.h"
 static const GameRomAlias english_prompts_alias={"English gameplay prompts (partial)",DYNA_DB2_ENGLISH_CRC};
 static unsigned pad_trace_remaining;
@@ -272,6 +273,9 @@ static void entry(void) {
     }
 #ifdef DYNA_HAS_JP
     db1_video_set_english(dyna_language_english());
+#endif
+#ifdef DYNA_HAS_OVERLAY
+    db2_menu_labels_set_english(dyna_language_english());
 #endif
 #ifdef DYNA_HAS_JP
     dyna_progress_runtime_db1_identities(db1_language_sha256,sizeof db1_language_sha256/sizeof db1_language_sha256[0]);

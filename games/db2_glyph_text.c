@@ -91,6 +91,14 @@ static int ram_observe(uint32_t a1,uint32_t a0)
  if(line>=t->nlines)return 1;
  const char *text=t->line[line];size_t n=strlen(text);
  char c0=2*col<n?text[2*col]:' ',c1=2*col+1<n?text[2*col+1]:' ';
+ /* '#' copies the number the guest wrote right after the matched prefix
+  * (e.g. the practice stage digit), so one entry serves every stage. */
+ if(c0=='#'||c1=='#'){
+  unsigned w=ram_word(start+12),d=(w-0xccu)/2u;
+  char digit=(w>=0xccu&&!(w&1)&&d<=9u)?(char)('0'+d):' ';
+  if(c0=='#')c0=digit;
+  if(c1=='#')c1=digit;
+ }
  unsigned char bitmap[32];
  if(db2_glyph_text_cell(c0,c1,bitmap))memcpy(g_ram+(a0&0xffffu),bitmap,32);
  return 1;

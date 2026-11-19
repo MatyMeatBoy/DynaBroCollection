@@ -70,7 +70,7 @@ static DynaHubLayout home_layout;
 static int ui_scale_milli=1000;
 static DynaHubNavigation hub_navigation;
 static DynaMenuControls manuals_controls;
-static wchar_t exe_dir[LD_PATH_CAP],profile_dir[LD_PATH_CAP],cached_rom[2][LD_PATH_CAP],selected_rom[2][LD_PATH_CAP];
+static wchar_t exe_dir[LD_PATH_CAP],root_dir[LD_PATH_CAP],profile_dir[LD_PATH_CAP],cached_rom[2][LD_PATH_CAP],selected_rom[2][LD_PATH_CAP];
 static wchar_t config_path[LD_PATH_CAP],cache_path[2][LD_PATH_CAP];
 static ld_inventory discovered;
 static unsigned detected_patches;
@@ -148,7 +148,7 @@ static void find_files(HWND window) {
  for(int i=0;i<2;i++)if(!options.rom){
   FILE *file=_wfopen(cache_path[i],L"rb");if(file){char value[8192];if(fgets(value,sizeof value,file)){value[strcspn(value,"\r\n")]=0;ld_utf8_to_wide(value,cached_rom[i],LD_PATH_CAP);}fclose(file);}
  }
- ld_options scan={0};scan.base_dir=exe_dir;scan.cached_rom[0]=cached_rom[0];scan.cached_rom[1]=cached_rom[1];
+ ld_options scan={0};scan.base_dir=root_dir[0]?root_dir:exe_dir;scan.cached_rom[0]=cached_rom[0];scan.cached_rom[1]=cached_rom[1];
  ld_scan(&scan,&discovered);detected_patches=0;
  for(size_t i=0;i<discovered.count;i++)if(discovered.items[i].kind==LD_BPS||discovered.items[i].kind==LD_IPS)detected_patches++;
  for(int i=0;i<2;i++){const ld_item *rom=options.rom?ld_requested_rom(&discovered,i+1,options.rom):ld_best_rom(&discovered,i+1);selected_rom[i][0]=0;if(rom)wcscpy(selected_rom[i],rom->path);}
@@ -200,7 +200,12 @@ static void launch(HWND window,int index) {
     wchar_t path[2048],directory[2048];DWORD length=GetModuleFileNameW(NULL,directory,2048);
     if(!length||length>=2048)return;
     wchar_t *slash=wcsrchr(directory,L'\\');if(!slash)return;slash[1]=0;
-    if(swprintf(path,2048,L"%ls%ls",directory,index?L"DynaBrothers2AOT.exe":L"DynaBrothers1AOT.exe")<0)return;
+    /* Packages keep only the launcher at the root; the games live in game\.
+     * Development builds keep them beside the launcher. Either way the games
+     * save and read settings in the launcher's folder, as before. */
+    const wchar_t *game=index?L"DynaBrothers2AOT.exe":L"DynaBrothers1AOT.exe";
+    if(swprintf(path,2048,L"%lsgame\\%ls",directory,game)<0)return;
+    if(GetFileAttributesW(path)==INVALID_FILE_ATTRIBUTES&&swprintf(path,2048,L"%ls%ls",directory,game)<0)return;
     wchar_t arguments[8192];
     if(!dyna_launcher_options_command(&child_options,path,arguments,8192))return;
     STARTUPINFOW startup={0};startup.cb=sizeof startup;PROCESS_INFORMATION process={0};
@@ -506,6 +511,71 @@ static void home_selftest(HWND window) {
  fprintf(stderr,"[hub-home-test] PASS dpi%u client%ldx%ld outer%ldx%ld HWND preserved\n",dpi,client.right,client.bottom,outer.right-outer.left,outer.bottom-outer.top);
  DestroyWindow(window);
 }
+static int draw_item_direct(DRAWITEMSTRUCT *item) {
+        
+        {const wchar_t *pill_label=NULL;
+         switch(item->CtlID){
+         case 201:case 202:pill_label=L"Settings";break;
+         case 301:case 302:pill_label=L"Manual";break;
+         case 401:pill_label=L"< Prev";break;
+         case 402:pill_label=L"Next >";break;
+         case 403:pill_label=L"JP / EN";break;
+         case 404:pill_label=L"Close";break;
+         }
+         if(pill_label){
+            RECT box=item->rcItem;FillRect(item->hDC,&box,background_brush);int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;HBRUSH fill=CreateSolidBrush(RGB(48,100,65));HPEN edge=CreatePen(PS_SOLID,scale(selected?2:1),RGB(238,213,100));
+            HGDIOBJ oldb=SelectObject(item->hDC,fill),oldp=SelectObject(item->hDC,edge);RoundRect(item->hDC,box.left,box.top,box.right,box.bottom,scale(18),scale(18));
+            SelectObject(item->hDC,oldb);SelectObject(item->hDC,oldp);DeleteObject(fill);DeleteObject(edge);
+            draw_text(item->hDC,pill_label,box,body_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;
+         }}
+int index=(int)item->CtlID-101;if(index<0||index>1)return 0;
+        RECT r=item->rcItem;int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;
+        FillRect(item->hDC,&r,background_brush);
+        HBRUSH brush=CreateSolidBrush(selected?RGB(42,91,65):RGB(26,66,50));
+        HPEN pen=CreatePen(PS_SOLID,scale(selected?2:1),selected?RGB(255,221,94):RGB(90,141,89));
+        HGDIOBJ old_brush=SelectObject(item->hDC,brush),old_pen=SelectObject(item->hDC,pen);
+        RoundRect(item->hDC,r.left+2,r.top+2,r.right-2,r.bottom-2,scale(30),scale(30));
+        SelectObject(item->hDC,old_brush);SelectObject(item->hDC,old_pen);DeleteObject(brush);DeleteObject(pen);
+        int height=r.bottom;
+        int box_w=scale(70);
+        RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
+        image_paint(item->hDC,box_art[index],box);
+        if(cart_art[index]&&card_reveal[index]>0.01){
+            /* Lift the cartridge straight up and out of the box's open top
+             * edge, growing as it rises, instead of sliding sideways across
+             * the middle of the cover art (which used to look like the
+             * cartridge was crossing/cutting through the box). */
+            int cart_w=box.right-box.left-scale(8);
+            int cart_h=(int)(card_reveal[index]*scale(16));
+            int cart_bottom=box.top+scale(4)-(int)(card_reveal[index]*scale(28));
+            RECT cart={box.left+scale(4),cart_bottom-cart_h,box.left+scale(4)+cart_w,cart_bottom};
+            image_paint(item->hDC,cart_art[index],cart);
+        }
+        RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
+        r.left+=scale(20);r.right-=scale(20);r.top=height-scale(80);r.bottom=height-scale(28);
+        draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+
+        r.top=height-scale(26);r.bottom=height-scale(5);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_LEFT);return TRUE;
+    
+    return 0;
+}
+/* Owner-drawn cards and pills are composed off-screen and copied in one
+ * blit, so focus moves and the cartridge animation never show half-drawn
+ * layers (background, box, cartridge, text) on screen. */
+static int draw_item(DRAWITEMSTRUCT *item) {
+    RECT r=item->rcItem;int w=r.right-r.left,h=r.bottom-r.top;
+    if(w<=0||h<=0)return draw_item_direct(item);
+    HDC memory=CreateCompatibleDC(item->hDC);HBITMAP bitmap=CreateCompatibleBitmap(item->hDC,w,h);
+    if(!memory||!bitmap){if(bitmap)DeleteObject(bitmap);if(memory)DeleteDC(memory);return draw_item_direct(item);}
+    HGDIOBJ old=SelectObject(memory,bitmap);
+    SetViewportOrgEx(memory,-r.left,-r.top,NULL);
+    DRAWITEMSTRUCT copy=*item;copy.hDC=memory;
+    int handled=draw_item_direct(&copy);
+    SetViewportOrgEx(memory,0,0,NULL);
+    if(handled)BitBlt(item->hDC,r.left,r.top,w,h,memory,0,0,SRCCOPY);
+    SelectObject(memory,old);DeleteObject(bitmap);DeleteDC(memory);
+    return handled;
+}
 static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
     switch(message) {
     case WM_CREATE:
@@ -592,52 +662,7 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
             ShowWindow(window,SW_SHOW);
             EnableWindow(cards[0],TRUE);EnableWindow(cards[1],TRUE);SetWindowTextW(status,L"Choose a game");SetFocus(cards[0]);
         }return 0;
-    case WM_DRAWITEM: {
-        DRAWITEMSTRUCT *item=(DRAWITEMSTRUCT *)l;
-        {const wchar_t *pill_label=NULL;
-         switch(item->CtlID){
-         case 201:case 202:pill_label=L"Settings";break;
-         case 301:case 302:pill_label=L"Manual";break;
-         case 401:pill_label=L"< Prev";break;
-         case 402:pill_label=L"Next >";break;
-         case 403:pill_label=L"JP / EN";break;
-         case 404:pill_label=L"Close";break;
-         }
-         if(pill_label){
-            RECT box=item->rcItem;FillRect(item->hDC,&box,background_brush);int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;HBRUSH fill=CreateSolidBrush(RGB(48,100,65));HPEN edge=CreatePen(PS_SOLID,scale(selected?2:1),RGB(238,213,100));
-            HGDIOBJ oldb=SelectObject(item->hDC,fill),oldp=SelectObject(item->hDC,edge);RoundRect(item->hDC,box.left,box.top,box.right,box.bottom,scale(18),scale(18));
-            SelectObject(item->hDC,oldb);SelectObject(item->hDC,oldp);DeleteObject(fill);DeleteObject(edge);
-            draw_text(item->hDC,pill_label,box,body_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;
-         }}
-int index=(int)item->CtlID-101;if(index<0||index>1)break;
-        RECT r=item->rcItem;int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;
-        FillRect(item->hDC,&r,background_brush);
-        HBRUSH brush=CreateSolidBrush(selected?RGB(42,91,65):RGB(26,66,50));
-        HPEN pen=CreatePen(PS_SOLID,scale(selected?2:1),selected?RGB(255,221,94):RGB(90,141,89));
-        HGDIOBJ old_brush=SelectObject(item->hDC,brush),old_pen=SelectObject(item->hDC,pen);
-        RoundRect(item->hDC,r.left+2,r.top+2,r.right-2,r.bottom-2,scale(30),scale(30));
-        SelectObject(item->hDC,old_brush);SelectObject(item->hDC,old_pen);DeleteObject(brush);DeleteObject(pen);
-        int height=r.bottom;
-        int box_w=scale(70);
-        RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
-        image_paint(item->hDC,box_art[index],box);
-        if(cart_art[index]&&card_reveal[index]>0.01){
-            /* Lift the cartridge straight up and out of the box's open top
-             * edge, growing as it rises, instead of sliding sideways across
-             * the middle of the cover art (which used to look like the
-             * cartridge was crossing/cutting through the box). */
-            int cart_w=box.right-box.left-scale(8);
-            int cart_h=(int)(card_reveal[index]*scale(16));
-            int cart_bottom=box.top+scale(4)-(int)(card_reveal[index]*scale(28));
-            RECT cart={box.left+scale(4),cart_bottom-cart_h,box.left+scale(4)+cart_w,cart_bottom};
-            image_paint(item->hDC,cart_art[index],cart);
-        }
-        RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
-        r.left+=scale(20);r.right-=scale(20);r.top=height-scale(80);r.bottom=height-scale(28);
-        draw_text(item->hDC,game_names[index],r,card_font,text_color,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
-
-        r.top=height-scale(26);r.bottom=height-scale(5);draw_text(item->hDC,L"Open game  >",r,body_font,RGB(90,205,245),DT_LEFT);return TRUE;
-    }
+    case WM_DRAWITEM: if(draw_item((DRAWITEMSTRUCT *)l))return TRUE;break;
     case WM_CTLCOLORSTATIC:SetTextColor((HDC)w,muted);SetBkColor((HDC)w,background);return (LRESULT)background_brush;
     case WM_ERASEBKGND:if(settings_open)return 1;{RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);return 1;}
     case WM_PRINTCLIENT: {
@@ -670,6 +695,10 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER)!=0){MessageBoxW(NULL,L"Could not initialize display and controllers",L"Dyna Brothers",MB_OK);LocalFree(argv);return 1;}
     DWORD dir_len=GetModuleFileNameW(NULL,exe_dir,LD_PATH_CAP);if(!dir_len||dir_len>=LD_PATH_CAP){LocalFree(argv);return 1;}
     wchar_t *last=wcsrchr(exe_dir,L'\\');if(!last){LocalFree(argv);return 1;}*last=0;
+    /* Package layout: DynaBrothers.exe + data\ + roms\. When this launcher
+     * runs from data\, ROMs (and mods) are discovered from the package root. */
+    wcscpy(root_dir,exe_dir);
+    {wchar_t *leaf=wcsrchr(root_dir,L'\\');if(leaf&&!_wcsicmp(leaf+1,L"data"))*leaf=0;else root_dir[0]=0;}
     DWORD pn=GetEnvironmentVariableW(L"GENESIS_USER_DIR",profile_dir,LD_PATH_CAP);if(!pn||pn>=LD_PATH_CAP)wcscpy(profile_dir,exe_dir);
     swprintf(config_path,LD_PATH_CAP,L"%ls\\settings.ini",profile_dir);
     for(int i=0;i<2;i++){

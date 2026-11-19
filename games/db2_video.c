@@ -5,6 +5,8 @@
 #include "db2_effects.h"
 #include "db2_visor.h"
 #include "db2_bio_overlay.h"
+#include "db2_wide_menu.h"
+#include "db2_menu_labels.h"
 #include "viewport.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
@@ -27,11 +29,24 @@ static Db2WorldEffect effects[80];
 static size_t effect_count;
 static uint32_t background;
 static uint32_t native_image[224][320];
+/* Native row plus plane/sprite margins (db2_wide_menu): the presentation used
+ * for every frame that is not an accepted widened battle frame. */
+static uint32_t wide_image[224][LIMIT];
+static uint8_t wide_valid[224];
+static int wide_w;
 static uint8_t native_valid[224],owner_kind[80];
 static int rejected;
 static int world_is_a;
+/* Displayed-vs-modelled terrain alignment. During held camera pans the guest
+ * advances the VDP scroll in 16-pixel steps while the RAM camera cell only
+ * moves every 32 pixels, so half of the frames show the plane one sub-step
+ * ahead of the RAM model. The displayed origin is VDP scroll + k (k fixed while
+ * the nametable ring is coherent); off_x/off_y re-align the reconstructed
+ * terrain with what the guest actually shows. Every widened row is still
+ * verified against the native plane, so a wrong guess only rejects a frame. */
+static int have_k,kx,ky,off_x,off_y,model_x,model_y,disp_x,disp_y,plane_w,plane_h,heal_pending,heal_dx,heal_dy;
 static int visor_offset;
-static int trace_enabled;
+static int trace_enabled,trace_frames;
 static unsigned frame_reasons,trace_seen,trace_signature,trace_budget;
 static unsigned trace_ok_frames,trace_fallback_frames,trace_reason_frames[6];
 /* Diagnostic-only producer epoch counter (evidence/db2-visor-research/coherence.md
@@ -41,6 +56,13 @@ static unsigned trace_ok_frames,trace_fallback_frames,trace_reason_frames[6];
  * a dirty span; it does not yet change frame accept/reject behavior (steps 2-4
  * of the proposed contract are not implemented). */
 static unsigned producer_epoch,producer_dirty_since_epoch;
+/* Last accepted widened battle frame, re-presented for at most HOLD_FRAMES
+ * consecutive rejected frames so a one-frame SAT/RAM incoherence or scene
+ * hand-off never flashes the 4:3 native image. Presentation only. */
+enum { HOLD_FRAMES=3 };
+static uint32_t held[MAX_HEIGHT][LIMIT];
+static int held_w,held_h,held_valid;
+static unsigned held_misses;
 void db2_video_visor_offset(int tiles){visor_offset=tiles;}
 int db2_video_visor_requested(void){return visor_offset;}
 static int plane_layout(const GVDP *v){
@@ -50,7 +72,7 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&!strcmp(t,"1");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&(!strcmp(t,"1")||!strcmp(t,"2"));trace_frames=t&&!strcmp(t,"2");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;have_k=off_x=off_y=heal_pending=0;held_valid=0;held_misses=0;}
 void db2_video_observe(unsigned pc){
  if(pc==0x3bb0)world_scene=WORLD_BATTLE;
  else if(pc==0xf794)world_scene=WORLD_DEMO;
@@ -78,6 +100,22 @@ static void capture(const GVDP *v){
  ready=db2_world_read_camera(&c,&camera)&&plane_layout(v)&&
        word(ram+0x2a5a)==0xe036&&word(ram+0x2a5c)==0xe004&&
        word(ram+0x2a5e)==216&&word(ram+0x2a60)==16;
+ off_x=off_y=0;
+ if(ready){
+  static const int sizes[4]={256,512,0,1024};
+  plane_w=sizes[snapshot.reg[16]&3];plane_h=sizes[(snapshot.reg[16]>>4)&3];
+  unsigned hb=((unsigned)snapshot.reg[13]&63)<<10;
+  int hs=(int)(word(snapshot.vram+((hb+(world_is_a?0:2))&65535))&1023);
+  int vs=(int)(snapshot.vsram[world_is_a?0:1]&1023);
+  model_x=(int)camera.cell_x*32-camera.anchor_x;model_y=(int)camera.cell_y*32-camera.anchor_y;
+  disp_x=-hs;disp_y=vs;
+  if(heal_pending&&plane_w&&plane_h){kx=model_x+heal_dx-disp_x;ky=model_y+heal_dy-disp_y;have_k=1;heal_pending=0;}
+  if(have_k&&plane_w&&plane_h){
+   off_x=((disp_x+kx-model_x)%plane_w+plane_w+plane_w/2)%plane_w-plane_w/2;
+   off_y=((disp_y+ky-model_y)%plane_h+plane_h+plane_h/2)%plane_h-plane_h/2;
+   if(off_x<-64||off_x>64||off_y<-64||off_y>64)off_x=off_y=0;
+  }
+ }
  if(!ready)frame_reasons|=1;
  Db2ActorsContext ac={g_rom,2621440,ram,sizeof ram};count=0;
  for(unsigned id=0;id<255;id++)rank[id]=72+id;
@@ -161,6 +199,12 @@ static void classify_sprites(void){
    * parked 32x32 pattern-0 body at x=-32 during Normal2 play). Ownership is
    * irrelevant for it; any non-zero pattern byte still rejects the frame. */
   if(!kind&&sprite_transparent(attr,size))kind=3;
+  /* Gameplay prompt banner ("HATCH EGGS FOR DINOS", written by the native
+   * routine around 0CA8): a row of 32x32 palette-1 sprites using patterns
+   * 370-47F (palette 1 or 2, either flip), slid in from the right and centered on the native 216-pixel
+   * world view. It belongs to the world view, so it follows the world shift
+   * instead of forcing the whole frame back to the native image. */
+  if(!kind&&size==15&&(attr&0x6000)&&(attr&0x6000)!=0x6000&&(attr&0x7ff)>=0x370&&(attr&0x7ff)<0x480)kind=1;
   if(!kind){
    /* Unknown entry: not rejected here. world_row rejects the frame only if one
     * of its pixels is visible in the native raster (sprite_owner without a
@@ -201,8 +245,8 @@ static void effect_row(const Db2WorldEffect *e,int y,int w,int shift,uint8_t *s,
 }
 static uint8_t terrain_pixel(const Db2WorldContext *c,int x,int y){
  uint8_t pixel=0;
- int wx=x-camera.anchor_x+(int)camera.cell_x*32;
- int wy=y-camera.anchor_y+(int)camera.cell_y*32;
+ int wx=x-camera.anchor_x+(int)camera.cell_x*32+off_x;
+ int wy=y-camera.anchor_y+(int)camera.cell_y*32+off_y;
  if(wx>=0&&wy>=0&&wx<1280&&wy<1280)
   db2_world_terrain_plane(c,(unsigned)wx/32,(unsigned)wy/32,(unsigned)wx%32,(unsigned)wy%32,&pixel);
  return pixel;
@@ -238,6 +282,18 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
    if(expected!=native_terrain[x]&&!((native_ui[x]&0x80)&&(native_ui[x]&15))){
     if(trace_enabled&&!rejected){static unsigned n;if(n++%25==0)fprintf(stderr,"[db2-video] terrain mismatch y=%d x=%d expected=%02X native=%02X anchor=%d,%d cell=%d,%d shift=%d\n",y,x,expected,native_terrain[x],camera.anchor_x,camera.anchor_y,(int)camera.cell_x,(int)camera.cell_y,shift);}
     if(trace_enabled&&!rejected){static unsigned m;if(m++%25==0){unsigned bad=0,nz=0,bgc=0;for(int q=0;q<216;q++){bgc+=(y>=0&&y<224&&native_valid[y]&&native_image[y][q]==background);int dd=q+shift;uint8_t ex=dd>=0&&dd<w?terrain[dd]:terrain_pixel(&c,q,y);if(ex!=native_terrain[q])bad++;if(native_terrain[q])nz++;}fprintf(stderr,"[db2-video]   row y=%d mismatching=%u native_nonzero=%u native_img_bg=%u winH=%02X winV=%02X reg0=%02X reg11=%02X vs=%d ui=%02X,%02X,%02X,%02X spr=%02X,%02X,%02X,%02X img=%08X,%08X bg=%08X exp=%02X,%02X\n",y,bad,nz,bgc,snapshot.reg[17],snapshot.reg[18],snapshot.reg[0],snapshot.reg[11],world_is_a,native_ui[0],native_ui[50],native_ui[100],native_ui[200],r->sprite[0],r->sprite[50],r->sprite[100],r->sprite[200],native_image[0][0],native_image[0][100],background,terrain[shift],terrain[shift+100]);}}
+    if(!rejected&&!heal_pending){
+     /* Find the alignment the guest is actually showing on this row and use it
+      * from the next frame on. Ambiguous rows (no unique full match) are left. */
+     int found=0,fx=0,fy=0,sx=off_x,sy=off_y;
+     for(int dy=-32;dy<=32&&found<2;dy+=4)for(int dx=-32;dx<=32&&found<2;dx+=4){
+      off_x=sx+dx;off_y=sy+dy;int q=0;
+      for(;q<216;q++)if(terrain_pixel(&c,q,y)!=native_terrain[q]&&!((native_ui[q]&0x80)&&(native_ui[q]&15)))break;
+      if(q==216){found++;fx=off_x;fy=off_y;}
+     }
+     off_x=sx;off_y=sy;
+     if(found==1){heal_pending=1;heal_dx=fx;heal_dy=fy;}
+    }
     rejected=1;frame_reasons|=16;}
    if(dx>=0&&dx<w)ui[dx]=native_ui[x];
   }
@@ -255,10 +311,21 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  }
  while(ei)effect_row(effects+--ei,y,w,shift,s,o,hi);
  if(r){
+  int unknown_traced=0;
   for(int x=0;x<320;x++){unsigned owner=r->sprite_owner[x];if(!owner)continue;
-   if(owner>80||!owner_kind[owner-1]){rejected=1;frame_reasons|=8;continue;}
-   if(owner_kind[owner-1]==3)continue;
-   int dx=x+(owner_kind[owner-1]==2?layout.hud_shift:shift);
+   if(owner>80){rejected=1;frame_reasons|=8;continue;}
+   /* A visible SAT entry without a recognized source is usually a HUD or unit
+    * pattern whose SAT update lands one frame apart from its RAM source. Its
+    * native pixels are kept, placed by the native region they occupy (HUD
+    * column 216+ or world view), instead of rolling the whole frame back to
+    * the native image and flickering between 16:9 and 4:3. */
+   int kind=owner_kind[owner-1];
+   if(!kind){
+    if(trace_frames&&!(unknown_traced)){unsigned p=((((unsigned)snapshot.reg[5]&127)<<9)+(owner-1)*8)&65535;fprintf(stderr,"[db2-reject] y=%d x=%d link=%u attr=%04X size=%02X sx=%d sy=%d\n",y,x,owner-1,word(snapshot.vram+((p+4)&65535)),snapshot.vram[(p+2)&65535],(int)(word(snapshot.vram+((p+6)&65535))&511)-128,(int)(word(snapshot.vram+p)&1023)-128);}
+    unknown_traced=1;kind=x>=216?2:1;
+   }
+   if(kind==3)continue;
+   int dx=x+(kind==2?layout.hud_shift:shift);
    if(dx<0||dx>=w)continue;
    s[dx]=r->sprite[x];o[dx]=r->opaque[x];hi[dx]=r->high[x];sh[dx]=r->shadow_op[x];hl[dx]=r->hilite_op[x];
   }
@@ -274,23 +341,168 @@ static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNat
  if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);if(supported)capture(v);}
  const uint32_t *p=native(ctx);
  if(y>=0&&y<224&&nw==320){memcpy(native_image[y],p,sizeof native_image[y]);native_valid[y]=1;}
+ if(y==0){memset(wide_valid,0,sizeof wide_valid);wide_w=w;db2_wide_menu_frame(v);db2_menu_labels_frame(v);}
+ if(y>=0&&y<224&&nw==320&&w>320&&w<=LIMIT&&w==wide_w){
+  uint32_t *row=wide_image[y];int left=(w-320)/2;
+  for(int x=0;x<w;x++)row[x]=background;
+  memcpy(row+left,p,320*sizeof *p);
+  db2_wide_menu_row(v,y,row,w,left,1);
+  db2_menu_labels_row(v,y,row,w,left);
+  wide_valid[y]=1;
+ }
  if(supported&&ready){
   if(memcmp(ram,g_ram,sizeof ram))capture(v);else memcpy(&snapshot,v,sizeof snapshot);
   classify_sprites();
  }
- if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;for(int x=0;x<w;x++)out[x]=background;if(w>=nw){memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);if(nw==320)db2_bio_overlay_row(v,y,out,w,(w-nw)/2);}return;}
+ if(trace_frames&&(y==100)&&world_scene!=WORLD_BATTLE){
+  static unsigned probe_n;if(probe_n++%30==0){
+  unsigned hb=((unsigned)v->reg[13]&63)<<10;int wt=(v->reg[16]&3)==1?64:(v->reg[16]&3)==3?128:32;int ht=((v->reg[16]>>4)&3)==1?64:((v->reg[16]>>4)&3)==3?128:32;
+  char colsA[129]={0},colsB[129]={0};
+  for(int pl=0;pl<2;pl++){unsigned base=pl?((unsigned)v->reg[4]&7)<<13:((unsigned)v->reg[2]&0x38)<<10;char *cs=pl?colsB:colsA;
+   for(int cx=0;cx<wt&&cx<128;cx++){int n=0;for(int cy=0;cy<ht;cy++){unsigned a2=(base+((unsigned)(cy*wt+cx)<<1))&0xffff;if(v->vram[a2]|v->vram[(a2+1)&0xffff])n++;}cs[cx]=n==0?'.':n<ht/2?'+':'#';}}
+  fprintf(stderr,"[db2-introprobe] size=%dx%d hsA=%d hsB=%d vsA=%d vsB=%d hmode=%d\n A:%s\n B:%s\n",wt,ht,(int)(((v->vram[hb]<<8)|v->vram[hb+1])&1023),(int)(((v->vram[hb+2]<<8)|v->vram[hb+3])&1023),v->vsram[0]&1023,v->vsram[1]&1023,v->reg[11]&3,colsA,colsB);}
+ }
+ if(!supported||!ready||rejected){if(!supported)frame_reasons|=32;rejected=1;
+  if(y>=0&&y<224&&wide_valid[y]&&w==wide_w)memcpy(out,wide_image[y],(size_t)w*sizeof *out);
+  else{for(int x=0;x<w;x++)out[x]=background;if(w>=nw)memcpy(out+(w-nw)/2,p,(size_t)nw*sizeof *p);}
+  if(w>=nw&&nw==320){db2_bio_overlay_row(v,y,out,w,(w-nw)/2);db2_menu_labels_row(v,y,out,w,(w-nw)/2);}
+  return;}
  world_row(y,w,r,out);
 }
 static void complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
- (void)v;if(!pixels||w<320||w>LIMIT||h>MAX_HEIGHT||stride<w||top<0||top+nh>h)return;
- for(int y=0;y<h;y++)if(y<top||y>=top+nh){if(ready)world_row(y-top,w,NULL,pixels+(size_t)y*stride);else for(int x=0;x<w;x++)pixels[(size_t)y*stride+x]=background;}
+if(!pixels||w<320||w>LIMIT||h>MAX_HEIGHT||stride<w||top<0||top+nh>h)return;
+ for(int y=0;y<h;y++)if(y<top||y>=top+nh){if(ready)world_row(y-top,w,NULL,pixels+(size_t)y*stride);else{uint32_t *o=pixels+(size_t)y*stride;for(int x=0;x<w;x++)o[x]=background;if(w>320)db2_wide_menu_row(v,y-top,o,w,(w-320)/2,0);}}
 }
 static void trace_totals(void){
  if(trace_enabled&&!((trace_ok_frames+trace_fallback_frames)%600))fprintf(stderr,"[db2-video] totals accepted=%u fallback=%u r01=%u r02=%u r04=%u r08=%u r10=%u r20=%u\n",trace_ok_frames,trace_fallback_frames,trace_reason_frames[0],trace_reason_frames[1],trace_reason_frames[2],trace_reason_frames[3],trace_reason_frames[4],trace_reason_frames[5]);
 }
+/* DB1-style panel stretch for menu screens whose art is exactly 4:3: find a
+ * pixel column near each side that is horizontally flat on nearly every line
+ * (a panel interior or frame run), move everything outside it outward by the
+ * margin and repeat that column across the gap. The lettering/cursor between
+ * the two columns keep their exact native pixels and position. */
+static int flat_rows(int x,int dir){
+ int n=0;for(int y=0;y<224;y++)n+=native_image[y][x]==native_image[y][x+dir];
+ return n;
+}
+/* Percentage of margin pixels that carry real plane/sprite art this frame. */
+static int margin_art(int w){
+ int margin=(w-320)/2;unsigned art=0,total=0;
+ if(margin<=0||w!=wide_w)return 0;
+ for(int y=0;y<224;y++)if(wide_valid[y])for(int x=0;x<margin;x++){total+=2;art+=(wide_image[y][x]!=background)+(wide_image[y][w-1-x]!=background);}
+ return total?(int)(art*100u/total):0;
+}
+static int same_rows(int x,int d){
+ int n=0;for(int y=0;y<224;y++)n+=native_image[y][x]==native_image[y][x+d];
+ return n;
+}
+static int panel_stretch(uint32_t *pixels,int stride,int w,int top){
+ int margin=(w-320)/2;
+ if(margin<=0)return 0;
+ for(int y=0;y<224;y++)if(!native_valid[y])return 0;
+ int xl=-1,xr=-1;
+ /* Sticky: while the columns chosen for this screen stay valid, keep them,
+  * so an animated background never makes the layout jump between frames. */
+ static int last_xl=-1,last_xr=-1;
+ if(last_xl>=0&&flat_rows(last_xl,1)>=150&&same_rows(last_xl,8)>=150&&
+    flat_rows(last_xr,-1)>=150&&same_rows(last_xr,-8)>=150){xl=last_xl;xr=last_xr;}
+ else{
+ last_xl=last_xr=-1;
+ /* Screens whose own planes already continue past 4:3 (main menu, intro)
+  * keep that real art instead. */
+ if(margin_art(w)>=30)return 0;
+ /* The repeated column must be a wide interior (same colour eight pixels
+  * further in), with a frame (busy columns) between it and the screen edge. */
+ int busy_l=0,busy_r=0;
+ for(int x=4;x<=64&&xl<0;x++){
+  if(flat_rows(x,1)<112)busy_l=1;
+  if(busy_l&&flat_rows(x,1)>=168&&same_rows(x,8)>=168)xl=x;
+ }
+ for(int x=315;x>=255&&xr<0;x--){
+  if(flat_rows(x,-1)<112)busy_r=1;
+  if(busy_r&&flat_rows(x,-1)>=168&&same_rows(x,-8)>=168)xr=x;
+ }
+ if(xl<16||xr<0||xr>303||xr-xl<160)return 0;
+ last_xl=xl;last_xr=xr;
+ }
+ for(int y=0;y<224;y++){
+  uint32_t *row=pixels+(size_t)(y+top)*stride;const uint32_t *n=native_image[y];
+  /* One column for every line: the gap is that column's colour, never a
+   * copied block (which would echo borders, cursors or HUD pieces). A line
+   * where that column touches an outline/shadow (not wide interior) takes the
+   * colour of the nearest interior line instead. */
+  int a=xl,b=xr;
+  uint32_t gl=n[xl],gr=n[xr];
+  if(!(n[xl]==n[xl+1]&&n[xl]==n[xl+8]))for(int d=1;d<224;d++){
+   int yy=y-d;if(yy>=0){const uint32_t *m=native_image[yy];if(m[xl]==m[xl+1]&&m[xl]==m[xl+8]){gl=m[xl];break;}}
+   yy=y+d;if(yy<224){const uint32_t *m=native_image[yy];if(m[xl]==m[xl+1]&&m[xl]==m[xl+8]){gl=m[xl];break;}}
+  }
+  if(!(n[xr]==n[xr-1]&&n[xr]==n[xr-8]))for(int d=1;d<224;d++){
+   int yy=y-d;if(yy>=0){const uint32_t *m=native_image[yy];if(m[xr]==m[xr-1]&&m[xr]==m[xr-8]){gr=m[xr];break;}}
+   yy=y+d;if(yy<224){const uint32_t *m=native_image[yy];if(m[xr]==m[xr-1]&&m[xr]==m[xr-8]){gr=m[xr];break;}}
+  }
+  for(int dx=0;dx<w;dx++){
+   int x=dx-margin;uint32_t c;
+   if(x<a+1-margin)c=n[x+margin];
+   else if(x<a+1)c=gl;
+   else if(x<b)c=n[x];
+   else if(x<b+margin)c=gr;
+   else c=n[x-margin];
+   row[dx]=c;
+  }
+ }
+ return 1;
+}
+/* Non-battle frames: what goes above/below the 224 native lines.
+ * A plain sky on the first native line (title/main menu beach) anchors the
+ * image to the bottom of the canvas and continues that sky upward, as DB1's
+ * title does; otherwise rows without art fade the native edge into the
+ * backdrop over eight lines (DB1 intro fade, vertical). */
+static int sky_row(const uint32_t *row){
+ uint32_t c=row[160];unsigned same=0;
+ for(int x=0;x<320;x++)same+=row[x]==c;
+ unsigned r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+ return same>=280&&b>=96&&b>=r&&r+g+b>=200;
+}
+static void vertical_finish(uint32_t *pixels,int stride,int w,int h,int top){
+ int bottom=h-(top+224);
+ if(top<0||bottom<0)return;
+ if(!db2_wide_menu_extended()&&panel_stretch(pixels,stride,w,top)){
+  /* Lines above/below continue the stretched first/last line. */
+  for(int y=0;y<top;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)top*stride,(size_t)w*sizeof *pixels);
+  for(int y=top+224;y<h;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(top+223)*stride,(size_t)w*sizeof *pixels);
+  return;
+ }
+ if(top<=0)return;
+ if(native_valid[0]&&native_valid[223]&&sky_row(native_image[0])){
+  for(int y=h-1;y>=top+bottom;y--)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(y-bottom)*stride,(size_t)w*sizeof *pixels);
+  for(int y=0;y<top+bottom;y++)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(top+bottom)*stride,(size_t)w*sizeof *pixels);
+  return;
+ }
+ /* Intro (art authored past the 4:3 window): like the DB1 intro, the sides
+  * stay backdrop and the original left/right borders fade into it over
+  * sixteen native pixels; the continued art is kept only above and below. */
+ /* Map scenes with nothing authored outside 4:3 (attract demo, cutscenes):
+  * the same treatment, so stray off-screen sprites never float on black. */
+ if(!db2_wide_menu_extended()&&margin_art(w)>=30)return;
+ int left=(w-320)/2;
+ for(int y=0;y<h;y++){
+  uint32_t *row=pixels+(size_t)y*stride;
+  for(int x=0;x<left;x++)row[x]=background;
+  for(int x=left+320;x<w;x++)row[x]=background;
+  for(int i=0;i<16;i++){unsigned wgt=(unsigned)(i*i*(45-2*i));row[left+i]=db2_wide_menu_blend(row[left+i],background,wgt);row[left+319-i]=db2_wide_menu_blend(row[left+319-i],background,wgt);}
+ }
+}
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
+ if(trace_frames&&v){
+  unsigned hb=((unsigned)snapshot.reg[13]&63)<<10;
+  fprintf(stderr,"[db2-frame] n=%u ok=%d reasons=%02X ready=%d scene=%d ramscroll=%d,%d vdp_hs=%d,%d vs=%d,%d ring=%u,%u cell=%u,%u\n",trace_ok_frames+trace_fallback_frames,!rejected&&ready,frame_reasons,ready,world_scene,(int)(int16_t)word(g_ram+0x2bf8),(int)(int16_t)word(g_ram+0x2bfa),(int)(word(snapshot.vram+hb)&1023),(int)(word(snapshot.vram+hb+2)&1023),snapshot.vsram[0]&1023,snapshot.vsram[1]&1023,camera.ring_x,camera.ring_y,camera.cell_x,camera.cell_y,off_x,off_y);
+ }
  if(!rejected&&ready){
+  for(int y=0;y<h;y++)memcpy(held[y],pixels+(size_t)y*stride,(size_t)w*sizeof *pixels);
+  held_w=w;held_h=h;held_valid=1;held_misses=0;
+  if(plane_w&&plane_h){kx=model_x+off_x-disp_x;ky=model_y+off_y-disp_y;have_k=1;}
   ++trace_ok_frames;trace_totals();
   if(trace_enabled&&!(trace_seen&64)){
    Db2VisorLayout layout={0};db2_visor_layout(w,visor_offset,&layout);
@@ -308,11 +520,25 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
    --trace_budget;trace_signature=signature;trace_seen|=frame_reasons;
   }
  }
+ if(held_valid&&held_w==w&&held_h==h&&world_scene==WORLD_BATTLE&&++held_misses<=HOLD_FRAMES){
+  for(int y=0;y<h;y++)memcpy(pixels+(size_t)y*stride,held[y],(size_t)w*sizeof *pixels);
+  return;
+ }
+ held_valid=0;
  /* All rows are restored together, including rows drawn before an unknown
   * effect appeared. No callback/provider/runner pointer is retained. */
  for(int y=0;y<h;y++){
-  uint32_t *out=pixels+(size_t)y*stride;for(int x=0;x<w;x++)out[x]=background;
-  int source=y-top;if(source>=0&&source<224&&native_valid[source]){memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);db2_bio_overlay_row(v,source,out,w,(w-320)/2);}
+  uint32_t *out=pixels+(size_t)y*stride;int source=y-top;
+  if(source>=0&&source<224&&wide_valid[source]&&w==wide_w){memcpy(out,wide_image[source],(size_t)w*sizeof *out);{db2_bio_overlay_row(v,source,out,w,(w-320)/2);db2_menu_labels_row(v,source,out,w,(w-320)/2);}continue;}
+  for(int x=0;x<w;x++)out[x]=background;
+  if(source>=0&&source<224&&native_valid[source]){memcpy(out+(w-320)/2,native_image[source],sizeof native_image[source]);{db2_bio_overlay_row(v,source,out,w,(w-320)/2);db2_menu_labels_row(v,source,out,w,(w-320)/2);}}
+  else if(w>320)db2_wide_menu_row(v,source,out,w,(w-320)/2,0);
  }
+ vertical_finish(pixels,stride,w,h,top);
 }
-const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete,.overlay_scanline=db2_bio_overlay_scanline};
+static void overlay_scanline(const GVDP *v,int line,uint32_t *out,int width){
+ db2_bio_overlay_scanline(v,line,out,width);
+ if(line==0)db2_menu_labels_frame(v);
+ db2_menu_labels_row(v,line,out,width,width>=320?(width-320)/2:0);
+}
+const GameVideo db2_video={.configure=configure,.enabled=enabled,.width=width,.raster_enabled=raster_enabled,.scanline_presented=scanline,.integer_scale_supported=1,.canvas_geometry=geometry,.canvas_complete=complete,.frame_complete=frame_complete,.overlay_scanline=overlay_scanline};
