@@ -5418,7 +5418,7 @@
     {
       "words": "016C 0173 0137 0165 0126 0001 00D4",
       "lines": [
-        "PRACTICE 4"
+        "PRACTICE #"
       ],
       "verification": "script dialogue in RAM stream (password-route stages)"
     },

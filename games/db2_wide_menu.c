@@ -1,0 +1,164 @@
+#include "db2_wide_menu.h"
+#include "video/genesis_vdp.h"
+#include "video/genesis_dac.h"
+#include "video/genesis_vdp_compose.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+enum { MAX_W=768 };
+static unsigned rd(const GVDP *v,unsigned a){a&=0xffff;return ((unsigned)v->vram[a]<<8)|v->vram[(a+1)&0xffff];}
+uint32_t db2_wide_menu_blend(uint32_t pixel,uint32_t backdrop,unsigned weight){
+ const unsigned denominator=3375;   /* smoothstep over 16 pixels, 15^3 */
+ if(weight>denominator)weight=denominator;
+ uint32_t result=pixel&0xff000000u;
+ for(unsigned shift=0;shift<24;shift+=8){
+  unsigned x=(pixel>>shift)&255,y=(backdrop>>shift)&255;
+  result|=((x*weight+y*(denominator-weight)+denominator/2)/denominator)<<shift;
+ }
+ return result;
+}
+static int cells(unsigned bits){return bits==0?32:bits==1?64:bits==3?128:32;}
+
+/* Per-frame column occupancy (whole plane height). A margin column whose name
+ * entries are all zero has no art; it repeats the nearest edge block of the
+ * authored run instead (EDGE_PERIOD cells, the floor/background texture
+ * period), so backgrounds authored only a little wider than 320 continue. */
+enum { EDGE_PERIOD=4 };
+/* 2 = dense art, 1 = sparse art, 0 = empty; per plane column and row. */
+static uint8_t col_art[2][128],row_art[2][128];
+static int occupancy_ready,extended_used;
+
+void db2_wide_menu_frame(const GVDP *v){
+ occupancy_ready=0;extended_used=0;if(!v)return;
+ int wt=cells(v->reg[16]&3),ht=cells((v->reg[16]>>4)&3);if(wt*ht>4096)ht=4096/wt;
+ for(int plane=0;plane<2;plane++){
+  unsigned base=plane?((unsigned)v->reg[4]&7)<<13:((unsigned)v->reg[2]&0x38)<<10;
+  /* Only dense background columns/rows (art on at least 3/4 of the visible
+   * 28 rows / 40 columns) count; sparse overlays such as dialogue boxes are
+   * never repeated. */
+  int need_c=(ht<28?ht:28)*3/4,need_r=(wt<40?wt:40)*3/4;
+  int rows[128]={0};
+  for(int cx=0;cx<wt;cx++){int n=0;for(int cy=0;cy<ht;cy++){int on=rd(v,base+((unsigned)(cy*wt+cx)<<1))!=0;n+=on;rows[cy]+=on;}col_art[plane][cx]=(uint8_t)(n>=need_c?2:n?1:0);}
+  for(int cy=0;cy<ht;cy++)row_art[plane][cy]=(uint8_t)(rows[cy]>=need_r?2:rows[cy]?1:0);
+ }
+ occupancy_ready=1;
+}
+/* An empty cell outside the window repeats the nearest edge block of the dense
+ * run around the visible centre, but only when the guest authored that run
+ * wider/taller than the visible window (a scrolling background); a panel
+ * exactly the size of the 4:3 window keeps its frame inside it. */
+static int remap(const uint8_t *art,int pc,int n,int center,int visible){
+ if(!occupancy_ready||art[pc]||art[center]!=2)return pc;
+ int s=center,e=center,k=0;
+ while(k<n&&art[(s-1+n)%n]==2){s=(s-1+n)%n;k++;}
+ k=0;while(k<n&&art[(e+1)%n]==2){e=(e+1)%n;k++;}
+ int len=(e-s+n)%n+1;
+ if(len<=visible||len>=n)return pc;
+ int left=(s-pc+n)%n,right=(pc-e+n)%n;
+ extended_used=1;
+ if(left<=right){int q=(EDGE_PERIOD-left%EDGE_PERIOD)%EDGE_PERIOD;return (s+q)%n;}
+ int q=(right-1)%EDGE_PERIOD;return (e-EDGE_PERIOD+1+q+n)%n;
+}
+
+static int last_tile;
+uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
+ int wt=cells(v->reg[16]&3),ht=cells((v->reg[16]>>4)&3);
+ /* 128-cell planes are only valid with 32-cell height and vice versa. */
+ if(wt*ht>4096)ht=4096/wt;
+ int pw=wt*8,ph=ht*8;
+ unsigned base=plane?((unsigned)v->reg[4]&7)<<13:((unsigned)v->reg[2]&0x38)<<10;
+ unsigned hbase=((unsigned)v->reg[13]&63)<<10;
+ int hmode=v->reg[11]&3;
+ int l=line<0?0:line>223?223:line;   /* letterbox rows reuse the edge scroll */
+ int hidx=hmode==0?0:hmode==2?(l&~7):l;
+ int hs=(int)(rd(v,hbase+(unsigned)hidx*4+(plane?2u:0u))&1023);
+ int vs;
+ if(v->reg[11]&4){
+  int col=x>>4;if(col<0)col=0;if(col>19)col=19;
+  vs=v->vsram[(col*2+plane)&(GVDP_VSRAM_ENTRIES-1)]&1023;
+ }else vs=v->vsram[plane]&1023;
+ int px=((x-hs)%pw+pw)%pw,py=((line+vs)%ph+ph)%ph;
+ if(x<0||x>=320){
+  int center=(((160-hs)%pw+pw)%pw)>>3;
+  px=(remap(col_art[plane],px>>3,wt,center,40)<<3)|(px&7);
+ }
+ if(line<0||line>=224){
+  int center=(((112+vs)%ph+ph)%ph)>>3;
+  py=(remap(row_art[plane],py>>3,ht,center,28)<<3)|(py&7);
+ }
+ unsigned name=rd(v,base+((unsigned)((py>>3)*wt+(px>>3))<<1));
+ last_tile=name!=0;
+ int tx=px&7,ty=py&7;
+ if(name&0x800)tx=7-tx;
+ if(name&0x1000)ty=7-ty;
+ unsigned b=v->vram[((name&2047)*32+(unsigned)ty*4+(unsigned)tx/2)&0xffff];
+ unsigned c=(tx&1)?b&15:b>>4;
+ if(!c)return (uint8_t)((name&0x8000)?0x80:0);
+ return (uint8_t)(((name>>9)&48)|c|0x40|((name&0x8000)?0x80:0));
+}
+
+/* Window plane replaces plane A on its region; the margin beside a window
+ * region has no plane A of its own, so plane A is left transparent there. */
+static int window_side(const GVDP *v,int line,int x){
+ unsigned wx=v->reg[17],wy=v->reg[18];
+ int wyl=(int)(wy&31)*8;
+ if(wy&128?line>=wyl:line<wyl)return 1;
+ int wxp=(int)(wx&31)*16;
+ if(!wxp&&!(wx&128))return 0;
+ if(wx&128)return x>=wxp;   /* window to the right of wxp */
+ return x<wxp;              /* window to the left of wxp */
+}
+
+static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,uint8_t *hi){
+ unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0};
+ for(int n=0;n<80;n++){
+  if(link>=80||seen[link])return;seen[link]=1;
+  unsigned p=base+link*8;
+  int sy=(int)(rd(v,p)&511)-128;
+  unsigned size=v->vram[(p+2)&0xffff],next=v->vram[(p+3)&0xffff]&127;
+  unsigned attr=rd(v,p+4);
+  int sx=(int)(rd(v,p+6)&511)-128;
+  int hc=(int)((size>>2)&3)+1,vc=(int)(size&3)+1;
+  if(line>=sy&&line<sy+vc*8&&sx>-128){
+   int ry=line-sy;if(attr&0x1000)ry=vc*8-1-ry;
+   for(int c=0;c<hc*8;c++){
+    int x=sx+c;
+    if(x>=0&&x<320)continue;              /* native columns stay authentic */
+    int dx=x+left;if(dx<0||dx>=w||o[dx])continue;
+    int rx=c;if(attr&0x800)rx=hc*8-1-rx;
+    unsigned tile=((attr&2047)+(unsigned)(rx>>3)*(unsigned)vc+(unsigned)(ry>>3))&2047;
+    unsigned b=v->vram[(tile*32+(unsigned)(ry&7)*4+(unsigned)(rx&7)/2)&0xffff];
+    unsigned col=(rx&1)?b&15:b>>4;
+    if(!col)continue;
+    s[dx]=(uint8_t)(((attr>>9)&48)|col);o[dx]=1;hi[dx]=(uint8_t)(attr>>15);
+   }
+  }
+  if(!next)return;
+  link=next;
+ }
+}
+
+int db2_wide_menu_row(const GVDP *v,int line,uint32_t *out,int w,int left,int native_row){
+ if(!v||!out||w<=320||w>MAX_W||left<0||left+320>w)return 0;
+ if(!(v->reg[12]&1))return 0;        /* H40 only */
+ if(!(v->reg[1]&0x40)){for(int x=0;x<w;x++)if(!native_row||x<left||x>=left+320)out[x]=0xff000000u;return 1;}
+ uint8_t a[MAX_W]={0},b[MAX_W]={0},s[MAX_W]={0},o[MAX_W]={0},hi[MAX_W]={0},z[MAX_W]={0},px[MAX_W],art[MAX_W]={0};
+ for(int dx=0;dx<w;dx++){
+  int x=dx-left;
+  if(native_row&&x>=0&&x<320)continue;
+  b[dx]=db2_wide_menu_plane_pixel(v,1,x,line);art[dx]=(uint8_t)last_tile;
+  if(!window_side(v,line,x)){a[dx]=db2_wide_menu_plane_pixel(v,0,x,line);art[dx]|=(uint8_t)last_tile;}
+ }
+ sprites(v,line,left,w,s,o,hi);
+ int shadow=(v->reg[12]&8)!=0;
+ gvdp_compose_span(px,a,b,s,o,hi,z,z,w,(uint8_t)(v->reg[7]&63),shadow);
+ for(int dx=0;dx<w;dx++){
+  if(native_row&&dx>=left&&dx<left+320)continue;
+  unsigned p=px[dx];
+  out[dx]=genesis_dac_cram_to_argb(v->cram[p&63],p>=128?2:p>=64?1:0);
+ }
+ return 1;
+}
+
+int db2_wide_menu_extended(void){return extended_used;}

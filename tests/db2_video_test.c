@@ -83,9 +83,10 @@ int main(void){
  /* Valid-looking temporary record16 is not blanket-classified as HUD. */
  setup();w16(g_ram+0x2752+16*8+4,0x82fd);w16(g_ram+0x2752+16*8+2,0x0f00);
  w16(v.vram+4,0x82fd);w16(v.vram+2,0x0f00);w16(v.vram,128);w16(v.vram+6,128);
- v.vram[0x2fd*32]=0x11; /* Visible pattern data: an unowned entry that draws pixels must reject. */
+ v.vram[0x2fd*32]=0x11; /* Visible pattern data from an unowned entry: its native pixels are
+  * kept in the widened view (placed by region) instead of rolling the frame back to 4:3. */
  r.sprite_owner[0]=1;r.sprite[0]=1;r.opaque[0]=1;
- db2_video_observe(0x3bb0);row(0,427);row(1,427);assert(out[53]==original[0]);
+ db2_video_observe(0x3bb0);row(0,427);row(1,427);assert(out[53]!=original[0]);
  setup();v.reg[2]=0;db2_video_observe(0x3bb0);row(0,427);assert(out[53]==original[0]);
  setup();w16(g_ram+0x2a60,112);db2_video_observe(0x3bb0);row(0,427);assert(out[53]==original[0]);
  setup();row(0,398);assert(calls==1&&out[39]==original[0]&&out[0]==0xff000000);
@@ -125,7 +126,9 @@ int main(void){
   row(y,398);memcpy(canvas+(size_t)y*480,out,398*sizeof *out);
  }
  db2_video.frame_complete(&v,canvas,480,398,224,0,224);
- for(int y=0;y<224;y++){assert(canvas[(size_t)y*480+39]==original[0]);assert(canvas[(size_t)y*480+38]==0xff000000);}
+ /* The unknown entry keeps its native pixels in place; no row of the frame is
+  * left as native fallback (no mixed enhanced/native frame, no 4:3 flash). */
+ for(int y=0;y<224;y++)assert(canvas[(size_t)y*480+39]!=original[0]);
  /* Per-row palette updates apply to BOTH sides of old native boundary. */
  setup();db2_video_observe(0x3bb0);row(0,398);v.cram[63]=0xe;row(1,398);
  assert(out[100]==out[216]&&out[216]==genesis_dac_cram_to_argb(0xe,0));
