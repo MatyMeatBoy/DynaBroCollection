@@ -116,6 +116,13 @@ int main(void){
  g_rom[0x1220]=0;g_rom[0x1221]=0;g_rom[0x1222]=5;
  for(unsigned id=1;id<=41;id++){uint8_t *rec=g_ram+0x5f58+48*id;rec[0]=1;rec[2]=15;rec[3]=15;}
  g_ram[0x5f58+48*41+2]=26;v.cram[26]=0xe;v.cram[27]=0xe0;
+ /* A 42nd actor with an unconfigured type (db2_actor_decode fails on
+  * type>92) must not drop the whole frame to native fallback -- only
+  * that actor's own sprite should be skipped. Regression coverage for
+  * the 2026-11-18 fix mirroring the DB1 prepare_actors()/center_supported
+  * fix (confirmed live: reason 04 fired during ordinary DB2 battle play,
+  * not just the documented pre-battle window). */
+ g_ram[0x5f58+48*42]=200;
  db2_video_observe(0x3bb0);row(0,480);row(4,480);
  assert(calls==2&&out[444]==genesis_dac_cram_to_argb(v.cram[26],0));
  /* A late unknown world sprite at x300 must neither become HUD nor leave

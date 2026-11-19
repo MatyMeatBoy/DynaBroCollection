@@ -10,6 +10,7 @@
 #include "hub_settings.h"
 #include "hub_navigation.h"
 #include "hub_layout.h"
+#include "manual_data.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,12 +54,22 @@ static void image_paint(HDC dc,void *image,RECT r) {
   image_draw(graphics,image,r.left,r.top,dw,dh);graphics_delete(graphics);
  }
 }
-static HWND cards[2],settings_buttons[2],status;
+static HWND cards[2],settings_buttons[2],manual_buttons[2],status;
+static HWND manual_prev,manual_next,manual_lang,manual_close;
+static DynaManualBook manual_books[2];static int manual_books_loaded[2];
+static int manuals_game=-1,manuals_page,manuals_show_translation=0;
+static void *manual_page_image,*manual_page_image2;static wchar_t manual_page_image_path[LD_PATH_CAP];
+/* PDF-reader-style pagination: page 0 (the cover) alone, then facing pairs
+ * (1,2), (3,4), (5,6)... -- never an arbitrary two pages glued together. */
+static int manuals_spread_start(int page){return page<=0?0:1+((page-1)/2)*2;}
+static int manuals_next_spread(int page){return page==0?1:page+2;}
+static int manuals_prev_spread(int page){return page<=1?0:page-2;}
 static int settings_open,closing_hub;
 static unsigned settings_visits[2];
 static DynaHubLayout home_layout;
 static int ui_scale_milli=1000;
 static DynaHubNavigation hub_navigation;
+static DynaMenuControls manuals_controls;
 static wchar_t exe_dir[LD_PATH_CAP],profile_dir[LD_PATH_CAP],cached_rom[2][LD_PATH_CAP],selected_rom[2][LD_PATH_CAP];
 static wchar_t config_path[LD_PATH_CAP],cache_path[2][LD_PATH_CAP];
 static ld_inventory discovered;
@@ -109,11 +120,25 @@ static void layout(HWND window) {
   ui_scale_milli=home_layout.ui_scale_milli;fonts();
  }
  for(int i=0;i<2;i++){
-  move_control(cards[i],home_layout.cards[i]);move_control(settings_buttons[i],home_layout.settings[i]);
+  move_control(cards[i],home_layout.cards[i]);
+  DynaHubRect sr=home_layout.settings[i];int gap=scale(8);
+  DynaHubRect settings_part=sr;settings_part.w=sr.w*62/100;
+  DynaHubRect manual_part=sr;manual_part.x=sr.x+settings_part.w+gap;manual_part.w=sr.w-settings_part.w-gap;
+  move_control(settings_buttons[i],settings_part);move_control(manual_buttons[i],manual_part);
   if(settings_buttons[i])SetWindowPos(settings_buttons[i],HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+  if(manual_buttons[i])SetWindowPos(manual_buttons[i],HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
  }
  move_control(status,home_layout.status);
  if(status)SendMessageW(status,WM_SETFONT,(WPARAM)body_font,TRUE);
+ if(manuals_game>=0){
+  RECT r;GetClientRect(window,&r);int pad=scale(16),bar=scale(44);
+  DynaHubRect bar_rect={pad,r.bottom-bar-pad,r.right-2*pad,bar};
+  int gap=scale(10);int bw2=(bar_rect.w-3*gap)/4;
+  move_control(manual_prev,(DynaHubRect){bar_rect.x,bar_rect.y,bw2,bar_rect.h});
+  move_control(manual_lang,(DynaHubRect){bar_rect.x+bw2+gap,bar_rect.y,bw2,bar_rect.h});
+  move_control(manual_next,(DynaHubRect){bar_rect.x+2*(bw2+gap),bar_rect.y,bw2,bar_rect.h});
+  move_control(manual_close,(DynaHubRect){bar_rect.x+3*(bw2+gap),bar_rect.y,bw2,bar_rect.h});
+ }
  InvalidateRect(window,NULL,TRUE);
 }
 static void draw_text(HDC dc,const wchar_t *text,RECT r,HFONT font,COLORREF color,UINT flags) {
@@ -187,16 +212,221 @@ static void launch(HWND window,int index) {
     EnableWindow(cards[0],FALSE);EnableWindow(cards[1],FALSE);
     SetWindowTextW(status,L"Game running. Close its window to return here.");SetTimer(window,1,250,NULL);
 }
+static void *manuals_load_page_image(const DynaManualBook *book,int page,wchar_t *directory) {
+ void *image=NULL;
+ if(page<0||page>=(int)book->count)return NULL;
+ wchar_t *slash=wcsrchr(directory,L'\\');
+ if(!slash)return NULL;
+ slash[1]=0;wchar_t rel[LD_PATH_CAP];
+ if(ld_utf8_to_wide(book->pages[page].image,rel,LD_PATH_CAP)){
+  for(wchar_t *p=rel;*p;p++)if(*p==L'/')*p=L'\\';
+  wchar_t path[LD_PATH_CAP];swprintf(path,LD_PATH_CAP,L"%ls%ls",directory,rel);
+  image_load(path,&image);
+ }
+ *slash=L'\\';
+ return image;
+}
+/* PDF-reader pagination: `page` is the spread's FIRST page (0 = cover
+ * alone; 1,3,5... = the left half of a facing pair). Loads both halves. */
+static void manuals_set_page(HWND window,int page) {
+ if(manuals_game<0)return;
+ DynaManualBook *book=&manual_books[manuals_game];
+ if(!book->count)return;
+ if(page<0)page=0;if(page>=(int)book->count)page=(int)book->count-1;
+ page=manuals_spread_start(page);
+ manuals_page=page;
+ if(manual_page_image){image_dispose(manual_page_image);manual_page_image=NULL;}
+ if(manual_page_image2){image_dispose(manual_page_image2);manual_page_image2=NULL;}
+ wchar_t directory[2048];DWORD n=GetModuleFileNameW(NULL,directory,2048);
+ if(n&&n<2048){
+  manual_page_image=manuals_load_page_image(book,page,directory);
+  if(page>0)manual_page_image2=manuals_load_page_image(book,page+1,directory);
+ }
+ if(window)InvalidateRect(window,NULL,TRUE);
+}
+static void manuals_open(HWND window,int game) {
+ if(game<0||game>1)return;
+ memset(&manuals_controls,0,sizeof manuals_controls);
+ if(!manual_books_loaded[game]){
+  wchar_t directory[2048];DWORD n=GetModuleFileNameW(NULL,directory,2048);
+  if(n&&n<2048){
+   wchar_t *slash=wcsrchr(directory,L'\\');
+   if(slash){
+    slash[1]=0;wchar_t wpath[LD_PATH_CAP];char path[LD_PATH_CAP*2];
+    swprintf(wpath,LD_PATH_CAP,L"%lsassets\\img\\manuals\\db%d-manual-en.json",directory,game+1);
+    if(ld_wide_to_utf8(wpath,path,sizeof path))dyna_manual_load_file(path,&manual_books[game]);
+   }
+  }
+  manual_books_loaded[game]=1;
+ }
+ manuals_game=game;manuals_show_translation=0;
+ for(int i=0;i<2;i++){ShowWindow(cards[i],SW_HIDE);ShowWindow(settings_buttons[i],SW_HIDE);ShowWindow(manual_buttons[i],SW_HIDE);}
+ ShowWindow(status,SW_HIDE);
+ ShowWindow(manual_prev,SW_SHOW);ShowWindow(manual_next,SW_SHOW);ShowWindow(manual_lang,SW_SHOW);ShowWindow(manual_close,SW_SHOW);
+ if(!manual_books[game].count){
+  MessageBoxW(window,L"This game's manual pages were not found alongside the launcher.",L"Dyna Brothers",MB_OK|MB_ICONINFORMATION);
+ }
+ manuals_set_page(window,0);
+ layout(window);
+}
+static void manuals_close(HWND window) {
+ manuals_game=-1;
+ if(manual_page_image){image_dispose(manual_page_image);manual_page_image=NULL;}
+ ShowWindow(manual_prev,SW_HIDE);ShowWindow(manual_next,SW_HIDE);ShowWindow(manual_lang,SW_HIDE);ShowWindow(manual_close,SW_HIDE);
+ for(int i=0;i<2;i++){ShowWindow(cards[i],SW_SHOW);ShowWindow(settings_buttons[i],SW_SHOW);ShowWindow(manual_buttons[i],SW_SHOW);}
+ ShowWindow(status,SW_SHOW);
+ layout(window);SetFocus(cards[0]);
+}
+/* Two book-style "paper" leaves filling as much of the window as possible,
+ * split by a spine: the original scan on the left leaf, the English
+ * translation on the right, instead of a small centered panel. */
+static void paint_book_leaf(HDC dc,RECT leaf) {
+ HBRUSH paper=CreateSolidBrush(RGB(238,230,206));
+ HGDIOBJ old=SelectObject(dc,paper);HPEN pen=CreatePen(PS_SOLID,1,RGB(196,182,146));HGDIOBJ oldp=SelectObject(dc,pen);
+ RoundRect(dc,leaf.left,leaf.top,leaf.right,leaf.bottom,scale(10),scale(10));
+ SelectObject(dc,old);SelectObject(dc,oldp);DeleteObject(paper);DeleteObject(pen);
+}
+/* True if an image's own aspect ratio (w/h) says it is a pre-scanned,
+ * already-joined two-page spread (wider than tall) rather than one single
+ * portrait manual page. Some of this project's own manual scans (the
+ * interior DB2 pages) were scanned as one JPEG per open spread, fold and
+ * all, while others (DB1, and the DB2 covers) are one JPEG per single
+ * page -- the image's own proportions are the only reliable signal. */
+static int manuals_image_is_spread(void *image) {
+ UINT w=0,h=0;
+ if(!image||!image_width||!image_height||image_width(image,&w)||image_height(image,&h)||!w||!h)return 0;
+ return w>h;
+}
+static void paint_manuals(HDC dc,RECT client) {
+ FillRect(dc,&client,background_brush);
+ if(manuals_game<0)return;
+ DynaManualBook *book=&manual_books[manuals_game];
+ int pad=scale(10),bar=scale(44),inset=scale(14);
+ int left_is_spread=manuals_image_is_spread(manual_page_image);
+ int right_page=(!left_is_spread&&manuals_page>0&&manuals_page+1<(int)book->count)?manuals_page+1:-1;
+ RECT header={pad,pad,client.right-pad,pad+scale(28)};
+ wchar_t title[320];
+ if(right_page>=0)swprintf(title,320,L"%ls manual - pages %d-%d / %d",game_names[manuals_game],manuals_page+1,right_page+1,(int)book->count);
+ else swprintf(title,320,L"%ls manual - page %d / %d",game_names[manuals_game],book->count?manuals_page+1:0,(int)book->count);
+ draw_text(dc,title,header,body_font,muted,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_END_ELLIPSIS);
+ RECT avail={pad,header.bottom+scale(4),client.right-pad,client.bottom-bar-pad};
+ if(avail.bottom<=avail.top)return;
+ /* PDF-viewer pagination: page 0 (cover) alone, then real facing pairs for
+  * single-page scans, or the page's own pre-joined spread image shown
+  * whole when the scan already contains both facing pages. The JP/EN
+  * toggle swaps the right half between that page's own scan and its
+  * English translation text (single-page mode only). */
+ int show_both=right_page>=0;
+ int show_translation_text=show_both&&manuals_show_translation&&book->pages[right_page].translation&&book->pages[right_page].translation[0];
+ int spine=scale(6),stack=scale(5);
+ /* Size the booklet like the real thing (owner-supplied photo reference: a
+  * small, thin saddle-stitched manual), not a page stretched edge to edge.
+  * Read the actual loaded image's own aspect ratio instead of guessing, so
+  * every page -- single or pre-joined spread -- keeps its true proportions
+  * with no letterboxed padding around it. */
+ double content_aspect=0.72; /* width/height fallback before any image loads */
+ {
+  UINT iw=0,ih=0;
+  if(manual_page_image&&image_width&&image_height&&!image_width(manual_page_image,&iw)&&!image_height(manual_page_image,&ih)&&iw&&ih)
+   content_aspect=(double)iw/ih;
+ }
+ double book_aspect=left_is_spread?content_aspect:(show_both?content_aspect*2:content_aspect);
+ int book_h=avail.bottom-avail.top;if(book_h>scale(560))book_h=scale(560);
+ int book_w=(int)(book_h*book_aspect)+stack+scale(4)+(show_both?spine:0);
+ if(book_w>avail.right-avail.left){
+  double shrink=(double)(avail.right-avail.left)/book_w;book_h=(int)(book_h*shrink);book_w=avail.right-avail.left;
+ }
+ RECT body={avail.left+(avail.right-avail.left-book_w)/2,avail.top+(avail.bottom-avail.top-book_h)/2,0,0};
+ body.right=body.left+book_w;body.bottom=body.top+book_h;
+ RECT stack_edge={body.left,body.top+scale(6),body.left+stack,body.bottom-scale(6)};
+ HBRUSH stack_brush=CreateSolidBrush(RGB(240,236,222));HGDIOBJ old_stack=SelectObject(dc,stack_brush);
+ HPEN stack_pen=CreatePen(PS_SOLID,1,RGB(210,202,180));HGDIOBJ old_stack_pen=SelectObject(dc,stack_pen);
+ for(int i=0;i<4;i++){
+  RECT layer={stack_edge.left+i*scale(2),stack_edge.top+i*scale(3),stack_edge.left+stack+i*scale(2),stack_edge.bottom-i*scale(3)};
+  Rectangle(dc,layer.left,layer.top,layer.right,layer.bottom);
+ }
+ SelectObject(dc,old_stack);SelectObject(dc,old_stack_pen);DeleteObject(stack_brush);DeleteObject(stack_pen);
+ int leaf_x0=body.left+stack+scale(4);
+ RECT left_leaf={leaf_x0,body.top,body.right,body.bottom};
+ if(show_both)left_leaf.right=leaf_x0+(int)((body.right-leaf_x0-spine)*(left_is_spread?1.0:0.5));
+ paint_book_leaf(dc,left_leaf);
+ {
+  /* Two metal staples through the booklet's actual spine edge. */
+  int staple_h=scale(3),staple_w=scale(22),staple_leg=scale(5);
+  int staple_x=stack_edge.left+stack/2;
+  int staple_ys[2]={body.top+(body.bottom-body.top)*20/100,body.top+(body.bottom-body.top)*76/100};
+  HBRUSH metal=CreateSolidBrush(RGB(176,176,182)),shadow=CreateSolidBrush(RGB(90,86,78));
+  HPEN none_pen=CreatePen(PS_NULL,0,0);HGDIOBJ oldpen2=SelectObject(dc,none_pen);
+  for(int i=0;i<2;i++){
+   int sy=staple_ys[i];
+   RECT bar={staple_x,sy-staple_h/2,staple_x+staple_w,sy+staple_h/2};
+   HGDIOBJ oldb=SelectObject(dc,shadow);
+   Rectangle(dc,bar.left+scale(1),bar.top+scale(1),bar.right+scale(1),bar.bottom+scale(1));
+   SelectObject(dc,metal);Rectangle(dc,bar.left,bar.top,bar.right,bar.bottom);
+   Rectangle(dc,bar.left-scale(1),sy-staple_leg,bar.left+scale(2),sy+staple_leg);
+   Rectangle(dc,bar.right-scale(2),sy-staple_leg,bar.right+scale(1),sy+staple_leg);
+   SelectObject(dc,oldb);
+  }
+  SelectObject(dc,oldpen2);DeleteObject(none_pen);DeleteObject(metal);DeleteObject(shadow);
+ }
+ RECT image_rect={left_leaf.left+inset,left_leaf.top+inset,left_leaf.right-inset,left_leaf.bottom-inset};
+ image_paint(dc,manual_page_image,image_rect);
+ if(left_is_spread){
+  /* The scan itself already shows this page's own physical fold; mark it
+   * with the same crease style as a regular facing-pages gutter so both
+   * cases read consistently as "two pages meeting at a spine". */
+  int mid_x=(image_rect.left+image_rect.right)/2;
+  HPEN crease=CreatePen(PS_SOLID,scale(2),RGB(210,202,180));HGDIOBJ oldp=SelectObject(dc,crease);
+  MoveToEx(dc,mid_x,image_rect.top,NULL);LineTo(dc,mid_x,image_rect.bottom);
+  SelectObject(dc,oldp);DeleteObject(crease);
+ }
+ if(show_both){
+  RECT right_leaf={left_leaf.right+spine,body.top,body.right,body.bottom};
+  paint_book_leaf(dc,right_leaf);
+  /* Plain crease between the two facing pages -- not another staple seam,
+   * this gutter is just where this spread's two scans meet. */
+  int spine_x=left_leaf.right+spine/2;
+  HPEN crease=CreatePen(PS_SOLID,scale(2),RGB(210,202,180));HGDIOBJ oldp=SelectObject(dc,crease);
+  MoveToEx(dc,spine_x,body.top+inset/2,NULL);LineTo(dc,spine_x,body.bottom-inset/2);
+  SelectObject(dc,oldp);DeleteObject(crease);
+  RECT right_rect={right_leaf.left+inset,right_leaf.top+inset,right_leaf.right-inset,right_leaf.bottom-inset};
+  if(show_translation_text){
+   wchar_t wtext[4096];ld_utf8_to_wide(book->pages[right_page].translation,wtext,4096);
+   /* Long translation notes (ad pages, rule tables) can overflow a fixed-size
+    * leaf at the normal body size; shrink the font just enough to make the
+    * whole note fit rather than silently clipping text off the bottom. */
+   HFONT fit_font=body_font;int created=0;
+   for(int size=scale(16);size>=scale(10);size-=scale(1)){
+    HFONT candidate=(size==scale(16))?body_font:CreateFontW(-size,0,0,0,FW_NORMAL,0,0,0,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,0,L"Segoe UI");
+    RECT calc=right_rect;SelectObject(dc,candidate);DrawTextW(dc,wtext,-1,&calc,DT_LEFT|DT_TOP|DT_WORDBREAK|DT_CALCRECT|DT_NOPREFIX);
+    int fits=calc.bottom-calc.top<=right_rect.bottom-right_rect.top;
+    int last=size-scale(1)<scale(10);
+    if(fits||last){
+     if(created)DeleteObject(fit_font);
+     fit_font=candidate;created=candidate!=body_font;
+     break;
+    }
+    if(candidate!=body_font)DeleteObject(candidate);
+   }
+   draw_text(dc,wtext,right_rect,fit_font,RGB(42,34,20),DT_LEFT|DT_TOP|DT_WORDBREAK);
+   if(created)DeleteObject(fit_font);
+  } else {
+   image_paint(dc,manual_page_image2,right_rect);
+  }
+ }
+}
 static void paint_home(HDC dc) {
  RECT banner=native_rect(home_layout.banner);
  if(logo)image_paint(dc,logo,banner);else draw_text(dc,L"Dyna Brothers 1 + 2",banner,title_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
  RECT version=native_rect(home_layout.version);
- draw_text(dc,L"Checkpoint v" DYNA_WIDEN(DYNA_VERSION),version,body_font,RGB(90,205,245),DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+ draw_text(dc,L"Alpha v" DYNA_WIDEN(DYNA_VERSION),version,body_font,RGB(90,205,245),DT_CENTER|DT_VCENTER|DT_SINGLELINE);
  RECT note=native_rect(home_layout.note);
  draw_text(dc,L"English is enabled by default. Language and controls are in Settings.\nTranslations are in progress. Use your own Japanese game dumps.",note,body_font,muted,DT_CENTER|DT_WORDBREAK);
 }
 static void home_capture(HWND window) {
  const char *path=getenv("DYNA_HUB_HOME_CAPTURE");if(!path||!*path)return;
+ const char *reveal=getenv("DYNA_HUB_CARD_REVEAL");
+ if(reveal){double value=atof(reveal);card_reveal[0]=value;card_reveal[1]=value;}
  RECT r;GetClientRect(window,&r);HDC dc=GetDC(window),memory=CreateCompatibleDC(dc);
  BITMAPINFO info={0};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
  info.bmiHeader.biWidth=r.right;info.bmiHeader.biHeight=-r.bottom;info.bmiHeader.biPlanes=1;
@@ -206,7 +436,7 @@ static void home_capture(HWND window) {
  /* PrintWindow may report success without painting a hidden HWND. Explicit
   * WM_PRINT omits PRF_CHECKVISIBLE and asks these same native controls to draw. */
  FillRect(memory,&r,background_brush);paint_home(memory);
- HWND children[]={cards[0],cards[1],settings_buttons[0],settings_buttons[1],status};
+ HWND children[]={cards[0],cards[1],settings_buttons[0],settings_buttons[1],manual_buttons[0],manual_buttons[1],status};
  for(unsigned i=0;i<sizeof children/sizeof children[0];i++){
   HWND child=children[i];if(!(GetWindowLongW(child,GWL_STYLE)&WS_VISIBLE))continue;
   RECT bounds;GetWindowRect(child,&bounds);MapWindowPoints(NULL,window,(POINT *)&bounds,2);
@@ -224,8 +454,39 @@ static void home_capture(HWND window) {
 }
 /* Native opt-in regression: hit-test actual child windows before activating
  * them. Direct WM_COMMAND tests cannot detect an obscured Settings button. */
+static void manuals_capture(HWND window) {
+ const char *path=getenv("DYNA_HUB_MANUALS_CAPTURE");if(!path||!*path)return;
+ manuals_open(window,getenv("DYNA_HUB_MANUALS_GAME")?atoi(getenv("DYNA_HUB_MANUALS_GAME")):0);
+ const char *skip=getenv("DYNA_HUB_MANUALS_NEXT");
+ for(int i=skip?atoi(skip):0;i>0;i--)manuals_set_page(window,manuals_next_spread(manuals_page));
+ if(getenv("DYNA_HUB_MANUALS_EN"))manuals_show_translation=1;
+ RECT r;GetClientRect(window,&r);HDC dc=GetDC(window),memory=CreateCompatibleDC(dc);
+ BITMAPINFO info={0};info.bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
+ info.bmiHeader.biWidth=r.right;info.bmiHeader.biHeight=-r.bottom;info.bmiHeader.biPlanes=1;
+ info.bmiHeader.biBitCount=32;info.bmiHeader.biCompression=BI_RGB;
+ void *bits=NULL;HBITMAP bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&bits,NULL,0);
+ if(!memory||!bitmap||!bits)abort();HGDIOBJ previous=SelectObject(memory,bitmap);
+ FillRect(memory,&r,background_brush);paint_manuals(memory,r);
+ HWND children[]={manual_prev,manual_next,manual_lang,manual_close};
+ for(unsigned i=0;i<sizeof children/sizeof children[0];i++){
+  HWND child=children[i];if(!(GetWindowLongW(child,GWL_STYLE)&WS_VISIBLE))continue;
+  RECT bounds;GetWindowRect(child,&bounds);MapWindowPoints(NULL,window,(POINT *)&bounds,2);
+  int saved=SaveDC(memory);SetViewportOrgEx(memory,bounds.left,bounds.top,NULL);
+  IntersectClipRect(memory,0,0,bounds.right-bounds.left,bounds.bottom-bounds.top);
+  SendMessageW(child,WM_PRINT,(WPARAM)memory,PRF_CLIENT|PRF_ERASEBKGND);
+  RestoreDC(memory,saved);
+ }
+ wchar_t wide[8192];if(!ld_utf8_to_wide(path,wide,8192))abort();FILE *file=_wfopen(wide,L"wb");if(!file)abort();
+ DWORD size=(DWORD)r.right*(DWORD)r.bottom*4;
+ BITMAPFILEHEADER header={0};header.bfType=0x4d42;header.bfOffBits=sizeof header+sizeof(BITMAPINFOHEADER);header.bfSize=header.bfOffBits+size;
+ int ok=fwrite(&header,sizeof header,1,file)==1&&fwrite(&info.bmiHeader,sizeof(BITMAPINFOHEADER),1,file)==1&&fwrite(bits,size,1,file)==1;
+ if(fclose(file)||!ok)abort();SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(window,dc);
+ fprintf(stderr,"[hub-manuals-test] captured manuals view %ldx%ld, page %d/%d\n",r.right,r.bottom,manuals_page+1,(int)manual_books[0].count);
+ manuals_close(window);
+}
 static void home_selftest(HWND window) {
  HWND original=window;
+ manuals_capture(window);
  home_capture(window);
  SDL_setenv("DYNA_HUB_SELFTEST","1",1);
  if(!getenv("LNG_SCRIPT"))SDL_setenv("LNG_SCRIPT","wait:3;quit",1);
@@ -254,6 +515,12 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
             0,0,0,0,window,(HMENU)(INT_PTR)(101+i),GetModuleHandleW(NULL),NULL);
         for(int i=0;i<2;i++)settings_buttons[i]=CreateWindowW(L"BUTTON",L"Settings",WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_OWNERDRAW,
             0,0,0,0,window,(HMENU)(INT_PTR)(201+i),GetModuleHandleW(NULL),NULL);
+        for(int i=0;i<2;i++)manual_buttons[i]=CreateWindowW(L"BUTTON",L"Manual",WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_OWNERDRAW,
+            0,0,0,0,window,(HMENU)(INT_PTR)(301+i),GetModuleHandleW(NULL),NULL);
+        manual_prev=CreateWindowW(L"BUTTON",L"< Prev",WS_CHILD|BS_OWNERDRAW,0,0,0,0,window,(HMENU)(INT_PTR)401,GetModuleHandleW(NULL),NULL);
+        manual_next=CreateWindowW(L"BUTTON",L"Next >",WS_CHILD|BS_OWNERDRAW,0,0,0,0,window,(HMENU)(INT_PTR)402,GetModuleHandleW(NULL),NULL);
+        manual_lang=CreateWindowW(L"BUTTON",L"Japanese / English",WS_CHILD|BS_OWNERDRAW,0,0,0,0,window,(HMENU)(INT_PTR)403,GetModuleHandleW(NULL),NULL);
+        manual_close=CreateWindowW(L"BUTTON",L"Close",WS_CHILD|BS_OWNERDRAW,0,0,0,0,window,(HMENU)(INT_PTR)404,GetModuleHandleW(NULL),NULL);
         status=CreateWindowW(L"STATIC",L"Choose a game",WS_CHILD|WS_VISIBLE,0,0,0,0,window,NULL,GetModuleHandleW(NULL),NULL);
         char settings_utf8[8192];if(ld_wide_to_utf8(config_path,settings_utf8,sizeof settings_utf8))dyna_hub_controls_start(settings_utf8);
         layout(window);find_files(window);SetTimer(window,2,16,NULL);SetFocus(cards[0]);return 0;
@@ -275,17 +542,37 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
          SetWindowPos(window,NULL,r.left,r.top,width,height,SWP_NOZORDER|SWP_NOACTIVATE);}layout(window);return 0;
     case WM_COMMAND:
         if(LOWORD(w)==201||LOWORD(w)==202){int game=LOWORD(w)-201;if(configure_game(window,game)==0){options.setup=0;launch(window,game);}return 0;}
-        if(LOWORD(w)==101||LOWORD(w)==102){launch(window,LOWORD(w)-101);return 0;}break;
+        if(LOWORD(w)==101||LOWORD(w)==102){launch(window,LOWORD(w)-101);return 0;}
+        if(LOWORD(w)==301||LOWORD(w)==302){manuals_open(window,LOWORD(w)-301);return 0;}
+        if(LOWORD(w)==401){manuals_set_page(window,manuals_prev_spread(manuals_page));return 0;}
+        if(LOWORD(w)==402){manuals_set_page(window,manuals_next_spread(manuals_page));return 0;}
+        if(LOWORD(w)==403){manuals_show_translation=!manuals_show_translation;InvalidateRect(window,NULL,TRUE);return 0;}
+        if(LOWORD(w)==404){manuals_close(window);return 0;}
+        break;
     case WM_TIMER:
         if(w==2){
-            if(!settings_open&&!game_process&&GetForegroundWindow()==window){
+            /* The Manual viewer hides cards/settings and uses its own
+             * buttons; this gamepad focus cycle must stay out of its way
+             * while it's open (those controls would be invisible targets). */
+            if(!settings_open&&manuals_game<0&&!game_process&&GetForegroundWindow()==window){
                 HWND focused=GetFocus();int id=GetDlgCtrlID(focused);
                 if(id==101||id==102)hub_navigation.focus=(unsigned)(id-101);
                 else if(id==201||id==202)hub_navigation.focus=(unsigned)(id-199);
+                else if(id==301||id==302)hub_navigation.focus=(unsigned)(id-301)+4;
                 unsigned old_focus=hub_navigation.focus;
                 int command=dyna_hub_navigation_tick(&hub_navigation,dyna_hub_controls_poll(),SDL_GetTicks64());
-                if(hub_navigation.focus!=old_focus)SetFocus(hub_navigation.focus<2?cards[hub_navigation.focus]:settings_buttons[hub_navigation.focus-2]);
+                if(hub_navigation.focus!=old_focus){
+                    HWND *row[3]={cards,settings_buttons,manual_buttons};
+                    SetFocus(row[hub_navigation.focus/2][hub_navigation.focus%2]);
+                }
                 if(command)SendMessageW(window,WM_COMMAND,(WPARAM)command,0);
+            }
+            if(!settings_open&&manuals_game>=0&&GetForegroundWindow()==window){
+                int action=dyna_menu_controls_tick(&manuals_controls,dyna_hub_controls_poll(),1,SDL_GetTicks64());
+                if(action==DYNA_MENU_LEFT)manuals_set_page(window,manuals_prev_spread(manuals_page));
+                else if(action==DYNA_MENU_RIGHT)manuals_set_page(window,manuals_next_spread(manuals_page));
+                else if(action==DYNA_MENU_ACCEPT){manuals_show_translation=!manuals_show_translation;InvalidateRect(window,NULL,TRUE);}
+                else if(action==DYNA_MENU_BACK)manuals_close(window);
             }
             for(int i=0;i<2;i++){
                 int hovered=GetFocus()==cards[i];double target=hovered?1.0:0.0;double before=card_reveal[i];
@@ -307,12 +594,21 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         }return 0;
     case WM_DRAWITEM: {
         DRAWITEMSTRUCT *item=(DRAWITEMSTRUCT *)l;
-        if(item->CtlID==201 || item->CtlID==202){
+        {const wchar_t *pill_label=NULL;
+         switch(item->CtlID){
+         case 201:case 202:pill_label=L"Settings";break;
+         case 301:case 302:pill_label=L"Manual";break;
+         case 401:pill_label=L"< Prev";break;
+         case 402:pill_label=L"Next >";break;
+         case 403:pill_label=L"JP / EN";break;
+         case 404:pill_label=L"Close";break;
+         }
+         if(pill_label){
             RECT box=item->rcItem;FillRect(item->hDC,&box,background_brush);int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;HBRUSH fill=CreateSolidBrush(RGB(48,100,65));HPEN edge=CreatePen(PS_SOLID,scale(selected?2:1),RGB(238,213,100));
             HGDIOBJ oldb=SelectObject(item->hDC,fill),oldp=SelectObject(item->hDC,edge);RoundRect(item->hDC,box.left,box.top,box.right,box.bottom,scale(18),scale(18));
             SelectObject(item->hDC,oldb);SelectObject(item->hDC,oldp);DeleteObject(fill);DeleteObject(edge);
-            draw_text(item->hDC,L"Settings",box,body_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;
-        }
+            draw_text(item->hDC,pill_label,box,body_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);return TRUE;
+         }}
 int index=(int)item->CtlID-101;if(index<0||index>1)break;
         RECT r=item->rcItem;int selected=(item->itemState&(ODS_FOCUS|ODS_SELECTED))!=0;
         FillRect(item->hDC,&r,background_brush);
@@ -325,9 +621,15 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
         int box_w=scale(70);
         RECT box={r.left+scale(10),r.top+scale(10),r.left+scale(10)+box_w,r.top+scale(10)+box_w*58/42};
         image_paint(item->hDC,box_art[index],box);
-        if(cart_art[index]){
-            int slide=(int)(card_reveal[index]*scale(55));
-            RECT cart={box.left+scale(6)+slide,box.top+(box.bottom-box.top)/2-scale(9),box.right+scale(26)+slide,box.top+(box.bottom-box.top)/2+scale(9)};
+        if(cart_art[index]&&card_reveal[index]>0.01){
+            /* Lift the cartridge straight up and out of the box's open top
+             * edge, growing as it rises, instead of sliding sideways across
+             * the middle of the cover art (which used to look like the
+             * cartridge was crossing/cutting through the box). */
+            int cart_w=box.right-box.left-scale(8);
+            int cart_h=(int)(card_reveal[index]*scale(16));
+            int cart_bottom=box.top+scale(4)-(int)(card_reveal[index]*scale(28));
+            RECT cart={box.left+scale(4),cart_bottom-cart_h,box.left+scale(4)+cart_w,cart_bottom};
             image_paint(item->hDC,cart_art[index],cart);
         }
         RECT art={box.right+scale(12),scale(14),r.right-scale(14),height-scale(94)};image_paint(item->hDC,game_art[index],art);
@@ -339,15 +641,16 @@ int index=(int)item->CtlID-101;if(index<0||index>1)break;
     case WM_CTLCOLORSTATIC:SetTextColor((HDC)w,muted);SetBkColor((HDC)w,background);return (LRESULT)background_brush;
     case WM_ERASEBKGND:if(settings_open)return 1;{RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);return 1;}
     case WM_PRINTCLIENT: {
-        if(!settings_open){RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);paint_home((HDC)w);}return 0;
+        if(!settings_open){RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);
+         if(manuals_game>=0)paint_manuals((HDC)w,r);else paint_home((HDC)w);}return 0;
     }
     case WM_PAINT: {
         if(settings_open){ValidateRect(window,NULL);return 0;}
         PAINTSTRUCT p;HDC dc=BeginPaint(window,&p);
-        paint_home(dc);
+        if(manuals_game>=0){RECT r;GetClientRect(window,&r);paint_manuals(dc,r);}else paint_home(dc);
         EndPaint(window,&p);return 0;
     }
-    case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);for(int i=0;i<2;i++){if(box_art[i])image_dispose(box_art[i]);if(cart_art[i])image_dispose(cart_art[i]);}if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
+    case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);for(int i=0;i<2;i++){if(box_art[i])image_dispose(box_art[i]);if(cart_art[i])image_dispose(cart_art[i]);}if(manual_page_image)image_dispose(manual_page_image);if(manual_page_image2)image_dispose(manual_page_image2);for(int i=0;i<2;i++)if(manual_books_loaded[i])dyna_manual_free(&manual_books[i]);if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
     }
     return DefWindowProcW(window,message,w,l);
 }

@@ -129,7 +129,13 @@ static void capture(const GVDP *v){
  for(unsigned id=1;id<=254;id++){
   const uint8_t *p=ram+0x5f58+48*id;
   if(!p[0])continue;
-  Db2Actor a;if(!(db2_actor_decode_cached(&ac,id,&a)||db2_actor_decode(&ac,id,&a))){ready=0;frame_reasons|=4;continue;}
+  /* A single actor mid-transition (e.g. the frame it dies on) can fail to
+   * decode this frame without the OTHER actors (already correctly added
+   * below) needing to be thrown away by a whole-frame fallback; the DB1
+   * engine had the exact same pattern (games/db1_video.c prepare_actors)
+   * and real play data here confirms reason 04 fires during ordinary
+   * gameplay, not just the already-documented pre-battle window. */
+  Db2Actor a;if(!(db2_actor_decode_cached(&ac,id,&a)||db2_actor_decode(&ac,id,&a)))continue;
   actors[count++]=a;
  }
  for(unsigned i=0;i<count;i++)for(unsigned j=i+1;j<count;j++)

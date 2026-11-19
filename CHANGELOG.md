@@ -1,3 +1,20 @@
+# v0.3.0 beta
+
+- Launcher: fixed a cartridge-reveal visual bug where the hover/focus animation slid the cartridge sideways across the box art instead of rising out of its top edge ("una parada y una cruzada" report); fixed the launcher's own diagnostic capture tool missing the Manual button from its screenshot list (the live app was unaffected); the home screen's version text now reads "Alpha"/version consistently with the rest of the UI.
+- Manual viewer: long translation notes (ad pages, rule tables) could overflow the fixed-size text panel and get cut off mid-sentence; the viewer now measures each note and shrinks its font just enough to show the whole thing.
+- ROM integrity: confirmed the existing CRC32 guard (Japanese-original and English-translation revisions, both games) is exercised by the packaged regression suite and rejects any other ROM cleanly.
+- `tools/verify_checkpoint.py` now runs its 45 packaged regression checks in parallel (~3x faster, same results).
+- DB1/DB2 string-level translation is complete at the catalog level; remaining gaps are tile-graphics text (not ROM strings) and a handful of screens whose text is already translated but unconfirmed on screen because no reliable scripted repro reaches them (QUIT dialog, results, Dyna Fight, Sega Channel, endings) — see `docs/handoff/PENDING.md` for the full honest accounting.
+- Promoted to public BETA: translation and rendering fixes from v0.2.0/v0.2.1 have held up, and the remaining open items are either cosmetic, environment-dependent, or need a human with real hardware/input rather than more scripted work.
+
+# v0.2.1 alpha
+
+- New Settings > Manual viewer in the launcher: a book-sized, GDI-drawn open booklet with a staple-bound spine, PDF-reader pagination (cover alone, then real facing pairs), and a JP/EN toggle. Auto-detects whether a DB2 scan is a single page or an already-joined two-page spread and renders each correctly. Fully gamepad-reachable (D-pad to the Manual button, then LEFT/RIGHT/A/BACK inside the viewer).
+- DB2 gets the same rendering fix DB1 got in v0.2.0: a single actor with a transiently unreadable record (confirmed live during ordinary battle play, not just the documented pre-battle window) no longer drops the whole frame to the native fallback image -- only that actor's own sprite is skipped.
+- DB2 Special translation catalog grows from 582 to 704 entries (stage-2 RAM cutscene dialogue, password-screen fixes, stage 30 title, assorted briefing leftovers).
+- Launcher: the home screen's gamepad navigation was generalized from a hardcoded 2x2 grid to a 3-row grid, with full regression coverage for the existing rows.
+- Known remaining gaps unchanged from v0.2.0 (DB2 Options menu/kanji stage-name tile graphics, the DB1 title-menu wraparound timing question, a subtle moving-actor HUD-seam glitch) -- see docs/handoff/PENDING.md.
+
 # v0.2.0 alpha
 
 - DB2 Special translation grows from 454 to 582 catalog entries: title OPTIONS menu and sound-test names, Custom Versus settings and COM difficulty names, Practice briefings 2-6, stage-2 RAM cutscene dialogue, and a centering fix for the 3-line gameplay prompt boxes.
