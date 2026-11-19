@@ -61,12 +61,41 @@ static int remap(const uint8_t *art,int pc,int n,int center,int visible){
  int q=(right-1)%EDGE_PERIOD;return (e-EDGE_PERIOD+1+q+n)%n;
 }
 
-static int last_tile;
+static int last_tile,mirror_on;
+static unsigned pool[4*28],pool_n;
+void db2_wide_menu_mirror(const GVDP *v,int on){
+ mirror_on=on;pool_n=0;
+ if(!on||!v)return;
+ int wt=cells(v->reg[16]&3);unsigned base=((unsigned)v->reg[4]&7)<<13;
+ static const int cols[4]={0,1,38,39};
+ for(int i=0;i<4;i++)for(int cy=0;cy<28;cy++)pool[pool_n++]=rd(v,base+((unsigned)(cy*wt+cols[i])<<1));
+ /* The user-approved look: flat backdrop colour only. Keep the single most
+  * frequent tile (the empty sky tile) and drop the confetti pieces. */
+ unsigned best=0,bn=0;
+ for(unsigned i=0;i<pool_n;i++){unsigned n=0;for(unsigned j=0;j<pool_n;j++)n+=pool[j]==pool[i];if(n>bn){bn=n;best=pool[i];}}
+ pool[0]=best;pool_n=1;
+}
 uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
  int wt=cells(v->reg[16]&3),ht=cells((v->reg[16]>>4)&3);
  /* 128-cell planes are only valid with 32-cell height and vice versa. */
  if(wt*ht>4096)ht=4096/wt;
  int pw=wt*8,ph=ht*8;
+ /* Confetti backdrop (stage briefing): outside the window every 8x8 cell takes a
+  * tile drawn from the real confetti tiles of the outer columns, chosen by a
+  * fixed hash so the continuation is stable but never an echo of the edge. */
+ if(mirror_on&&plane==1&&(x<0||x>=320||line<0||line>=224)){
+  int cx=x>=0?x>>3:-((-x+7)>>3),cy=line>=0?line>>3:-((-line+7)>>3);
+  unsigned h=(unsigned)cx*2654435761u^(unsigned)cy*40503u*2246822519u;h^=h>>15;h*=2246822519u;h^=h>>13;
+  unsigned name=pool_n?pool[h%(unsigned)pool_n]:0;
+  int tx=((x%8)+8)%8,ty=((line%8)+8)%8;
+  last_tile=name!=0;
+  if(name&0x800)tx=7-tx;
+  if(name&0x1000)ty=7-ty;
+  unsigned bb=v->vram[((name&2047)*32+(unsigned)ty*4+(unsigned)tx/2)&0xffff];
+  unsigned c=(tx&1)?bb&15:bb>>4;
+  if(!c)return (uint8_t)((name&0x8000)?0x80:0);
+  return (uint8_t)(((name>>9)&48)|c|0x40|((name&0x8000)?0x80:0));
+ }
  unsigned base=plane?((unsigned)v->reg[4]&7)<<13:((unsigned)v->reg[2]&0x38)<<10;
  unsigned hbase=((unsigned)v->reg[13]&63)<<10;
  int hmode=v->reg[11]&3;
@@ -148,9 +177,9 @@ int db2_wide_menu_row(const GVDP *v,int line,uint32_t *out,int w,int left,int na
   int x=dx-left;
   if(native_row&&x>=0&&x<320)continue;
   b[dx]=db2_wide_menu_plane_pixel(v,1,x,line);art[dx]=(uint8_t)last_tile;
-  if(!window_side(v,line,x)){a[dx]=db2_wide_menu_plane_pixel(v,0,x,line);art[dx]|=(uint8_t)last_tile;}
+  if(!mirror_on&&!window_side(v,line,x)){a[dx]=db2_wide_menu_plane_pixel(v,0,x,line);art[dx]|=(uint8_t)last_tile;}
  }
- sprites(v,line,left,w,s,o,hi);
+ if(!mirror_on)sprites(v,line,left,w,s,o,hi);
  int shadow=(v->reg[12]&8)!=0;
  gvdp_compose_span(px,a,b,s,o,hi,z,z,w,(uint8_t)(v->reg[7]&63),shadow);
  for(int dx=0;dx<w;dx++){

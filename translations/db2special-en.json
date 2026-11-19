@@ -3713,6 +3713,446 @@
       "before": "c0debcc02e",
       "english": "     ",
       "verification": "stage briefing half-width text; guard exact; Stage 43 leftover end-of-sentence kana blanked"
+    },
+    {
+      "id": "infoview-label-43c24",
+      "address": 277540,
+      "capacity": 15,
+      "before": "5f5f5fc1b9b2cfafccdf5f5f5f5f5f",
+      "english": "_TERRAIN_MAP___",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c34",
+      "address": 277556,
+      "capacity": 15,
+      "before": "5f5f5fb7acd7b8c0b0cfafccdf5f5f",
+      "english": "_CHARACTER_MAP_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c44",
+      "address": 277572,
+      "capacity": 15,
+      "before": "5f5f5fc0cfbadecfafccdf5f5f5f5f",
+      "english": "__EGG_MAP______",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c54",
+      "address": 277588,
+      "capacity": 18,
+      "before": "5fbcadbfdeb85f5fc0cfbade5fbab3bbdd5f",
+      "english": "_TRIBE__EGG_GIVEUP",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c67",
+      "address": 277607,
+      "capacity": 18,
+      "before": "5fd0b6c05f5fc3b75f5f5fbbccdeb7acd75f",
+      "english": "_ALLY__FOE___SUB__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c7a",
+      "address": 277626,
+      "capacity": 18,
+      "before": "5fd0b6c05f5fc3b75f5f5f5f5f5f5f5f5f5f",
+      "english": "_ALLY__FOE________",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43c8d",
+      "address": 277645,
+      "capacity": 18,
+      "before": "5fb2b2c93f5f5f5f5f5f5f5f5f5f5f5f5f5f",
+      "english": "_OK?______________",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43ca0",
+      "address": 277664,
+      "capacity": 18,
+      "before": "5fceddc4c63f5f5f5f5f5f5f5f5f5f5f5f5f",
+      "english": "_REALLY?__________",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43cc0",
+      "address": 277696,
+      "capacity": 11,
+      "before": "c2b6dad95f202020c1b9b2",
+      "english": "TIRING_AREA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43ccc",
+      "address": 277708,
+      "capacity": 12,
+      "before": "c0ded2b0bcde202020c1b9b2",
+      "english": "DAMAGE_AREA_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43cd9",
+      "address": 277721,
+      "capacity": 11,
+      "before": "bccedeb35f202020c1b9b2",
+      "english": "DEADLY_AREA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43ce5",
+      "address": 277733,
+      "capacity": 11,
+      "before": "c4b8bcad5f202020c1b9b2",
+      "english": "SPCL_AREA__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43cf1",
+      "address": 277745,
+      "capacity": 5,
+      "before": "d3b4d9d3c9",
+      "english": "BURNS",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-label-43cf7",
+      "address": 277751,
+      "capacity": 6,
+      "before": "d3b4c5b2d3c9",
+      "english": "NOBURN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ff86",
+      "address": 65414,
+      "capacity": 11,
+      "before": "c0cfbade5fbfdeb3beb2b7",
+      "english": "EGG_BREEDER",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ff92",
+      "address": 65426,
+      "capacity": 5,
+      "before": "40bdc3bade",
+      "english": "STEGO",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ff98",
+      "address": 65432,
+      "capacity": 5,
+      "before": "40c4d8b9d7",
+      "english": "TRICE",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ff9e",
+      "address": 65438,
+      "capacity": 3,
+      "before": "40b1db",
+      "english": "ALO",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffa2",
+      "address": 65442,
+      "capacity": 5,
+      "before": "40c3a8d7c9",
+      "english": "TYRAN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffa8",
+      "address": 65448,
+      "capacity": 5,
+      "before": "40ccdfc3d7",
+      "english": "PTERA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffae",
+      "address": 65454,
+      "capacity": 8,
+      "before": "40cbdfb040c1acdd",
+      "english": "P-CHAN__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffb8",
+      "address": 65464,
+      "capacity": 8,
+      "before": "40c0b0cede5fb1db",
+      "english": "T-ALLO__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffc1",
+      "address": 65473,
+      "capacity": 10,
+      "before": "40b7ddb8de5fc3a8d7c9",
+      "english": "KING_TYRAN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffcc",
+      "address": 65484,
+      "capacity": 8,
+      "before": "40c5d240bcdedbb0",
+      "english": "NAMEJIRO",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffd5",
+      "address": 65493,
+      "capacity": 7,
+      "before": "40badb40d1ddb7",
+      "english": "KOROMUN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffdd",
+      "address": 65501,
+      "capacity": 8,
+      "before": "c6ddcedfb05fb8dd",
+      "english": "NINPOKUN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0ffe6",
+      "address": 65510,
+      "capacity": 8,
+      "before": "40cadeafc040d3dd",
+      "english": "BATTAMON",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0fff0",
+      "address": 65520,
+      "capacity": 10,
+      "before": "40bcdeb4afc45fc5b2c4",
+      "english": "JET_KNIGHT",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-0fffb",
+      "address": 65531,
+      "capacity": 10,
+      "before": "40b8dedab2c45fc5b2c4",
+      "english": "GRT_KNIGHT",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10006",
+      "address": 65542,
+      "capacity": 7,
+      "before": "40cedfddcedfdd",
+      "english": "PONPON_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1000e",
+      "address": 65550,
+      "capacity": 7,
+      "before": "40b6deb3b6deb3",
+      "english": "GAUGAU_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10016",
+      "address": 65558,
+      "capacity": 5,
+      "before": "40c3a8b1d7",
+      "english": "TIARA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1001c",
+      "address": 65564,
+      "capacity": 8,
+      "before": "c6ddcedfb05fb8dd",
+      "english": "NINPOKUN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10026",
+      "address": 65574,
+      "capacity": 9,
+      "before": "cab6be5f40b8dbb0dd",
+      "english": "DOC_CLONE",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10030",
+      "address": 65584,
+      "capacity": 11,
+      "before": "40ccded7afb85fbdc3bade",
+      "english": "BLACK_STEGO",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1003c",
+      "address": 65596,
+      "capacity": 11,
+      "before": "40ccded7afb85fc4d8b9d7",
+      "english": "BLACK_TRICE",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10048",
+      "address": 65608,
+      "capacity": 9,
+      "before": "40ccded7afb85fb1db",
+      "english": "BLACK_ALO",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10052",
+      "address": 65618,
+      "capacity": 11,
+      "before": "40ccded7afb85fc3a8d7c9",
+      "english": "BLACK_TYRAN",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1005e",
+      "address": 65630,
+      "capacity": 11,
+      "before": "40ccded7afb85fccdfc3d7",
+      "english": "BLACK_PTERA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1006a",
+      "address": 65642,
+      "capacity": 14,
+      "before": "40ccded7afb85fcbdfb040c1acdd",
+      "english": "BLACK_P-CHAN__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10079",
+      "address": 65657,
+      "capacity": 12,
+      "before": "40bdc3bade5fccded7cedeb0",
+      "english": "STEGO_BRAVO_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10086",
+      "address": 65670,
+      "capacity": 12,
+      "before": "40c4d8b9d75fccded7cedeb0",
+      "english": "TRICE_BRAVO_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10093",
+      "address": 65683,
+      "capacity": 10,
+      "before": "40b1db5fccded7cedeb0",
+      "english": "ALO_BRAVO_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1009e",
+      "address": 65694,
+      "capacity": 12,
+      "before": "40c3a8d7c95fccded7cedeb0",
+      "english": "TYRAN_BRAVO_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100ab",
+      "address": 65707,
+      "capacity": 12,
+      "before": "40ccdfc3d75fccded7cedeb0",
+      "english": "PTERA_BRAVO_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100b8",
+      "address": 65720,
+      "capacity": 15,
+      "before": "40cbdfb040c1acdd40ccded7cedeb0",
+      "english": "P-CHAN_BRAVO___",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100c8",
+      "address": 65736,
+      "capacity": 7,
+      "before": "40cedfddcedfdd",
+      "english": "PONPON_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100d0",
+      "address": 65744,
+      "capacity": 7,
+      "before": "40b6deb3b6deb3",
+      "english": "GAUGAU_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100d8",
+      "address": 65752,
+      "capacity": 5,
+      "before": "40c3a8b1d7",
+      "english": "TIARA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100de",
+      "address": 65758,
+      "capacity": 9,
+      "before": "c4deb3d8aeb8b9dedd",
+      "english": "POWER_SRC",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100e8",
+      "address": 65768,
+      "capacity": 5,
+      "before": "40c3a8b1d7",
+      "english": "TIARA",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-100f6",
+      "address": 65782,
+      "capacity": 10,
+      "before": "40d2b6de5fbbdeb3d9bd",
+      "english": "MEGAZAURUS",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10101",
+      "address": 65793,
+      "capacity": 11,
+      "before": "40b5d8bcdec5d940cab6be",
+      "english": "ORIGIN_DOC_",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-1010d",
+      "address": 65805,
+      "capacity": 5,
+      "before": "cec8bcc0b2",
+      "english": "BONES",
+      "verification": "Info View (A in stage) ROM string; capture pending"
+    },
+    {
+      "id": "infoview-unit-10113",
+      "address": 65811,
+      "capacity": 12,
+      "before": "40bdb6cedfdd405fc0cfbade",
+      "english": "SKAPON_EGG__",
+      "verification": "Info View (A in stage) ROM string; capture pending"
     }
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
