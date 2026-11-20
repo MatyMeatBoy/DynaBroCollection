@@ -1,5 +1,6 @@
 package org.dynabro.collection;
 
+import android.content.pm.ActivityInfo;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -33,6 +34,11 @@ public final class GameActivity extends SDLActivity {
     @Override protected String[] getArguments() {
         nativeSetenv("GENESIS_USER_DIR", getIntent().getStringExtra("profile"));
         return new String[]{"--no-launcher", getIntent().getStringExtra("rom")};
+    }
+
+    @Override public void setOrientationBis(int width, int height, boolean resizable, String hint) {
+        // The touch controls and game canvas are laid out for landscape.
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
     }
 
     @Override protected void onCreate(Bundle state) {
