@@ -1,0 +1,746 @@
+{
+  "format": 1,
+  "game": "dynabrocollection--db2",
+  "source": "events",
+  "versions": "0.5.0-beta.1, 0.5.0",
+  "achievements": [
+    {
+      "id": 2000001,
+      "title": "Practice: Stage 01",
+      "description": "Win stage 1 in Practice.",
+      "points": 5,
+      "event": "dyna_2000001"
+    },
+    {
+      "id": 2000002,
+      "title": "Practice: Stage 02",
+      "description": "Win stage 2 in Practice.",
+      "points": 5,
+      "event": "dyna_2000002"
+    },
+    {
+      "id": 2000003,
+      "title": "Practice: Stage 03",
+      "description": "Win stage 3 in Practice.",
+      "points": 5,
+      "event": "dyna_2000003"
+    },
+    {
+      "id": 2000004,
+      "title": "Practice: Stage 04",
+      "description": "Win stage 4 in Practice.",
+      "points": 5,
+      "event": "dyna_2000004"
+    },
+    {
+      "id": 2000005,
+      "title": "Practice: Stage 05",
+      "description": "Win stage 5 in Practice.",
+      "points": 5,
+      "event": "dyna_2000005"
+    },
+    {
+      "id": 2000006,
+      "title": "Practice: Stage 06",
+      "description": "Win stage 6 in Practice.",
+      "points": 5,
+      "event": "dyna_2000006"
+    },
+    {
+      "id": 2000007,
+      "title": "Practice: Stage 07",
+      "description": "Win stage 7 in Practice.",
+      "points": 5,
+      "event": "dyna_2000007"
+    },
+    {
+      "id": 2000008,
+      "title": "Practice: Stage 08",
+      "description": "Win stage 8 in Practice.",
+      "points": 5,
+      "event": "dyna_2000008"
+    },
+    {
+      "id": 2000101,
+      "title": "Story: Stage 01",
+      "description": "Win stage 1 in Story.",
+      "points": 10,
+      "event": "dyna_2000101",
+      "type": "progression"
+    },
+    {
+      "id": 2000102,
+      "title": "Story: Stage 02",
+      "description": "Win stage 2 in Story.",
+      "points": 10,
+      "event": "dyna_2000102",
+      "type": "progression"
+    },
+    {
+      "id": 2000103,
+      "title": "Story: Stage 03",
+      "description": "Win stage 3 in Story.",
+      "points": 10,
+      "event": "dyna_2000103",
+      "type": "progression"
+    },
+    {
+      "id": 2000104,
+      "title": "Story: Stage 04",
+      "description": "Win stage 4 in Story.",
+      "points": 10,
+      "event": "dyna_2000104",
+      "type": "progression"
+    },
+    {
+      "id": 2000105,
+      "title": "Story: Stage 05",
+      "description": "Win stage 5 in Story.",
+      "points": 10,
+      "event": "dyna_2000105",
+      "type": "progression"
+    },
+    {
+      "id": 2000106,
+      "title": "Story: Stage 06",
+      "description": "Win stage 6 in Story.",
+      "points": 10,
+      "event": "dyna_2000106",
+      "type": "progression"
+    },
+    {
+      "id": 2000107,
+      "title": "Story: Stage 07",
+      "description": "Win stage 7 in Story.",
+      "points": 10,
+      "event": "dyna_2000107",
+      "type": "progression"
+    },
+    {
+      "id": 2000108,
+      "title": "Story: Stage 08",
+      "description": "Win stage 8 in Story.",
+      "points": 10,
+      "event": "dyna_2000108",
+      "type": "progression"
+    },
+    {
+      "id": 2000109,
+      "title": "Story: Stage 09",
+      "description": "Win stage 9 in Story.",
+      "points": 10,
+      "event": "dyna_2000109",
+      "type": "progression"
+    },
+    {
+      "id": 2000110,
+      "title": "Story: Stage 10",
+      "description": "Win stage 10 in Story.",
+      "points": 10,
+      "event": "dyna_2000110",
+      "type": "progression"
+    },
+    {
+      "id": 2000111,
+      "title": "Story: Stage 11",
+      "description": "Win stage 11 in Story.",
+      "points": 10,
+      "event": "dyna_2000111",
+      "type": "progression"
+    },
+    {
+      "id": 2000112,
+      "title": "Story: Stage 12",
+      "description": "Win stage 12 in Story.",
+      "points": 10,
+      "event": "dyna_2000112",
+      "type": "progression"
+    },
+    {
+      "id": 2000113,
+      "title": "Story: Stage 13",
+      "description": "Win stage 13 in Story.",
+      "points": 10,
+      "event": "dyna_2000113",
+      "type": "progression"
+    },
+    {
+      "id": 2000114,
+      "title": "Story: Stage 14",
+      "description": "Win stage 14 in Story.",
+      "points": 10,
+      "event": "dyna_2000114",
+      "type": "progression"
+    },
+    {
+      "id": 2000115,
+      "title": "Story: Stage 15",
+      "description": "Win stage 15 in Story.",
+      "points": 10,
+      "event": "dyna_2000115",
+      "type": "progression"
+    },
+    {
+      "id": 2000116,
+      "title": "Story: Stage 16",
+      "description": "Win stage 16 in Story.",
+      "points": 10,
+      "event": "dyna_2000116",
+      "type": "progression"
+    },
+    {
+      "id": 2000117,
+      "title": "Story: Stage 17",
+      "description": "Win stage 17 in Story.",
+      "points": 10,
+      "event": "dyna_2000117",
+      "type": "progression"
+    },
+    {
+      "id": 2000118,
+      "title": "Story: Stage 18",
+      "description": "Win stage 18 in Story.",
+      "points": 10,
+      "event": "dyna_2000118",
+      "type": "progression"
+    },
+    {
+      "id": 2000119,
+      "title": "Story: Stage 19",
+      "description": "Win stage 19 in Story.",
+      "points": 10,
+      "event": "dyna_2000119",
+      "type": "progression"
+    },
+    {
+      "id": 2000120,
+      "title": "Story: Stage 20",
+      "description": "Win stage 20 in Story.",
+      "points": 10,
+      "event": "dyna_2000120",
+      "type": "progression"
+    },
+    {
+      "id": 2000121,
+      "title": "Story: Stage 21",
+      "description": "Win stage 21 in Story.",
+      "points": 10,
+      "event": "dyna_2000121",
+      "type": "progression"
+    },
+    {
+      "id": 2000122,
+      "title": "Story: Stage 22",
+      "description": "Win stage 22 in Story.",
+      "points": 10,
+      "event": "dyna_2000122",
+      "type": "progression"
+    },
+    {
+      "id": 2000123,
+      "title": "Story: Stage 23",
+      "description": "Win stage 23 in Story.",
+      "points": 10,
+      "event": "dyna_2000123",
+      "type": "progression"
+    },
+    {
+      "id": 2000124,
+      "title": "Story: Stage 24",
+      "description": "Win stage 24 in Story.",
+      "points": 10,
+      "event": "dyna_2000124",
+      "type": "progression"
+    },
+    {
+      "id": 2000125,
+      "title": "Story: Stage 25",
+      "description": "Win stage 25 in Story.",
+      "points": 10,
+      "event": "dyna_2000125",
+      "type": "progression"
+    },
+    {
+      "id": 2000126,
+      "title": "Story: Stage 26",
+      "description": "Win stage 26 in Story.",
+      "points": 10,
+      "event": "dyna_2000126",
+      "type": "progression"
+    },
+    {
+      "id": 2000127,
+      "title": "Story: Stage 27",
+      "description": "Win stage 27 in Story.",
+      "points": 10,
+      "event": "dyna_2000127",
+      "type": "progression"
+    },
+    {
+      "id": 2000128,
+      "title": "Story: Stage 28",
+      "description": "Win stage 28 in Story.",
+      "points": 10,
+      "event": "dyna_2000128",
+      "type": "progression"
+    },
+    {
+      "id": 2000129,
+      "title": "Story: Stage 29",
+      "description": "Win stage 29 in Story.",
+      "points": 10,
+      "event": "dyna_2000129",
+      "type": "progression"
+    },
+    {
+      "id": 2000130,
+      "title": "Story: Stage 30",
+      "description": "Win stage 30 in Story.",
+      "points": 10,
+      "event": "dyna_2000130",
+      "type": "progression"
+    },
+    {
+      "id": 2000131,
+      "title": "Story: Stage 31",
+      "description": "Win stage 31 in Story.",
+      "points": 10,
+      "event": "dyna_2000131",
+      "type": "progression"
+    },
+    {
+      "id": 2000132,
+      "title": "Story: Stage 32",
+      "description": "Win stage 32 in Story.",
+      "points": 10,
+      "event": "dyna_2000132",
+      "type": "progression"
+    },
+    {
+      "id": 2000133,
+      "title": "Story: Stage 33",
+      "description": "Win stage 33 in Story.",
+      "points": 10,
+      "event": "dyna_2000133",
+      "type": "progression"
+    },
+    {
+      "id": 2000134,
+      "title": "Story: Stage 34",
+      "description": "Win stage 34 in Story.",
+      "points": 10,
+      "event": "dyna_2000134",
+      "type": "progression"
+    },
+    {
+      "id": 2000135,
+      "title": "Story: Stage 35",
+      "description": "Win stage 35 in Story.",
+      "points": 10,
+      "event": "dyna_2000135",
+      "type": "progression"
+    },
+    {
+      "id": 2000136,
+      "title": "Story: Stage 36",
+      "description": "Win stage 36 in Story.",
+      "points": 10,
+      "event": "dyna_2000136",
+      "type": "progression"
+    },
+    {
+      "id": 2000137,
+      "title": "Story: Stage 37",
+      "description": "Win stage 37 in Story.",
+      "points": 10,
+      "event": "dyna_2000137",
+      "type": "progression"
+    },
+    {
+      "id": 2000138,
+      "title": "Story: Stage 38",
+      "description": "Win stage 38 in Story.",
+      "points": 10,
+      "event": "dyna_2000138",
+      "type": "progression"
+    },
+    {
+      "id": 2000139,
+      "title": "Story: Stage 39",
+      "description": "Win stage 39 in Story.",
+      "points": 10,
+      "event": "dyna_2000139",
+      "type": "progression"
+    },
+    {
+      "id": 2000140,
+      "title": "Story: Stage 40",
+      "description": "Win stage 40 in Story.",
+      "points": 10,
+      "event": "dyna_2000140",
+      "type": "progression"
+    },
+    {
+      "id": 2000141,
+      "title": "Story: Stage 41",
+      "description": "Win stage 41 in Story.",
+      "points": 10,
+      "event": "dyna_2000141",
+      "type": "progression"
+    },
+    {
+      "id": 2000142,
+      "title": "Story: Stage 42",
+      "description": "Win stage 42 in Story.",
+      "points": 10,
+      "event": "dyna_2000142",
+      "type": "progression"
+    },
+    {
+      "id": 2000143,
+      "title": "Story: Stage 43",
+      "description": "Win stage 43 in Story.",
+      "points": 10,
+      "event": "dyna_2000143",
+      "type": "progression"
+    },
+    {
+      "id": 2000144,
+      "title": "Story: Stage 44",
+      "description": "Win stage 44 in Story.",
+      "points": 10,
+      "event": "dyna_2000144",
+      "type": "progression"
+    },
+    {
+      "id": 2000145,
+      "title": "Story: Stage 45",
+      "description": "Win stage 45 in Story.",
+      "points": 10,
+      "event": "dyna_2000145",
+      "type": "win"
+    },
+    {
+      "id": 2000301,
+      "title": "Original I: Stage 01",
+      "description": "Win stage 1 in Original I.",
+      "points": 10,
+      "event": "dyna_2000301"
+    },
+    {
+      "id": 2000302,
+      "title": "Original I: Stage 02",
+      "description": "Win stage 2 in Original I.",
+      "points": 10,
+      "event": "dyna_2000302"
+    },
+    {
+      "id": 2000303,
+      "title": "Original I: Stage 03",
+      "description": "Win stage 3 in Original I.",
+      "points": 10,
+      "event": "dyna_2000303"
+    },
+    {
+      "id": 2000304,
+      "title": "Original I: Stage 04",
+      "description": "Win stage 4 in Original I.",
+      "points": 10,
+      "event": "dyna_2000304"
+    },
+    {
+      "id": 2000305,
+      "title": "Original I: Stage 05",
+      "description": "Win stage 5 in Original I.",
+      "points": 10,
+      "event": "dyna_2000305"
+    },
+    {
+      "id": 2000306,
+      "title": "Original I: Stage 06",
+      "description": "Win stage 6 in Original I.",
+      "points": 10,
+      "event": "dyna_2000306"
+    },
+    {
+      "id": 2000307,
+      "title": "Original I: Stage 07",
+      "description": "Win stage 7 in Original I.",
+      "points": 10,
+      "event": "dyna_2000307"
+    },
+    {
+      "id": 2000308,
+      "title": "Original I: Stage 08",
+      "description": "Win stage 8 in Original I.",
+      "points": 10,
+      "event": "dyna_2000308"
+    },
+    {
+      "id": 2000309,
+      "title": "Original I: Stage 09",
+      "description": "Win stage 9 in Original I.",
+      "points": 10,
+      "event": "dyna_2000309"
+    },
+    {
+      "id": 2000310,
+      "title": "Original I: Stage 10",
+      "description": "Win stage 10 in Original I.",
+      "points": 10,
+      "event": "dyna_2000310"
+    },
+    {
+      "id": 2000401,
+      "title": "Original II: Stage 01",
+      "description": "Win stage 1 in Original II.",
+      "points": 10,
+      "event": "dyna_2000401"
+    },
+    {
+      "id": 2000402,
+      "title": "Original II: Stage 02",
+      "description": "Win stage 2 in Original II.",
+      "points": 10,
+      "event": "dyna_2000402"
+    },
+    {
+      "id": 2000403,
+      "title": "Original II: Stage 03",
+      "description": "Win stage 3 in Original II.",
+      "points": 10,
+      "event": "dyna_2000403"
+    },
+    {
+      "id": 2000404,
+      "title": "Original II: Stage 04",
+      "description": "Win stage 4 in Original II.",
+      "points": 10,
+      "event": "dyna_2000404"
+    },
+    {
+      "id": 2000405,
+      "title": "Original II: Stage 05",
+      "description": "Win stage 5 in Original II.",
+      "points": 10,
+      "event": "dyna_2000405"
+    },
+    {
+      "id": 2000406,
+      "title": "Original II: Stage 06",
+      "description": "Win stage 6 in Original II.",
+      "points": 10,
+      "event": "dyna_2000406"
+    },
+    {
+      "id": 2000407,
+      "title": "Original II: Stage 07",
+      "description": "Win stage 7 in Original II.",
+      "points": 10,
+      "event": "dyna_2000407"
+    },
+    {
+      "id": 2000408,
+      "title": "Original II: Stage 08",
+      "description": "Win stage 8 in Original II.",
+      "points": 10,
+      "event": "dyna_2000408"
+    },
+    {
+      "id": 2000409,
+      "title": "Original II: Stage 09",
+      "description": "Win stage 9 in Original II.",
+      "points": 10,
+      "event": "dyna_2000409"
+    },
+    {
+      "id": 2000410,
+      "title": "Original II: Stage 10",
+      "description": "Win stage 10 in Original II.",
+      "points": 10,
+      "event": "dyna_2000410"
+    },
+    {
+      "id": 2000501,
+      "title": "Original III: Stage 01",
+      "description": "Win stage 1 in Original III.",
+      "points": 10,
+      "event": "dyna_2000501"
+    },
+    {
+      "id": 2000502,
+      "title": "Original III: Stage 02",
+      "description": "Win stage 2 in Original III.",
+      "points": 10,
+      "event": "dyna_2000502"
+    },
+    {
+      "id": 2000503,
+      "title": "Original III: Stage 03",
+      "description": "Win stage 3 in Original III.",
+      "points": 10,
+      "event": "dyna_2000503"
+    },
+    {
+      "id": 2000504,
+      "title": "Original III: Stage 04",
+      "description": "Win stage 4 in Original III.",
+      "points": 10,
+      "event": "dyna_2000504"
+    },
+    {
+      "id": 2000505,
+      "title": "Original III: Stage 05",
+      "description": "Win stage 5 in Original III.",
+      "points": 10,
+      "event": "dyna_2000505"
+    },
+    {
+      "id": 2000506,
+      "title": "Original III: Stage 06",
+      "description": "Win stage 6 in Original III.",
+      "points": 10,
+      "event": "dyna_2000506"
+    },
+    {
+      "id": 2000507,
+      "title": "Original III: Stage 07",
+      "description": "Win stage 7 in Original III.",
+      "points": 10,
+      "event": "dyna_2000507"
+    },
+    {
+      "id": 2000508,
+      "title": "Original III: Stage 08",
+      "description": "Win stage 8 in Original III.",
+      "points": 10,
+      "event": "dyna_2000508"
+    },
+    {
+      "id": 2000509,
+      "title": "Original III: Stage 09",
+      "description": "Win stage 9 in Original III.",
+      "points": 10,
+      "event": "dyna_2000509"
+    },
+    {
+      "id": 2000510,
+      "title": "Original III: Stage 10",
+      "description": "Win stage 10 in Original III.",
+      "points": 10,
+      "event": "dyna_2000510"
+    },
+    {
+      "id": 2000601,
+      "title": "Original IV: Stage 01",
+      "description": "Win stage 1 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000601"
+    },
+    {
+      "id": 2000602,
+      "title": "Original IV: Stage 02",
+      "description": "Win stage 2 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000602"
+    },
+    {
+      "id": 2000603,
+      "title": "Original IV: Stage 03",
+      "description": "Win stage 3 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000603"
+    },
+    {
+      "id": 2000604,
+      "title": "Original IV: Stage 04",
+      "description": "Win stage 4 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000604"
+    },
+    {
+      "id": 2000605,
+      "title": "Original IV: Stage 05",
+      "description": "Win stage 5 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000605"
+    },
+    {
+      "id": 2000606,
+      "title": "Original IV: Stage 06",
+      "description": "Win stage 6 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000606"
+    },
+    {
+      "id": 2000607,
+      "title": "Original IV: Stage 07",
+      "description": "Win stage 7 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000607"
+    },
+    {
+      "id": 2000608,
+      "title": "Original IV: Stage 08",
+      "description": "Win stage 8 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000608"
+    },
+    {
+      "id": 2000609,
+      "title": "Original IV: Stage 09",
+      "description": "Win stage 9 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000609"
+    },
+    {
+      "id": 2000610,
+      "title": "Original IV: Stage 10",
+      "description": "Win stage 10 in Original IV.",
+      "points": 10,
+      "event": "dyna_2000610"
+    },
+    {
+      "id": 2000900,
+      "title": "Practice Complete",
+      "description": "Win every stage in Practice in one RecompLauncher session.",
+      "points": 10,
+      "event": "dyna_2000900"
+    },
+    {
+      "id": 2000901,
+      "title": "Story Complete",
+      "description": "Win every stage in Story in one RecompLauncher session.",
+      "points": 25,
+      "event": "dyna_2000901"
+    },
+    {
+      "id": 2000903,
+      "title": "Original I Complete",
+      "description": "Win every stage in Original I in one RecompLauncher session.",
+      "points": 25,
+      "event": "dyna_2000903"
+    },
+    {
+      "id": 2000904,
+      "title": "Original II Complete",
+      "description": "Win every stage in Original II in one RecompLauncher session.",
+      "points": 25,
+      "event": "dyna_2000904"
+    },
+    {
+      "id": 2000905,
+      "title": "Original III Complete",
+      "description": "Win every stage in Original III in one RecompLauncher session.",
+      "points": 25,
+      "event": "dyna_2000905"
+    },
+    {
+      "id": 2000906,
+      "title": "Original IV Complete",
+      "description": "Win every stage in Original IV in one RecompLauncher session.",
+      "points": 25,
+      "event": "dyna_2000906"
+    }
+  ]
+}

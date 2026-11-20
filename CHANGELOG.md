@@ -1,3 +1,9 @@
+# v0.5.0 Beta 1
+
+- Both Dyna Brothers games report newly earned achievements through the Recomp Achievements SDK.
+- RecompLauncher sessions support automatic display mode and controller-specific button icons.
+- The Windows release runs on SDL3 through sdl2-compat. ROM error messages, log rotation and writable profile fallback improve startup recovery.
+
 # v0.4.3
 
 - DB2 keeps the English menu plates consistent while the stone rises. Skipping the title clips the parked Sega Channel logo, and the upper sky follows the native palette.

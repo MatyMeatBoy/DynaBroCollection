@@ -480,6 +480,83 @@ index 602438d..32820c0 100644
      launcher_boot_timing_mark("rui:backend_closed");
  
      /* In session, closing the window is "back to the game", the same as
+diff --git a/src/common/backends/imgui/runtime_ui_imgui.cpp b/src/common/backends/imgui/runtime_ui_imgui.cpp
+index ad81129..006d2c5 100644
+--- a/src/common/backends/imgui/runtime_ui_imgui.cpp
++++ b/src/common/backends/imgui/runtime_ui_imgui.cpp
+@@ -20,6 +20,49 @@ ImU32 u32(const LngColor &c, float alpha = 1.0f) {
+     return ImGui::ColorConvertFloat4ToU32(col(c, alpha));
+ }
+ 
++const char *const select_hint = "Enter / Select";
++const char *const back_hint = "Esc / Back";
++const char *const navigate_hint = "D-pad / Arrows  Navigate";
++
++float gamepad_footer_width() {
++    return ImGui::GetFontSize() * 2.0f + ImGui::GetStyle().ItemSpacing.x * 6.0f +
++           ImGui::CalcTextSize(select_hint).x + ImGui::CalcTextSize(back_hint).x +
++           ImGui::CalcTextSize(navigate_hint).x;
++}
++
++void draw_gamepad_footer(int style) {
++    const bool playstation = style == RECOMP_RUNTIME_UI_GAMEPAD_PLAYSTATION;
++    const float size = ImGui::GetFontSize();
++    const float gap = ImGui::GetStyle().ItemSpacing.x;
++    const ImU32 muted = ImGui::GetColorU32(ImGuiCol_TextDisabled);
++    ImVec2 pos = ImGui::GetCursorScreenPos();
++    ImDrawList *draw = ImGui::GetWindowDrawList();
++    for (int i = 0; i < 2; ++i) {
++        const ImVec2 center(pos.x + size * 0.5f, pos.y + size * 0.5f);
++        const ImU32 color = i ? IM_COL32(244,125,122,255)
++                             : playstation ? IM_COL32(137,187,252,255) : IM_COL32(138,215,153,255);
++        draw->AddCircleFilled(center, size * 0.5f, IM_COL32(29,36,48,255));
++        if (playstation) {
++            const float r = size * 0.20f;
++            if (i) {
++                draw->AddCircle(center, r, color, 0, 1.4f);
++            } else {
++                draw->AddLine(ImVec2(center.x-r, center.y-r), ImVec2(center.x+r, center.y+r), color, 1.4f);
++                draw->AddLine(ImVec2(center.x-r, center.y+r), ImVec2(center.x+r, center.y-r), color, 1.4f);
++            }
++        } else {
++            const char *letter = i ? "B" : "A";
++            draw->AddText(ImVec2(center.x - ImGui::CalcTextSize(letter).x * 0.5f, pos.y), color, letter);
++        }
++        pos.x += size + gap;
++        const char *label = i ? back_hint : select_hint;
++        draw->AddText(pos, muted, label);
++        pos.x += ImGui::CalcTextSize(label).x + 2.0f * gap;
++    }
++    draw->AddText(pos, muted, navigate_hint);
++    ImGui::Dummy(ImVec2(gamepad_footer_width(), size));
++}
++
+ void value_text(RecompRuntimeUi *ui, const RecompRuntimeUiItem *item,
+                 char *out, size_t out_size) {
+     if (item->type == RECOMP_RUNTIME_UI_ACTION) {
+@@ -420,7 +463,9 @@ extern "C" void recomp_runtime_ui_render_imgui(RecompRuntimeUi *ui) {
+                 ui->config.accept_label ? ui->config.accept_label : "Select",
+                 ui->config.back_label ? ui->config.back_label : "Back");
+         }
+-        float text_h = ImGui::CalcTextSize(hint, nullptr, false, text_w).y;
++        const bool show_gamepad = !touch_friendly && ui->config.gamepad_style &&
++                                  gamepad_footer_width() <= text_w;
++        float text_h = show_gamepad ? ImGui::GetFontSize() : ImGui::CalcTextSize(hint, nullptr, false, text_w).y;
+         if (ui->status_frames)
+             text_h += ImGui::GetStyle().ItemSpacing.y +
+                       ImGui::CalcTextSize(ui->status, nullptr, false, text_w).y;
+@@ -472,7 +517,10 @@ extern "C" void recomp_runtime_ui_render_imgui(RecompRuntimeUi *ui) {
+         ImGui::BeginChild("##footer", ImVec2(text_w, footer_content_h), false,
+                           ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+         ImGui::PushTextWrapPos(0.0f);
+-        ImGui::TextDisabled("%s", hint);
++        if (show_gamepad)
++            draw_gamepad_footer(ui->config.gamepad_style);
++        else
++            ImGui::TextDisabled("%s", hint);
+         if (ui->status_frames) {
+             ImGui::PushStyleColor(ImGuiCol_Text, col(theme.accent2));
+             ImGui::TextUnformatted(ui->status);
 diff --git a/src/common/launcher_binds.c b/src/common/launcher_binds.c
 index 336adee..5796dc1 100644
 --- a/src/common/launcher_binds.c
@@ -1157,6 +1234,26 @@ index bc60540..e5c498e 100644
  
  // *io always comes back carrying the player's edits, whichever way the
  // launcher closed -- a setting changed and then dismissed is still a setting
+diff --git a/src/recomp_runtime_ui.h b/src/recomp_runtime_ui.h
+index 8d7775e..c623259 100644
+--- a/src/recomp_runtime_ui.h
++++ b/src/recomp_runtime_ui.h
+@@ -161,8 +161,15 @@ typedef struct RecompRuntimeUiConfig {
+      * the default, where every row can take the selection.
+      */
+     uint32_t navigation_flags;
++    /* Zero keeps the footer's text labels. */
++    int gamepad_style;
+ } RecompRuntimeUiConfig;
+ 
++enum {
++    RECOMP_RUNTIME_UI_GAMEPAD_XBOX = 1,
++    RECOMP_RUNTIME_UI_GAMEPAD_PLAYSTATION = 2,
++};
++
+ enum {
+     RECOMP_RUNTIME_UI_PRESENTATION_TOUCH_FRIENDLY = UINT32_C(1) << 0,
+ };
 diff --git a/src/third_party/stb_image.h b/src/third_party/stb_image.h
 index ef76fc1..d430d37 100644
 --- a/src/third_party/stb_image.h

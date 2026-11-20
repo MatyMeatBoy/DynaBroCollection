@@ -84,16 +84,29 @@ const wchar_t *dyna_launcher_options_help(void) {
         L"--widescreen off|16:9|fit\n"
         L"--integration-info     Print supported launch options as JSON\n"
         L"--help                 Show this help\n\n"
+#ifdef _WIN32
         L"Example: DynaBrothersLauncher.exe --game db2 --rom \"C:\\Games\\DB2.bin\" --no-launcher\n";
+#else
+        L"Example: ./DynaBroCollection --game db2 --rom \"/path/to/DB2.md\" --no-launcher\n";
+#endif
 }
 const char *dyna_launcher_integration_info(void) {
     return "{\"schema_version\":1,\"application\":\"Dyna Brothers\","
+#ifdef _WIN32
         "\"games\":[{\"id\":\"db1\",\"executable\":\"DynaBrothers1AOT.exe\"},"
         "{\"id\":\"db2\",\"executable\":\"DynaBrothers2AOT.exe\"}],"
+#else
+        "\"games\":[{\"id\":\"db1\",\"executable\":\"DynaBrothers1AOT\"},"
+        "{\"id\":\"db2\",\"executable\":\"DynaBrothers2AOT\"}],"
+#endif
         "\"options\":{\"--game\":[\"db1\",\"db2\"],\"--rom\":\"path\","
         "\"--no-launcher\":true,\"--setup\":true,\"--fullscreen\":true,"
         "\"--widescreen\":[\"off\",\"16:9\",\"fit\"]},"
         "\"rom_required\":\"user_supplied\",\"writes_rom\":false,"
         "\"paths_relative_to\":\"launcher_directory\","
+        "\"profile\":{\"override_env\":\"GENESIS_USER_DIR\",\"first_choice\":\"launcher_directory\","
+        "\"windows_fallback\":\"%LOCALAPPDATA%/DynaBroCollection\",\"logs\":\"logs\",\"log_retention_per_component\":5},"
+        "\"exit_codes\":{\"success\":0,\"startup_error\":1,\"invalid_arguments\":2,\"rom_missing\":3,"
+        "\"rom_unreadable\":4,\"rom_incompatible\":5,\"rom_wrong_game\":6},"
         "\"launch_template\":[\"--game\",\"{game}\",\"--rom\",\"{rom}\",\"--no-launcher\"]}\n";
 }

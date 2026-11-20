@@ -67,6 +67,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  int result=recomp_launcher_run_window(gi.name,&s,&gi,assets,initial,picked,capacity);
  if(result==0||result==1){
   app_config_reload_preserving_mods(config);
+  if(g_app_config.fullscreen!=s.fullscreen)g_app_config.fullscreen_auto=0;
   g_app_config.window_scale=s.window_scale;g_app_config.fullscreen=s.fullscreen;
   g_app_config.linear_filter=s.linear_filter;g_app_config.integer_scale=s.integer_scale;
   g_app_config.volume=s.volume;g_app_config.audio_freq=s.audio_freq;g_app_config.skip_launcher=1;

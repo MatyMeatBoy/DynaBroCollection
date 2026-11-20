@@ -31,6 +31,15 @@
     "--help": "human-readable help"
   },
   "rom_required": "user_supplied",
-  "writes_outside_own_folder": false,
-  "notes": "No separate builder step: DynaBrothersLauncher.exe and both *AOT.exe are shipped prebuilt in every release zip and run as-is. Deleting the extracted folder removes the whole install. Settings/cache files (settings.ini, rom-*.cfg) are written next to the executables unless GENESIS_USER_DIR is set."
+  "exit_codes": {
+    "0": "Success",
+    "1": "Startup error",
+    "2": "Invalid arguments",
+    "3": "ROM file missing",
+    "4": "ROM file unreadable",
+    "5": "Unsupported ROM revision",
+    "6": "ROM belongs to the other game"
+  },
+  "writes_outside_own_folder": true,
+  "notes": "The executables ship prebuilt. Settings, saves and ROM path caches use GENESIS_USER_DIR when set, then the writable launcher directory, then %LOCALAPPDATA%/DynaBroCollection. The selected profile keeps the latest five logs per executable in its logs folder."
 }

@@ -493,6 +493,7 @@ const GameSpec g_game_spec={
     .host_ui_input=game_ui_input,.host_ui_render=game_ui_render,
     .on_diagnostic_session=dyna_achievement_session_diagnostic,
     .on_frame_post=dyna_achievement_session_frame,
+    .sram_loaded=dyna_achievement_session_sram_loaded,
     .controller_prepare=dyna_controller_prepare,.controller_mask=dyna_controller_mask,
     .controller_removed=dyna_controller_removed,
     .expected_rom_crc32=DYNA_CRC,.expected_rom_size=DYNA_SIZE,

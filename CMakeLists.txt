@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.20)
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" DYNA_PROJECT_VERSION LIMIT_COUNT 1)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
 project(DynaBrothersRecomp VERSION ${DYNA_PROJECT_VERSION} LANGUAGES C CXX)
+if(ANDROID)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(DYNA_ANDROID_SDL_SOURCE "" CACHE PATH "SDL2 source checkout for Android")
+    if(NOT EXISTS "${DYNA_ANDROID_SDL_SOURCE}/android-project")
+        message(FATAL_ERROR "Set DYNA_ANDROID_SDL_SOURCE to the SDL2 source checkout")
+    endif()
+    set(SDL_SHARED ON CACHE BOOL "" FORCE)
+    set(SDL_STATIC OFF CACHE BOOL "" FORCE)
+    set(SDL_TEST OFF CACHE BOOL "" FORCE)
+    add_subdirectory("${DYNA_ANDROID_SDL_SOURCE}" android-sdl EXCLUDE_FROM_ALL)
+endif()
 enable_testing()
 add_executable(DynaViewportTest tests/viewport_test.c games/viewport.c)
 target_include_directories(DynaViewportTest PRIVATE games)
@@ -51,7 +62,9 @@ target_include_directories(DynaAchievementsTest PRIVATE games)
 target_compile_options(DynaAchievementsTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/test-achievements-profile")
 add_test(NAME achievement_persistence_contract COMMAND DynaAchievementsTest "${CMAKE_BINARY_DIR}/test-achievements-profile")
-find_package(SDL2 REQUIRED CONFIG)
+if(NOT TARGET SDL2::SDL2)
+    find_package(SDL2 REQUIRED CONFIG)
+endif()
 add_executable(DynaAchievementUiTest tests/achievement_ui_test.c games/achievement_ui.c)
 target_include_directories(DynaAchievementUiTest PRIVATE games)
 target_compile_definitions(DynaAchievementUiTest PRIVATE SDL_MAIN_HANDLED)
@@ -80,22 +93,31 @@ function(add_dyna target prefix rom crc entry vint hint)
     if(NOT PARTS)
         message(FATAL_ERROR "Generate ${prefix} before configuring")
     endif()
-    add_executable(${target} ${RUNNER_SOURCES} ${PARTS}
+    set(_sources ${RUNNER_SOURCES} ${PARTS}
         "generated/${prefix}/${prefix}_dispatch.c"
         "generated/${prefix}/${prefix}_layout.c"
         "generated/${prefix}/${prefix}_cycles.c"
-        "${RUNNER_ROOT}/game_cycles.c" games/dyna_spec.c)
+        "${RUNNER_ROOT}/game_cycles.c" games/dyna_spec.c
+        games/launcher_profile.c games/launcher_discovery.c)
+    if(ANDROID)
+        add_library(${target} SHARED ${_sources})
+    else()
+        add_executable(${target} ${_sources})
+    endif()
     target_include_directories(${target} PRIVATE
         "${RUNNER_ROOT}" "${RUNNER_ROOT}/include" "${RUNNER_ROOT}/video"
         "${RUNNER_ROOT}/external/ymfm/src" "${RUNNER_ROOT}/external/superzazu"
         "${RUNNER_ROOT}/external/clowncommon" "${RECOMP_ROOT}/recompiler/src"
-        "${CMAKE_SOURCE_DIR}/generated/${prefix}")
+        "${CMAKE_SOURCE_DIR}/generated/${prefix}" "${CMAKE_SOURCE_DIR}/games")
     target_compile_definitions(${target} PRIVATE
         INCLUDE_GENERATED_CODE=1 ENABLE_RECOMPILED_CODE=1 OWN_BACKEND=1 GEN_ENABLE_TRACE=1
         DEFAULT_DEBUG_PORT=4390 DYNA_NAME="${target}" DYNA_CRC=${crc}
         DYNA_DISPLAY_NAME="${_display}"
         DYNA_SIZE=${rom} DYNA_ENTRY=${entry} DYNA_VINT=${vint} DYNA_HINT=${hint})
-    target_link_libraries(${target} PRIVATE SDL2::SDL2main SDL2::SDL2)
+    target_link_libraries(${target} PRIVATE SDL2::SDL2)
+    if(WIN32 AND TARGET SDL2::SDL2main)
+        target_link_libraries(${target} PRIVATE SDL2::SDL2main)
+    endif()
     if(WIN32)
         # Per-game icon (resource id 1 is what SDL uses for the window icon).
         enable_language(RC)
@@ -104,6 +126,7 @@ function(add_dyna target prefix rom crc entry vint hint)
         else()
             target_sources(${target} PRIVATE "${CMAKE_SOURCE_DIR}/assets/icons/db1.rc")
         endif()
+        target_sources(${target} PRIVATE games/checkpoint_manifest.rc)
         target_link_libraries(${target} PRIVATE comdlg32)
     endif()
     genesisrecomp_runner_target(${target})
@@ -163,14 +186,39 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db2step/db2step_module.c")
     endif()
 endif()
 
-add_custom_target(DynaAchievementAssets COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_SOURCE_DIR}/assets/achievements" "${CMAKE_BINARY_DIR}/assets/achievements")
+add_subdirectory(third_party/recomp-achievements/sdk)
+set_target_properties(rl_achievements PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_source_files_properties(games/achievement_session.c PROPERTIES COMPILE_DEFINITIONS "DYNA_VERSION=\"${PROJECT_VERSION}\"")
+add_custom_target(DynaAchievementAssets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets/achievements" "${CMAKE_BINARY_DIR}/assets/achievements"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets/recomp-achievements" "${CMAKE_BINARY_DIR}/assets/recomp-achievements")
+if(NOT CMAKE_CROSSCOMPILING)
+    find_package(Python3 QUIET COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_executable(DynaRecompAchievementSessionTest tests/recomp_achievement_session_test.c
+            games/achievement_session.c games/achievements.c
+            games/db1_achievement_events.c games/db2_achievement_events.c)
+        target_include_directories(DynaRecompAchievementSessionTest PRIVATE games "${RUNNER_ROOT}" "${RUNNER_ROOT}/include"
+            "${RUNNER_ROOT}/video" "${RUNNER_ROOT}/external/clowncommon" "${RUNNER_ROOT}/external/superzazu")
+        target_compile_definitions(DynaRecompAchievementSessionTest PRIVATE SDL_MAIN_HANDLED)
+        target_compile_options(DynaRecompAchievementSessionTest PRIVATE
+            $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG> $<$<C_COMPILER_ID:MSVC>:/UNDEBUG>)
+        target_link_libraries(DynaRecompAchievementSessionTest PRIVATE SDL2::SDL2 rl_achievements)
+        add_dependencies(DynaRecompAchievementSessionTest DynaAchievementAssets)
+        add_test(NAME recomp_achievement_channel_contract COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/recomp_achievement_channel.py"
+            "$<TARGET_FILE:DynaRecompAchievementSessionTest>" "${PROJECT_VERSION}" "${CMAKE_BINARY_DIR}/assets/recomp-achievements")
+    endif()
+endif()
 foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
     if(TARGET ${_game})
         target_sources(${_game} PRIVATE games/language_patch.c games/language_settings.c games/controller_profiles.c games/step_lookup.c games/viewport.c)
         target_sources(${_game} PRIVATE games/achievement_session.c games/achievement_ui.c games/achievement_smoke.c games/achievements.c
             games/db1_achievement_events.c games/db2_achievement_events.c)
         target_include_directories(${_game} PRIVATE games generated/language)
+        target_link_libraries(${_game} PRIVATE rl_achievements)
         add_dependencies(${_game} DynaAchievementAssets)
         add_custom_command(TARGET ${_game} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${_game}>/assets"
@@ -178,8 +226,14 @@ foreach(_game IN ITEMS DynaBrothers1AOT DynaBrothers2AOT)
                 "$<TARGET_FILE_DIR:${_game}>/assets/gamecontrollerdb.txt")
         if(_game STREQUAL "DynaBrothers1AOT")
             target_compile_definitions(${_game} PRIVATE DYNA_LANGUAGE_HEADER="db1_language.h" DYNA_LANGUAGE_IMAGE=db1_language_image)
+            set(_android_game 1)
         else()
             target_compile_definitions(${_game} PRIVATE DYNA_LANGUAGE_HEADER="db2_language.h" DYNA_LANGUAGE_IMAGE=db2_language_image)
+            set(_android_game 2)
+        endif()
+        if(ANDROID)
+            target_sources(${_game} PRIVATE platform/android/sdl_bridge.c)
+            target_compile_definitions(${_game} PRIVATE DYNA_ANDROID_GAME_ID=${_android_game})
         endif()
     endif()
 endforeach()
@@ -298,7 +352,7 @@ add_test(NAME db2_bio_overlay_contract COMMAND DynaDb2BioOverlayTest)
 
 
 if(WIN32 AND DYNA_LAUNCHER_UI)
- target_sources(DynaBrothersLauncher PRIVATE games/hub_settings.c games/launcher_discovery.c
+ target_sources(DynaBrothersLauncher PRIVATE games/hub_settings.c games/launcher_discovery.c games/launcher_profile.c
   games/controller_profiles.c games/language_settings.c "${RUNNER_ROOT}/app_config.c"
   "${RUNNER_ROOT}/gamepad.c" "${RUNNER_ROOT}/input_map.c")
  target_include_directories(DynaBrothersLauncher PRIVATE "${RUNNER_ROOT}" "${RUNNER_ROOT}/include"
@@ -314,6 +368,10 @@ add_executable(DynaLauncherDiscoveryTest tests/launcher_discovery_test.c games/l
 target_include_directories(DynaLauncherDiscoveryTest PRIVATE games)
 target_compile_options(DynaLauncherDiscoveryTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME launcher_discovery_contract COMMAND DynaLauncherDiscoveryTest)
+add_executable(DynaLauncherProfileTest tests/launcher_profile_test.c games/launcher_profile.c)
+target_include_directories(DynaLauncherProfileTest PRIVATE games)
+target_compile_options(DynaLauncherProfileTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG> $<$<C_COMPILER_ID:MSVC>:/UNDEBUG>)
+add_test(NAME launcher_profile_contract COMMAND DynaLauncherProfileTest "${CMAKE_CURRENT_BINARY_DIR}")
 if(TARGET DynaBrothersLauncher)
  target_include_directories(DynaBrothersLauncher PRIVATE "${RUNNER_ROOT}/external/superzazu")
 endif()
@@ -486,3 +544,12 @@ target_include_directories(DynaManualDataTest PRIVATE games)
 target_compile_options(DynaManualDataTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
 add_test(NAME manual_data_contract COMMAND DynaManualDataTest
     "${CMAKE_SOURCE_DIR}/docs/manuals/db1-manual-en.json" "${CMAKE_SOURCE_DIR}/docs/manuals/db2-manual-en.json")
+
+add_executable(DynaDisplayProfileTest tests/display_profile_test.c "${RUNNER_ROOT}/app_config.c")
+target_include_directories(DynaDisplayProfileTest PRIVATE "${RUNNER_ROOT}" "${RUNNER_ROOT}/external/clowncommon")
+target_compile_options(DynaDisplayProfileTest PRIVATE $<$<C_COMPILER_ID:GNU,Clang>:-UNDEBUG>)
+add_test(NAME display_profile_contract COMMAND DynaDisplayProfileTest "${CMAKE_BINARY_DIR}/test-display-profile.ini")
+
+if(DYNA_LAUNCHER_UI)
+    include(platform/desktop/install.cmake)
+endif()

@@ -1,2 +1,3 @@
 # Exact approved-patch comparisons must survive Windows checkouts unchanged.
 patches/*.patch -text whitespace=-blank-at-eol
+third_party/recomp-achievements/** -text whitespace=-blank-at-eol,-blank-at-eof

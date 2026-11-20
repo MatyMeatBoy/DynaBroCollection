@@ -35,6 +35,7 @@ int main(void) {
 #endif
     CHECK(!dyna_launcher_options_command(&o,L"game.exe",command,4));
     CHECK(strstr(dyna_launcher_integration_info(),"\"schema_version\":1"));
+    CHECK(strstr(dyna_launcher_integration_info(),"\"rom_wrong_game\":6"));
     puts("ok: launcher allowlist, whitespace/quote escaping, conflicts, integration schema");
     return 0;
 }

@@ -1,5 +1,6 @@
 /* Host persistence bridge. Guest code capture remains immutable. */
 #include "progress_runtime.h"
+#include "achievement_session.h"
 #include "achievements.h"
 #include "db1_progress_migration.h"
 #include "progress_session.h"
@@ -198,6 +199,7 @@ void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t 
   if(save_test_mode==1 && !save_test_done && pc==0x1becc &&
      dyna_progress_session_current(&session))save_test_pending=1;
   if(replay.status!=before){
+   if(replay.status==DYNA_REPLAY_LOADED)dyna_achievement_session_save_loaded();
    dyna_extras_ui_notice(dyna_progress_replay_status_text(&replay));
    if((test_index>=0 || trace_progress) && size>=0x3a){
     test_log(pc);

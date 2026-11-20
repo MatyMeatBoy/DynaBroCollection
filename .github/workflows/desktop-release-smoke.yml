@@ -1,0 +1,97 @@
+name: Desktop release smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Native desktop platform
+        type: choice
+        options: [macos, linux]
+        default: macos
+      tag:
+        description: Release tag
+        required: true
+      asset:
+        description: Desktop release asset
+        required: true
+      sha256:
+        description: SHA-256 of the ZIP
+        required: true
+
+permissions:
+  # GitHub only exposes draft releases to tokens with push access.
+  contents: write
+
+jobs:
+  startup:
+    if: inputs.platform == 'macos'
+    runs-on: macos-15
+    timeout-minutes: 10
+    env:
+      TAG: ${{ inputs.tag }}
+      ASSET: ${{ inputs.asset }}
+      CHECKSUM: ${{ inputs.sha256 }}
+    steps:
+      - name: Download and verify the release archive
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --output "$RUNNER_TEMP/game.zip"
+          actual="$(shasum -a 256 "$RUNNER_TEMP/game.zip" | cut -d ' ' -f 1)"
+          test "$actual" = "$CHECKSUM"
+          ditto -x -k "$RUNNER_TEMP/game.zip" "$RUNNER_TEMP/game"
+      - name: Check bundle, linkage and ROM rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find "$RUNNER_TEMP/game" -type d -name DynaBroCollection.app -print -quit)"
+          test -n "$app"
+          bin="$app/Contents/MacOS"
+          plutil -lint "$app/Contents/Info.plist"
+          "$bin/DynaBroCollection" --integration-info | python3 -m json.tool
+          "$bin/DynaBrothers1AOT" --build-info
+          "$bin/DynaBrothers2AOT" --build-info
+          printf 'invalid ROM fixture' > "$RUNNER_TEMP/unsupported.md"
+          code=0
+          SDL_VIDEODRIVER=dummy "$bin/DynaBroCollection" --game db1 --rom "$RUNNER_TEMP/unsupported.md" --no-launcher || code=$?
+          test "$code" -eq 5
+  linux-startup:
+    if: inputs.platform == 'linux'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    env:
+      TAG: ${{ inputs.tag }}
+      ASSET: ${{ inputs.asset }}
+      CHECKSUM: ${{ inputs.sha256 }}
+    steps:
+      - name: Download and verify the release archive
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --output "$RUNNER_TEMP/game.tar.gz"
+          actual="$(sha256sum "$RUNNER_TEMP/game.tar.gz" | cut -d ' ' -f 1)"
+          test "$actual" = "$CHECKSUM"
+          tar -xzf "$RUNNER_TEMP/game.tar.gz" -C "$RUNNER_TEMP"
+      - name: Check native program, SDL3 loading and ROM rejection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/DynaBroCollection"
+          ./DynaBroCollection --integration-info | python3 -m json.tool
+          ./DynaBrothers1AOT --build-info
+          ./DynaBrothers2AOT --build-info
+          python3 - <<'PY'
+          from ctypes import CDLL, c_char_p
+          sdl2 = CDLL("./lib/libSDL2-2.0.so.0")
+          sdl2.SDL_GetError.restype = c_char_p
+          assert sdl2.SDL_Init(0) == 0, sdl2.SDL_GetError()
+          sdl2.SDL_Quit()
+          PY
+          printf 'invalid ROM fixture' > "$RUNNER_TEMP/unsupported.md"
+          code=0
+          SDL_VIDEODRIVER=dummy ./DynaBroCollection --game db1 --rom "$RUNNER_TEMP/unsupported.md" --no-launcher || code=$?
+          test "$code" -eq 5

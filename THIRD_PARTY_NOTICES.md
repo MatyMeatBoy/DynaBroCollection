@@ -8,6 +8,8 @@ Este documento distingue las licencias de las dependencias; no concede derechos 
 | m68k-recomp-core | ABI de operaciones AOT | Avisos del submódulo fijado por el engine |
 | recomp-ui | Launcher y ajustes | [MIT](https://github.com/mstan/recomp-ui/blob/d55bf8304c455dbc5773a000c919f6ba0a26d6bb/LICENSE) |
 | SDL2 | Vídeo, audio e input | [zlib](https://github.com/libsdl-org/SDL/blob/SDL2/LICENSE.txt) |
+| SDL3 y sdl2-compat | Runtime SDL de la beta de Windows | [zlib](https://github.com/libsdl-org/sdl2-compat/blob/release-2.32.74/LICENSE.txt) |
+| Recomp Achievements | Eventos de logros para RecompLauncher | [SDK](https://github.com/elripalda/RecompAchievements) y avisos de cJSON y rcheevos incluidos en el paquete |
 | SDL_GameControllerDB | Identificación de dispositivos | [zlib](https://github.com/mdqinc/SDL_GameControllerDB/blob/4e87e3c6c2574f49e1cdf8526b6f829b61e5ccb3/LICENSE) |
 | Fuentes de recomp-ui | Interfaz | LatoLatin/Noto: OFL; OpenMoji: CC BY-SA 4.0. Avisos copiados al paquete |
 | Traducción de Tybis | Base inglesa de DB1 suministrada por el usuario | [Identidad publicada](https://retroachievements.org/forums/topic/15658); el parche de entrada no se incluye en el repositorio |

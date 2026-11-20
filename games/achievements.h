@@ -11,10 +11,14 @@ typedef struct {
     uint64_t unlocked_at; /* Offline Unix seconds; zero means locked. */
 } DynaAchievementItem;
 typedef struct { uint32_t id; uint64_t serial; } DynaAchievementUnlock;
+typedef int (*DynaAchievementLiveSink)(uint32_t id);
 /* settings_path is the existing settings filename; profile lives beside it.
  * Returns zero on invalid path/corrupt profile, with all goals safely locked.
  * Missing profile is successful. No network, accounts or RA synchronization. */
 int dyna_achievements_init(const char *settings_path,int game2);
+/* The optional sink accepts only freshly observed events. Its completion
+ * goals depend on stages reported successfully in this process. */
+void dyna_achievements_set_live_sink(DynaAchievementLiveSink sink);
 void dyna_achievements_emit(void *user,uint32_t id);
 /* Atomic replacement; failure keeps dirty state for the next retry. */
 int dyna_achievements_flush(void);

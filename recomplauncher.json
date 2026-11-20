@@ -8,18 +8,29 @@
       "id": "db1",
       "label": "Dyna Brothers (Japan), Mega Drive cartridge dump",
       "role": "game",
-      "formats": [{ "type": "file", "extensions": ["md", "bin"] }]
+      "formats": [{ "type": "file", "extensions": ["md", "bin", "gen", "68k"] }]
     },
     {
       "id": "db2",
       "label": "Dyna Brothers 2 Special (Japan), Virtual Console dump",
       "role": "game",
-      "formats": [{ "type": "file", "extensions": ["md", "bin"] }]
+      "formats": [{ "type": "file", "extensions": ["md", "bin", "gen", "68k"] }]
     }
   ],
   "start": {
-    "program": ["data/DynaBrothersLauncher.exe"],
-    "env": { "GENESIS_USER_DIR": "{install}/data" }
+    "program": [
+      "data/DynaBrothersLauncher.exe",
+      "DynaBroCollection",
+      "DynaBroCollection.app/Contents/MacOS/DynaBroCollection"
+    ]
+  },
+  "exit_codes": {
+    "2": "The launch arguments were invalid. Check the selected game and ROM path.",
+    "3": "The ROM file could not be found. Select your cartridge dump again.",
+    "4": "The ROM file could not be read. Choose a regular file you can open.",
+    "5": "This ROM revision is unsupported. Select a supported, uncompressed cartridge dump.",
+    "6": "This ROM belongs to the other Dyna Brothers game. Select the matching cartridge dump.",
+    "42": "ok"
   },
   "games": [
     {
@@ -29,7 +40,11 @@
       "args": ["--game", "db1", "--rom", "{input:db1}", "--no-launcher"],
       "saves": [
         "{install}/data/dyna1-progress-*.bin",
-        "{install}/data/dynabrothers-achievements-db1.txt"
+        "{install}/data/dynabrothers-achievements-db1.txt",
+        "{install}/dyna1-progress-*.bin",
+        "{install}/dynabrothers-achievements-db1.txt",
+        "{local}/DynaBroCollection/dyna1-progress-*.bin",
+        "{local}/DynaBroCollection/dynabrothers-achievements-db1.txt"
       ]
     },
     {
@@ -40,13 +55,33 @@
       "saves": [
         "{install}/data/*.srm",
         "{install}/data/dyna2-progress-*.bin",
-        "{install}/data/dynabrothers-achievements-db2.txt"
+        "{install}/data/dynabrothers-achievements-db2.txt",
+        "{install}/*.srm",
+        "{install}/dyna2-progress-*.bin",
+        "{install}/dynabrothers-achievements-db2.txt",
+        "{local}/DynaBroCollection/*.srm",
+        "{local}/DynaBroCollection/dyna2-progress-*.bin",
+        "{local}/DynaBroCollection/dynabrothers-achievements-db2.txt"
       ]
     }
   ],
   "config": [
-    { "id": "main", "format": "ini", "file": [{ "path": "{install}/data/settings.ini" }] },
-    { "id": "language", "format": "ini", "file": [{ "path": "{install}/data/dynabrothers-language.ini" }] }
+    { "id": "main", "format": "ini", "file": [
+      { "path": "{local}/DynaBroCollection/settings.ini", "if": "{install}/DynaBroCollection.app" },
+      { "path": "{install}/data/settings.ini", "if": "{install}/data/settings.ini" },
+      { "path": "{install}/settings.ini", "if": "{install}/settings.ini" },
+      { "path": "{local}/DynaBroCollection/settings.ini", "if": "{local}/DynaBroCollection/logs" },
+      { "path": "{install}/data/settings.ini", "if": "{install}/data/DynaBrothersLauncher.exe" },
+      { "path": "{install}/settings.ini" }
+    ] },
+    { "id": "language", "format": "ini", "file": [
+      { "path": "{local}/DynaBroCollection/dynabrothers-language.ini", "if": "{install}/DynaBroCollection.app" },
+      { "path": "{install}/data/dynabrothers-language.ini", "if": "{install}/data/dynabrothers-language.ini" },
+      { "path": "{install}/dynabrothers-language.ini", "if": "{install}/dynabrothers-language.ini" },
+      { "path": "{local}/DynaBroCollection/dynabrothers-language.ini", "if": "{local}/DynaBroCollection/logs" },
+      { "path": "{install}/data/dynabrothers-language.ini", "if": "{install}/data/DynaBrothersLauncher.exe" },
+      { "path": "{install}/dynabrothers-language.ini" }
+    ] }
   ],
   "settings": [
     {
@@ -54,11 +89,12 @@
       "label": "Window mode",
       "help": "Pick how the game opens on your display.",
       "choices": [
+        { "label": "Automatic", "set": { "video/fullscreen": "auto" } },
         { "label": "Windowed", "set": { "video/fullscreen": "0" } },
         { "label": "Borderless", "set": { "video/fullscreen": "1" } },
         { "label": "Exclusive fullscreen", "set": { "video/fullscreen": "2" } }
       ],
-      "defaults": { "video/fullscreen": "1" }
+      "defaults": { "video/fullscreen": "auto" }
     },
     {
       "id": "filter",
@@ -88,5 +124,9 @@
       "defaults": { "english": "1" }
     }
   ],
-  "folders": { "logs": [{ "path": "{install}/data/logs" }] }
+  "folders": { "logs": [
+    { "path": "{install}/data/logs", "if": "{install}/data/logs" },
+    { "path": "{install}/logs", "if": "{install}/logs" },
+    { "path": "{local}/DynaBroCollection/logs" }
+  ] }
 }

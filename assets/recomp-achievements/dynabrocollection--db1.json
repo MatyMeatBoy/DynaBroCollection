@@ -1,0 +1,560 @@
+{
+  "format": 1,
+  "game": "dynabrocollection--db1",
+  "source": "events",
+  "versions": "0.5.0-beta.1, 0.5.0",
+  "achievements": [
+    {
+      "id": 193201,
+      "title": "Monsoon Commander",
+      "description": "Cast Rain successfully at least 100 times before winning a battle.",
+      "points": 5,
+      "event": "dyna_193201"
+    },
+    {
+      "id": 193202,
+      "title": "Invasion Repelled",
+      "description": "Win a Normal, Hard or Back battle after taking out at least 100 enemies.",
+      "points": 5,
+      "event": "dyna_193202"
+    },
+    {
+      "id": 205018,
+      "title": "Three Forces of Nature",
+      "description": "Win a battle after casting Earthquake, Tsunami and Meteor.",
+      "points": 5,
+      "event": "dyna_205018"
+    },
+    {
+      "id": 193203,
+      "title": "Victory Past Zero",
+      "description": "Win a Normal, Hard or Back battle after time expires and triggers extinction.",
+      "points": 10,
+      "event": "dyna_193203"
+    },
+    {
+      "id": 205017,
+      "title": "Rise of a King",
+      "description": "Evolve one of your own Tyranno into King Tyranno during a numbered stage.",
+      "points": 10,
+      "event": "dyna_205017"
+    },
+    {
+      "id": 193204,
+      "title": "The PUGU Challenge",
+      "description": "Enter PUGU in the password menu and win the resulting battle.",
+      "points": 5,
+      "event": "dyna_193204"
+    },
+    {
+      "id": 205061,
+      "title": "The PPPP Challenge",
+      "description": "Enter PPPP in the password menu and claim victory on that map.",
+      "points": 5,
+      "event": "dyna_205061"
+    },
+    {
+      "id": 193205,
+      "title": "Clear Water Ahead",
+      "description": "Cast Tsunami with the battlefield clear of units to see the surfing Tyranno.",
+      "points": 5,
+      "event": "dyna_193205"
+    },
+    {
+      "id": 183303,
+      "title": "Practice Battle 01",
+      "description": "Lead your dinosaurs to victory on Practice stage 1.",
+      "points": 5,
+      "event": "dyna_183303"
+    },
+    {
+      "id": 183304,
+      "title": "Practice Battle 02",
+      "description": "Lead your dinosaurs to victory on Practice stage 2.",
+      "points": 5,
+      "event": "dyna_183304"
+    },
+    {
+      "id": 183305,
+      "title": "Practice Battle 03",
+      "description": "Lead your dinosaurs to victory on Practice stage 3.",
+      "points": 5,
+      "event": "dyna_183305"
+    },
+    {
+      "id": 183306,
+      "title": "Practice Battle 04",
+      "description": "Lead your dinosaurs to victory on Practice stage 4.",
+      "points": 5,
+      "event": "dyna_183306"
+    },
+    {
+      "id": 183307,
+      "title": "Practice Battle 05",
+      "description": "Lead your dinosaurs to victory on Practice stage 5.",
+      "points": 5,
+      "event": "dyna_183307"
+    },
+    {
+      "id": 183308,
+      "title": "Practice Battle 06",
+      "description": "Lead your dinosaurs to victory on Practice stage 6.",
+      "points": 5,
+      "event": "dyna_183308"
+    },
+    {
+      "id": 183309,
+      "title": "Practice Battle 07",
+      "description": "Lead your dinosaurs to victory on Practice stage 7.",
+      "points": 5,
+      "event": "dyna_183309"
+    },
+    {
+      "id": 183310,
+      "title": "Practice Battle 08",
+      "description": "Lead your dinosaurs to victory on Practice stage 8.",
+      "points": 5,
+      "event": "dyna_183310"
+    },
+    {
+      "id": 183311,
+      "title": "Normal Battle 01",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 1.",
+      "points": 5,
+      "event": "dyna_183311",
+      "type": "progression"
+    },
+    {
+      "id": 183247,
+      "title": "Normal Battle 02",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 2.",
+      "points": 5,
+      "event": "dyna_183247",
+      "type": "progression"
+    },
+    {
+      "id": 183312,
+      "title": "Normal Battle 03",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 3.",
+      "points": 5,
+      "event": "dyna_183312",
+      "type": "progression"
+    },
+    {
+      "id": 183248,
+      "title": "Normal Battle 04",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 4.",
+      "points": 5,
+      "event": "dyna_183248",
+      "type": "progression"
+    },
+    {
+      "id": 183249,
+      "title": "Normal Battle 05",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 5.",
+      "points": 5,
+      "event": "dyna_183249",
+      "type": "progression"
+    },
+    {
+      "id": 183250,
+      "title": "Normal Battle 06",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 6.",
+      "points": 5,
+      "event": "dyna_183250",
+      "type": "progression"
+    },
+    {
+      "id": 183251,
+      "title": "Normal Battle 07",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 7.",
+      "points": 5,
+      "event": "dyna_183251",
+      "type": "progression"
+    },
+    {
+      "id": 183252,
+      "title": "Normal Battle 08",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 8.",
+      "points": 5,
+      "event": "dyna_183252",
+      "type": "progression"
+    },
+    {
+      "id": 183253,
+      "title": "Normal Battle 09",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 9.",
+      "points": 5,
+      "event": "dyna_183253",
+      "type": "progression"
+    },
+    {
+      "id": 183254,
+      "title": "Normal Battle 10",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 10.",
+      "points": 5,
+      "event": "dyna_183254",
+      "type": "progression"
+    },
+    {
+      "id": 183255,
+      "title": "Normal Battle 11",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 11.",
+      "points": 5,
+      "event": "dyna_183255",
+      "type": "progression"
+    },
+    {
+      "id": 183256,
+      "title": "Normal Battle 12",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 12.",
+      "points": 5,
+      "event": "dyna_183256",
+      "type": "progression"
+    },
+    {
+      "id": 183257,
+      "title": "Normal Battle 13",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 13.",
+      "points": 5,
+      "event": "dyna_183257",
+      "type": "progression"
+    },
+    {
+      "id": 183258,
+      "title": "Normal Battle 14",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 14.",
+      "points": 5,
+      "event": "dyna_183258",
+      "type": "progression"
+    },
+    {
+      "id": 183259,
+      "title": "Normal Battle 15",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 15.",
+      "points": 5,
+      "event": "dyna_183259",
+      "type": "progression"
+    },
+    {
+      "id": 183260,
+      "title": "Normal Battle 16",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 16.",
+      "points": 10,
+      "event": "dyna_183260",
+      "type": "progression"
+    },
+    {
+      "id": 183261,
+      "title": "Normal Battle 17",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 17.",
+      "points": 10,
+      "event": "dyna_183261",
+      "type": "progression"
+    },
+    {
+      "id": 183262,
+      "title": "Normal Battle 18",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 18.",
+      "points": 10,
+      "event": "dyna_183262",
+      "type": "progression"
+    },
+    {
+      "id": 183263,
+      "title": "Normal Battle 19",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 19.",
+      "points": 10,
+      "event": "dyna_183263",
+      "type": "progression"
+    },
+    {
+      "id": 183264,
+      "title": "Normal Battle 20",
+      "description": "Lead your dinosaurs to victory on Normal or Hard stage 20.",
+      "points": 10,
+      "event": "dyna_183264",
+      "type": "win"
+    },
+    {
+      "id": 183313,
+      "title": "Hard Battle 01",
+      "description": "Lead your dinosaurs to victory on Hard stage 1.",
+      "points": 5,
+      "event": "dyna_183313"
+    },
+    {
+      "id": 183265,
+      "title": "Hard Battle 02",
+      "description": "Lead your dinosaurs to victory on Hard stage 2.",
+      "points": 5,
+      "event": "dyna_183265"
+    },
+    {
+      "id": 183314,
+      "title": "Hard Battle 03",
+      "description": "Lead your dinosaurs to victory on Hard stage 3.",
+      "points": 5,
+      "event": "dyna_183314"
+    },
+    {
+      "id": 183266,
+      "title": "Hard Battle 04",
+      "description": "Lead your dinosaurs to victory on Hard stage 4.",
+      "points": 5,
+      "event": "dyna_183266"
+    },
+    {
+      "id": 183267,
+      "title": "Hard Battle 05",
+      "description": "Lead your dinosaurs to victory on Hard stage 5.",
+      "points": 5,
+      "event": "dyna_183267"
+    },
+    {
+      "id": 183268,
+      "title": "Hard Battle 06",
+      "description": "Lead your dinosaurs to victory on Hard stage 6.",
+      "points": 5,
+      "event": "dyna_183268"
+    },
+    {
+      "id": 183269,
+      "title": "Hard Battle 07",
+      "description": "Lead your dinosaurs to victory on Hard stage 7.",
+      "points": 5,
+      "event": "dyna_183269"
+    },
+    {
+      "id": 183270,
+      "title": "Hard Battle 08",
+      "description": "Lead your dinosaurs to victory on Hard stage 8.",
+      "points": 5,
+      "event": "dyna_183270"
+    },
+    {
+      "id": 183271,
+      "title": "Hard Battle 09",
+      "description": "Lead your dinosaurs to victory on Hard stage 9.",
+      "points": 5,
+      "event": "dyna_183271"
+    },
+    {
+      "id": 183272,
+      "title": "Hard Battle 10",
+      "description": "Lead your dinosaurs to victory on Hard stage 10.",
+      "points": 5,
+      "event": "dyna_183272"
+    },
+    {
+      "id": 183273,
+      "title": "Hard Battle 11",
+      "description": "Lead your dinosaurs to victory on Hard stage 11.",
+      "points": 10,
+      "event": "dyna_183273"
+    },
+    {
+      "id": 183274,
+      "title": "Hard Battle 12",
+      "description": "Lead your dinosaurs to victory on Hard stage 12.",
+      "points": 10,
+      "event": "dyna_183274"
+    },
+    {
+      "id": 183275,
+      "title": "Hard Battle 13",
+      "description": "Lead your dinosaurs to victory on Hard stage 13.",
+      "points": 10,
+      "event": "dyna_183275"
+    },
+    {
+      "id": 183276,
+      "title": "Hard Battle 14",
+      "description": "Lead your dinosaurs to victory on Hard stage 14.",
+      "points": 10,
+      "event": "dyna_183276"
+    },
+    {
+      "id": 183277,
+      "title": "Hard Battle 15",
+      "description": "Lead your dinosaurs to victory on Hard stage 15.",
+      "points": 10,
+      "event": "dyna_183277"
+    },
+    {
+      "id": 183278,
+      "title": "Hard Battle 16",
+      "description": "Lead your dinosaurs to victory on Hard stage 16.",
+      "points": 10,
+      "event": "dyna_183278"
+    },
+    {
+      "id": 183279,
+      "title": "Hard Battle 17",
+      "description": "Lead your dinosaurs to victory on Hard stage 17.",
+      "points": 10,
+      "event": "dyna_183279"
+    },
+    {
+      "id": 183280,
+      "title": "Hard Battle 18",
+      "description": "Lead your dinosaurs to victory on Hard stage 18.",
+      "points": 10,
+      "event": "dyna_183280"
+    },
+    {
+      "id": 183281,
+      "title": "Hard Battle 19",
+      "description": "Lead your dinosaurs to victory on Hard stage 19.",
+      "points": 10,
+      "event": "dyna_183281"
+    },
+    {
+      "id": 183282,
+      "title": "Hard Battle 20",
+      "description": "Lead your dinosaurs to victory on Hard stage 20.",
+      "points": 10,
+      "event": "dyna_183282"
+    },
+    {
+      "id": 183283,
+      "title": "Back Battle 01",
+      "description": "Lead your dinosaurs to victory on Back stage 1.",
+      "points": 5,
+      "event": "dyna_183283"
+    },
+    {
+      "id": 183284,
+      "title": "Back Battle 02",
+      "description": "Lead your dinosaurs to victory on Back stage 2.",
+      "points": 5,
+      "event": "dyna_183284"
+    },
+    {
+      "id": 183285,
+      "title": "Back Battle 03",
+      "description": "Lead your dinosaurs to victory on Back stage 3.",
+      "points": 5,
+      "event": "dyna_183285"
+    },
+    {
+      "id": 183286,
+      "title": "Back Battle 04",
+      "description": "Lead your dinosaurs to victory on Back stage 4.",
+      "points": 5,
+      "event": "dyna_183286"
+    },
+    {
+      "id": 183287,
+      "title": "Back Battle 05",
+      "description": "Lead your dinosaurs to victory on Back stage 5.",
+      "points": 5,
+      "event": "dyna_183287"
+    },
+    {
+      "id": 183288,
+      "title": "Back Battle 06",
+      "description": "Lead your dinosaurs to victory on Back stage 6.",
+      "points": 5,
+      "event": "dyna_183288"
+    },
+    {
+      "id": 183289,
+      "title": "Back Battle 07",
+      "description": "Lead your dinosaurs to victory on Back stage 7.",
+      "points": 5,
+      "event": "dyna_183289"
+    },
+    {
+      "id": 183290,
+      "title": "Back Battle 08",
+      "description": "Lead your dinosaurs to victory on Back stage 8.",
+      "points": 5,
+      "event": "dyna_183290"
+    },
+    {
+      "id": 183291,
+      "title": "Back Battle 09",
+      "description": "Lead your dinosaurs to victory on Back stage 9.",
+      "points": 5,
+      "event": "dyna_183291"
+    },
+    {
+      "id": 183292,
+      "title": "Back Battle 10",
+      "description": "Lead your dinosaurs to victory on Back stage 10.",
+      "points": 5,
+      "event": "dyna_183292"
+    },
+    {
+      "id": 183293,
+      "title": "Back Battle 11",
+      "description": "Lead your dinosaurs to victory on Back stage 11.",
+      "points": 5,
+      "event": "dyna_183293"
+    },
+    {
+      "id": 183294,
+      "title": "Back Battle 12",
+      "description": "Lead your dinosaurs to victory on Back stage 12.",
+      "points": 5,
+      "event": "dyna_183294"
+    },
+    {
+      "id": 183295,
+      "title": "Back Battle 13",
+      "description": "Lead your dinosaurs to victory on Back stage 13.",
+      "points": 5,
+      "event": "dyna_183295"
+    },
+    {
+      "id": 183296,
+      "title": "Back Battle 14",
+      "description": "Lead your dinosaurs to victory on Back stage 14.",
+      "points": 5,
+      "event": "dyna_183296"
+    },
+    {
+      "id": 183297,
+      "title": "Back Battle 15",
+      "description": "Lead your dinosaurs to victory on Back stage 15.",
+      "points": 5,
+      "event": "dyna_183297"
+    },
+    {
+      "id": 183298,
+      "title": "Back Battle 16",
+      "description": "Lead your dinosaurs to victory on Back stage 16.",
+      "points": 10,
+      "event": "dyna_183298"
+    },
+    {
+      "id": 183299,
+      "title": "Back Battle 17",
+      "description": "Lead your dinosaurs to victory on Back stage 17.",
+      "points": 10,
+      "event": "dyna_183299"
+    },
+    {
+      "id": 183300,
+      "title": "Back Battle 18",
+      "description": "Lead your dinosaurs to victory on Back stage 18.",
+      "points": 10,
+      "event": "dyna_183300"
+    },
+    {
+      "id": 183301,
+      "title": "Back Battle 19",
+      "description": "Lead your dinosaurs to victory on Back stage 19.",
+      "points": 10,
+      "event": "dyna_183301"
+    },
+    {
+      "id": 183302,
+      "title": "Back Battle 20",
+      "description": "Lead your dinosaurs to victory on Back stage 20.",
+      "points": 10,
+      "event": "dyna_183302"
+    }
+  ]
+}

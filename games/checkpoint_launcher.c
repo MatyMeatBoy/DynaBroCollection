@@ -7,6 +7,7 @@
 #include <string.h>
 #include "launcher_options.h"
 #include "launcher_discovery.h"
+#include "launcher_profile.h"
 #include "hub_settings.h"
 #include "hub_navigation.h"
 #include "hub_layout.h"
@@ -79,8 +80,12 @@ static HBRUSH background_brush;
 #define DYNA_WIDEN_INNER(x) L##x
 #define DYNA_WIDEN(x) DYNA_WIDEN_INNER(x)
 static HANDLE game_process;
+static int running_game;
 static DynaLauncherOptions options;
+static ld_rom_result requested_rom_result;
 static int direct_launch;
+static DWORD direct_exit_code;
+static FILE *launcher_log;
 static UINT dpi=96;
 static int scale(int x){return MulDiv(x,ui_scale_milli,1000);}
 static COLORREF background=RGB(16,47,40),text_color=RGB(255,249,214),muted=RGB(191,219,174);
@@ -151,7 +156,17 @@ static void find_files(HWND window) {
  ld_options scan={0};scan.base_dir=root_dir[0]?root_dir:exe_dir;scan.cached_rom[0]=cached_rom[0];scan.cached_rom[1]=cached_rom[1];
  ld_scan(&scan,&discovered);detected_patches=0;
  for(size_t i=0;i<discovered.count;i++)if(discovered.items[i].kind==LD_BPS||discovered.items[i].kind==LD_IPS)detected_patches++;
- for(int i=0;i<2;i++){const ld_item *rom=options.rom?ld_requested_rom(&discovered,i+1,options.rom):ld_best_rom(&discovered,i+1);selected_rom[i][0]=0;if(rom)wcscpy(selected_rom[i],rom->path);}
+ if(options.rom){
+  ld_item rom;
+  requested_rom_result=ld_probe_rom(options.rom,0,NULL,&rom);
+  for(int i=0;i<2;i++){
+   selected_rom[i][0]=0;
+   if(requested_rom_result==LD_ROM_OK&&rom.game==i+1)wcscpy(selected_rom[i],rom.path);
+  }
+ }else for(int i=0;i<2;i++){
+  const ld_item *rom=ld_best_rom(&discovered,i+1);
+  selected_rom[i][0]=0;if(rom)wcscpy(selected_rom[i],rom->path);
+ }
  wchar_t message[256];swprintf(message,256,L"DB1: %ls   |   DB2: %ls   |   %u patches found",selected_rom[0][0]?L"ready":L"locate ROM",selected_rom[1][0]?L"ready":L"locate ROM",detected_patches);
  if(status)SetWindowTextW(status,message);if(window)InvalidateRect(window,NULL,TRUE);
 }
@@ -183,39 +198,63 @@ static int configure_game(HWND window,int index) {
  }
  return result;
 }
-static void launch(HWND window,int index) {
-    if(game_process)return;
+static void log_launch(const char *message)
+{
+    if(launcher_log){fprintf(launcher_log,"%s\n",message);fflush(launcher_log);}
+}
+
+static int report_launch_error(HWND window,int code,const char *message)
+{
+    log_launch(message);
+    HANDLE output=GetStdHandle(STD_ERROR_HANDLE);
+    DWORD written;
+    char line[512];
+    int length=snprintf(line,sizeof line,"Dyna Brothers: %s\n",message);
+    BOOL reported=output&&output!=INVALID_HANDLE_VALUE&&length>0&&(size_t)length<sizeof line&&
+                  WriteFile(output,line,(DWORD)length,&written,NULL);
+    if(!options.no_launcher&&(!direct_launch||!reported)){
+        wchar_t wide[512];
+        if(ld_utf8_to_wide(message,wide,512))MessageBoxW(window,wide,L"Dyna Brothers",MB_OK|MB_ICONERROR);
+    }
+    return code;
+}
+
+static int launch(HWND window,int index) {
+    if(game_process)return 0;
     find_files(window);
     if(options.rom && !selected_rom[index][0] && !options.setup){
-        fprintf(stderr,"[hub] Explicit ROM is missing, unsupported, or belongs to another game\n");
-        if(!options.no_launcher)MessageBoxW(window,L"The requested ROM is missing, unsupported, or belongs to another game.",L"Dyna Brothers",MB_OK|MB_ICONERROR);
-        return;
+        ld_rom_result result=requested_rom_result==LD_ROM_OK?LD_ROM_WRONG_GAME:requested_rom_result;
+        return report_launch_error(window,result,ld_rom_error(result,index+1));
     }
+    if(options.no_launcher&&!selected_rom[index][0])
+        return report_launch_error(window,LD_ROM_MISSING,ld_rom_error(LD_ROM_MISSING,index+1));
     if(options.setup || !selected_rom[index][0]) {
-        if(configure_game(window,index)!=0 || !selected_rom[index][0])return;
+        if(configure_game(window,index)!=0 || !selected_rom[index][0])return 1;
         options.setup=0;
     }
     DynaLauncherOptions child_options=options;
     child_options.setup=0;child_options.no_launcher=1;child_options.rom=selected_rom[index];
     wchar_t path[2048],directory[2048];DWORD length=GetModuleFileNameW(NULL,directory,2048);
-    if(!length||length>=2048)return;
-    wchar_t *slash=wcsrchr(directory,L'\\');if(!slash)return;slash[1]=0;
+    if(!length||length>=2048)return 1;
+    wchar_t *slash=wcsrchr(directory,L'\\');if(!slash)return 1;slash[1]=0;
     /* Packages keep only the launcher at the root; the games live in game\.
      * Development builds keep them beside the launcher. Either way the games
      * save and read settings in the launcher's folder, as before. */
     const wchar_t *game=index?L"DynaBrothers2AOT.exe":L"DynaBrothers1AOT.exe";
-    if(swprintf(path,2048,L"%lsgame\\%ls",directory,game)<0)return;
-    if(GetFileAttributesW(path)==INVALID_FILE_ATTRIBUTES&&swprintf(path,2048,L"%ls%ls",directory,game)<0)return;
+    if(swprintf(path,2048,L"%lsgame\\%ls",directory,game)<0)return 1;
+    if(GetFileAttributesW(path)==INVALID_FILE_ATTRIBUTES&&swprintf(path,2048,L"%ls%ls",directory,game)<0)return 1;
     wchar_t arguments[8192];
-    if(!dyna_launcher_options_command(&child_options,path,arguments,8192))return;
+    if(!dyna_launcher_options_command(&child_options,path,arguments,8192))return 1;
     STARTUPINFOW startup={0};startup.cb=sizeof startup;PROCESS_INFORMATION process={0};
     if(!CreateProcessW(path,arguments,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,directory,&startup,&process)) {
-        MessageBoxW(window,L"The game could not be started. Keep the checkpoint files and runtime libraries together.",L"Dyna Brothers",MB_OK|MB_ICONERROR);return;
+        return report_launch_error(window,1,"The game could not be started. Keep the game files and runtime libraries together.");
     }
-    CloseHandle(process.hThread);game_process=process.hProcess;
+    CloseHandle(process.hThread);game_process=process.hProcess;running_game=index+1;
     ShowWindow(window,SW_HIDE);
     EnableWindow(cards[0],FALSE);EnableWindow(cards[1],FALSE);
     SetWindowTextW(status,L"Game running. Close its window to return here.");SetTimer(window,1,250,NULL);
+    log_launch(index?"Started Dyna Brothers 2 Special":"Started Dyna Brothers");
+    return 0;
 }
 static void *manuals_load_page_image(const DynaManualBook *book,int page,wchar_t *directory) {
  void *image=NULL;
@@ -669,7 +708,16 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
             /* The game's own "Quit to Desktop" menu action exits with this
              * code (also used when it relaunched itself for Restart Level,
              * since the fresh instance is no longer this launcher's child). */
-            if(direct_launch || exit_code==42){DestroyWindow(window);return 0;}
+            char exit_message[96];
+            snprintf(exit_message,sizeof exit_message,"Game process exited with code %lu",(unsigned long)exit_code);
+            log_launch(exit_message);
+            if(exit_code>=LD_ROM_MISSING&&exit_code<=LD_ROM_WRONG_GAME)
+                report_launch_error(window,(int)exit_code,ld_rom_error((ld_rom_result)exit_code,options.game?options.game:running_game));
+            else if(exit_code!=0 && exit_code!=42){
+                snprintf(exit_message,sizeof exit_message,"The game closed with exit code %lu. Check the profile's logs folder.",(unsigned long)exit_code);
+                report_launch_error(window,(int)exit_code,exit_message);
+            }
+            if(direct_launch || exit_code==42){direct_exit_code=exit_code==42?0:exit_code;DestroyWindow(window);return 0;}
             ShowWindow(window,SW_SHOW);
             EnableWindow(cards[0],TRUE);EnableWindow(cards[1],TRUE);SetWindowTextW(status,L"Choose a game");SetFocus(cards[0]);
         }return 0;
@@ -694,7 +742,10 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     (void)previous;(void)command;
     int argc=0;wchar_t **argv=CommandLineToArgvW(GetCommandLineW(),&argc);wchar_t error[256];
     if(!argv || !dyna_launcher_options_parse(argc,(const wchar_t *const *)argv,&options,error,256)) {
-        MessageBoxW(NULL,argv?error:L"Unable to read launch options",L"Dyna Brothers",MB_OK|MB_ICONERROR);if(argv)LocalFree(argv);return 2;
+        char message[1024]="Unable to read launch options.";
+        if(argv){ld_wide_to_utf8(error,message,sizeof message);LocalFree(argv);}
+        direct_launch=argc>1;
+        return report_launch_error(NULL,2,message);
     }
     if(options.integration_info){
         const char *json=dyna_launcher_integration_info();DWORD written;
@@ -703,22 +754,32 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
         LocalFree(argv);return ok?0:1;
     }
     if(options.help){MessageBoxW(NULL,dyna_launcher_options_help(),L"Dyna Brothers",MB_OK);LocalFree(argv);return 0;}
-    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER)!=0){MessageBoxW(NULL,L"Could not initialize display and controllers",L"Dyna Brothers",MB_OK);LocalFree(argv);return 1;}
+    direct_launch=options.game!=0;
     DWORD dir_len=GetModuleFileNameW(NULL,exe_dir,LD_PATH_CAP);if(!dir_len||dir_len>=LD_PATH_CAP){LocalFree(argv);return 1;}
     wchar_t *last=wcsrchr(exe_dir,L'\\');if(!last){LocalFree(argv);return 1;}*last=0;
     /* Package layout: DynaBrothers.exe + data\ + roms\. When this launcher
      * runs from data\, ROMs (and mods) are discovered from the package root. */
     wcscpy(root_dir,exe_dir);
     {wchar_t *leaf=wcsrchr(root_dir,L'\\');if(leaf&&!_wcsicmp(leaf+1,L"data"))*leaf=0;else root_dir[0]=0;}
-    DWORD pn=GetEnvironmentVariableW(L"GENESIS_USER_DIR",profile_dir,LD_PATH_CAP);if(!pn||pn>=LD_PATH_CAP)wcscpy(profile_dir,exe_dir);
+    char portable[8192],profile[DYNA_PROFILE_PATH_CAP];
+    if(!ld_wide_to_utf8(exe_dir,portable,sizeof portable))portable[0]=0;
+    DynaProfileChoice choice=dyna_profile_resolve(portable,profile,sizeof profile);
+    if(choice==DYNA_PROFILE_UNAVAILABLE || !ld_utf8_to_wide(profile,profile_dir,LD_PATH_CAP) ||
+       !SetEnvironmentVariableW(L"GENESIS_USER_DIR",profile_dir)) {
+        LocalFree(argv);
+        return report_launch_error(NULL,1,"Could not open a writable profile. Check GENESIS_USER_DIR or your local application data folder.");
+    }
+    launcher_log=dyna_log_open(profile,"launcher",NULL,0);
+    log_launch(choice==DYNA_PROFILE_FALLBACK?"Launcher started with a per-user profile":"Launcher started");
+    if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_GAMECONTROLLER)!=0){
+        int result=report_launch_error(NULL,1,"Could not initialize display and controllers.");
+        if(launcher_log)fclose(launcher_log);LocalFree(argv);return result;
+    }
     swprintf(config_path,LD_PATH_CAP,L"%ls\\settings.ini",profile_dir);
     for(int i=0;i<2;i++){
         swprintf(cache_path[i],LD_PATH_CAP,L"%ls\\rom-DynaBrothers%dAOT.cfg",profile_dir,i+1);
         FILE *file=_wfopen(cache_path[i],L"rb");if(file){char value[8192];if(fgets(value,sizeof value,file)){value[strcspn(value,"\r\n")]=0;ld_utf8_to_wide(value,cached_rom[i],LD_PATH_CAP);}fclose(file);}
     }
-    if(options.rom){if(options.game)wcsncpy(cached_rom[options.game-1],options.rom,LD_PATH_CAP-1);else for(int i=0;i<2;i++)wcsncpy(cached_rom[i],options.rom,LD_PATH_CAP-1);}
-    direct_launch=options.game!=0;
-    if(options.rom && !options.setup)options.no_launcher=1;
     WNDCLASSW type={0};type.lpfnWndProc=procedure;type.hInstance=instance;
     type.hCursor=LoadCursorW(NULL,IDC_ARROW);type.hIcon=LoadIconW(instance,MAKEINTRESOURCEW(1));type.lpszClassName=L"DynaBrothersCheckpoint";
     if(!RegisterClassW(&type))return 1;
@@ -727,7 +788,10 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
     dyna_hub_window_bounds(work_area(NULL),dpi,fw,fh,0,&bounds);
     HWND window=CreateWindowW(type.lpszClassName,L"Dyna Brothers - v" DYNA_WIDEN(DYNA_VERSION),WS_OVERLAPPEDWINDOW,
         bounds.x,bounds.y,bounds.w,bounds.h,NULL,NULL,instance,NULL);if(!window)return 1;
-    if(direct_launch){launch(window,options.game-1);if(!game_process){DestroyWindow(window);LocalFree(argv);return 1;}}
+    if(direct_launch){
+        direct_exit_code=(DWORD)launch(window,options.game-1);
+        if(!game_process)DestroyWindow(window);
+    }
     else {if(!getenv("LNG_TEST_HIDDEN"))ShowWindow(window,show);UpdateWindow(window);}
     if(getenv("DYNA_HUB_HOME_SELFTEST")&&!direct_launch)PostMessageW(window,WM_APP+9,0,0);
     MSG message;while(GetMessageW(&message,NULL,0,0)>0){
@@ -736,5 +800,5 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
         }
         if(!IsDialogMessageW(window,&message)){TranslateMessage(&message);DispatchMessageW(&message);}
     }
-    SDL_Quit();LocalFree(argv);return 0;
+    SDL_Quit();LocalFree(argv);if(launcher_log)fclose(launcher_log);return (int)direct_exit_code;
 }

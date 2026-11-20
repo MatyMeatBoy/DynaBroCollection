@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.dynabro.collection">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="35" />
+    <application android:label="DynaBroCollection" android:theme="@android:style/Theme.Material.NoActionBar"
+        android:allowBackup="false" android:extractNativeLibs="true">
+        <activity android:name=".LibraryActivity" android:exported="true"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".GameActivity" android:exported="false" android:process=":game"
+            android:screenOrientation="sensorLandscape" android:enableOnBackInvokedCallback="false"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|locale|touchscreen" />
+    </application>
+</manifest>

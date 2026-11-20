@@ -15,6 +15,22 @@ from tools.build import find_by_hash, DB1_SHA, DB2_SHA, default_input_root
 from tools.windows_environment import portable_windows_env
 
 
+def verify_media_runtime(payload):
+    # Load both libraries in a subprocess so the package stays movable.
+    probe = """
+import ctypes
+from pathlib import Path
+base = Path.cwd()
+sdl3 = ctypes.WinDLL(str(base / 'SDL3.dll'))
+sdl2 = ctypes.WinDLL(str(base / 'SDL2.dll'))
+assert sdl3.SDL_GetVersion() // 1000000 == 3
+assert sdl2.SDL_Init(0) == 0
+sdl2.SDL_Quit()
+"""
+    subprocess.run([sys.executable, '-c', probe], cwd=payload,
+                   env=portable_windows_env(dict(os.environ)), check=True)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('candidate',type=Path);parser.add_argument('--output',type=Path,required=True)
@@ -33,6 +49,19 @@ def main():
         metadata=json.loads((ROOT/f'generated/language/{game}_language.json').read_text(encoding='utf-8'))
         english[game]=find_by_hash(ROOT/'local/roms',metadata['images'][1]['sha256'],{'.md','.bin'})
     cases={}
+    version=json.loads((payload/'PACKAGE.json').read_text(encoding='utf-8'))['version']
+    if tuple(map(int,version.split('.'))) >= (0,5,0):
+        verify_media_runtime(payload)
+        cases['sdl3-runtime']=dict(passed=True)
+        for game, count in [('db1',76),('db2',99)]:
+            name=f'dynabrocollection--{game}.json'
+            path=payload/'assets/recomp-achievements'/name
+            if path.read_bytes()!=(ROOT/'assets/recomp-achievements'/name).read_bytes():
+                raise RuntimeError(f'Incorrect packaged Recomp Achievements list: {game}')
+            data=json.loads(path.read_bytes())
+            if len(data['achievements'])!=count or data['source']!='events':
+                raise RuntimeError(f'Incomplete packaged Recomp Achievements list: {game}')
+        cases['recomp-achievements-lists']=dict(passed=True,db1_goals=76,db2_goals=99)
     pool=ThreadPoolExecutor(max_workers=args.jobs)
 
     def build(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None,diagnostic_env=None,markers=(),db1_progress_seed=None):
@@ -127,7 +156,6 @@ def main():
     collect('replay-record',futures['replay-record'])
     run('replay-play','DynaBrothers2AOT.exe',db2,301,replay=args.output/'replay-record/profile/logs/DynaBrothers2AOT-feedback.replay')
 
-    version=json.loads((payload/'PACKAGE.json').read_text(encoding='utf-8'))['version']
     if tuple(map(int,version.split('.'))) >= (0,1,3):
         wide_jobs={
             'db1-wide-original':submit('db1-wide-original','DynaBrothers1AOT.exe',db1,6100,script=payload/'debug/db1-16x9.input',widescreen='off'),
@@ -294,6 +322,9 @@ def main():
         cases['db2-player-6button-state-equality']=dict(passed=True,frames=9400,state_fnv1a64=a['state_fnv1a64'],audio_state_fnv1a64=a['audio_state_fnv1a64'],scope='Actual typed Normal2 password, six-button detector and B+direction camera postcondition; held-scroll may use native fallback')
     pool.shutdown(wait=True)
     binaries={p.relative_to(payload).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in payload.rglob('*.exe')}
+    if 'sdl3-runtime' in cases:
+        for name in ('SDL2.dll','SDL3.dll'):
+            binaries[name]=hashlib.sha256((payload/name).read_bytes()).hexdigest()
     report=dict(passed=all(x['passed'] for x in cases.values()),binaries=binaries,cases=cases,
         environment='Windows x64; PATH excludes development DLL directories; isolated settings and saves',
         scope='Finite native scene/replay/IRQ contracts; physical controllers/audio and complete campaigns remain unverified')

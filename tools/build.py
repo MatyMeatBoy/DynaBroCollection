@@ -77,11 +77,12 @@ def main():
     args = parser.parse_args()
     os.chdir(ROOT)
     # Select the available toolchain without changing machine-wide PATH.
+    suffix = '.exe' if os.name == 'nt' else ''
     selected_toolchain = os.environ.get('DYNA_TOOLCHAIN_BIN')
     if selected_toolchain:
         selected_toolchain = Path(selected_toolchain).resolve()
-        if not (selected_toolchain / 'cmake.exe').is_file():
-            raise RuntimeError('DYNA_TOOLCHAIN_BIN does not contain cmake.exe')
+        if not (selected_toolchain / f'cmake{suffix}').is_file():
+            raise RuntimeError(f'DYNA_TOOLCHAIN_BIN does not contain cmake{suffix}')
         os.environ['PATH'] = str(selected_toolchain) + os.pathsep + os.environ.get('PATH', '')
     elif Path('C:/msys64/ucrt64/bin/cmake.exe').exists():
         os.environ['PATH'] = 'C:/msys64/ucrt64/bin;' + os.environ['PATH']
@@ -195,8 +196,8 @@ def main():
     (overlay_dir / 'translation_identity.h').write_text('#pragma once\n#define DYNA_DB2_ENGLISH_CRC 0x' + db2_crc + 'u\n')
     run('configure-recompiler', [cmake, '-S', engine / 'recompiler', '-B', ROOT / 'build/recompiler', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release'])
     run('build-recompiler', [cmake, '--build', ROOT / 'build/recompiler', '--parallel', args.jobs])
-    compiler = ROOT / 'build/recompiler/GenesisRecomp.exe'
-    step = ROOT / 'build/recompiler/M68kStepRecomp.exe'
+    compiler = ROOT / f'build/recompiler/GenesisRecomp{suffix}'
+    step = ROOT / f'build/recompiler/M68kStepRecomp{suffix}'
     # Both legacy catalogs satisfy the shared runtime's dispatch ABI; AOT
     # targets execute explicit-PC modules instead of these function bodies.
     for prefix, rom in [('db1', english), ('db2special', db2)]:
@@ -237,6 +238,8 @@ def main():
     targets = ['DynaBrothers1AOT', 'DynaBrothers2AOT'] if args.target == 'both' else ['DynaBrothers1AOT' if args.target == 'db1' else 'DynaBrothers2AOT']
     if os.name == 'nt' and args.target == 'both':
         targets.append('DynaBrothersLauncher')
+    elif sys.platform in ('darwin', 'linux') and args.target == 'both':
+        targets.append('DynaBroCollection')
     run('build-game', [cmake, '--build', ROOT / 'build/dev', '--target', *targets, '--parallel', args.jobs])
     print('Experimental native build complete. Translation completion and whole-game validation remain separate.')
 

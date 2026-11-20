@@ -48,8 +48,14 @@ int main(void){
  assert(ld_scan(&o,v));assert(v->count==5);assert(ld_best_rom(v,1));assert(!wcscmp(ld_best_rom(v,1)->path,cached));assert(ld_best_rom(v,2));assert(ld_best_rom(v,2)->priority==40);
  {size_t i;int unknown=0,patch=0;for(i=0;i<v->count;i++){if(v->items[i].kind==LD_IPS){patch++;assert(!v->items[i].compatible);}if(v->items[i].kind==LD_ROM&&!v->items[i].game)unknown++;}assert(unknown==1&&patch==1);}
  assert(ld_requested_rom(v,1,cached));assert(!ld_requested_rom(v,2,cached));
+ ld_item probed;
+ assert(ld_probe_rom(cached,1,&o,&probed)==LD_ROM_OK);
+ assert(ld_probe_rom(cached,2,&o,&probed)==LD_ROM_WRONG_GAME);
+ assert(ld_probe_rom(base,1,&o,&probed)==LD_ROM_UNREADABLE);
  swprintf(p,LD_PATH_CAP,L"%ls\\missing.md",base);assert(!ld_requested_rom(v,1,p));
+ assert(ld_probe_rom(p,1,&o,&probed)==LD_ROM_MISSING);
  swprintf(p,LD_PATH_CAP,L"%ls\\unknown.bin",base);assert(!ld_requested_rom(v,1,p));
+ assert(ld_probe_rom(p,1,&o,&probed)==LD_ROM_INCOMPATIBLE);
  /* Remove only files this fixture created. */
  swprintf(p,LD_PATH_CAP,L"%ls\\a.md",base);DeleteFileW(p);DeleteFileW(cached);
  swprintf(p,LD_PATH_CAP,L"%ls\\unknown.bin",base);DeleteFileW(p);swprintf(p,LD_PATH_CAP,L"%ls\\archive.zip",base);DeleteFileW(p);

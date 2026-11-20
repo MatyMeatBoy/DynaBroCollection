@@ -1,5 +1,6 @@
 #ifndef DYNA_ACHIEVEMENT_SESSION_H
 #define DYNA_ACHIEVEMENT_SESSION_H
+#include <stddef.h>
 #include <stdint.h>
 void dyna_achievement_session_init(const char *settings,int game2);
 void dyna_achievement_session_reset(void);
@@ -18,5 +19,7 @@ static inline void dyna_achievement_session_before(uint32_t pc) {
 }
 void dyna_achievement_session_frame(uint64_t frame);
 void dyna_achievement_session_diagnostic(void);
+void dyna_achievement_session_save_loaded(void);
+void dyna_achievement_session_sram_loaded(const char *path,const uint8_t *data,size_t size,int loaded);
 int dyna_achievement_session_action(const char *key);
 #endif

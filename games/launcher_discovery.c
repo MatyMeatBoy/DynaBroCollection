@@ -14,6 +14,19 @@ uint32_t ld_crc32(uint32_t prior,const void *data,size_t n) {
 static int eq(const wchar_t *a,const wchar_t *b){while(*a&&*b){wchar_t x=*a++,y=*b++;if(x>=L'A'&&x<=L'Z')x+=32;if(y>=L'A'&&y<=L'Z')y+=32;if(x!=y)return 0;}return *a==*b;}
 ld_kind ld_classify(const wchar_t *p){const wchar_t *e=wcsrchr(p,L'.');if(!e)return LD_UNKNOWN;if(eq(e,L".md")||eq(e,L".bin")||eq(e,L".gen")||eq(e,L".68k"))return LD_ROM;if(eq(e,L".bps"))return LD_BPS;if(eq(e,L".ips"))return LD_IPS;return LD_UNKNOWN;}
 int ld_identify(uint64_t s,uint32_t c,const ld_revision *r,size_t n){size_t i;if(!r){r=revisions;n=sizeof(revisions)/sizeof(*revisions);}for(i=0;i<n;i++)if(r[i].size==s&&r[i].crc32==c)return r[i].game;return 0;}
+const char *ld_rom_error(ld_rom_result result,int game) {
+ switch(result) {
+ case LD_ROM_MISSING: return "The ROM file was not found. Check the path or choose your ROM in Game Settings.";
+ case LD_ROM_UNREADABLE: return "The ROM file could not be read. Check that it is a regular file you can open.";
+ case LD_ROM_WRONG_GAME: return game==2
+     ? "This ROM is for Dyna Brothers. Choose Dyna Brothers or supply a Dyna Brothers 2 Special ROM."
+     : "This ROM is for Dyna Brothers 2 Special. Choose Dyna Brothers 2 Special or supply a Dyna Brothers ROM.";
+ case LD_ROM_INCOMPATIBLE: return game==2
+     ? "Unsupported Dyna Brothers 2 Special ROM. Use a supported, uncompressed cartridge dump."
+     : "Unsupported Dyna Brothers ROM. Use a supported, uncompressed cartridge dump.";
+ default: return "";
+ }
+}
 const ld_item *ld_best_rom(const ld_inventory *v,int game){size_t i;const ld_item *best=NULL;for(i=0;i<v->count;i++){const ld_item *x=&v->items[i];if(x->kind!=LD_ROM||x->game!=game)continue;if(!best||x->priority<best->priority||(x->priority==best->priority&&wcscmp(x->path,best->path)<0))best=x;}return v->truncated&&best&&best->priority!=0?NULL:best;}
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -24,18 +37,53 @@ static int join(wchar_t *out,const wchar_t *a,const wchar_t *b){size_t n=wcslen(
 static int canonical(wchar_t *out,const wchar_t *p){DWORD n=GetFullPathNameW(p,LD_PATH_CAP,out,NULL);return n&&n<LD_PATH_CAP;}
 /* Reject reparse points in every existing ancestor, not only the leaf. */
 static int safe_path(const wchar_t *p){wchar_t q[LD_PATH_CAP];size_t i,n=wcslen(p);if(n>=LD_PATH_CAP)return 0;wcscpy(q,p);for(i=3;i<=n;i++)if(!q[i]||q[i]==L'\\'||q[i]==L'/'){wchar_t save=q[i];DWORD a;q[i]=0;a=GetFileAttributesW(q);q[i]=save;if(a!=INVALID_FILE_ATTRIBUTES&&(a&FILE_ATTRIBUTE_REPARSE_POINT))return 0;}return 1;}
+static ld_rom_result read_rom(const wchar_t *path,int game,const ld_options *o,ld_item *out) {
+ DWORD attr=GetFileAttributesW(path);
+ if(attr==INVALID_FILE_ATTRIBUTES){
+  DWORD error=GetLastError();
+  return error==ERROR_FILE_NOT_FOUND||error==ERROR_PATH_NOT_FOUND?LD_ROM_MISSING:LD_ROM_UNREADABLE;
+ }
+ if((attr&FILE_ATTRIBUTE_DIRECTORY)||!safe_path(path))return LD_ROM_UNREADABLE;
+ HANDLE file=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+ if(file==INVALID_HANDLE_VALUE)return LD_ROM_UNREADABLE;
+ LARGE_INTEGER size;
+ if(!GetFileSizeEx(file,&size)){CloseHandle(file);return LD_ROM_UNREADABLE;}
+ if(size.QuadPart<=0||size.QuadPart>16*1024*1024){CloseHandle(file);return LD_ROM_INCOMPATIBLE;}
+ unsigned char buf[32768];DWORD got;uint64_t total=0;uint32_t crc=0;BOOL ok;
+ while((ok=ReadFile(file,buf,sizeof buf,&got,NULL))&&got){total+=got;crc=ld_crc32(crc,buf,got);}
+ CloseHandle(file);
+ if(!ok||total!=(uint64_t)size.QuadPart)return LD_ROM_UNREADABLE;
+ out->kind=LD_ROM;out->size=total;out->crc32=crc;
+ out->game=ld_identify(total,crc,o?o->revisions:NULL,o?o->revision_count:0);
+ out->compatible=out->game!=0;wcscpy(out->path,path);
+ if(!out->compatible)return LD_ROM_INCOMPATIBLE;
+ return game&&out->game!=game?LD_ROM_WRONG_GAME:LD_ROM_OK;
+}
+ld_rom_result ld_probe_rom(const wchar_t *path,int game,const ld_options *o,ld_item *out) {
+ wchar_t full[LD_PATH_CAP];
+ if(!out)return LD_ROM_UNREADABLE;
+ memset(out,0,sizeof *out);
+ if(!path||!*path)return LD_ROM_MISSING;
+ if(!canonical(full,path))return LD_ROM_UNREADABLE;
+ return read_rom(full,game,o,out);
+}
 static void inspect(const wchar_t *p,unsigned priority,const ld_options *o,ld_inventory *v){
- HANDLE f;DWORD got;unsigned char buf[32768];uint32_t crc=0;LARGE_INTEGER size;ld_item x;size_t i;ld_kind k=ld_classify(p);
+ ld_item x={0};size_t i;ld_kind k=ld_classify(p);
  if(k==LD_UNKNOWN||!safe_path(p))return;
  for(i=0;i<v->count;i++)if(eq(v->items[i].path,p)){if(priority<v->items[i].priority)v->items[i].priority=priority;return;}
- f=CreateFileW(p,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);if(f==INVALID_HANDLE_VALUE)return;
- if(!GetFileSizeEx(f,&size)||size.QuadPart<0||size.QuadPart>16*1024*1024){CloseHandle(f);return;}
- memset(&x,0,sizeof(x));x.kind=k;x.size=(uint64_t)size.QuadPart;x.priority=priority;wcscpy(x.path,p);
- if(k==LD_ROM){uint64_t total=0;for(;;){if(!ReadFile(f,buf,sizeof(buf),&got,NULL)){CloseHandle(f);return;}if(!got)break;total+=got;crc=ld_crc32(crc,buf,got);}if(total!=x.size){CloseHandle(f);return;}x.crc32=crc;x.game=ld_identify(x.size,crc,o->revisions,o->revision_count);x.compatible=x.game!=0;}
- else { /* Inventory only: a magic header identifies a patch, never authorizes it. */
- if(!ReadFile(f,buf,5,&got,NULL)||got<5||(k==LD_BPS?memcmp(buf,"BPS1",4):memcmp(buf,"PATCH",5))){CloseHandle(f);return;}
+ if(k==LD_ROM){
+  read_rom(p,0,o,&x);
+  if(x.kind!=LD_ROM)return;
+ } else { /* Inventory only: a magic header identifies a patch, never authorizes it. */
+  HANDLE file=CreateFileW(p,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,NULL);
+  if(file==INVALID_HANDLE_VALUE)return;
+  DWORD got;unsigned char buf[5];LARGE_INTEGER size;
+  BOOL ok=GetFileSizeEx(file,&size)&&size.QuadPart<=16*1024*1024&&ReadFile(file,buf,5,&got,NULL);
+  CloseHandle(file);
+  if(!ok||got<5||(k==LD_BPS?memcmp(buf,"BPS1",4):memcmp(buf,"PATCH",5)))return;
+  x.kind=k;x.size=(uint64_t)size.QuadPart;wcscpy(x.path,p);
  }
- CloseHandle(f);if(v->count==LD_MAX_ITEMS){v->truncated=1;return;}v->items[v->count++]=x;
+ x.priority=priority;if(v->count==LD_MAX_ITEMS){v->truncated=1;return;}v->items[v->count++]=x;
 }
 static void walk(const wchar_t *dir,unsigned priority,unsigned depth,const ld_options *o,ld_inventory *v){wchar_t pattern[LD_PATH_CAP],p[LD_PATH_CAP];WIN32_FIND_DATAW data;HANDLE h;if(!safe_path(dir)||!join(pattern,dir,L"*"))return;h=FindFirstFileW(pattern,&data);if(h==INVALID_HANDLE_VALUE)return;do{if(++v->examined>4096){v->truncated=1;break;}if(eq(data.cFileName,L".")||eq(data.cFileName,L"..")||(data.dwFileAttributes&FILE_ATTRIBUTE_REPARSE_POINT))continue;if(!join(p,dir,data.cFileName))continue;if(data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY){if(depth)walk(p,priority,depth-1,o,v);}else inspect(p,priority,o,v);if(v->examined>4096)break;}while(FindNextFileW(h,&data));FindClose(h);}
 int ld_scan(const ld_options *options,ld_inventory *v){ld_options zero;const ld_options *o;wchar_t base[LD_PATH_CAP],p[LD_PATH_CAP],cfg[LD_PATH_CAP],values[8192];const wchar_t *sections[]={L"roms",L"mods"};size_t i,j;unsigned roots=0;
@@ -51,9 +99,67 @@ int ld_scan(const ld_options *options,ld_inventory *v){ld_options zero;const ld_
  return 1;
 }
 #else
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 int ld_scan(const ld_options *o,ld_inventory *v){(void)o;if(v)memset(v,0,sizeof(*v));return 0;}
-int ld_utf8_to_wide(const char *s,wchar_t *d,size_t n){(void)s;(void)d;(void)n;return 0;}
-int ld_wide_to_utf8(const wchar_t *s,char *d,size_t n){(void)s;(void)d;(void)n;return 0;}
+int ld_utf8_to_wide(const char *src, wchar_t *dst, size_t capacity) {
+ if (!src || !dst || !capacity) return 0;
+ size_t count = mbstowcs(dst, src, capacity);
+ return count != (size_t)-1 && count < capacity;
+}
+int ld_wide_to_utf8(const wchar_t *src, char *dst, size_t capacity) {
+ if (!src || !dst || !capacity) return 0;
+ size_t count = wcstombs(dst, src, capacity);
+ return count != (size_t)-1 && count < capacity;
+}
+ld_rom_result ld_probe_rom(const wchar_t *path, int game, const ld_options *opts, ld_item *out) {
+ char path_utf8[LD_PATH_CAP * 4];
+ if (!out) return LD_ROM_UNREADABLE;
+ memset(out, 0, sizeof(*out));
+ if (!path || !*path) return LD_ROM_MISSING;
+ if (!ld_wide_to_utf8(path, path_utf8, sizeof path_utf8)) return LD_ROM_UNREADABLE;
+ char *resolved = realpath(path_utf8, NULL);
+ if (!resolved) return errno == ENOENT || errno == ENOTDIR ? LD_ROM_MISSING : LD_ROM_UNREADABLE;
+ int fd = open(resolved, O_RDONLY | O_NONBLOCK);
+ if (fd < 0 || !ld_utf8_to_wide(resolved, out->path, LD_PATH_CAP)) {
+  if (fd >= 0) close(fd);
+  free(resolved);
+  return LD_ROM_UNREADABLE;
+ }
+ free(resolved);
+ struct stat info;
+ if (fstat(fd, &info) || !S_ISREG(info.st_mode)) {
+  close(fd);
+  return LD_ROM_UNREADABLE;
+ }
+ if (info.st_size <= 0 || info.st_size > 16 * 1024 * 1024) {
+  close(fd);
+  return LD_ROM_INCOMPATIBLE;
+ }
+ unsigned char bytes[32768];
+ uint64_t size = 0;
+ uint32_t crc = 0;
+ ssize_t amount;
+ do {
+  amount = read(fd, bytes, sizeof bytes);
+  if (amount > 0) {
+   size += (uint64_t)amount;
+   crc = ld_crc32(crc, bytes, (size_t)amount);
+  }
+ } while ((amount > 0 && size <= (uint64_t)info.st_size) || (amount < 0 && errno == EINTR));
+ close(fd);
+ if (amount != 0 || size != (uint64_t)info.st_size) return LD_ROM_UNREADABLE;
+ out->kind = LD_ROM;
+ out->size = size;
+ out->crc32 = crc;
+ out->game = ld_identify(size, crc, opts ? opts->revisions : NULL, opts ? opts->revision_count : 0);
+ out->compatible = out->game != 0;
+ if (!out->compatible) return LD_ROM_INCOMPATIBLE;
+ return game && out->game != game ? LD_ROM_WRONG_GAME : LD_ROM_OK;
+}
 #endif
 
 

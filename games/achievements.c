@@ -24,6 +24,8 @@ static DynaAchievementUnlock last_unlock;
  * all pending events, even if the UI has not consumed any notification. */
 static DynaAchievementUnlock unlock_queue[MAX_ITEMS];
 static size_t queue_head,queue_count;
+static DynaAchievementLiveSink live_sink;
+static uint8_t reported_live[MAX_ITEMS];
 static int find_id(uint32_t id) {
     size_t i;for(i=0;i<item_count;++i) if(items[i].id==id)return (int)i;
     return -1;
@@ -99,6 +101,7 @@ int dyna_achievements_init(const char *settings_path,int game2) {
     requires=game2?db2_requires:db1_requires;
     item_count=game2?sizeof(db2_catalog)/sizeof(db2_catalog[0]):sizeof(db1_catalog)/sizeof(db1_catalog[0]);
     current_game=game2?2:1;dirty=0;profile[0]=0;
+    dyna_achievements_set_live_sink(NULL);
     memset(&last_unlock,0,sizeof last_unlock);
     queue_head=queue_count=0;
     if(item_count>MAX_ITEMS) {item_count=0;return 0;}
@@ -116,10 +119,30 @@ int dyna_achievements_init(const char *settings_path,int game2) {
     if(!ok) {for(i=0;i<item_count;++i)items[i].unlocked_at=0;dirty=0;}
     return ok;
 }
+void dyna_achievements_set_live_sink(DynaAchievementLiveSink sink) {
+    live_sink=sink;
+    memset(reported_live,0,sizeof reported_live);
+}
+static void report_live(size_t index) {
+    if(!live_sink || reported_live[index] || !live_sink(items[index].id))return;
+    reported_live[index]=1;
+    for(size_t i=0;i<item_count;++i) {
+        if(!catalog[i].count || reported_live[i] || !items[i].qualified)continue;
+        unsigned j;
+        for(j=0;j<catalog[i].count;++j) {
+            int dependency=find_id(requires[catalog[i].start+j]);
+            if(dependency<0 || !reported_live[dependency])break;
+        }
+        if(j==catalog[i].count)
+            reported_live[i]=(uint8_t)(live_sink(items[i].id)!=0);
+    }
+}
 void dyna_achievements_emit(void *user,uint32_t id) {
     int index;(void)user;
     index=find_id(id);
-    if(index<0||!items[index].qualified||items[index].unlocked_at||catalog[index].count)return;
+    if(index<0||!items[index].qualified||catalog[index].count)return;
+    report_live((size_t)index);
+    if(items[index].unlocked_at)return;
     unlock((size_t)index,timestamp(),1);milestones(1);
 }
 int dyna_achievements_flush(void) {

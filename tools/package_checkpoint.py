@@ -13,6 +13,7 @@ import zipfile
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
 from tools.windows_environment import portable_windows_env
+from tools.sdl_runtime import stage_sdl3
 BIN=Path(os.environ.get('DYNA_TOOLCHAIN_BIN','C:/msys64/ucrt64/bin'))
 EXECUTABLES=['DynaBrothersLauncher.exe','DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']
 DIAGNOSTICS=['DynaDb1VideoTest.exe','DynaDb1visibleTest.exe']
@@ -78,17 +79,20 @@ def stage(candidate):
     for file in (build/'assets').rglob('*'):
         if file.is_file() and file.name!='boxart_sonic1.tga':
             target=payload/'assets'/file.relative_to(build/'assets');target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,target)
-    system=set();queue=[payload/x for x in EXECUTABLES]+[payload/'debug'/x for x in DIAGNOSTICS];seen=set()
+    media_runtime=stage_sdl3(payload,ROOT/'local/sdl-runtime')
+    system=set();queue=[payload/x for x in EXECUTABLES]+[payload/'debug'/x for x in DIAGNOSTICS]
+    queue.extend(payload/name for name in ('SDL2.dll','SDL3.dll'))
+    seen=set()
     while queue:
         source=queue.pop()
         if source.name.lower() in seen:continue
         seen.add(source.name.lower())
         text=subprocess.check_output([str(BIN/'objdump.exe'),'-p',str(source)],text=True)
         for name in re.findall(r'DLL Name:\s*(\S+)',text):
-            dependency=BIN/name
+            dependency=next((p for p in payload.glob('*.dll') if p.name.lower()==name.lower()),BIN/name)
             if dependency.is_file():
-                target=payload/name
-                if not target.exists():shutil.copy2(dependency,target)
+                target=payload/dependency.name
+                if dependency!=target and not target.exists():shutil.copy2(dependency,target)
                 queue.append(target)
             else:system.add(name)
     # Diagnostics live one directory below the games. Windows does not search
@@ -100,7 +104,7 @@ def stage(candidate):
     for target in ['DynaBrothers1AOT.exe','DynaBrothers2AOT.exe']:
         text=subprocess.check_output([str(payload/target),'--build-info'],env=portable_env,text=True).strip()
         validate_build_info(text,revision,version);embedded[target]=text
-    licenses=payload/'licenses';licenses.mkdir()
+    licenses=payload/'licenses'
     sources={
         'GenesisRecomp.txt':ROOT/'upstream/segagenesisrecomp/LICENSE.md',
         'GenesisRecomp-third-party.md':ROOT/'upstream/segagenesisrecomp/THIRD-PARTY-LICENSES.md',
@@ -110,7 +114,9 @@ def stage(candidate):
         'stb_image-source-and-license.h':ROOT/'upstream/recomp-ui/src/third_party/stb_image.h',
         'Fonts.md':ROOT/'upstream/recomp-ui/assets/common/fonts/NOTICE.md',
         'Controller-database.txt':ROOT/'upstream/controller-db/LICENSE',
-        'SDL2.txt':BIN.parent/'share/licenses/SDL2/LICENSE.txt',
+        'RecompAchievements.txt':ROOT/'third_party/recomp-achievements/LICENSE',
+        'RecompAchievements-cJSON.txt':ROOT/'third_party/recomp-achievements/sdk/third_party/cjson/LICENSE',
+        'RecompAchievements-rcheevos.txt':ROOT/'third_party/recomp-achievements/sdk/third_party/rcheevos/LICENSE',
         'GCC-runtime-exception.txt':BIN.parent/'share/licenses/gcc/COPYING.RUNTIME',
         'GPL-3.0.txt':BIN.parent/'share/licenses/gcc/COPYING3',
         'winpthreads.txt':BIN.parent/'share/licenses/winpthreads/COPYING',
@@ -133,7 +139,7 @@ def stage(candidate):
         ui_commit=git('-C',str(ROOT/'upstream/recomp-ui'),'rev-parse','HEAD'),
         ui_patch_sha256=digest(ROOT/'patches/0002-dyna-launcher.patch'),
         controller_database_commit=git('-C',str(ROOT/'upstream/controller-db'),'rev-parse','HEAD'),
-        embedded_build_info=embedded,
+        embedded_build_info=embedded,media_runtime=media_runtime,
         target='Windows x64',compiler=subprocess.check_output([str(BIN/'gcc.exe'),'--version'],text=True).splitlines()[0],
         system_libraries=sorted(system),files=inventory(root),proprietary_input_images_included=False,
         single_entry_point=True,primary_executable='DynaBrothers.exe',launcher_executable='data/DynaBrothersLauncher.exe',
@@ -166,6 +172,7 @@ def close(candidate,qa_path,releases,revision=1):
     if tuple(map(int,version.split('.'))) >= (0,1,6):required.update({'green-hub-home-buttons','db1-intro-fade','db1-save-result','db1-hard-ending-save','db1-visor--2','db1-visor-0','db1-visor-2','db1-save-unicode'})
     if tuple(map(int,version.split('.'))) >= (0,1,7):required.update({'db1-title-extras','db1-title-level','db1-emi-save'})
     if tuple(map(int,version.split('.'))) >= (0,1,8):required.update({'db2-player-6button-original','db2-player-6button-wide','db2-player-6button-state-equality'})
+    if tuple(map(int,version.split('.'))) >= (0,5,0):required.update({'sdl3-runtime','recomp-achievements-lists'})
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'
