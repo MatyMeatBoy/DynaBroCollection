@@ -4,6 +4,7 @@
 /* Unused host paths are removed by section GC for this focused bridge test. */
 #include "../games/progress_runtime.c"
 void dyna_extras_ui_notice(const char *text){(void)text;}
+void dyna_achievement_session_save_loaded(void){}
 static DynaAchievementItem final_stage={.id=183264};
 size_t dyna_achievements_count(void){return 1;}
 const DynaAchievementItem *dyna_achievements_item(size_t i){return i==0?&final_stage:NULL;}
