@@ -1,5 +1,7 @@
 # Pending work queue
 
+**Update 2026-11-20 (v0.5.1): DB2 title/menu after skipping the intro fixed (Japanese plates, edge strips, logo fragment). It was route-dependent, not GPU-dependent: see `docs/handoff/title-skip-fix.md`. Linux/macOS/Android still ship v0.5.0 Beta 1 and need a rebuild on their platforms to get this fix.**
+
 **Update 2026-11-19 (v0.4.1, merged, unpackaged): DB2 Practice/Story tutorial dialogue translated, title/menu wide fixes, pause/Info View hold. Open polish and release steps: `docs/handoff/v0.4.1-notes.md`.**
 
 ## Reportes del usuario a 2560 × 1440

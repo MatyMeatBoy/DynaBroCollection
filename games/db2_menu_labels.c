@@ -49,6 +49,18 @@ static void flatten_versus_ink(const GVDP *v,Label *label){
  if(chosen)memset(label->ink,(int)chosen,sizeof label->ink);
 }
 
+/* First letter tile: れんしゅう 199, ストーリー 1DB, オリジナル 1E3, たいけつ 1C3. */
+static int plate_word(const Label *l){
+ static const unsigned first[MAX_LABELS]={0x199,0x1db,0x1e3,0x1c3};
+ for(int k=0;k<l->ncells&&k<3;k++){
+  unsigned tile=l->top[k]&2047;
+  if(tile==0x265||tile==0x203)continue;
+  for(int w=0;w<MAX_LABELS;w++)if(tile==first[w])return w;
+  if(tile==0x176)return 0;   /* れんしゅう streamed without its first cell */
+  return -1;
+ }
+ return -1;
+}
 void db2_menu_labels_frame(const GVDP *v){
  label_count=0;
  if(!english||!v)return;
@@ -125,13 +137,14 @@ void db2_menu_labels_frame(const GVDP *v){
  {static int tr=-1;if(tr<0){const char *e=getenv("DYNA_TRACE_LABELS");tr=e&&e[0]=='1';}
   if(tr){fprintf(stderr,"[labels] n=%d",n);for(int i=0;i<n;i++)fprintf(stderr," (r=%d x0=%d y0=%d)",found[i].row,found[i].x0,found[i].y0);fprintf(stderr,"\n");}}
  /* The plates are streamed into the plane as the camera scrolls, so only some
-  * are present mid-transition. They sit on fixed nametable rows 3,6,9,12. */
+  * are present mid-transition. Each plate is identified by its own first
+  * Japanese letter tile, not by its name-table row: a skipped intro lays the
+  * menu out four rows lower than the normal title sequence. */
  unsigned seen=0;
  for(int i=0;i<n;i++){
   Label *label=found+i;
-  int row=label->row-3;
-  if(row<0||row%3||row/3>=MAX_LABELS)continue;
-  label->word=row/3;
+  label->word=plate_word(label);
+  if(label->word<0)continue;
   unsigned mask=1u<<label->word;
   if(seen&mask)continue;
   seen|=mask;

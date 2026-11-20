@@ -406,12 +406,17 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  for(int x=0;x<w;x++){unsigned p=pixels[x];out[x]=genesis_dac_cram_to_argb(snapshot.cram[p&63],p>=128?2:p>=64?1:0);}
 }
 static int title_sky_planes(const GVDP *v){
- if((v->reg[4]&7)!=7||(v->reg[16]&3)!=1)return 0;
- /* This sky row on B survives the scroll from the title to the mode menu.
-  * The solid tile's pixels select CRAM 20, including during palette fades. */
- const uint8_t *sky=v->vram+0xe000+11*128;
- return word(sky)==0x2075&&word(sky+62)==0x2075&&
-        word(sky+126)==0x2075&&v->vram[0x75*32]==0x44;
+ if((v->reg[4]&7)!=7||(v->reg[16]&3)!=1||v->vram[0x75*32]!=0x44)return 0;
+ /* A solid sky row on B survives the scroll from the title to the mode menu;
+  * its tile's pixels select CRAM 20, including during palette fades. The
+  * guest lays the title out on different name-table rows when the intro is
+  * skipped (the sky row moves from 11 to 3 and the vertical scroll
+  * compensates), so any row of the 32-row plane may hold it. */
+ for(unsigned r=0;r<32;r++){
+  const uint8_t *sky=v->vram+0xe000+r*128;
+  if(word(sky)==0x2075&&word(sky+62)==0x2075&&word(sky+126)==0x2075)return 1;
+ }
+ return 0;
 }
 int db2_video_title_active(const GVDP *v){
  return (v->reg[1]&0x40)&&world_scene==WORLD_NONE&&!briefing_scene&&title_sky_planes(v);
