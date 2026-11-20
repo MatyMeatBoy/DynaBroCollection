@@ -52,10 +52,41 @@ static void image_paint(HDC dc,void *image,RECT r) {
    if(fit_h<=dh){r.top+=(dh-fit_h)/2;dh=fit_h;}
    else {int fit_w=(int)((double)dh*w/h);r.left+=(dw-fit_w)/2;dw=fit_w;}
   }
+  /* Scaled images are cached per size and background (GDI+ scaling of the
+   * box, cartridge, gameplay and logo art on every repaint made the launcher
+   * slow). Only used when the four corners show one uniform background. */
+  COLORREF c0=GetPixel(dc,r.left,r.top);
+  if(dw>0&&dh>0&&c0!=CLR_INVALID&&GetPixel(dc,r.left+dw-1,r.top)==c0&&GetPixel(dc,r.left,r.top+dh-1)==c0&&GetPixel(dc,r.left+dw-1,r.top+dh-1)==c0){
+   static struct{void *image;int w,h;COLORREF bg;HBITMAP bitmap;}cache[24];static int next;
+   HBITMAP hit=NULL;
+   for(int i=0;i<24;i++)if(cache[i].bitmap&&cache[i].image==image&&cache[i].w==dw&&cache[i].h==dh&&cache[i].bg==c0){hit=cache[i].bitmap;break;}
+   HDC m=CreateCompatibleDC(dc);
+   if(!hit){
+    hit=CreateCompatibleBitmap(dc,dw,dh);HGDIOBJ o=SelectObject(m,hit);
+    HBRUSH b=CreateSolidBrush(c0);RECT all={0,0,dw,dh};FillRect(m,&all,b);DeleteObject(b);
+    void *g2=NULL;if(!graphics_create(m,&g2)){image_draw(g2,image,0,0,dw,dh);graphics_delete(g2);}
+    SelectObject(m,o);
+    if(cache[next].bitmap)DeleteObject(cache[next].bitmap);
+    cache[next].image=image;cache[next].w=dw;cache[next].h=dh;cache[next].bg=c0;cache[next].bitmap=hit;next=(next+1)%24;
+   }
+   HGDIOBJ o=SelectObject(m,hit);BitBlt(dc,r.left,r.top,dw,dh,m,0,0,SRCCOPY);SelectObject(m,o);DeleteDC(m);
+   graphics_delete(graphics);return;
+  }
   image_draw(graphics,image,r.left,r.top,dw,dh);graphics_delete(graphics);
  }
 }
 static HWND cards[2],settings_buttons[2],manual_buttons[2],status;
+/* Opening intro: the 1+2 logo fades in and out before the game selector. */
+enum { INTRO_MS=1800 };
+static ULONGLONG intro_start;static int intro_active;
+static void intro_controls(int show){
+ for(int i=0;i<2;i++){if(cards[i])ShowWindow(cards[i],show?SW_SHOW:SW_HIDE);if(settings_buttons[i])ShowWindow(settings_buttons[i],show?SW_SHOW:SW_HIDE);if(manual_buttons[i])ShowWindow(manual_buttons[i],show?SW_SHOW:SW_HIDE);}
+ if(status)ShowWindow(status,show?SW_SHOW:SW_HIDE);
+}
+static void intro_finish(HWND window){
+ if(!intro_active)return;intro_active=0;intro_controls(1);
+ if(cards[0])SetFocus(cards[0]);InvalidateRect(window,NULL,TRUE);
+}
 static HWND manual_prev,manual_next,manual_lang,manual_close;
 static DynaManualBook manual_books[2];static int manual_books_loaded[2];
 static int manuals_game=-1,manuals_page,manuals_show_translation=0;
@@ -459,6 +490,31 @@ static void paint_manuals(HDC dc,RECT client) {
   }
  }
 }
+/* The logo frame is composed once (GDI+ scaling of the 1778x884 PNG is far too
+ * slow per tick); each tick only blends that cached frame and blits once. */
+static HBITMAP intro_frame;static int intro_w,intro_h;
+static void paint_intro(HDC dc,HWND window){
+ RECT r;GetClientRect(window,&r);
+ if(!intro_frame||intro_w!=r.right||intro_h!=r.bottom){
+  if(intro_frame)DeleteObject(intro_frame);
+  intro_frame=CreateCompatibleBitmap(dc,r.right,r.bottom);intro_w=r.right;intro_h=r.bottom;
+  HDC m=CreateCompatibleDC(dc);HGDIOBJ o=SelectObject(m,intro_frame);
+  FillRect(m,&r,background_brush);
+  int w=r.right*6/10,h=w*884/1778;RECT box={(r.right-w)/2,(r.bottom-h)/2,(r.right-w)/2+w,(r.bottom-h)/2+h};
+  if(logo)image_paint(m,logo,box);
+  SelectObject(m,o);DeleteDC(m);
+ }
+ ULONGLONG t=GetTickCount64()-intro_start;double a;
+ if(t<600)a=t/600.0;else if(t<1200)a=1.0;else a=t<INTRO_MS?(INTRO_MS-t)/600.0:0.0;
+ int alpha=(int)(a*255.0+0.5);if(alpha<0)alpha=0;if(alpha>255)alpha=255;
+ HDC back=CreateCompatibleDC(dc);HBITMAP bb=CreateCompatibleBitmap(dc,r.right,r.bottom);HGDIOBJ ob=SelectObject(back,bb);
+ FillRect(back,&r,background_brush);
+ HDC src=CreateCompatibleDC(dc);HGDIOBJ os=SelectObject(src,intro_frame);
+ BLENDFUNCTION f={AC_SRC_OVER,0,(BYTE)alpha,0};
+ if(alpha)AlphaBlend(back,0,0,r.right,r.bottom,src,0,0,r.right,r.bottom,f);
+ BitBlt(dc,0,0,r.right,r.bottom,back,0,0,SRCCOPY);
+ SelectObject(src,os);DeleteDC(src);SelectObject(back,ob);DeleteObject(bb);DeleteDC(back);
+}
 static void paint_home(HDC dc) {
  RECT banner=native_rect(home_layout.banner);
  if(logo)image_paint(dc,logo,banner);else draw_text(dc,L"Dyna Brothers 1 + 2",banner,title_font,text_color,DT_CENTER|DT_VCENTER|DT_SINGLELINE);
@@ -640,7 +696,9 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         manual_close=CreateWindowW(L"BUTTON",L"Close",WS_CHILD|BS_OWNERDRAW,0,0,0,0,window,(HMENU)(INT_PTR)404,GetModuleHandleW(NULL),NULL);
         status=CreateWindowW(L"STATIC",L"Choose a game",WS_CHILD|WS_VISIBLE,0,0,0,0,window,NULL,GetModuleHandleW(NULL),NULL);
         char settings_utf8[8192];if(ld_wide_to_utf8(config_path,settings_utf8,sizeof settings_utf8))dyna_hub_controls_start(settings_utf8);
-        layout(window);find_files(window);SetTimer(window,2,16,NULL);SetFocus(cards[0]);return 0;
+        layout(window);find_files(window);SetTimer(window,2,16,NULL);SetFocus(cards[0]);
+        if(!direct_launch&&!getenv("DYNA_HUB_NO_INTRO")&&!getenv("DYNA_HUB_HOME_CAPTURE")&&!getenv("LNG_TEST_HIDDEN")){intro_active=1;intro_start=GetTickCount64();intro_controls(0);}
+        return 0;
     case WM_APP+9:home_selftest(window);return 0;
     case WM_CLOSE:
         if(settings_open){SDL_Event quit;SDL_zero(quit);quit.type=SDL_QUIT;closing_hub=1;SDL_PushEvent(&quit);return 0;}
@@ -667,6 +725,11 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         if(LOWORD(w)==404){manuals_close(window);return 0;}
         break;
     case WM_TIMER:
+        if(w==2&&intro_active){
+            if(GetTickCount64()-intro_start>=INTRO_MS||(dyna_hub_controls_poll()&~0u))intro_finish(window);
+            else InvalidateRect(window,NULL,FALSE);
+            return 0;
+        }
         if(w==2){
             /* The Manual viewer hides cards/settings and uses its own
              * buttons; this gamepad focus cycle must stay out of its way
@@ -723,7 +786,7 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
         }return 0;
     case WM_DRAWITEM: if(draw_item((DRAWITEMSTRUCT *)l))return TRUE;break;
     case WM_CTLCOLORSTATIC:SetTextColor((HDC)w,muted);SetBkColor((HDC)w,background);return (LRESULT)background_brush;
-    case WM_ERASEBKGND:if(settings_open)return 1;{RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);return 1;}
+    case WM_ERASEBKGND:if(settings_open||intro_active)return 1;{RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);return 1;}
     case WM_PRINTCLIENT: {
         if(!settings_open){RECT r;GetClientRect(window,&r);FillRect((HDC)w,&r,background_brush);
          if(manuals_game>=0)paint_manuals((HDC)w,r);else paint_home((HDC)w);}return 0;
@@ -731,7 +794,8 @@ static LRESULT CALLBACK procedure(HWND window,UINT message,WPARAM w,LPARAM l) {
     case WM_PAINT: {
         if(settings_open){ValidateRect(window,NULL);return 0;}
         PAINTSTRUCT p;HDC dc=BeginPaint(window,&p);
-        if(manuals_game>=0){RECT r;GetClientRect(window,&r);paint_manuals(dc,r);}else paint_home(dc);
+        if(intro_active)paint_intro(dc,window);
+        else if(manuals_game>=0){RECT r;GetClientRect(window,&r);paint_manuals(dc,r);}else paint_home(dc);
         EndPaint(window,&p);return 0;
     }
     case WM_DESTROY:if(logo)image_dispose(logo);for(int i=0;i<2;i++)if(game_art[i])image_dispose(game_art[i]);for(int i=0;i<2;i++){if(box_art[i])image_dispose(box_art[i]);if(cart_art[i])image_dispose(cart_art[i]);}if(manual_page_image)image_dispose(manual_page_image);if(manual_page_image2)image_dispose(manual_page_image2);for(int i=0;i<2;i++)if(manual_books_loaded[i])dyna_manual_free(&manual_books[i]);if(image_token)image_shutdown(image_token);if(image_library)FreeLibrary(image_library);if(game_process)CloseHandle(game_process);DeleteObject(title_font);DeleteObject(body_font);DeleteObject(card_font);DeleteObject(background_brush);PostQuitMessage(0);return 0;
@@ -792,9 +856,18 @@ int WINAPI wWinMain(HINSTANCE instance,HINSTANCE previous,PWSTR command,int show
         direct_exit_code=(DWORD)launch(window,options.game-1);
         if(!game_process)DestroyWindow(window);
     }
-    else {if(!getenv("LNG_TEST_HIDDEN"))ShowWindow(window,show);UpdateWindow(window);}
+    else {
+        /* Borderless by default: the selector covers the monitor it opens on. */
+        if(!getenv("DYNA_HUB_WINDOWED")){
+            MONITORINFO mi={sizeof mi};GetMonitorInfoW(MonitorFromWindow(window,MONITOR_DEFAULTTONEAREST),&mi);
+            SetWindowLongPtrW(window,GWL_STYLE,WS_POPUP|WS_CLIPCHILDREN);
+            SetWindowPos(window,HWND_TOP,mi.rcMonitor.left,mi.rcMonitor.top,mi.rcMonitor.right-mi.rcMonitor.left,mi.rcMonitor.bottom-mi.rcMonitor.top,SWP_FRAMECHANGED);
+            layout(window);show=SW_SHOW;
+        }
+        if(!getenv("LNG_TEST_HIDDEN"))ShowWindow(window,show);UpdateWindow(window);}
     if(getenv("DYNA_HUB_HOME_SELFTEST")&&!direct_launch)PostMessageW(window,WM_APP+9,0,0);
     MSG message;while(GetMessageW(&message,NULL,0,0)>0){
+        if(intro_active&&(message.message==WM_KEYDOWN||message.message==WM_LBUTTONDOWN)){intro_finish(window);continue;}
         if(!settings_open&&message.message==WM_KEYDOWN&&message.wParam==VK_RETURN){
             int id=GetDlgCtrlID(GetFocus());if(id==101||id==102||id==201||id==202){SendMessageW(window,WM_COMMAND,id,0);continue;}
         }
