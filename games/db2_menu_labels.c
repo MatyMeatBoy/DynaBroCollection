@@ -62,22 +62,31 @@ void db2_menu_labels_frame(const GVDP *v){
   int ok=1;
   for(int k=0;k<6&&ok;k++)ok=(rd(v,at+2u*k)&2047)==MODE_TOP+k&&(rd(v,below+2u*k)&2047)==MODE_BOTTOM+k;
   if(!ok)continue;
-  unsigned fill=rd(v,at+12);                 /* plate fill right after モード */
-  if(!(fill&2047))continue;                  /* the right end is still streaming in */
+  /* Find the actual left frame edge. The far edge can still be empty while
+   * the guest brings the plate in after skipping the intro. */
   int start=c;
-  while(start>0&&(rd(v,base+(unsigned)(r*wt+start-1)*2)&2047)!=(fill&2047)&&c-start<14)start--;
+  while(start>0&&c-start<14){
+   unsigned offset=2u*(unsigned)(start-1-c);
+   if((rd(v,at+offset)&2047)==0x203&&(rd(v,below+offset)&2047)==0x213)break;
+   --start;
+  }
+  if(start==0||c-start==14)continue;
+  unsigned edge=rd(v,at+2u*(unsigned)(start-1-c));
   Label *l=found+n++;memset(l,0,sizeof *l);l->row=r;
   int sx=((start*8+hs)%pw+pw)%pw;if(sx>=320+64)sx-=pw;
   int sy=((r*8-vs)%ph+ph)%ph;if(sy>=224+32)sy-=ph;
-  l->x0=sx;l->x1=sx+(c+6-start)*8;l->y0=sy;l->fill=fill;
+  l->x0=sx;l->x1=sx+(c+6-start)*8;l->y0=sy;
+  /* The stone fill pattern is already loaded when the first plate arrives.
+   * The cursor scroll streams in the cells that refer to it much later. */
+  l->fill=(edge&0x6000)|0x265;
   l->ncells=c+6-start>24?24:c+6-start;
   for(int k=0;k<l->ncells;k++){l->top[k]=(uint16_t)rd(v,at+2u*(unsigned)(start+k-c));l->bot[k]=(uint16_t)rd(v,below+2u*(unsigned)(start+k-c));}
-  /* Stone texture inside the plate frame (tile 265, e.g. both ends of the
-   * たいけつ plate); the frame edge tile is only a fallback. */
-  for(int rr=0;rr<ht;rr++)for(int cc=0;cc<wt;cc++){unsigned nm=rd(v,base+(unsigned)(rr*wt+cc)*2);if((nm&2047)==0x265){l->fill=nm;rr=ht;break;}}
   /* Ink: dominant non-fill colour per scanline of the Japanese label art. */
   uint8_t fill_colors[64]={0};
-  for(int y=0;y<8;y++)for(int x=0;x<8;x++)fill_colors[tile_index(v,fill,x,y)]=1;
+  for(int y=0;y<8;y++)for(int x=0;x<8;x++){
+   fill_colors[tile_index(v,edge,x,y)]=1;
+   fill_colors[tile_index(v,l->fill,x,y)]=1;
+  }
   unsigned dark=0,dark_l=~0u;
   for(int yy=0;yy<16;yy++){
    unsigned hist[64]={0};

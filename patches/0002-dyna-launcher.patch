@@ -103,7 +103,7 @@ index 3502c4f..09f3c13 100644
          # console-agnostic launcher core (C) — src/common/
          ${RUI_SRC}/common/launcher_model.c
 diff --git a/src/common/backends/imgui/launcher_imgui.cpp b/src/common/backends/imgui/launcher_imgui.cpp
-index 602438d..578977f 100644
+index 602438d..32820c0 100644
 --- a/src/common/backends/imgui/launcher_imgui.cpp
 +++ b/src/common/backends/imgui/launcher_imgui.cpp
 @@ -47,12 +47,14 @@
@@ -255,7 +255,61 @@ index 602438d..578977f 100644
  
      // CTA centred in the remaining band height (glow clears the rule on both sides)
      const float band_y = origin.y + px(1.5f);
-@@ -14598,12 +14628,14 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+@@ -13051,13 +13081,13 @@ void draw_footer(LauncherModel* m, const LauncherTheme& th, float footer_h) {
+     const float cta_y  = band_y + (band_h - play_h) * 0.5f;
+ 
+     const ImVec2 win = ImGui::GetWindowPos();
+-    if (m->view == LNG_VIEW_DASHBOARD) {
++    if (!m->in_session && m->view == LNG_VIEW_DASHBOARD) {
+         bool skip = m->s.skip_launcher != 0;
+         ImGui::SetCursorScreenPos(ImVec2(origin.x, cta_y + (play_h - ImGui::GetFrameHeight()) * 0.5f));
+         if (ImGui::Checkbox(ui_text("Skip launcher on boot"), &skip))
+             launcher_model_request_skip_toggle(m);
+-    } else if (m->view == LNG_VIEW_SETTINGS &&
+-               launcher_model_can_restore_defaults(m)) {
++    } else if ((!m->in_session_return_to_title || fullw >= px(680)) &&
++               m->view == LNG_VIEW_SETTINGS && launcher_model_can_restore_defaults(m)) {
+         ImGui::SetCursorScreenPos(
+             ImVec2(origin.x, cta_y + (play_h - px(34.0f)) * 0.5f));
+         if (ImGui::Button(ui_text("Restore Defaults"), ImVec2(px(150.0f), px(34.0f))))
+@@ -13295,10 +13325,32 @@ void draw_footer(LauncherModel* m, const LauncherTheme& th, float footer_h) {
+         /* Opened from a running game: closing the window resumes it, so
+          * leaving the game needs a button of its own. Netplay cannot start
+          * from here -- the session it would replace is still alive. */
+-        const float quit_w = px(170.0f);
+-        ImGui::SetCursorScreenPos(ImVec2(play_x - quit_w - px(12.0f), cta_y));
+-        if (ImGui::Button(ui_text("QUIT GAME"), ImVec2(quit_w, play_h)))
+-            m->action = LNG_ACTION_QUIT;
++        const float gap = px(8.0f);
++        const float action_w = m->in_session_return_to_title
++            ? std::clamp((fullw - play_w - 2 * gap) * 0.5f, 1.0f, px(170.0f))
++            : px(170.0f);
++        if (m->in_session_return_to_title) {
++            ImGui::SetCursorScreenPos(ImVec2(play_x - 2 * (action_w + gap), cta_y));
++            if (ImGui::Button("Return to Title", ImVec2(action_w, play_h)))
++                ImGui::OpenPopup("Return to Title?");
++        }
++        ImGui::SetCursorScreenPos(ImVec2(play_x - action_w - gap, cta_y));
++        if (ImGui::Button(ui_text("QUIT GAME"), ImVec2(action_w, play_h))) {
++            if (m->in_session_return_to_title) ImGui::OpenPopup("Quit Game?");
++            else m->action = LNG_ACTION_QUIT;
++        }
++        for (const char* dialog : {"Return to Title?", "Quit Game?"}) {
++            if (!ImGui::BeginPopupModal(dialog, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) continue;
++            ImGui::TextUnformatted("Any unsaved progress will be lost.");
++            if (ImGui::Button("Cancel")) ImGui::CloseCurrentPopup();
++            ImGui::SetItemDefaultFocus();
++            ImGui::SameLine();
++            if (ImGui::Button("Confirm")) {
++                m->action = dialog[0] == 'R' ? LNG_ACTION_TITLE : LNG_ACTION_QUIT;
++                ImGui::CloseCurrentPopup();
++            }
++            ImGui::EndPopup();
++        }
+     } else if (m->netplay_supported &&
+         (m->view == LNG_VIEW_DASHBOARD || m->view == LNG_VIEW_SETTINGS ||
+          m->view == LNG_VIEW_CONTROLLER)) {
+@@ -14598,12 +14650,14 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
      // HEIGHT with proportional width so the logo reads clearly.
      if (g_brand.id && g_brand.w > 0) {
          const SystemProfile* hprof = (const SystemProfile*)m->profile;
@@ -273,7 +327,7 @@ index 602438d..578977f 100644
          }
          // Vertically center against the two-line title block (game title at
          // 1.55x + platform at 1.0x), from the fitted height.
-@@ -14627,10 +14659,10 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+@@ -14627,10 +14681,10 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
          ImGui::SetWindowFontScale(1.0f);
          // Platform lockup: the wordmark image when a host supplied one
          // (SystemProfile.wordmark_image), else the plain platform text.
@@ -286,7 +340,7 @@ index 602438d..578977f 100644
              ImGui::PushStyleColor(ImGuiCol_Text, col(th.text_muted));
              ImGui::TextUnformatted(m->platform);
              ImGui::PopStyleColor();
-@@ -14723,8 +14755,8 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
+@@ -14723,8 +14777,8 @@ void draw_ui(LauncherModel* m, const LauncherTheme& th, int logical_w, int logic
          float fw = ImGui::GetContentRegionAvail().x;
          ImDrawList* dl = ImGui::GetWindowDrawList();
          dl->AddRectFilledMultiColor(u, ImVec2(u.x + fw, u.y + px(2.0f)),
@@ -297,7 +351,7 @@ index 602438d..578977f 100644
          glow_rect(dl, u, ImVec2(u.x + fw*0.5f, u.y + px(2.0f)), 0, th.accent2, 0.5f, 3);
      }
      ImGui::Dummy(ImVec2(0, px(12.0f)));
-@@ -15176,7 +15208,11 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15176,7 +15230,11 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      } commit_binding(launch_commit);
      launcher_boot_timing_mark("rui:backend_run:begin");
      IMGUI_CHECKVERSION();
@@ -310,7 +364,7 @@ index 602438d..578977f 100644
      s_mod_binding_capture = {};
      ImGuiIO& io = ImGui::GetIO();
      io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-@@ -15210,12 +15246,20 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15210,12 +15268,20 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      std::atomic_signal_fence(std::memory_order_seq_cst);
  #endif
      g_th = th;
@@ -331,7 +385,7 @@ index 602438d..578977f 100644
      launcher_boot_timing_mark("rui:imgui_gl_ready");
  
      // Box art: per-game path from the ABI when given (multi-variant repos
-@@ -15261,16 +15305,17 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15261,16 +15327,17 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
          // opts out of a corner emblem entirely (N64 leads with its wordmark).
          // Only load when there's an actual filename.
          // A game's own mark (recomp_target_launcher_ui BRAND) wins over all of it.
@@ -352,7 +406,7 @@ index 602438d..578977f 100644
              g_wordmark = launcher_texture_load(
                  asset((std::string("assets/img/") + bprof->wordmark_image).c_str()).c_str());
      }
-@@ -15436,6 +15481,7 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15436,6 +15503,7 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
              // PSX: keep Input source labels on concrete pad names (live SDL name
              // or saved [gamepads] registry), never the generic "Gamepad" placeholder.
              launcher_binds_sync_psx_pad_sources(m, g_pads, g_pad_count);
@@ -360,7 +414,7 @@ index 602438d..578977f 100644
  
              // SNES: same purpose, from this console's own profile store. Run every
              // frame so a pad plugged in after start-up picks up its label too.
-@@ -15491,6 +15537,10 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15491,6 +15559,10 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
  
          }
  
@@ -371,7 +425,7 @@ index 602438d..578977f 100644
          ImGui_ImplOpenGL3_NewFrame();
          /* Suspend ImGui's GAMEPAD navigation while a bind capture is open.
           *
-@@ -15548,11 +15598,32 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15548,11 +15620,32 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
              launch_commit.job.start();
          }
  
@@ -408,7 +462,7 @@ index 602438d..578977f 100644
          if (launch_commit.job.pending()) {
              if (launcher_debug_step_pending(p)) launch_commit.close_requested = true;
          } else if (m->setup_preparing) {
-@@ -15590,9 +15661,16 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
+@@ -15590,9 +15683,16 @@ extern "C" LngAction launcher_backend_run(LauncherPlatform* p,
      launcher_texture_free(&g_wordmark);
      for (int i = 0; i < 5; ++i) launcher_texture_free(&g_cart[i]);
      launcher_texture_free(&g_tpak);
@@ -597,10 +651,18 @@ index 2215b80..0c756a6 100644
  // Load an image file into a freshly created GL texture (linear filtered,
  // clamped). Returns a texture with id==0 on failure. Requires a current GL
 diff --git a/src/common/launcher_model.c b/src/common/launcher_model.c
-index f2c1c9f..d9ba87b 100644
+index f2c1c9f..fc754c0 100644
 --- a/src/common/launcher_model.c
 +++ b/src/common/launcher_model.c
-@@ -423,6 +423,7 @@ void launcher_model_init(LauncherModel* m,
+@@ -390,6 +390,7 @@ void launcher_model_init(LauncherModel* m,
+         m->native_save_path_ctx = game->native_save_path_ctx;
+         m->has_solar_sensor     = game->has_solar_sensor != 0;
+     m->in_session           = game->in_session != 0;
++    m->in_session_return_to_title = game && game->in_session_return_to_title;
+     m->has_open_launcher_hotkey = game->has_open_launcher_hotkey != 0;
+         m->has_integer_scale    = game->has_integer_scale != 0;
+         m->hdpack_supported     = game->hdpack_supported != 0;
+@@ -423,6 +424,7 @@ void launcher_model_init(LauncherModel* m,
          }
  
          m->pad_mode_supported   = game->pad_mode_supported != 0;
@@ -608,7 +670,7 @@ index f2c1c9f..d9ba87b 100644
          m->pad_mode_selectable  = game->pad_mode_selectable != 0;
          m->locked_pad_mode      = clampi(game->locked_pad_mode, 0, 2);
          m->lock_device          = game->lock_device != 0;
-@@ -556,6 +557,7 @@ void launcher_model_init(LauncherModel* m,
+@@ -556,6 +558,7 @@ void launcher_model_init(LauncherModel* m,
          m->pgo_success_status   = game->pgo_success_status;
          m->fmv_timing_busy_status = game->fmv_timing_busy_status;
          m->fmv_timing_success_status = game->fmv_timing_success_status;
@@ -616,7 +678,7 @@ index f2c1c9f..d9ba87b 100644
          m->boxart_path          = game->boxart_path;      // NULL => default boxart.tga
          m->aspect_labels        = game->aspect_labels;    // NULL => built-in 4:3/16:9/21:9
          m->num_aspect_labels    = game->num_aspect_labels;
-@@ -970,6 +972,11 @@ void launcher_model_init(LauncherModel* m,
+@@ -970,6 +973,11 @@ void launcher_model_init(LauncherModel* m,
      lm_inspect_memcard(m, 1);
  
      m->view      = LNG_VIEW_DASHBOARD;
@@ -628,7 +690,7 @@ index f2c1c9f..d9ba87b 100644
      m->action    = LNG_ACTION_NONE;
      m->cfg_player = 0;
      m->setup_wizard_open = false;
-@@ -4791,7 +4798,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
+@@ -4791,7 +4799,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
  
  void launcher_model_cycle_player_src(LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -639,7 +701,7 @@ index f2c1c9f..d9ba87b 100644
      apply_default_pad_mode_for_source(m, player);
  }
  
-@@ -4809,7 +4818,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
+@@ -4809,7 +4819,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
                                 uint32_t pad_id, const char* pad_name,
                                 const char* pad_guid) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -650,7 +712,7 @@ index f2c1c9f..d9ba87b 100644
      if (kind == 2) {
          m->player_pad_id[player] = pad_id;
          m->s.player_gamepad_instance[player] = pad_id + 1;
-@@ -5051,6 +5062,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
+@@ -5051,6 +5063,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
  
  const char* launcher_model_player_src_label(const LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -664,7 +726,7 @@ index f2c1c9f..d9ba87b 100644
      int src = clampi(m->s.player_src[player], 0, 2);
      if (src == 2) {
          // Never show the generic "Gamepad" placeholder when we have a concrete
-@@ -5068,6 +5086,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
+@@ -5068,6 +5087,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
      return kSrcNames[src];
  }
  
@@ -691,7 +753,7 @@ index f2c1c9f..d9ba87b 100644
      if (b < 0 || b >= LNG_BTN_COUNT) return "?";
      return kButtonNames[b];
 diff --git a/src/common/launcher_model.h b/src/common/launcher_model.h
-index de53037..4fb660e 100644
+index de53037..123fe84 100644
 --- a/src/common/launcher_model.h
 +++ b/src/common/launcher_model.h
 @@ -20,6 +20,7 @@
@@ -702,7 +764,25 @@ index de53037..4fb660e 100644
  
  #include <stdbool.h>
  #include <stddef.h>
-@@ -317,6 +318,7 @@ typedef struct {
+@@ -69,7 +70,8 @@ typedef enum {
+     LNG_ACTION_NONE = 0,   // still running
+     LNG_ACTION_LAUNCH,     // boot the game with committed settings
+     LNG_ACTION_QUIT,       // user quit
+-    LNG_ACTION_RELAUNCH    // quit + host should exec rebuilt binary
++    LNG_ACTION_RELAUNCH,   // quit + host should exec rebuilt binary
++    LNG_ACTION_TITLE       // leave settings and return to the in-game title
+ } LngAction;
+ 
+ // What the launcher concluded about the picked cartridge ROM (verify.mode==0
+@@ -196,6 +198,7 @@ typedef struct {
+ 
+     // ---- NES-style capabilities (borrowed from RecompLauncherCGameInfo) ----
+     bool        has_solar_sensor;    // Solar sensor panel in Settings
++    bool        in_session_return_to_title;
+     bool        in_session;          // opened from a running game (RESUME, not PLAY)
+     bool        has_open_launcher_hotkey; // [KeyMap] OpenLauncher row in Hotkeys
+     bool        has_integer_scale;   // Integer-scale checkbox in Display settings
+@@ -317,6 +320,7 @@ typedef struct {
      // Box-art path relative to the assets dir (GameInfo.boxart_path);
      // NULL => the default "assets/img/boxart.tga".
      const char* boxart_path;
@@ -710,7 +790,7 @@ index de53037..4fb660e 100644
  
      // ---- N64 Transfer Pak --------------------------------------------------
      // Per-slot facts refreshed via tpak_inspect_cb (the HOST's cartridge
-@@ -411,6 +413,8 @@ typedef struct {
+@@ -411,6 +415,8 @@ typedef struct {
      const char* assist_tools_note;
      bool has_virtual_stylus;
      bool settings_bindings;
@@ -719,7 +799,7 @@ index de53037..4fb660e 100644
      const char* const* assist_binding_labels;
      int assist_binding_count;
      int assist_direct_pad_bind_action;
-@@ -1326,6 +1330,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
+@@ -1326,6 +1332,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
  const char* launcher_model_scale_label(const LauncherModel* m);        // "3x"
  const char* launcher_model_freq_label(const LauncherModel* m);         // "44100 Hz"
  const char* launcher_model_player_src_label(const LauncherModel* m, int player);
@@ -731,7 +811,7 @@ index de53037..4fb660e 100644
  const char* launcher_hotkey_name(LngHotkey h);
  const char* launcher_view_name(LngView v);
 diff --git a/src/common/launcher_ng_capi.c b/src/common/launcher_ng_capi.c
-index a2eb587..d56221f 100644
+index a2eb587..b25222f 100644
 --- a/src/common/launcher_ng_capi.c
 +++ b/src/common/launcher_ng_capi.c
 @@ -192,8 +192,17 @@ int recomp_launcher_run_window(const char* window_title,
@@ -764,6 +844,13 @@ index a2eb587..d56221f 100644
      launcher_platform_close(&plat);
      launcher_boot_timing_mark("rui:platform_closed");
      /* A verified regional handoff must not persist the foreign disc or any
+@@ -270,5 +280,6 @@ int recomp_launcher_run_window(const char* window_title,
+         return RECOMP_LAUNCHER_RESULT_LAUNCH;
+     }
+ 
++    if (act == LNG_ACTION_TITLE) return RECOMP_LAUNCHER_RESULT_TITLE;
+     return RECOMP_LAUNCHER_RESULT_QUIT;
+ }
 diff --git a/src/common/launcher_platform.h b/src/common/launcher_platform.h
 index 524f73c..8db9f92 100644
 --- a/src/common/launcher_platform.h
@@ -1007,7 +1094,7 @@ index 68aa362..550f96f 100644
  // Current keyboard binding (SDL_Scancode as int; 0 = unbound) for player
  // (0..3), rebind-spec button b. Auto-initializes from `path` on first use.
 diff --git a/src/recomp_launcher.h b/src/recomp_launcher.h
-index bc60540..818e4a2 100644
+index bc60540..e5c498e 100644
 --- a/src/recomp_launcher.h
 +++ b/src/recomp_launcher.h
 @@ -1275,7 +1275,7 @@ struct RecompLauncherCSettings {
@@ -1019,7 +1106,15 @@ index bc60540..818e4a2 100644
      int  deadzone[RECOMP_LAUNCHER_MAX_PLAYERS];    // 0..100
      int  skip_launcher;     // bool: boot straight to the game next time
      int  msu1_enabled;      // bool
-@@ -2502,7 +2502,34 @@ typedef struct RecompLauncherCGameInfo {
+@@ -2309,6 +2309,7 @@ typedef struct RecompLauncherCGameInfo {
+      * has_open_launcher_hotkey: show the [KeyMap] OpenLauncher row, for a host
+      * that offers the hotkey. Both zero keep every existing launcher as-is. */
+     int in_session;
++    int in_session_return_to_title;
+     int has_open_launcher_hotkey;
+     /* Display row for Settings.scanlines / scanline_strength_pct: a present-time
+      * scanline post-process (a checkbox plus a strength slider). Only meaningful
+@@ -2502,7 +2503,34 @@ typedef struct RecompLauncherCGameInfo {
                      char* error, size_t error_size);
      void (*rom_read_free)(void* ctx, uint8_t* bytes);
      void* rom_read_ctx;
@@ -1054,6 +1149,14 @@ index bc60540..818e4a2 100644
  #define RECOMP_LAUNCHER_HAS_ROM_READER 1
  #define RECOMP_LAUNCHER_HAS_NATIVE_SAVE_PATH_PROVIDER 1
  #define RECOMP_LAUNCHER_HAS_VSYNC_VRR 1
+@@ -2537,6 +2565,7 @@ typedef struct RecompLauncherCGameInfo {
+ #define RECOMP_LAUNCHER_RESULT_UNAVAILABLE  2
+ #define RECOMP_LAUNCHER_RESULT_RELAUNCH     3
+ #define RECOMP_LAUNCHER_RESULT_PROFILE      4
++#define RECOMP_LAUNCHER_RESULT_TITLE        5
+ 
+ // *io always comes back carrying the player's edits, whichever way the
+ // launcher closed -- a setting changed and then dismissed is still a setting
 diff --git a/src/third_party/stb_image.h b/src/third_party/stb_image.h
 index ef76fc1..d430d37 100644
 --- a/src/third_party/stb_image.h

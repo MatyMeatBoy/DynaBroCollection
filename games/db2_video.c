@@ -19,8 +19,9 @@
 enum { LIMIT=768, MAX_HEIGHT=480 };
 static DynaViewport view=DYNA_VIEWPORT_DEFAULT;
 enum { WORLD_NONE, WORLD_BATTLE, WORLD_DEMO, WORLD_VERSUS };
-static int world_scene,briefing_scene,results_scene,ready,canvas_top,canvas_height=224;
-static int sky_hold;
+static int world_scene,briefing_scene,results_scene,pause_active,ready,canvas_top,canvas_height=224;
+static int actor_effect_active;
+static int title_sky;
 static int dialogue_hold;
 static uint32_t sky_base;
 static uint8_t ram[65536];
@@ -79,19 +80,23 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){db2_bio_overlay_reset();world_scene=briefing_scene=results_scene=sky_hold=dialogue_hold=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&(!strcmp(t,"1")||!strcmp(t,"2"));trace_frames=t&&!strcmp(t,"2");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;have_k=off_x=off_y=heal_pending=0;held_valid=0;held_misses=0;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=briefing_scene=results_scene=pause_active=actor_effect_active=title_sky=dialogue_hold=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&(!strcmp(t,"1")||!strcmp(t,"2"));trace_frames=t&&!strcmp(t,"2");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;have_k=off_x=off_y=heal_pending=0;held_valid=0;held_misses=0;}
 void db2_video_observe(unsigned pc){
- if(pc==0x3b64){briefing_scene=1;sky_hold=0;}
+ if(pc==0x3b64){briefing_scene=1;title_sky=0;}
  else if(pc==0x3b66)briefing_scene=0;
  else if(pc==0x3c70)results_scene=1;
  else if(pc==0x3c78)results_scene=0;
  else if(pc==0x3bb0){
-  world_scene=WORLD_BATTLE;briefing_scene=results_scene=sky_hold=0;
+  world_scene=WORLD_BATTLE;briefing_scene=results_scene=pause_active=actor_effect_active=title_sky=0;
   held_valid=have_k=heal_pending=0;
  }
  else if(pc==0x734e){world_scene=WORLD_VERSUS;held_valid=have_k=heal_pending=0;}
  else if(pc==0xf794)world_scene=WORLD_DEMO;
  else if(pc==0x3bb4||pc==0x7308||pc==0xf728)world_scene=WORLD_NONE;
+ else if(pc==0x425c)pause_active=1;
+ else if(pc==0x4422)pause_active=0;
+ else if(pc==0xc158)actor_effect_active=!(g_ram[0x286]&0x88);
+ else if(pc==0xc298)actor_effect_active=0;
  else if(pc==0x146c0)producer_dirty_since_epoch=1;
  else if(pc==0x15220){if(producer_dirty_since_epoch)producer_epoch++;producer_dirty_since_epoch=0;}
 }
@@ -105,10 +110,15 @@ static int native_pause(void){
   * Other users of bit 7 can replace the entire screen (Info View, effects). */
  return (g_ram[0x286]&0x80)&&word(g_ram+0x6c)==0&&word(g_ram+0x6e)==0x442c;
 }
-static int raster_enabled(const GVDP *v){
- (void)v;
+static int world_raster_enabled(void){
  unsigned modal_mask=world_scene==WORLD_VERSUS?0x80u:0x88u;
- return world_scene!=WORLD_NONE&&(!(g_ram[0x286]&modal_mask)||native_pause());
+ /* The actor animation sets the modal bit while the stage stays visible. */
+ return world_scene!=WORLD_NONE&&(!(g_ram[0x286]&modal_mask)||native_pause()||
+        (world_scene==WORLD_BATTLE&&actor_effect_active&&!(g_ram[0x286]&8)));
+}
+static int raster_enabled(const GVDP *v){
+ /* The guest can park the logo during this frame, after raster setup. */
+ return world_raster_enabled()||db2_video_title_active(v);
 }
 static int geometry(int dw,int dh,int nw,int nh,int *w,int *h){
  if(!view.enabled||nw!=320||nh!=224)return 0;
@@ -395,19 +405,43 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  gvdp_compose_span(pixels,a,b,s,o,hi,sh,hl,w,r?r->backdrop:(snapshot.reg[7]&63),shadow);
  for(int x=0;x<w;x++){unsigned p=pixels[x];out[x]=genesis_dac_cram_to_argb(snapshot.cram[p&63],p>=128?2:p>=64?1:0);}
 }
-static int sky_row(const uint32_t *row);
+static int title_sky_planes(const GVDP *v){
+ if((v->reg[4]&7)!=7||(v->reg[16]&3)!=1)return 0;
+ /* This sky row on B survives the scroll from the title to the mode menu.
+  * The solid tile's pixels select CRAM 20, including during palette fades. */
+ const uint8_t *sky=v->vram+0xe000+11*128;
+ return word(sky)==0x2075&&word(sky+62)==0x2075&&
+        word(sky+126)==0x2075&&v->vram[0x75*32]==0x44;
+}
+int db2_video_title_active(const GVDP *v){
+ return (v->reg[1]&0x40)&&world_scene==WORLD_NONE&&!briefing_scene&&title_sky_planes(v);
+}
+static const uint32_t *remove_parked_title_logo(const GVDP *v,const GVDPRasterRow *r,
+                                               const uint32_t *native,uint32_t *clean){
+ static const uint8_t zero=0;
+ if(!r||!r->display||!db2_video_title_active(v)||!db2_wide_menu_parked_title_logo(v))return native;
+ memcpy(clean,native,320*sizeof *clean);
+ for(int x=0;x<320;x++){
+  if(!r->sprite_owner[x]||!db2_wide_menu_title_logo_sprite(v,r->sprite_owner[x]-1u))continue;
+  uint8_t index;
+  gvdp_compose_span(&index,r->plane_a+x,r->plane_b+x,&zero,&zero,&zero,&zero,&zero,
+                    1,r->backdrop,r->shadow_mode);
+  clean[x]=genesis_dac_cram_to_argb(v->cram[index&63],index>=128?2:index>=64?1:0);
+ }
+ return clean;
+}
 static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNativeRow native,void *ctx,const GVDPRasterRow *r){
  background=genesis_dac_cram_to_argb(v->cram[v->reg[7]&63],0);
- int supported=nw==320&&w>=320&&w<=LIMIT&&r&&r->display&&raster_enabled(v);
+ int supported=nw==320&&w>=320&&w<=LIMIT&&r&&r->display&&world_raster_enabled();
  if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);memset(hud_edges,0,sizeof hud_edges);if(supported)capture(v);}
  const uint32_t *p=native(ctx);
+ uint32_t cleaned[320];
+ if(nw==320&&world_scene==WORLD_NONE)p=remove_parked_title_logo(v,r,p,cleaned);
  if(y>=0&&y<224&&nw==320){memcpy(native_image[y],p,sizeof native_image[y]);native_valid[y]=1;}
  if(y==0){memset(wide_valid,0,sizeof wide_valid);wide_w=w;
-  if(nw==320&&world_scene==WORLD_NONE&&!briefing_scene&&sky_row(native_image[0])){
-   sky_hold=120;sky_base=native_image[0][2];
-  }else if(!(v->reg[1]&0x40)||world_scene!=WORLD_NONE||briefing_scene)sky_hold=0;
-  else if(sky_hold)--sky_hold;
-  db2_wide_menu_set_sprite_gate(sky_hold>0);
+  title_sky=nw==320&&db2_video_title_active(v);
+  if(title_sky)sky_base=genesis_dac_cram_to_argb(v->cram[20],0);
+  db2_wide_menu_set_sprite_gate(title_sky);
   db2_wide_menu_frame(v);db2_menu_labels_frame(v);}
  if(y>=0&&y<224&&nw==320&&w>320&&w<=LIMIT&&w==wide_w){
   uint32_t *row=wide_image[y];int left=(w-320)/2;
@@ -454,21 +488,6 @@ static int margin_art(int w){
  for(int y=0;y<224;y++)if(wide_valid[y])for(int x=0;x<margin;x++){total+=2;art+=(wide_image[y][x]!=background)+(wide_image[y][w-1-x]!=background);}
  return total?(int)(art*100u/total):0;
 }
-/* Non-battle frames: what goes above/below the 224 native lines.
- * A plain sky on the first native line (title/main menu beach) anchors the
- * image to the bottom of the canvas and continues that sky upward, as DB1's
- * title does; otherwise rows without art fade the native edge into the
- * backdrop over eight lines (DB1 intro fade, vertical). */
-static int sky_pixel(uint32_t pixel){
- unsigned r=(pixel>>16)&255,g=(pixel>>8)&255,b=pixel&255;
- return (b>=r&&b>=g&&b>=150&&b>=r+24)||(r>=200&&g>=200&&b>=200);
-}
-static int sky_row(const uint32_t *row){
- /* Blue sky, with the white of clouds / dither, across nearly the whole line. */
- unsigned sky=0;
- for(int x=0;x<320;x++)sky+=sky_pixel(row[x]);
- return sky>=282;
-}
 /* A flat, confetti-dotted backdrop touching both native edges (stage
  * briefing): the same colour fills at least 70% of the 12 outer pixels per side. */
 static int flat_edges(void){
@@ -507,7 +526,7 @@ static int special_stage(void){
  return word(g_ram+0x278)==0xff&&word(g_ram+0x27a)==0x292&&g_ram[0x292]==6;
 }
 static int dialogue_over_black(void){
- if(world_scene!=WORLD_NONE||briefing_scene||sky_hold||!native_valid[0]||
+ if(world_scene!=WORLD_NONE||briefing_scene||title_sky||!native_valid[0]||
     native_image[0][0]!=0xff000000u||native_image[0][319]!=0xff000000u){
   dialogue_hold=0;return 0;
  }
@@ -651,6 +670,14 @@ static int briefing_planes(const GVDP *v){
         word(confetti)==0x87eb&&word(confetti+10)==0x87ec&&
         word(confetti+3*128+28)==0x87f3&&word(confetti+27*128+54)==0x87ee;
 }
+static int stage_picker_planes(const GVDP *v){
+ if(!v||(v->reg[4]&7)!=7||(v->reg[16]&0x33)!=1)return 0;
+ /* Classic stage selection keeps this frame and bank of backdrop tiles
+  * through the fade. Its colors alone cannot identify the dark frames. */
+ const uint8_t *map=v->vram+0xe000;
+ return word(map)==0x607d&&word(map+2*(2*64+2))==0x6082&&
+        word(map+2*(2*64+3))==0x6083&&word(map+2*(25*64+2))==0x7082;
+}
 static int extend_results_pattern(uint32_t *pixels,int stride,int w,int h,int top){
  for(int y=0;y<224;y++){
   if(!native_valid[y])return 0;
@@ -668,6 +695,27 @@ static int extend_results_pattern(uint32_t *pixels,int stride,int w,int h,int to
  }
  return 1;
 }
+static void fade_menu_edges(uint32_t *pixels,int stride,int w,int h){
+ int left=(w-320)/2;
+ for(int y=0;y<h;y++){
+  uint32_t *row=pixels+(size_t)y*stride;
+  for(int x=0;x<left;x++)row[x]=background;
+  for(int x=left+320;x<w;x++)row[x]=background;
+  for(int i=0;i<16;i++){unsigned wgt=(unsigned)(i*i*(45-2*i));row[left+i]=db2_wide_menu_blend(row[left+i],background,wgt);row[left+319-i]=db2_wide_menu_blend(row[left+319-i],background,wgt);}
+ }
+}
+static int story_intro_landscape(const GVDP *v){
+ if(world_scene!=WORLD_NONE||briefing_scene||(v->reg[16]&0x33)!=1)return 0;
+ unsigned a=((unsigned)v->reg[2]&0x38)<<10;
+ unsigned b=((unsigned)v->reg[4]&7)<<13;
+ for(int plane=0;plane<2;plane++){
+  const uint8_t *map=v->vram+(plane?b:a);
+  if(word(map)==0x6075&&word(map+2)==0x6076&&
+     word(map+4)==0x6075&&word(map+6)==0x6076&&
+     word(map+86)==0x6076&&word(map+88)==0&&word(map+28*128)==0)return 1;
+ }
+ return 0;
+}
 static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top){
  int bottom=h-(top+224);
  if(top<0||bottom<0)return;
@@ -676,6 +724,10 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
  if(results_scene){
   if(v&&w>320&&!extend_results_pattern(pixels,stride,w,h,top))
    fill_menu_margins(v,pixels,stride,w,h,top,DB2_MENU_BACKGROUND);
+  return;
+ }
+ if(v&&w>320&&story_intro_landscape(v)){
+  fade_menu_edges(pixels,stride,w,h);
   return;
  }
  if(v&&w>320&&dialogue_over_black()){
@@ -694,13 +746,14 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
   fill_menu_margins(v,pixels,stride,w,h,top,DB2_MENU_BRIEFING);
   return;
  }
- if(world_scene==WORLD_NONE&&!briefing_scene&&!sky_hold&&w>320&&
+ int stage_picker=world_scene==WORLD_NONE&&stage_picker_planes(v);
+ if(world_scene==WORLD_NONE&&!briefing_scene&&!title_sky&&!stage_picker&&w>320&&
     extend_solid_backdrop(pixels,stride,w,h,top))return;
  /* The blue Options palette also matches the title's sky heuristic. The
   * full-period and edge checks identify the menu independently of color. */
  if(world_scene==WORLD_NONE&&!briefing_scene&&w>320&&
     extend_menu_pattern(pixels,stride,w,h,top))return;
- if(v&&w>320&&world_scene==WORLD_NONE&&!briefing_scene&&!sky_hold&&framed_submenu()){
+ if(v&&w>320&&world_scene==WORLD_NONE&&!briefing_scene&&!title_sky&&(stage_picker||framed_submenu())){
   fill_menu_margins(v,pixels,stride,w,h,top,DB2_MENU_BACKGROUND);
   /* The silhouette reaches the right native column above the ground bands.
    * Extend the clear sky color there. For the ground, sample the unobstructed
@@ -736,36 +789,19 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
   }
   return;
  }
- if(v&&w>320&&!sky_hold&&!db2_wide_menu_extended()&&flat_edges()){
+ if(v&&w>320&&!title_sky&&!db2_wide_menu_extended()&&flat_edges()){
   fill_menu_margins(v,pixels,stride,w,h,top,DB2_MENU_FLAT);
   return;
  }
  if(top<=0)return;
- {
-  /* Title / main menu: the scenery is anchored to the bottom of the canvas (the
-   * stone and the ground reach the bottom edge) and the sky is generated above
-   * it. The scene is remembered for a while so the camera move between the title
-   * and the menu keeps the same framing while the logo scrolls through row 0. */
-  if(sky_hold>0&&native_valid[0]&&native_valid[223]){
-   int shift=bottom;
-   for(int y=h-1;y>=top+shift;y--)memcpy(pixels+(size_t)y*stride,pixels+(size_t)(y-shift)*stride,(size_t)w*sizeof *pixels);
-   int rows=top+shift;
-   uint32_t color=native_image[0][2];
-   if(color!=native_image[0][317])color=sky_base;
-   for(int y=0;y<rows;y++){
-    int distance=rows-1-y;
-    uint32_t *target=pixels+(size_t)y*stride;
-    /* Reflect just the near sky at the seam. Fade the reflected cloud
-     * detail into the same blue farther out, excluding foreground art. */
-    int sample=distance<16&&native_valid[distance]&&sky_row(native_image[distance]);
-    const uint32_t *source=pixels+(size_t)(rows+(sample?distance:0))*stride;
-    unsigned fade=(unsigned)(distance<16?15-distance:0);
-    unsigned weight=fade*fade*(45-2*fade);
-    for(int x=0;x<w;x++)target[x]=sample&&sky_pixel(source[x])?
-       db2_wide_menu_blend(source[x],color,weight):color;
-   }
-   return;
-  }
+ if(title_sky&&native_valid[0]&&native_valid[223]){
+  /* Anchor the native scene at the bottom. The added band is only sky;
+   * native foreground and sprites leave the screen at the original edge. */
+  for(int y=h-1;y>=top+bottom;y--)
+   memcpy(pixels+(size_t)y*stride,pixels+(size_t)(y-bottom)*stride,(size_t)w*sizeof *pixels);
+  for(int y=0;y<top+bottom;y++)
+   for(int x=0;x<w;x++)pixels[(size_t)y*stride+x]=sky_base;
+  return;
  }
  /* Intro (art authored past the 4:3 window): like the DB1 intro, the sides
   * stay backdrop and the original left/right borders fade into it over
@@ -773,14 +809,9 @@ static void vertical_finish(const GVDP *v,uint32_t *pixels,int stride,int w,int 
  /* Map scenes with nothing authored outside 4:3 (attract demo, cutscenes):
   * the same treatment, so stray off-screen sprites never float on black. */
  if(margin_art(w)>=30)return;
- int left=(w-320)/2;
- for(int y=0;y<h;y++){
-  uint32_t *row=pixels+(size_t)y*stride;
-  for(int x=0;x<left;x++)row[x]=background;
-  for(int x=left+320;x<w;x++)row[x]=background;
-  for(int i=0;i<16;i++){unsigned wgt=(unsigned)(i*i*(45-2*i));row[left+i]=db2_wide_menu_blend(row[left+i],background,wgt);row[left+319-i]=db2_wide_menu_blend(row[left+319-i],background,wgt);}
- }
+ fade_menu_edges(pixels,stride,w,h);
 }
+
 static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h,int top,int nh){
  if(!pixels||w<320||w>LIMIT||stride<w||top<0||nh!=224||top+nh>h)return;
  /* Leaving a native modal screen (pause, Info View): the first frames can still
@@ -813,9 +844,10 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
   }
  }
  int recovering_battle=world_scene==WORLD_BATTLE&&!(g_ram[0x286]&0x88);
- int pausing_versus=world_scene==WORLD_VERSUS&&native_pause()&&
+ int pausing_battle=(world_scene==WORLD_BATTLE||world_scene==WORLD_VERSUS)&&
+                    (pause_active||native_pause())&&
                     !memcmp(ram+0x2a56,g_ram+0x2a56,12);
- if(held_valid&&held_w==w&&held_h==h&&(recovering_battle||pausing_versus)&&++held_misses<=HOLD_FRAMES+2){
+ if(held_valid&&held_w==w&&held_h==h&&(recovering_battle||pausing_battle)&&++held_misses<=HOLD_FRAMES+2){
   for(int y=0;y<h;y++)memcpy(pixels+(size_t)y*stride,held[y],(size_t)w*sizeof *pixels);
   return;
  }

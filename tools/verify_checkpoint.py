@@ -35,7 +35,7 @@ def main():
     cases={}
     pool=ThreadPoolExecutor(max_workers=args.jobs)
 
-    def build(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None,diagnostic_env=None,markers=()):
+    def build(name,target,rom,frames,script=None,language=None,replay=None,hint=False,irq=False,widescreen=None,ui=False,audio=False,host_settings=False,window_size=None,visor=None,save_test=False,overlays=False,profile_name=None,diagnostic_env=None,markers=(),db1_progress_seed=None):
         output=args.output/name
         command=[sys.executable,str(ROOT/'tools/native_probe.py'),str(payload/target),str(rom),
                  '--output',str(output),'--frames',str(frames),'--portable-env']
@@ -50,6 +50,7 @@ def main():
         if visor is not None:command+=['--visor-offset-tiles',str(visor)]
         if overlays:command+=['--host-overlays']
         if profile_name:command+=['--profile-name',profile_name]
+        if db1_progress_seed:command+=['--db1-progress-seed',str(db1_progress_seed)]
         env=dict(os.environ);env.pop('DYNA_IRQ_SELFTEST',None);env.pop('DYNA_IRQ_VERIFY',None)
         env.pop('DYNA_DB1_SAVE_TEST',None)
         if diagnostic_env:env.update(diagnostic_env)
@@ -244,6 +245,8 @@ def main():
         cases['db1-save-unicode']=cases.pop(unicode_name)
         cases['db1-save-unicode']['native_save_sha256']=hashlib.sha256(data).hexdigest()
     if tuple(map(int,version.split('.'))) >= (0,1,7):
+        progress_seeds=list((args.output/'db1-save-result/profile').glob('dyna1-progress-*.bin'))
+        if len(progress_seeds)!=1:raise RuntimeError('Missing verified Normal 2 save for title level selection')
         title_jobs={}
         title_meta={}
         for level in [False,True]:
@@ -251,12 +254,14 @@ def main():
             dest=args.output.resolve()/name
             script=args.output/(name+'.input')
             source='WAIT 1999\nPRESS START 12\nWAIT 2000\nPRESS START 12\nWAIT 500\nPRESS UP 12\nWAIT 60\nPRESS A 12\nWAIT 2500\n'
-            if level:source+='ASSERT_RAM16 FF0034 0014\nASSERT_RAM16 FF002E 00FF\nASSERT_RAM16 FF0030 B3A6\n'
+            if level:source+='ASSERT_RAM16 FF0034 0015\nASSERT_RAM16 FF002E 00FF\nASSERT_RAM16 FF0030 B3F0\n'
             source+='SCREENSHOT title-result.png\n'
             script.write_text(source,encoding='utf-8')
             env={'DYNA_DB1_TITLE_UI_TEST':str(dest/'extras.bmp'),'DYNA_DB1_TITLE_UI_MODE':'level' if level else 'back','DYNA_PROGRESS_TRACE':'1'}
             markers=['PASS 4 level modal presentations; CPU/RAM/VDP unchanged','PASS real SDL level confirm closed modal','status=5'] if level else ['PASS 6 modal presentations; CPU/RAM/VDP unchanged','PASS real SDL Back event closed modal']
-            title_jobs[name]=submit(name,'DynaBrothers1AOT.exe',db1,8000,script=script,widescreen='16:9',overlays=True,diagnostic_env=env,markers=markers)
+            if level:env['DYNA_DB1_TITLE_UI_INDEX']='0'
+            title_jobs[name]=submit(name,'DynaBrothers1AOT.exe',db1,8000,script=script,widescreen='16:9',overlays=True,
+                diagnostic_env=env,markers=markers,db1_progress_seed=progress_seeds[0] if level else None)
             title_meta[name]=dest
         emi_future=submit('db1-emi-save','DynaBrothers1AOT.exe',db1,9500,
             script=ROOT/'games/db1/scenes/emi-natural-loss.input',widescreen='16:9',overlays=True,

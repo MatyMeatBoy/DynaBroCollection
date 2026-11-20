@@ -23,6 +23,8 @@ uint32_t db2_wide_menu_blend(uint32_t pixel, uint32_t backdrop, unsigned weight)
 /* True when this frame continued authored art past the 4:3 window (intro). */
 int db2_wide_menu_extended(void);
 void db2_wide_menu_set_sprite_gate(int on);
+int db2_wide_menu_parked_title_logo(const struct GVDP *v);
+int db2_wide_menu_title_logo_sprite(const struct GVDP *v, unsigned sat_index);
 typedef enum {
     DB2_MENU_PLANES,
     DB2_MENU_FLAT,

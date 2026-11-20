@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -55,6 +56,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--frames', type=int, default=6010)
     parser.add_argument('--profile-name', default='profile', help='Single private profile directory name; allows UTF-8 storage qualification')
+    parser.add_argument('--db1-progress-seed', type=Path, help='Copy a DB1 progress fixture into the isolated profile')
     parser.add_argument('--audio', action='store_true')
     parser.add_argument('--visor-offset-tiles', type=int, help='Seed DB1 visor position in whole tiles (-64..64); actual borders clamp it')
     parser.add_argument('--host-overlays', action='store_true', help='Include game-owned overlays on a private screenshot copy; raw capture remains the default')
@@ -82,6 +84,11 @@ def main():
         parser.error('--profile-name must be one directory name')
     profile = output / args.profile_name
     profile.mkdir()
+    if args.db1_progress_seed:
+        seed = args.db1_progress_seed
+        if not seed.is_file() or not re.fullmatch(r'dyna1-progress-[0-9a-f]{16}\.bin', seed.name):
+            parser.error('Invalid DB1 progress fixture')
+        shutil.copy2(seed, profile / seed.name)
     if args.language:
         (profile / 'dynabrothers-language.ini').write_text('english=' + ('1' if args.language == 'en' else '0') + '\n')
     if args.visor_offset_tiles is not None:

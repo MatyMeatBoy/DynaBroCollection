@@ -1,3 +1,10 @@
+# v0.4.3
+
+- DB2 keeps the English menu plates consistent while the stone rises. Skipping the title clips the parked Sega Channel logo, and the upper sky follows the native palette.
+- DB2 restores the intro side fade and keeps the widescreen HUD in place during pause and the opening animation of a Classic stage.
+- Start + Select offers Return to Title and Quit Game in both games, with confirmation.
+- The guest frame clock continues when the game window loses focus. Display synchronization resumes when the window regains focus.
+
 # v0.4.1
 
 - DB2 Practice/Story tutorial dialogue is now English: the ovi's opening cutscene and the full explanation (button controls, "THE EGG" rules, grass/egg/power lines, CANCEL, mid-stage surrender, "practice mode starts now") -- 25 new RAM-script catalog entries (`ram_text` can now pin the number of leading control cells with `skip`).

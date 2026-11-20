@@ -184,6 +184,28 @@ static int window_side(const GVDP *v,int line,int x){
  return x<wxp;              /* window to the left of wxp */
 }
 
+static int title_channel_logo(unsigned attr,unsigned size){
+ if((size&15)!=15)return 0;
+ switch(attr&0xe7ff){
+ case 0x24b5:case 0x24c5:case 0x26a0:case 0x26b0:
+ case 0x26d8:case 0x26e8:case 0x27d0:case 0x27e0:return 1;
+ default:return 0;
+ }
+}
+
+int db2_wide_menu_parked_title_logo(const GVDP *v){
+ unsigned sat=((unsigned)v->reg[5]&0x7f)<<9;
+ /* The first pieces of both rows are parked at x=-68 on a skipped reveal. */
+ return rd(v,sat+20*8+4)==0x24b5&&(rd(v,sat+20*8+6)&511)==60&&
+        rd(v,sat+24*8+4)==0x26d8&&(rd(v,sat+24*8+6)&511)==60;
+}
+
+int db2_wide_menu_title_logo_sprite(const GVDP *v,unsigned sat_index){
+ if(sat_index<20||sat_index>27)return 0;
+ unsigned p=(((unsigned)v->reg[5]&0x7f)<<9)+sat_index*8;
+ return title_channel_logo(rd(v,p+4),v->vram[(p+2)&0xffff]);
+}
+
 static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,uint8_t *hi){
  unsigned base=((unsigned)v->reg[5]&0x7f)<<9,link=0;uint8_t seen[80]={0};
  int cloud_x=0,cloud_y=0,cloud_spawn=0,cloud_piece=0,cloud_moved=0;
@@ -220,7 +242,9 @@ static void sprites(const GVDP *v,int line,int left,int w,uint8_t *s,uint8_t *o,
    sx+=320+(anchor-320)*(right-320)/(spawn-320)-anchor;
   if(line>=sy&&line<sy+vc*8&&sx>-128){
    int ry=line-sy;if(attr&0x1000)ry=vc*8-1-ry;
-   int gated=sprite_gate&&!moved;
+   /* The guest parks the eight logo pieces left of the native screen when
+    * Start skips their reveal. Their Y motion still follows the menu scroll. */
+   int gated=sprite_gate&&(!moved||title_channel_logo(attr,size));
    /* The briefing parks its waiting actors in these slots. They enter the
     * presentation when the guest advances them toward the center. */
    if(margins==DB2_MENU_BRIEFING&&!moved_x_recent[link_index]&&

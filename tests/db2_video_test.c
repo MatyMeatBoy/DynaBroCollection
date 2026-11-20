@@ -1,4 +1,5 @@
 #include "db2_video.h"
+#include "db2_menu_labels.h"
 #include "db2_wide_menu.h"
 #include "genesis_runtime.h"
 #include "video/genesis_vdp.h"
@@ -115,8 +116,79 @@ static void menu_pattern_contract(void){
  assert(canvas[153*480+173]==0xffcececeu);
  assert(canvas[153*480+426]==0xff929257u);
 }
+static void intro_side_fade_contract(void){
+ setup();v.reg[1]=64;v.reg[12]=1;v.reg[16]=1;
+ /* The zero-scroll story intro landscape is on B. A reuses the same
+  * landscape at the start of the scene, before it moves to B. */
+ for(int plane=0;plane<2;plane++){
+  unsigned base=(plane==0?0xc000:0xe000);
+  v.reg[2]=0x30;v.reg[4]=7;
+  memset(v.vram+0xc000,0,0x4000);
+  for(int y=0;y<28;y++)for(int x=0;x<44;x++)
+   w16(v.vram+base+2*(y*64+x),0x6075+(x&1));
+  memset(v.vram+0x75*32,0x22,64);
+  v.cram[50]=0x0a4;
+  uint32_t terrain=genesis_dac_cram_to_argb(v.cram[50],0);
+  for(int y=0;y<224;y++){
+   for(int x=0;x<320;x++)original[x]=terrain;
+   row(y,427);
+   memcpy(canvas+(size_t)(y+8)*480,out,427*sizeof *out);
+  }
+  db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+  assert(canvas[80*480+53]==0xff000000u);
+  assert(canvas[80*480+54]!=terrain);
+  assert(canvas[80*480+68]==terrain);
+  assert(canvas[80*480+372]==0xff000000u);
+ }
+}
+static void streamed_menu_label_contract(void){
+ setup();v.reg[16]=1;v.reg[2]=0x30;
+ uint8_t *top=v.vram+0xc000+3*128,*bottom=top+128;
+ w16(top+2*14,0x203);w16(bottom+2*14,0x213);
+ for(int x=15;x<31;x++){
+  unsigned a=x<25?0x176+x-15:0x17f+x-25;
+  unsigned b=x<25?0x185+x-15:0x18f+x-25;
+  w16(top+2*x,a);w16(bottom+2*x,b);
+  memset(v.vram+a*32,0x11,32);
+  memset(v.vram+b*32,0x11,32);
+ }
+ /* The left edge and the lettering have arrived. The right edge has not. */
+ /* The fill pattern is loaded before any name-table cell refers to it. */
+ memset(v.vram+0x265*32,0x22,32);
+ memset(v.vram+0x203*32,0x55,32);
+ v.cram[1]=0xeee;
+ for(int x=0;x<320;x++)out[x]=genesis_dac_cram_to_argb(v.cram[1],0);
+ db2_menu_labels_set_english(1);
+ db2_menu_labels_frame(&v);
+ db2_menu_labels_row(&v,26,out,320,0);
+ assert(out[120]==genesis_dac_cram_to_argb(v.cram[2],0));
+ assert(out[119]==genesis_dac_cram_to_argb(v.cram[1],0));
+ db2_menu_labels_set_english(0);
+}
+static void parked_title_logo_contract(void){
+ setup();v.reg[1]=64;v.reg[4]=7;v.reg[5]=0x6c;v.reg[12]=1;v.reg[16]=1;
+ uint8_t *sky=v.vram+0xe000+11*128;
+ w16(sky,0x2075);w16(sky+62,0x2075);w16(sky+126,0x2075);
+ memset(v.vram+0x75*32,0x44,32);
+ for(int slot=20;slot<=24;slot+=4){
+  uint8_t *sprite=v.vram+0xd800+slot*8;
+  w16(sprite+2,0x0f00);w16(sprite+4,slot==20?0x24b5:0x26d8);w16(sprite+6,60);
+ }
+ uint8_t *edge=v.vram+0xd800+23*8;
+ w16(edge+2,0x0f00);w16(edge+4,0x26b0);w16(edge+6,156);
+ v.cram[20]=0x0e0;
+ r.sprite_owner[30]=24;r.sprite_owner[31]=1;
+ r.plane_b[30]=r.plane_b[31]=0x40|20;
+ assert(db2_video.raster_enabled(&v));
+ row(0,427);
+ assert(out[53+30]==genesis_dac_cram_to_argb(v.cram[20],0));
+ assert(out[53+31]==original[31]); /* A cloud with different ownership remains. */
+}
 int main(void){
  menu_pattern_contract();
+ intro_side_fade_contract();
+ streamed_menu_label_contract();
+ parked_title_logo_contract();
  /* Recycled right-margin clouds enter at the viewport edge before reaching
   * the native coordinates. The left margin keeps guest coordinates. */
  memset(&v,0,sizeof v);v.reg[1]=64;v.reg[5]=0x78;v.reg[12]=1;
@@ -144,10 +216,25 @@ int main(void){
  assert(out[413]==0xffffffffu&&out[414]==0xffffffffu&&out[445]==0xffffffffu);
  assert(out[446]==0xff000000u);
  db2_wide_menu_set_sprite_gate(0);
+ /* Skipping the title must not show the parked Sega Channel logo through
+  * the widened left edge as its vertical position follows the scroll. */
+ memset(&v,0,sizeof v);v.reg[1]=64;v.reg[5]=0x6c;v.reg[12]=1;
+ v.cram[17]=0xeee;memset(v.vram+0x4b5*32,0x11,16*32);
+ w16(v.vram+0xd800,128);w16(v.vram+0xd802,0x0f00);
+ w16(v.vram+0xd804,0x24b5);w16(v.vram+0xd806,104);
+ db2_wide_menu_set_sprite_gate(1);db2_wide_menu_frame(&v);
+ w16(v.vram+0xd800,127);db2_wide_menu_frame(&v);
+ assert(db2_wide_menu_row(&v,0,out,480,80,1)&&out[56]==0xff000000u);
+ db2_wide_menu_set_sprite_gate(0);
  /* Demo ownership is explicit and independent of campaign/player acceptance. */
  setup();db2_video_observe(0xf794);assert(db2_video.raster_enabled(&v));
  db2_video_observe(0xf728);assert(!db2_video.raster_enabled(&v));
  db2_video_observe(0x3bb0);assert(db2_video.raster_enabled(&v));
+ db2_video_observe(0xc158);g_ram[0x286]=0x80;
+ assert(db2_video.raster_enabled(&v)); /* An actor animation leaves the world visible. */
+ db2_video_observe(0xc298);
+ assert(!db2_video.raster_enabled(&v)); /* An unrelated modal still owns the raster. */
+ g_ram[0x286]=0;
  db2_video_observe(0x3bb4);assert(!db2_video.raster_enabled(&v));
  actual_plane_contract();
  for(unsigned mode=0;mode<=2;mode++)owned_sprite_mode(6,0x82f4,10,260,178,367,mode);
@@ -216,6 +303,15 @@ int main(void){
  canvas[8*480+201]=0;
  db2_video.frame_complete(&v,canvas,480,427,240,8,224);
  assert(canvas[8*480+201]==0xffba5713u); /* First pause raster missed the latch. */
+ setup();db2_video_observe(0x3bb0);row(0,427);
+ canvas[8*480+201]=0xffba5713u;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ db2_video_observe(0x425c);
+ g_ram[0x286]=0x80;w32(g_ram+0x6c,0x4324);
+ r.display=0;row(0,427);
+ canvas[8*480+201]=0;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[8*480+201]==0xffba5713u); /* Campaign pause can miss it too. */
  /* A 41st actor, absent from all native SAT/cache entries, is still drawn
   * beyond the original right edge. All animation bytes are guest-derived. */
  setup();w32(g_rom+0x78810,0x1000);w32(g_rom+0x78814,0x1100);w32(g_rom+0x78804,0x1200);

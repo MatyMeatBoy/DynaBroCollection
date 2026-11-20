@@ -36,14 +36,15 @@ static const RecompRuntimeUiItem language_items[]={
     {"dyna.save","Game","Save Game","Save the progress code shown by the original game.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
     {"dyna.extras","Extras","Extras","Level Selection and Game Guide.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
     {"dyna.achievements","Achievements","Achievement list","Local progress, badges and stage goals. Opens a paused list.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
-    {RECOMP_RUNTIME_UI_KEY_RESET,"System","Restart Level","Relaunches fresh from the title screen. Any unsaved progress is lost; use Save Game first.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
-    {RECOMP_RUNTIME_UI_KEY_RETURN_TO_LAUNCHER,"System","Return to Title Screen","Closes this game and returns to the DynaBrothers launcher.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
-    {RECOMP_RUNTIME_UI_KEY_QUIT,"System","Quit to Desktop","Closes the game and the launcher entirely.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
+    {"dyna.return_to_title","System","Return to Title","End the current game and go back to its title screen.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {"dyna.quit_game","System","Quit Game","Close this game.",RECOMP_RUNTIME_UI_ACTION,0,0,0},
+    {RECOMP_RUNTIME_UI_KEY_QUIT,"System","Quit to Desktop","Close the game and the launcher.",RECOMP_RUNTIME_UI_ACTION,0,0,0}
 };
 #endif
 #include DYNA_STEP_HEADER
 #ifdef DYNA_HAS_JP
 #include "db1_video.h"
+#include "db1_scenes.h"
 #include "db1_title_menu.h"
 #include "db1_original_title.h"
 #include "db1_title_menu_smoke.h"
@@ -145,6 +146,8 @@ static int retire(void *user,unsigned *cycles) {
        g_cpu.PC==0x3c78 || g_cpu.PC==0x3bb0 ||
        g_cpu.PC==0x3bb4 || g_cpu.PC==0x7308 || g_cpu.PC==0x734e ||
        g_cpu.PC==0xf794 || g_cpu.PC==0xf728 ||
+       g_cpu.PC==0x425c || g_cpu.PC==0x4422 ||
+       g_cpu.PC==0xc158 || g_cpu.PC==0xc298 ||
        g_cpu.PC==0x146c0 || g_cpu.PC==0x15220)db2_video_observe(g_cpu.PC);
     if(g_cpu.PC==0x5b278){static int trace2=-1;if(trace2<0){const char *t=getenv("DYNA_TRACE_GLYPH");trace2=t&&t[0]=='1';}
         if(trace2){unsigned a1=g_cpu.A[1]&0xffffffu,w=(((unsigned)g_ram[(g_cpu.A[6]+12)&0xffff]<<8)|g_ram[(g_cpu.A[6]+13)&0xffff])>>2;
@@ -465,7 +468,15 @@ static int menu_tick(uint32_t mask,int open,uint64_t now,int *blocked) {
  int action=dyna_menu_controls_tick(&state,mask|keyboard_menu_bits(),open,now);
  *blocked=dyna_menu_controls_blocks(&state,open);return action;
 }
+static int title_active(void){
+#ifdef DYNA_HAS_JP
+ return db1_scenes_kind()==DB1_SCENE_TITLE;
+#else
+ return db2_video_title_active(&g_machine.vdp);
+#endif
+}
 const GameSpec g_game_spec={
+    .title_active=title_active,
     .menu_input_tick=menu_tick,
     .input_filter=game_input_filter,
     .pacing_default="accurate",.frame_rate_numerator=53693175,.frame_rate_denominator=3420*262,
@@ -473,7 +484,8 @@ const GameSpec g_game_spec={
     .display_name=DYNA_DISPLAY_NAME,.short_name=DYNA_NAME,
     .region_label="NTSC-J (Japan)",
 #if RECOMP_LAUNCHER
-    .runtime_menu_items=language_items,.runtime_menu_item_count=7,
+    .runtime_menu_items=language_items,
+    .runtime_menu_item_count=sizeof language_items/sizeof *language_items,
     .runtime_menu_get=game_runtime_get,.runtime_menu_set=game_runtime_set,
     .runtime_menu_action=game_ui_action,
 #endif

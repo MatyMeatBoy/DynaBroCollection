@@ -1,9 +1,11 @@
 #ifndef DB2_VIDEO_H
 #define DB2_VIDEO_H
 #include "game_video.h"
+#include "video/genesis_vdp.h"
 extern const GameVideo db2_video;
 void db2_video_observe(unsigned pc);
 void db2_video_reset(void);
+int db2_video_title_active(const GVDP *);
 void db2_video_visor_offset(int tiles);
 void db2_video_free_hud(int enabled);
 int db2_video_visor_requested(void);
