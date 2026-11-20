@@ -44,3 +44,30 @@ Waiting for the intro, or a probe that never skips it, takes the row-11 layout. 
 1. Read `data/logs/*-feedback.replay.config.ini` and `.mods.txt` from the user's install for the exact settings.
 2. Run the user's own `data/DynaBrothers2AOT.exe` with `tools.native_probe --portable-env` and the same window size.
 3. If the probe looks right, compare the route: in particular whether the intro was skipped.
+
+## Follow-up queue (2026-11-20, after v0.5.1)
+
+Done on branch `claude/menu-perf`:
+- **Original / Versus menus stuttered.** `remap()` in `games/db2_wide_menu.c` walked the dense run for every margin pixel. It is now memoised per frame (`remap_cached`), and frame time in the Original menu dropped from 11.8 to 3.7 ms.
+
+Done in v0.5.2: items 1 (doubled units while panning), 3 (System last), 4 (DB1 three-button) and the launcher defaults from item 5 (borderless, logo intro, skip-launcher off, faster drawing). VSync was already always on.
+
+Still open: item 2 (check DB1 for the same pattern), item 5 (a VSync toggle and more graphics options) and item 6 (one unified settings screen with Back).
+
+Original list:
+1. **DB2 units shown twice or "blending" while panning with B + D-pad** (repro: Original → SEGA CHANNEL SPECIAL → stage 1, hold B + LEFT/RIGHT; route `local/amd/sc2.input`, needs `--frames 5000`).
+   - Cause: during a pan a unit's native SAT body is sometimes not recognised (`kind=0`). Since v0.3.1 such entries are placed from their native pixels (to avoid a 4:3 flash), so the unit is drawn twice: once from RAM by the host, once from the SAT copy, about one sub-step apart.
+   - Tried and rejected:
+     - dropping unknown entries near any host actor: the egg vanished for two frames;
+     - shifting host actors by ±`off_x/off_y`: the queen still doubled in one frame.
+   - Next step: identify the unit's own SAT body by its pattern range and animation frame (`db2_actor_native_sat_body`), and drop only that copy when the host draws the unit.
+   - Check the start of the stage too (similar report).
+2. Check DB1 for the same pattern (`db1_video.c` places non-actor native sprites; actor bodies are filtered by `actor_owner`).
+3. Start+Select menu: move the "System" section to the very end. The game list already ends with it, but the engine appends its own sections after the game items (`runner/main.c` ~3464 builds `cfg.extra_items`), so this needs a change in the ordering there or in recomp-ui.
+4. DB1: remove the six-button option (DB1 does not support it) and add manual mapping.
+5. Launcher:
+   - "Skip launcher on boot" off by default;
+   - borderless by default;
+   - logo intro with fade, then a large selector that fits the screen;
+   - VSync always on, plus an option for it and more graphics options.
+6. Launcher settings: there are two configuration screens today (one opens from the Settings button, another appears after Back from it). Merge everything into one configuration screen and open it directly from Settings (launcher and in-game "Full Settings"), with a Back action that returns to the game selector (button, Esc and the controller B/Back button).

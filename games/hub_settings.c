@@ -36,7 +36,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  s.output_method=0;s.window_scale=g_app_config.window_scale;s.fullscreen=g_app_config.fullscreen;
  s.linear_filter=g_app_config.linear_filter;s.integer_scale=g_app_config.integer_scale;
  s.widescreen=g_app_config.widescreen;s.widescreen_cells=g_app_config.widescreen_cells;
- s.enable_audio=1;s.audio_freq=g_app_config.audio_freq;s.volume=g_app_config.volume;s.skip_launcher=1;
+ s.enable_audio=1;s.audio_freq=g_app_config.audio_freq;s.volume=g_app_config.volume;s.skip_launcher=g_app_config.skip_launcher;
  for(int p=0;p<2;p++){
   int device=g_input_map.p[p].device;
   s.player_src[p]=device==3?3:device==1?1:device==2?2:0;
@@ -70,7 +70,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
   if(g_app_config.fullscreen!=s.fullscreen)g_app_config.fullscreen_auto=0;
   g_app_config.window_scale=s.window_scale;g_app_config.fullscreen=s.fullscreen;
   g_app_config.linear_filter=s.linear_filter;g_app_config.integer_scale=s.integer_scale;
-  g_app_config.volume=s.volume;g_app_config.audio_freq=s.audio_freq;g_app_config.skip_launcher=1;
+  g_app_config.volume=s.volume;g_app_config.audio_freq=s.audio_freq;g_app_config.skip_launcher=s.skip_launcher;
   for(int p=0;p<2;p++){
    g_input_map.p[p].device=s.player_src[p]==3?3:s.player_src[p]==1?1:s.player_src[p]==2?2:0;
    g_input_map.p[p].pad_type=s.pad_mode[p]?PAD_6BUTTON:PAD_3BUTTON;

@@ -248,6 +248,16 @@ static void classify_sprites(void){
    * parked 32x32 pattern-0 body at x=-32 during Normal2 play). Ownership is
    * irrelevant for it; any non-zero pattern byte still rejects the frame. */
   if(!kind&&sprite_transparent(attr,size))kind=3;
+  /* During a camera pan a unit's own SAT body can lag one animation step and
+   * go unrecognised. The host already draws that unit (at its pan-aligned
+   * position), so the stale copy is dropped instead of showing it twice. */
+  if(!kind&&x<216){
+   int w8=(int)(((size>>2)&3)+1)*8,h8=(int)((size&3)+1)*8;
+   for(unsigned i=0;i<count&&!kind;i++){
+    int ax=actors[i].x+off_x,ay=actors[i].y+off_y;
+    if(ax+36>x&&ax-4<x+w8&&ay+36>y&&ay-4<y+h8)kind=3;
+   }
+  }
   /* Gameplay prompt banner ("HATCH EGGS FOR DINOS", written by the native
    * routine around 0CA8): a row of 32x32 palette-1 sprites using patterns
    * 370-47F (palette 1 or 2, either flip), slid in from the right and centered on the native 216-pixel
@@ -367,10 +377,10 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
  for(unsigned remaining=count;remaining;){const Db2Actor *ac=actors+--remaining;
   while(ei&&(effects[ei-1].depth<ac->depth||(effects[ei-1].depth==ac->depth&&effects[ei-1].rank>rank[ac->id])))effect_row(effects+--ei,y,w,shift,s,o,hi);
   for(unsigned part=ac->component_count;part;){const Db2ActorComponent *p=ac->part+--part;
-   int xx=ac->x+p->dx+shift,yy=ac->y+p->dy;if(y<yy||y>=yy+32)continue;
+   int xx=ac->x+off_x+p->dx+shift,yy=ac->y+off_y+p->dy;if(y<yy||y>=yy+32)continue;
    for(int px=0;px<32;px++){uint8_t color;db2_actor_pixel(p,(unsigned)px,(unsigned)(y-yy),&color);put(s,o,hi,xx+px,w,color,p->flags);}
   }
-  Db2WorldMarker m[6];unsigned n=db2_world_markers(ram[0x2a89],ram[0x5f58+48*ac->id+0x28],ac->x,ac->y,m);
+  Db2WorldMarker m[6];unsigned n=db2_world_markers(ram[0x2a89],ram[0x5f58+48*ac->id+0x28],ac->x+off_x,ac->y+off_y,m);
   while(n){const Db2WorldMarker *p=m+--n;if(y<p->y||y>=p->y+8)continue;for(int px=0;px<8;px++)put(s,o,hi,p->x+px+shift,w,tile_pixel(p->attribute,0,px,y-p->y),p->attribute);}
  }
  while(ei)effect_row(effects+--ei,y,w,shift,s,o,hi);

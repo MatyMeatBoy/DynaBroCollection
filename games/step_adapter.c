@@ -349,9 +349,12 @@ static void settings(const char *path){
     g_app_config.integer_scale=1;
     /* Use the common parser again after installing game defaults. Explicit
      * saved 3-button choices and unrelated settings retain their values. */
-    for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_6BUTTON;
+    for(int p=0;p<2;++p)g_input_map.p[p].pad_type=DYNA_ENTRY==0x738u?PAD_6BUTTON:PAD_3BUTTON;
     app_config_load(path);
     dyna_controllers_load(path);
+    /* Dyna Brothers (DB1) only reads the three-button pad; a saved or launcher
+     * six-button choice would just leave X/Y/Z/Mode unmapped for it. */
+    if(DYNA_ENTRY!=0x738u)for(int p=0;p<2;++p)g_input_map.p[p].pad_type=PAD_3BUTTON;
 }
 static uint16_t game_input_filter(unsigned player,uint16_t mask){
 #ifdef DYNA_HAS_JP
