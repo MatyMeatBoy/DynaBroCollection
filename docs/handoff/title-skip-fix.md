@@ -76,3 +76,13 @@ Original list:
 
 - v0.5.3: launcher graphics options now include Texture filter (Nearest/Bilinear → `linear_filter`) besides VSync, integer scale and window controls. Scanline/CRT filters would need a present-time post-process the engine does not have yet; not exposed.
 - Not verified with a physical controller: the launcher intro skip and gamepad navigation (only keyboard/mouse were exercised in captures).
+
+## v0.5.3 Beta published (Windows only)
+
+- Release: tag `v0.5.3-beta`, source commit `5d58860`; 47/47 packaged cases passed.
+- Linux, macOS and Android were not rebuilt. This PC has no WSL, no Android SDK/NDK and no Mac, and the build needs the private dumps, so it cannot run in CI.
+- To complete the release, on the machines that built v0.5.0, check out `5d58860` and run:
+  - `python -m tools.build --target both`;
+  - Linux and macOS: `tools/package_desktop.py linux|macos <stage> <out>`;
+  - Android: `tools/build_android.py --beta <n>` (needs the SDK with build-tools 35 and NDK).
+- Attach the outputs to the `v0.5.3-beta` release with `.sha256` files, as for v0.5.0.
