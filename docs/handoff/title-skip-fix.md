@@ -54,7 +54,7 @@ Done in v0.5.2: items 1 (doubled units while panning), 3 (System last), 4 (DB1 t
 
 Also done in v0.5.2: VSync On/Off/Adaptive in Settings → Video (`dynabrothers-video.ini` → `GENESIS_NO_VSYNC`), and Back from the hub's Settings returns to the selector (`back_quits` in the recomp-ui model).
 
-Still open: item 2 (check DB1 for the doubled-unit pattern while panning). The DB1 compositor filters actor bodies by pattern (`actor_owner`), so it is less exposed, but it has not been checked with a pan capture.
+Item 2 checked after v0.5.2: DB1 `games/db1/scenes/camera-motion.input` at 2560×1440 (left, right, up and down moves) shows every unit once. Nothing open from this list; DB2 in-stage dialogue translation remains the long-term goal.
 
 Original list:
 1. **DB2 units shown twice or "blending" while panning with B + D-pad** (repro: Original → SEGA CHANNEL SPECIAL → stage 1, hold B + LEFT/RIGHT; route `local/amd/sc2.input`, needs `--frames 5000`).
