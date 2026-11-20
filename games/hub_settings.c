@@ -36,6 +36,9 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  s.output_method=0;s.window_scale=g_app_config.window_scale;s.fullscreen=g_app_config.fullscreen;
  s.linear_filter=g_app_config.linear_filter;s.integer_scale=g_app_config.integer_scale;
  s.widescreen=g_app_config.widescreen;s.widescreen_cells=g_app_config.widescreen_cells;
+ {char vf[1100];snprintf(vf,sizeof vf,"%s",config);char *a=strrchr(vf,'/'),*b=strrchr(vf,'\\'),*sep=!a?b:!b?a:a>b?a:b;
+  size_t off=sep?(size_t)(sep+1-vf):0;snprintf(vf+off,sizeof vf-off,"dynabrothers-video.ini");
+  FILE *f=fopen(vf,"r");s.vsync=1;if(f){char line[80];int v;while(fgets(line,sizeof line,f))if(sscanf(line," vsync = %d",&v)==1&&v>=1&&v<=3)s.vsync=v;fclose(f);}}
  s.enable_audio=1;s.audio_freq=g_app_config.audio_freq;s.volume=g_app_config.volume;s.skip_launcher=g_app_config.skip_launcher;
  for(int p=0;p<2;p++){
   int device=g_input_map.p[p].device;
@@ -55,7 +58,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  gi.rom_revisions=revisions;gi.rom_noun="ROM";
  static const char *const patterns[]={"*.md","*.bin","*.gen","*.68k"};gi.rom_patterns=patterns;gi.num_rom_patterns=4;
  gi.rom_filter_desc="Dyna Brothers ROM";gi.config_path=config;gi.keybinds_path=config;gi.rom_cache_path=cache;
- gi.pad_mode_supported=gi.pad_mode_selectable=1;gi.has_integer_scale=1;
+ gi.pad_mode_supported=gi.pad_mode_selectable=1;gi.has_integer_scale=1;gi.has_vsync=1;
  gi.input_binding_snapshot=bindings;
  gi.host_sdl_window=window;gi.host_sdl_renderer=renderer;
  char brand[1400],art[1400],assets[1400];char *base=SDL_GetBasePath();
@@ -76,6 +79,9 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
    g_input_map.p[p].pad_type=s.pad_mode[p]?PAD_6BUTTON:PAD_3BUTTON;
    g_input_map.p[p].deadzone_pct=s.deadzone[p];
   }
+  {char vf[1100];snprintf(vf,sizeof vf,"%s",config);char *a=strrchr(vf,'/'),*b=strrchr(vf,'\\'),*sep=!a?b:!b?a:a>b?a:b;
+   size_t off=sep?(size_t)(sep+1-vf):0;snprintf(vf+off,sizeof vf-off,"dynabrothers-video.ini");
+   FILE *f=fopen(vf,"w");if(f){fprintf(f,"vsync = %d\n",s.vsync>=1&&s.vsync<=3?s.vsync:1);fclose(f);}}
   if(!app_config_save(config)){fprintf(stderr,"[hub] Could not save settings\n");result=2;}
  }
  gamepad_shutdown();return result;

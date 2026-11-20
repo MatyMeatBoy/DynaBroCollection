@@ -590,7 +590,7 @@ index 9678eef..7db2d0e 100644
  }
  
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..b37f7b9 100644
+index df30a08..f557e29 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -1234,7 +1234,17 @@ index df30a08..b37f7b9 100644
      /* Scripted launcher tests must stay hidden after the handoff to gameplay. */
      int test_hidden = getenv("LNG_SCRIPT") && getenv("LNG_TEST_HIDDEN");
      Uint32 win_flags = ((benchmark_frames || test_hidden) ? SDL_WINDOW_HIDDEN : SDL_WINDOW_SHOWN)
-@@ -3176,7 +3425,17 @@ int main(int argc, char *argv[])
+@@ -3106,7 +3355,8 @@ int main(int argc, char *argv[])
+      * two simply settle on whichever is slower. Fall back to no-vsync if the
+      * driver can't provide it. */
+     Uint32 renderer_flags = SDL_RENDERER_ACCELERATED;
+-    if (!benchmark_frames && !runtime_uncapped)
++    /* GENESIS_NO_VSYNC=1: the player turned VSync off in Settings. */
++    if (!benchmark_frames && !runtime_uncapped && !getenv("GENESIS_NO_VSYNC"))
+         renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+     SDL_Renderer *renderer = genesis_hd_create_renderer(window,renderer_flags,s_hd_scale);
+     if (!renderer) {
+@@ -3176,7 +3426,17 @@ int main(int argc, char *argv[])
          s_runtime_ui.window = window; s_runtime_ui.renderer = renderer; s_runtime_ui.texture = texture;
          s_runtime_ui.view_mode = s_ws_user_on ? RECOMP_RUNTIME_UI_VIEW_FIXED_16_9 : RECOMP_RUNTIME_UI_VIEW_NATIVE;
          if (game_video_viewport_enabled(g_game_spec.video)) s_runtime_ui.view_mode = RECOMP_RUNTIME_UI_VIEW_ADAPTIVE;
@@ -1253,7 +1263,7 @@ index df30a08..b37f7b9 100644
          cfg.menu.callbacks.context = &s_runtime_ui; cfg.menu.callbacks.get_value = runtime_ui_get;
          cfg.menu.callbacks.set_value = runtime_ui_set; cfg.menu.callbacks.run_action = runtime_ui_action;
          cfg.menu.callbacks.save = runtime_ui_save;
-@@ -3190,7 +3449,7 @@ int main(int argc, char *argv[])
+@@ -3190,7 +3450,7 @@ int main(int argc, char *argv[])
              cfg.features &= ~RECOMP_RUNTIME_UI_STANDARD_VIEW_MODE;
          }
          {
@@ -1262,7 +1272,7 @@ index df30a08..b37f7b9 100644
              if (game_video_has_viewport(g_game_spec.video)) {
                  memcpy(items,s_video_mod_items,sizeof s_video_mod_items); count=2;
              }
-@@ -3201,6 +3460,14 @@ int main(int argc, char *argv[])
+@@ -3201,6 +3461,14 @@ int main(int argc, char *argv[])
              if (!g_game_spec.state_unavailable_reason || !g_game_spec.state_unavailable_reason()) {
                  memcpy(items+count,s_quickstate_items,sizeof s_quickstate_items);count+=3;
              }
@@ -1277,7 +1287,7 @@ index df30a08..b37f7b9 100644
              cfg.extra_items=items;cfg.extra_item_count=count;
          }
          s_runtime_ui.ui = recomp_runtime_ui_create_standard(&cfg);
-@@ -3317,13 +3584,17 @@ int main(int argc, char *argv[])
+@@ -3317,13 +3585,17 @@ int main(int argc, char *argv[])
      /* --target-fps wins over debug.ini, which wins over default 59.94. */
      double target_fps = (target_fps_cli > 0.0)     ? target_fps_cli :
                          (target_fps_from_ini > 0.0) ? target_fps_from_ini :
@@ -1296,7 +1306,7 @@ index df30a08..b37f7b9 100644
  
  #ifdef GENESIS_COSIM
      /* Differential co-simulation: bring up the lockstep TCP server + checkpoint
-@@ -3345,7 +3616,7 @@ int main(int argc, char *argv[])
+@@ -3345,7 +3617,7 @@ int main(int argc, char *argv[])
       * tables fix made the per-instruction cycle counts exact). */
      {
          const char *chosen = pacing_cli ? pacing_cli :
@@ -1305,7 +1315,7 @@ index df30a08..b37f7b9 100644
          if (chosen) {
              if (strcmp(chosen, "accurate") == 0)
                  g_pacing_mode = GLUE_PACING_CYCLE_ACCURATE;
-@@ -3540,10 +3811,17 @@ session_begin:;
+@@ -3540,10 +3812,17 @@ session_begin:;
      const Uint64 perf_frequency = SDL_GetPerformanceFrequency();
      FramePacer frame_pacer;
      frame_pacer_init(&frame_pacer, perf_frequency, target_fps);
@@ -1323,7 +1333,7 @@ index df30a08..b37f7b9 100644
      SDL_RendererInfo initial_renderer_info={0};SDL_GetRendererInfo(renderer,&initial_renderer_info);
      int original_vsync=(initial_renderer_info.flags&SDL_RENDERER_PRESENTVSYNC)!=0;
      const char *presentation_trace_path=getenv("GENESIS_PRESENT_TRACE");
-@@ -3613,6 +3891,10 @@ session_begin:;
+@@ -3613,6 +3892,10 @@ session_begin:;
                  genesis_hd_gpu_destroy(hd_gpu);hd_gpu=NULL;hd_checked=0;
                  SDL_DestroyTexture(s_load_hold_texture);s_load_hold_texture=NULL;
              }
@@ -1334,7 +1344,7 @@ index df30a08..b37f7b9 100644
              load_hold_event(&ev, window);
  #if RECOMP_LAUNCHER
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui))
-@@ -3621,6 +3903,24 @@ session_begin:;
+@@ -3621,6 +3904,24 @@ session_begin:;
                  cancel_load_hold();
                  recomp_runtime_ui_open(s_runtime_ui.ui); continue;
              }
@@ -1359,7 +1369,7 @@ index df30a08..b37f7b9 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3708,6 +4008,15 @@ session_begin:;
+@@ -3708,6 +4009,15 @@ session_begin:;
          }
  
          if (!running) break; /* Close must not execute another game/render tick. */
@@ -1375,7 +1385,7 @@ index df30a08..b37f7b9 100644
          {
              uint32_t pad = gamepad_overlay_mask();
              uint32_t menu = GP_OVERLAY_BACK | GP_OVERLAY_RB;
-@@ -3735,7 +4044,61 @@ session_begin:;
+@@ -3735,7 +4045,61 @@ session_begin:;
          }
  
  #if RECOMP_LAUNCHER
@@ -1438,7 +1448,7 @@ index df30a08..b37f7b9 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -3868,6 +4231,17 @@ session_begin:;
+@@ -3868,6 +4232,17 @@ session_begin:;
            else
  #endif
            collect_sim_input(&sim_in);
@@ -1456,7 +1466,7 @@ index df30a08..b37f7b9 100644
            GenesisSimAudio sim_audio = {
                (int16_t *)s_fm_accum,  FM_ACCUM_FRAMES,  &s_fm_count,
                (int16_t *)s_psg_accum, PSG_ACCUM_FRAMES, &s_psg_count };
-@@ -3898,6 +4272,13 @@ session_begin:;
+@@ -3898,6 +4273,13 @@ session_begin:;
             * the existing interlace display modes (tv squash / raw) take over
             * from here, same as the clownmdemu path. */
            s_screen_height = gvdp_output_height(&g_machine.vdp);
@@ -1470,7 +1480,7 @@ index df30a08..b37f7b9 100644
            if (!completed) {                        /* reverse-debug quit */
                fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
                    "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
-@@ -4180,6 +4561,7 @@ session_begin:;
+@@ -4180,6 +4562,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -1478,7 +1488,7 @@ index df30a08..b37f7b9 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4570,7 @@ session_begin:;
+@@ -4188,7 +4571,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -1487,7 +1497,7 @@ index df30a08..b37f7b9 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4581,14 @@ session_begin:;
+@@ -4199,12 +4582,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -1503,7 +1513,7 @@ index df30a08..b37f7b9 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
-@@ -4288,7 +4672,14 @@ session_begin:;
+@@ -4288,7 +4673,14 @@ session_begin:;
              }
              peer_view_was_active = peer_view_is_active;
          }
@@ -1519,7 +1529,7 @@ index df30a08..b37f7b9 100644
  #if GENESIS_HAS_RECOMP_NET
          /* Process the peer INPUT and emit our CONFIRM before the blocking
           * present, so confirmation delivery overlaps vsync as well. */
-@@ -4312,7 +4703,12 @@ session_begin:;
+@@ -4312,7 +4704,12 @@ session_begin:;
              SDL_DisplayMode dm;int display=SDL_GetWindowDisplayIndex(window);
              display_rate=display>=0 && SDL_GetCurrentDisplayMode(display,&dm)==0 && dm.refresh_rate>0?dm.refresh_rate:target_fps;
          }
@@ -1533,7 +1543,7 @@ index df30a08..b37f7b9 100644
          if(want_vsync!=presentation_vsync) {
              if(SDL_RenderSetVSync(renderer,want_vsync)==0)presentation_vsync=want_vsync;
          }
-@@ -4367,7 +4763,9 @@ session_begin:;
+@@ -4367,7 +4764,9 @@ session_begin:;
              if(!turbo && !runtime_uncapped && now<guest_deadline)
                  genesis_host_wait_until(guest_deadline,perf_frequency);
              draw_load_hold(renderer);
@@ -1544,7 +1554,7 @@ index df30a08..b37f7b9 100644
          }
          FRAME_PHASE(8);
  #if GENESIS_HAS_RECOMP_NET
-@@ -4628,5 +5026,10 @@ session_begin:;
+@@ -4628,5 +5027,10 @@ session_begin:;
      SDL_Quit();
      free(rom_buf);
      if(replay_path && (genesis_replay_failed() || !genesis_replay_finished()))return 2;

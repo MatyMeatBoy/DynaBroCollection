@@ -327,7 +327,22 @@ static void interrupt(uint32_t pc,unsigned level) {
 }
 static void vint(void){interrupt(DYNA_VINT,6);}
 static void hint(void){interrupt(DYNA_HINT,4);}
+/* VSync choice from the launcher (dynabrothers-video.ini beside settings):
+ * 1 on (default), 2 off, 3 adaptive (treated as on). */
+static void video_choice(const char *path){
+    char file[1100];snprintf(file,sizeof file,"%s",path?path:"");
+    char *a=strrchr(file,'/'),*b=strrchr(file,'\\'),*sep=!a?b:!b?a:a>b?a:b;
+    size_t off=sep?(size_t)(sep+1-file):0;snprintf(file+off,sizeof file-off,"dynabrothers-video.ini");
+    FILE *f=fopen(file,"r");int v=1;
+    if(f){char line[80];while(fgets(line,sizeof line,f))if(sscanf(line," vsync = %d",&v)==1)break;fclose(f);}
+#ifdef _WIN32
+    _putenv(v==2?"GENESIS_NO_VSYNC=1":"GENESIS_NO_VSYNC=");
+#else
+    if(v==2)setenv("GENESIS_NO_VSYNC","1",1);else unsetenv("GENESIS_NO_VSYNC");
+#endif
+}
 static void settings(const char *path){
+    video_choice(path);
     dyna_language_settings_load(path);
 #ifdef DYNA_HAS_JP
     dyna_visor_settings_bind(db1_video_set_visor_offset_tiles);
