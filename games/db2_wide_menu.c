@@ -33,6 +33,8 @@ enum { EDGE_PERIOD=4 };
 /* 2 = dense art, 1 = sparse art, 0 = empty; per plane column and row. */
 static uint8_t col_art[2][128],row_art[2][128];
 static int occupancy_ready,extended_used;
+static uint8_t remap_memo[2][2][128][128];
+
 
 /* Title/main-menu clouds are sprites that respawn beyond the 4:3 window and sit
  * there until they start drifting; on a wide canvas that showed them popping in
@@ -85,11 +87,14 @@ void db2_wide_menu_frame(const GVDP *v){
   for(int cy=0;cy<ht;cy++)row_art[plane][cy]=(uint8_t)(rows[cy]>=need_r?2:rows[cy]?1:0);
  }
  occupancy_ready=1;
+ memset(remap_memo,0,sizeof remap_memo);
 }
 /* An empty cell outside the window repeats the nearest edge block of the dense
  * run around the visible centre, but only when the guest authored that run
  * wider/taller than the visible window (a scrolling background); a panel
  * exactly the size of the 4:3 window keeps its frame inside it. */
+/* remap() walks the whole dense run; it is called for every margin pixel, so
+ * its answer is memoised per frame (kind, plane, centre, cell). */
 static int remap(const uint8_t *art,int pc,int n,int center,int visible){
  if(!occupancy_ready||art[pc]||art[center]!=2)return pc;
  int s=center,e=center,k=0;
@@ -116,6 +121,12 @@ void db2_wide_menu_margins(const GVDP *v,Db2MenuMargins mode){
  unsigned best=0,bn=0;
  for(unsigned i=0;i<pool_n;i++){unsigned n=0;for(unsigned j=0;j<pool_n;j++)n+=pool[j]==pool[i];if(n>bn){bn=n;best=pool[i];}}
  pool[0]=best;pool_n=1;
+}
+static int remap_cached(int kind,int plane,const uint8_t *art,int pc,int n,int center,int visible){
+ if(n>128||pc<0||pc>=n||center<0||center>=n)return remap(art,pc,n,center,visible);
+ uint8_t *m=&remap_memo[kind][plane][center][pc];
+ if(*m){int r=*m-1;if(r!=pc)extended_used=1;return r;}
+ int r=remap(art,pc,n,center,visible);*m=(uint8_t)(r+1);return r;
 }
 uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
  if(margins==DB2_MENU_PANORAMA&&plane==1){
@@ -156,11 +167,11 @@ uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
  int px=((x-hs)%pw+pw)%pw,py=((line+vs)%ph+ph)%ph;
  if(x<0||x>=320){
   int center=(((160-hs)%pw+pw)%pw)>>3;
-  px=(remap(col_art[plane],px>>3,wt,center,40)<<3)|(px&7);
+  px=(remap_cached(0,plane,col_art[plane],px>>3,wt,center,40)<<3)|(px&7);
  }
  if(line<0||line>=224){
   int center=(((112+vs)%ph+ph)%ph)>>3;
-  py=(remap(row_art[plane],py>>3,ht,center,28)<<3)|(py&7);
+  py=(remap_cached(1,plane,row_art[plane],py>>3,ht,center,28)<<3)|(py&7);
  }
  unsigned name=rd(v,base+((unsigned)((py>>3)*wt+(px>>3))<<1));
  int tx=px&7,ty=py&7;
