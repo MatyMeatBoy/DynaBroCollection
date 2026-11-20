@@ -72,6 +72,8 @@ void db2_menu_labels_frame(const GVDP *v){
   }
   if(start==0||c-start==14)continue;
   unsigned edge=rd(v,at+2u*(unsigned)(start-1-c));
+  unsigned first=2u*(unsigned)(start-c);
+  if((rd(v,at+first)&2047)==0x265&&(rd(v,below+first)&2047)==0x265)++start;
   Label *l=found+n++;memset(l,0,sizeof *l);l->row=r;
   int sx=((start*8+hs)%pw+pw)%pw;if(sx>=320+64)sx-=pw;
   int sy=((r*8-vs)%ph+ph)%ph;if(sy>=224+32)sy-=ph;
@@ -83,10 +85,10 @@ void db2_menu_labels_frame(const GVDP *v){
   for(int k=0;k<l->ncells;k++){l->top[k]=(uint16_t)rd(v,at+2u*(unsigned)(start+k-c));l->bot[k]=(uint16_t)rd(v,below+2u*(unsigned)(start+k-c));}
   /* Ink: dominant non-fill colour per scanline of the Japanese label art. */
   uint8_t fill_colors[64]={0};
-  for(int y=0;y<8;y++)for(int x=0;x<8;x++){
-   fill_colors[tile_index(v,edge,x,y)]=1;
-   fill_colors[tile_index(v,l->fill,x,y)]=1;
-  }
+  unsigned ink_reference=rd(v,at+12);
+  if(!(ink_reference&2047))ink_reference=edge;
+  for(int y=0;y<8;y++)for(int x=0;x<8;x++)
+   fill_colors[tile_index(v,ink_reference,x,y)]=1;
   unsigned dark=0,dark_l=~0u;
   for(int yy=0;yy<16;yy++){
    unsigned hist[64]={0};
