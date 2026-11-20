@@ -50,7 +50,11 @@ Waiting for the intro, or a probe that never skips it, takes the row-11 layout. 
 Done on branch `claude/menu-perf`:
 - **Original / Versus menus stuttered.** `remap()` in `games/db2_wide_menu.c` walked the dense run for every margin pixel. It is now memoised per frame (`remap_cached`), and frame time in the Original menu dropped from 11.8 to 3.7 ms.
 
-Open:
+Done in v0.5.2: items 1 (doubled units while panning), 3 (System last), 4 (DB1 three-button) and the launcher defaults from item 5 (borderless, logo intro, skip-launcher off, faster drawing). VSync was already always on.
+
+Still open: item 2 (check DB1 for the same pattern), item 5 (a VSync toggle and more graphics options) and item 6 (one unified settings screen with Back).
+
+Original list:
 1. **DB2 units shown twice or "blending" while panning with B + D-pad** (repro: Original → SEGA CHANNEL SPECIAL → stage 1, hold B + LEFT/RIGHT; route `local/amd/sc2.input`, needs `--frames 5000`).
    - Cause: during a pan a unit's native SAT body is sometimes not recognised (`kind=0`). Since v0.3.1 such entries are placed from their native pixels (to avoid a 4:3 flash), so the unit is drawn twice: once from RAM by the host, once from the SAT copy, about one sub-step apart.
    - Tried and rejected:
