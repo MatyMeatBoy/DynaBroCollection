@@ -66,4 +66,4 @@ Open:
    - borderless by default;
    - logo intro with fade, then a large selector that fits the screen;
    - VSync always on, plus an option for it and more graphics options.
-6. Launcher settings: there are two configuration screens today (one opens from the Settings button, another appears after Back from it). Merge everything into one configuration screen and open it directly from Settings (launcher and in-game "Full Settings").
+6. Launcher settings: there are two configuration screens today (one opens from the Settings button, another appears after Back from it). Merge everything into one configuration screen and open it directly from Settings (launcher and in-game "Full Settings"), with a Back action that returns to the game selector.
