@@ -1118,6 +1118,25 @@ index 87d2cfd..eb1f31f 100644
      if (name && (name[0]=='c' || name[0]=='C') &&
          (name[1]=='d' || name[1]=='D') && (name[2]=='i' || name[2]=='I') && !name[3])
          return launcher_theme_cdi();
+diff --git a/src/common/recomp_runtime_ui.c b/src/common/recomp_runtime_ui.c
+index 809061c..f42f8c3 100644
+--- a/src/common/recomp_runtime_ui.c
++++ b/src/common/recomp_runtime_ui.c
+@@ -238,6 +238,14 @@ RecompRuntimeUi *recomp_runtime_ui_create(const RecompRuntimeUiConfig *config) {
+         name[len] = '\0';
+         ui->sections[ui->section_count++] = name;
+     }
++    /* "System" (return to title / quit) is always the last section. */
++    for (size_t j = 0; j + 1 < ui->section_count; ++j) {
++        if (strcmp(ui->sections[j], "System") != 0) continue;
++        const char *system = ui->sections[j];
++        memmove(&ui->sections[j], &ui->sections[j + 1], (ui->section_count - j - 1) * sizeof(*ui->sections));
++        ui->sections[ui->section_count - 1] = system;
++        break;
++    }
+     return ui;
+ }
+ 
 diff --git a/src/consoles/genesis/genesis_binds.c b/src/consoles/genesis/genesis_binds.c
 index eb4d422..a3a6661 100644
 --- a/src/consoles/genesis/genesis_binds.c
