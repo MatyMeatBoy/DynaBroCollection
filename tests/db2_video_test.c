@@ -312,6 +312,14 @@ int main(void){
  canvas[8*480+201]=0;
  db2_video.frame_complete(&v,canvas,480,427,240,8,224);
  assert(canvas[8*480+201]==0xffba5713u); /* Campaign pause can miss it too. */
+ setup();db2_video_observe(0x3bb0);row(0,427);
+ canvas[8*480+201]=0xffba5713u;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ /* The camera back end publishes the new anchor before its raster scroll. */
+ g_ram[0x2c08]+=16;r.plane_b[10]=0x41;row(0,427);
+ canvas[8*480+201]=0;
+ db2_video.frame_complete(&v,canvas,480,427,240,8,224);
+ assert(canvas[8*480+201]==0xffba5713u);
  /* A 41st actor, absent from all native SAT/cache entries, is still drawn
   * beyond the original right edge. All animation bytes are guest-derived. */
  setup();w32(g_rom+0x78810,0x1000);w32(g_rom+0x78814,0x1100);w32(g_rom+0x78804,0x1200);

@@ -146,7 +146,7 @@ static void capture(const GVDP *v){
    * (Practice moves from the cinematic's x=160 to the playfield's x=16).
    * The previous ring calibration is only valid for small scrolling steps. */
   if(abs(camera.anchor_x-previous_anchor_x)>32||abs(camera.anchor_y-previous_anchor_y)>32)
-   held_valid=have_k=heal_pending=0;
+   have_k=heal_pending=0;
   static const int sizes[4]={256,512,0,1024};
   plane_w=sizes[snapshot.reg[16]&3];plane_h=sizes[(snapshot.reg[16]>>4)&3];
   unsigned hb=((unsigned)snapshot.reg[13]&63)<<10;

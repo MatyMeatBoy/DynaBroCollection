@@ -1,8 +1,8 @@
 # DynaBroCollection
 
-[![Release](https://img.shields.io/badge/release-v0.4.2-brightgreen)](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.4.2)
+[![Release](https://img.shields.io/badge/release-v0.4.3-brightgreen)](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.4.3)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml)
-[![Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.4.2-checkpoint.md)
+[![Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.4.3-checkpoint.md)
 
 ![Dyna Brothers 1 + 2](docs/images/dyna-logo-1plus2-v1.png)
 
@@ -10,22 +10,22 @@ DynaBroCollection is a native Windows x64 recompilation of *Dyna Brothers* and *
 
 ## Download and play
 
-1. Download the Windows x64 ZIP from [v0.4.2](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.4.2) and extract it.
+1. Download the Windows x64 ZIP from [v0.4.3](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.4.3) and extract it.
 2. Place your own compatible game dumps in the included `roms/` folder, or select them in the launcher. The ZIP contains no ROMs.
 3. Start `DynaBrothers.exe` and select a game. Keep the adjacent `data/` folder with the executable.
 
 To play in Japanese, disable **English translation** in **Settings → Mods → Language** and restart the game. The source dumps stay untouched. Change the fullscreen option in **Settings** to switch to windowed or exclusive fullscreen. The selected display mode is saved to the profile.
 
-## What's in v0.4.2
+## What's in v0.4.3
 
 - **Dyna Brothers** has a full-screen Extras menu and a scrolling stage selector. Completing a difficulty opens its starting stage and the starting stages of lower difficulties. The widescreen lightning effect reaches both sides of the playfield.
 - **Dyna Brothers 2 Special** keeps its widescreen framing during gameplay and pause. Enhanced mode defaults to a floating HUD. The original HUD remains available.
 - **DB2 presentation** includes a continuous title sky, intact clouds at the right edge, flat green Versus panels, and original proportions for menus and Game Over.
 - **English DB2 text** covers the verified Practice, Sega Channel Special, stage selection, briefing, and results routes. English coverage across both games is still partial.
-- **Launcher and settings** include a centered, scalable cover, cartridge animation, and tabbed settings available in-game through **Start + Select**.
+- **Launcher and settings** include a centered, scalable cover, cartridge animation, and tabbed settings available in-game through **Start + Select**, including **Return to Title** and **Quit Game**.
 - **Achievements** include local progress, badge notifications, and an in-game list. The RetroAchievements Casual eligibility request is awaiting review.
 
-See the [v0.4.2 notes](docs/releases/v0.4.2-checkpoint.md) for the checkpoint scope and the [status board](STATUS.md) for project history. Physical monitor and controller acceptance remains pending.
+See the [v0.4.3 notes](docs/releases/v0.4.3-checkpoint.md) for the checkpoint scope and the [status board](STATUS.md) for project history.
 
 ## Build and verify
 
