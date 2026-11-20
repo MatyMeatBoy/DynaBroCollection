@@ -14,7 +14,7 @@ DynaBroCollection is a native recompilation of *Dyna Brothers* and *Dyna Brother
 Download [v0.5.0 Beta 1](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.0-beta.1) for your platform and bring your own compatible cartridge dumps.
 
 - **Windows x64** — extract the ZIP and run `DynaBrothers.exe`. Place dumps in `roms/` or select them in the launcher. Keep the adjacent `data/` folder with the executable.
-- **Linux x64** — extract the archive and run `DynaBroCollection`. The native settings picker asks for the ROM the first time.
+- **Linux x64** — extract the archive and run `DynaBroCollection`. Requires glibc 2.36 or later. The native settings picker asks for the ROM the first time.
 - **macOS Apple Silicon** — extract the archive and open `DynaBroCollection.app`. The beta is an ad hoc build. A Mac may require you to allow the app in **System Settings → Privacy & Security** after the first open attempt.
 - **Android 7.0 or later** — install the APK, then choose a ROM for each game from the collection screen. The APK contains arm64-v8a and x86_64 executables and on-screen controls.
 
