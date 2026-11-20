@@ -14,20 +14,22 @@ on:
         required: true
 
 permissions:
-  contents: read
+  # GitHub only exposes draft releases to tokens with push access.
+  contents: write
 
 jobs:
   startup:
     runs-on: macos-15
     timeout-minutes: 10
     env:
-      GH_TOKEN: ${{ github.token }}
       TAG: ${{ inputs.tag }}
       ASSET: ${{ inputs.asset }}
       CHECKSUM: ${{ inputs.sha256 }}
     steps:
       - name: Download and verify the release archive
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --output "$RUNNER_TEMP/game.zip"
