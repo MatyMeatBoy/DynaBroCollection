@@ -22,7 +22,7 @@ void dyna_language_settings_load(const char *settings_path) {
     if(file) {
         char line[100];int value;
         while(fgets(line,sizeof line,file))
-            if(sscanf(line,"english=%d",&value)==1&&(value==0||value==1))requested=value;
+            if(sscanf(line," english = %d",&value)==1&&(value==0||value==1))requested=value;
         fclose(file);
     }
 }

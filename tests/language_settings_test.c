@@ -45,6 +45,13 @@ int main(int argc,char **argv) {
     assert(provider->commit(NULL,"unused-test-rom"));
     dyna_language_settings_load(settings);
     assert(dyna_language_english()==1);
+    /* RecompLauncher writes spaced assignments when it creates an INI. */
+    FILE *launcher_settings=fopen(filename,"w");
+    assert(launcher_settings);
+    fputs("english = 0\n",launcher_settings);
+    assert(fclose(launcher_settings)==0);
+    dyna_language_settings_load(settings);
+    assert(dyna_language_english()==0);
     snprintf(settings,sizeof settings,"%s/absent/settings.ini",argv[1]);
     dyna_language_settings_load(settings);
     assert(!provider->commit(NULL,"unused-test-rom"));
