@@ -122,6 +122,7 @@ def stage(candidate):
     stub=build/'DynaBrothers.exe'
     if stub.read_bytes()[:2]!=b'MZ':raise RuntimeError('Invalid executable: DynaBrothers.exe')
     shutil.copy2(stub,root/'DynaBrothers.exe')
+    shutil.copy2(ROOT/'recomplauncher.json',root/'recomplauncher.json')
     (root/'roms').mkdir()
     (root/'roms'/'PUT-YOUR-ROMS-HERE.txt').write_text(
         'Place your own Dyna Brothers / Dyna Brothers 2 Special dumps (.md/.bin) in this folder,\n'

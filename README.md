@@ -4,6 +4,8 @@
 [![Source checks](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml)
 [![Windows x64](https://img.shields.io/badge/target-Windows%20x64-0078D4)](docs/releases/v0.4.3-checkpoint.md)
 
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
+
 ![Dyna Brothers 1 + 2](docs/images/dyna-logo-1plus2-v1.png)
 
 DynaBroCollection is a native Windows x64 recompilation of *Dyna Brothers* and *Dyna Brothers 2 Special* for Sega Genesis / Mega Drive. The portable launcher uses your own compatible Japanese cartridge dumps. Both games start in English and borderless fullscreen with a fresh profile.
@@ -43,6 +45,8 @@ The game targets are `DynaBrothers1AOT` and `DynaBrothers2AOT`. They execute sta
 The release workflow uses `tools.package_checkpoint stage` from a clean source commit, `tools.verify_checkpoint` to test the staged executables without development DLL paths, and `tools.package_checkpoint close` to produce the ZIP and SHA-256 file.
 
 ## Frontend integration
+
+RecompLauncher reads [recomplauncher.json](recomplauncher.json) from the release folder. Each tile takes its own Japanese ROM dump and starts the selected game. The window mode, pixel filter, volume and language settings use the same INI files under `data/` as the built-in menu.
 
 Use the root `DynaBrothers.exe` as the portable entry point. The two AOT executables in `data/` are child processes. `data/DynaBrothersLauncher.exe --integration-info` prints the launcher arguments as JSON. See [recomp-launcher.json](recomp-launcher.json) for supported ROM, game, and display arguments.
 

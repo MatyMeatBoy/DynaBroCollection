@@ -1,0 +1,92 @@
+{
+  "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
+  "format": 1,
+  "name": "DynaBroCollection",
+  "repo": "MatyMeatBoy/DynaBroCollection",
+  "inputs": [
+    {
+      "id": "db1",
+      "label": "Dyna Brothers (Japan), Mega Drive cartridge dump",
+      "role": "game",
+      "formats": [{ "type": "file", "extensions": ["md", "bin"] }]
+    },
+    {
+      "id": "db2",
+      "label": "Dyna Brothers 2 Special (Japan), Virtual Console dump",
+      "role": "game",
+      "formats": [{ "type": "file", "extensions": ["md", "bin"] }]
+    }
+  ],
+  "start": {
+    "program": ["data/DynaBrothersLauncher.exe"],
+    "env": { "GENESIS_USER_DIR": "{install}/data" }
+  },
+  "games": [
+    {
+      "id": "db1",
+      "name": "Dyna Brothers",
+      "inputs": ["db1"],
+      "args": ["--game", "db1", "--rom", "{input:db1}", "--no-launcher"],
+      "saves": [
+        "{install}/data/dyna1-progress-*.bin",
+        "{install}/data/dynabrothers-achievements-db1.txt"
+      ]
+    },
+    {
+      "id": "db2",
+      "name": "Dyna Brothers 2 Special",
+      "inputs": ["db2"],
+      "args": ["--game", "db2", "--rom", "{input:db2}", "--no-launcher"],
+      "saves": [
+        "{install}/data/*.srm",
+        "{install}/data/dyna2-progress-*.bin",
+        "{install}/data/dynabrothers-achievements-db2.txt"
+      ]
+    }
+  ],
+  "config": [
+    { "id": "main", "format": "ini", "file": [{ "path": "{install}/data/settings.ini" }] },
+    { "id": "language", "format": "ini", "file": [{ "path": "{install}/data/dynabrothers-language.ini" }] }
+  ],
+  "settings": [
+    {
+      "id": "display",
+      "label": "Window mode",
+      "help": "Pick how the game opens on your display.",
+      "choices": [
+        { "label": "Windowed", "set": { "video/fullscreen": "0" } },
+        { "label": "Borderless", "set": { "video/fullscreen": "1" } },
+        { "label": "Exclusive fullscreen", "set": { "video/fullscreen": "2" } }
+      ],
+      "defaults": { "video/fullscreen": "1" }
+    },
+    {
+      "id": "filter",
+      "label": "Pixel filtering",
+      "help": "Choose sharp pixels or smooth scaling.",
+      "choices": [
+        { "label": "Sharp", "set": { "video/linear_filter": "0" } },
+        { "label": "Smooth", "set": { "video/linear_filter": "1" } }
+      ],
+      "defaults": { "video/linear_filter": "0" }
+    },
+    {
+      "id": "volume",
+      "label": "Volume",
+      "slider": { "key": "audio/volume", "min": 0, "max": 100, "step": 5, "format": "%d" },
+      "defaults": { "audio/volume": "100" }
+    },
+    {
+      "id": "language",
+      "label": "Game language",
+      "help": "Choose the partial English translation or the original Japanese.",
+      "in": "language",
+      "choices": [
+        { "label": "English", "set": { "english": "1" } },
+        { "label": "Japanese", "set": { "english": "0" } }
+      ],
+      "defaults": { "english": "1" }
+    }
+  ],
+  "folders": { "logs": [{ "path": "{install}/data/logs" }] }
+}
