@@ -34,7 +34,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  gamepad_init_players(2);
  RecompLauncherCSettings s={0};
  s.output_method=0;s.window_scale=g_app_config.window_scale;s.fullscreen=g_app_config.fullscreen;
- s.linear_filter=g_app_config.linear_filter;s.integer_scale=g_app_config.integer_scale;
+ s.linear_filter=g_app_config.linear_filter;s.texture_filter=g_app_config.linear_filter?1:0;s.integer_scale=g_app_config.integer_scale;
  s.widescreen=g_app_config.widescreen;s.widescreen_cells=g_app_config.widescreen_cells;
  {char vf[1100];snprintf(vf,sizeof vf,"%s",config);char *a=strrchr(vf,'/'),*b=strrchr(vf,'\\'),*sep=!a?b:!b?a:a>b?a:b;
   size_t off=sep?(size_t)(sep+1-vf):0;snprintf(vf+off,sizeof vf-off,"dynabrothers-video.ini");
@@ -58,7 +58,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
  gi.rom_revisions=revisions;gi.rom_noun="ROM";
  static const char *const patterns[]={"*.md","*.bin","*.gen","*.68k"};gi.rom_patterns=patterns;gi.num_rom_patterns=4;
  gi.rom_filter_desc="Dyna Brothers ROM";gi.config_path=config;gi.keybinds_path=config;gi.rom_cache_path=cache;
- gi.pad_mode_supported=gi.pad_mode_selectable=1;gi.has_integer_scale=1;gi.has_vsync=1;
+ gi.pad_mode_supported=gi.pad_mode_selectable=1;gi.has_integer_scale=1;gi.has_vsync=1;gi.has_texture_filter=1;
  gi.input_binding_snapshot=bindings;
  gi.host_sdl_window=window;gi.host_sdl_renderer=renderer;
  char brand[1400],art[1400],assets[1400];char *base=SDL_GetBasePath();
@@ -72,7 +72,7 @@ int dyna_hub_settings_run(SDL_Window *window,SDL_Renderer *renderer,unsigned gam
   app_config_reload_preserving_mods(config);
   if(g_app_config.fullscreen!=s.fullscreen)g_app_config.fullscreen_auto=0;
   g_app_config.window_scale=s.window_scale;g_app_config.fullscreen=s.fullscreen;
-  g_app_config.linear_filter=s.linear_filter;g_app_config.integer_scale=s.integer_scale;
+  g_app_config.linear_filter=s.texture_filter?1:0;g_app_config.integer_scale=s.integer_scale;
   g_app_config.volume=s.volume;g_app_config.audio_freq=s.audio_freq;g_app_config.skip_launcher=s.skip_launcher;
   for(int p=0;p<2;p++){
    g_input_map.p[p].device=s.player_src[p]==3?3:s.player_src[p]==1?1:s.player_src[p]==2?2:0;

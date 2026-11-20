@@ -73,3 +73,6 @@ Original list:
    - logo intro with fade, then a large selector that fits the screen;
    - VSync always on, plus an option for it and more graphics options.
 6. Launcher settings: there are two configuration screens today (one opens from the Settings button, another appears after Back from it). Merge everything into one configuration screen and open it directly from Settings (launcher and in-game "Full Settings"), with a Back action that returns to the game selector (button, Esc and the controller B/Back button).
+
+- v0.5.3: launcher graphics options now include Texture filter (Nearest/Bilinear → `linear_filter`) besides VSync, integer scale and window controls. Scanline/CRT filters would need a present-time post-process the engine does not have yet; not exposed.
+- Not verified with a physical controller: the launcher intro skip and gamepad navigation (only keyboard/mouse were exercised in captures).
