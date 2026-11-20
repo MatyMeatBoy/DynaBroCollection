@@ -728,7 +728,7 @@ index 2215b80..0c756a6 100644
  // Load an image file into a freshly created GL texture (linear filtered,
  // clamped). Returns a texture with id==0 on failure. Requires a current GL
 diff --git a/src/common/launcher_model.c b/src/common/launcher_model.c
-index f2c1c9f..fc754c0 100644
+index f2c1c9f..c5d24c8 100644
 --- a/src/common/launcher_model.c
 +++ b/src/common/launcher_model.c
 @@ -390,6 +390,7 @@ void launcher_model_init(LauncherModel* m,
@@ -755,7 +755,7 @@ index f2c1c9f..fc754c0 100644
          m->boxart_path          = game->boxart_path;      // NULL => default boxart.tga
          m->aspect_labels        = game->aspect_labels;    // NULL => built-in 4:3/16:9/21:9
          m->num_aspect_labels    = game->num_aspect_labels;
-@@ -970,6 +973,11 @@ void launcher_model_init(LauncherModel* m,
+@@ -970,6 +973,12 @@ void launcher_model_init(LauncherModel* m,
      lm_inspect_memcard(m, 1);
  
      m->view      = LNG_VIEW_DASHBOARD;
@@ -763,11 +763,20 @@ index f2c1c9f..fc754c0 100644
 +        if (!strcmp(game->initial_page, "settings")) m->view = LNG_VIEW_SETTINGS;
 +        else if (!strcmp(game->initial_page, "controller")) m->view = LNG_VIEW_CONTROLLER;
 +        else if (!strcmp(game->initial_page, "mods")) m->view = LNG_VIEW_MODS;
++        m->back_quits = m->view != LNG_VIEW_DASHBOARD;
 +    }
      m->action    = LNG_ACTION_NONE;
      m->cfg_player = 0;
      m->setup_wizard_open = false;
-@@ -4791,7 +4799,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
+@@ -1748,6 +1757,7 @@ bool launcher_model_rom_verified(const LauncherModel* m) {
+ 
+ void launcher_model_set_view(LauncherModel* m, LngView v) {
+     if (v < 0 || v >= LNG_VIEW__COUNT) return;
++    if (m->back_quits && v == LNG_VIEW_DASHBOARD) { m->action = LNG_ACTION_QUIT; return; }
+     const bool entering_netplay = v == LNG_VIEW_NETPLAY_MODE ||
+         v == LNG_VIEW_NETPLAY_SIGNIN || v == LNG_VIEW_NETPLAY || v == LNG_VIEW_LOBBY;
+     if (m->netplay_supported && entering_netplay && !m->netplay_policy_active) {
+@@ -4791,7 +4801,9 @@ int launcher_model_active_button_count(const LauncherModel* m, int player) {
  
  void launcher_model_cycle_player_src(LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -778,7 +787,7 @@ index f2c1c9f..fc754c0 100644
      apply_default_pad_mode_for_source(m, player);
  }
  
-@@ -4809,7 +4819,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
+@@ -4809,7 +4821,9 @@ void launcher_model_set_source(LauncherModel* m, int player, int kind,
                                 uint32_t pad_id, const char* pad_name,
                                 const char* pad_guid) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -789,7 +798,7 @@ index f2c1c9f..fc754c0 100644
      if (kind == 2) {
          m->player_pad_id[player] = pad_id;
          m->s.player_gamepad_instance[player] = pad_id + 1;
-@@ -5051,6 +5063,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
+@@ -5051,6 +5065,13 @@ const char* launcher_model_freq_label(const LauncherModel* m) {
  
  const char* launcher_model_player_src_label(const LauncherModel* m, int player) {
      player = clampi(player, 0, LNG_MAX_PLAYERS - 1);
@@ -803,7 +812,7 @@ index f2c1c9f..fc754c0 100644
      int src = clampi(m->s.player_src[player], 0, 2);
      if (src == 2) {
          // Never show the generic "Gamepad" placeholder when we have a concrete
-@@ -5068,6 +5087,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
+@@ -5068,6 +5089,25 @@ const char* launcher_model_player_src_label(const LauncherModel* m, int player)
      return kSrcNames[src];
  }
  
@@ -830,7 +839,7 @@ index f2c1c9f..fc754c0 100644
      if (b < 0 || b >= LNG_BTN_COUNT) return "?";
      return kButtonNames[b];
 diff --git a/src/common/launcher_model.h b/src/common/launcher_model.h
-index de53037..123fe84 100644
+index de53037..1efa9ed 100644
 --- a/src/common/launcher_model.h
 +++ b/src/common/launcher_model.h
 @@ -20,6 +20,7 @@
@@ -876,7 +885,17 @@ index de53037..123fe84 100644
      const char* const* assist_binding_labels;
      int assist_binding_count;
      int assist_direct_pad_bind_action;
-@@ -1326,6 +1332,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
+@@ -750,6 +756,9 @@ typedef struct {
+     char      pad_binds_alt[LNG_MAX_PLAYERS][LNG_MAX_BUTTONS][32];
+     char      camera_binds[LNG_CAMERA_BIND_COUNT][32];
+     char      hotkeys[LNG_HK_COUNT][32];    // [KeyMap] value strings, e.g. "Ctrl+R"
++    /* Opened straight on a page by a host hub (initial_page): leaving that page
++     * for the dashboard ends the launcher instead, back to the host selector. */
++    bool back_quits;
+ } LauncherModel;
+ 
+ // Build the model from the inbound C ABI structs. `initial_rom` may be NULL.
+@@ -1326,6 +1335,10 @@ void launcher_model_cancel_hk_capture(LauncherModel* m);
  const char* launcher_model_scale_label(const LauncherModel* m);        // "3x"
  const char* launcher_model_freq_label(const LauncherModel* m);         // "44100 Hz"
  const char* launcher_model_player_src_label(const LauncherModel* m, int player);
