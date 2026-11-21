@@ -26,8 +26,8 @@ static void synthetic(void){
  assert(db1_level_catalog_count(&s)==2);
  check_code(&s,1,1);check_code(&s,1,2);
  assert(dyna_progress_init(&store,1,hash));
- s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==2);check_code(&s,0,1);check_code(&s,1,1);
- s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==3);
+ s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==3);check_code(&s,0,1);check_code(&s,1,1);check_code(&s,2,1);
+ s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==4);
  const char *names[]={"Practice","Normal","Hard","Back","Alien"};
  for(unsigned mode=0;mode<5;mode++)assert(!strcmp(db1_level_catalog_mode_name(mode),names[mode]));
  assert(!db1_level_catalog_mode_name(5));
@@ -36,12 +36,13 @@ static void synthetic(void){
   assert(!strcmp(item.mode_name,names[i]));char expected[32];snprintf(expected,sizeof expected,"%s 1",names[i]);assert(!strcmp(item.label,expected));check_code(&s,i,1);
  }
  DynaProgressCode no={0},before;memset(&no,0xa5,sizeof no);before=no;
- assert(!db1_level_catalog_request_code(&s,3,1,&no)&&!memcmp(&no,&before,sizeof no));
+ check_code(&s,3,1);
+ assert(!db1_level_catalog_request_code(&s,3,2,&no)&&!memcmp(&no,&before,sizeof no));
  s.current=code(3,1);s.current.source_pc=0x28f1a;s.has_current=1;
- assert(db1_level_catalog_count(&s)==3); /* An unsaved MHRI unlocks nothing. */
- saved(&store,2,20);assert(db1_level_catalog_count(&s)==22);
- assert(!db1_level_catalog_request_code(&s,3,1,&no)); /* Hard20 is not Back. */
- saved(&store,1,4);saved(&store,0,8);assert(db1_level_catalog_count(&s)==32);
+ assert(db1_level_catalog_count(&s)==4); /* An unsaved MHRI unlocks nothing. */
+ saved(&store,2,20);assert(db1_level_catalog_count(&s)==23);
+ assert(!db1_level_catalog_request_code(&s,3,2,&no)); /* Clearing Hard only opens the Reverse entry. */
+ saved(&store,1,4);saved(&store,0,8);assert(db1_level_catalog_count(&s)==33);
  saved(&store,3,5);assert(db1_level_catalog_count(&s)==37);check_code(&s,3,1);check_code(&s,3,5);
  assert(db1_level_catalog_item(&s,32,&item)&&item.mode==3&&item.stage==1&&!item.has_saved_code);
  assert(db1_level_catalog_item(&s,36,&item)&&item.mode==3&&item.stage==5&&item.has_saved_code);
@@ -61,21 +62,33 @@ static void synthetic(void){
  for(unsigned i=0;i<sizeof bad/sizeof bad[0];i++)assert(!db1_level_catalog_request_code(&s,bad[i][0],bad[i][1],&no)&&!memcmp(&no,&before,sizeof no));
  /* Corrupt stored bytes, target metadata and length never produce access. */
  assert(dyna_progress_init(&store,1,hash));saved(&store,1,20);store.codes[0].code[0]^=4;
- assert(db1_level_catalog_count(&s)==3&&!db1_level_catalog_request_code(&s,1,20,&no));
- store.codes[0]=code(0,8);store.codes[0].stage=9;assert(db1_level_catalog_count(&s)==3);
- store.codes[0]=code(3,1);store.codes[0].length=8;assert(db1_level_catalog_count(&s)==3);
- store.codes[0]=code(4,7);store.codes[0].mode=9;assert(db1_level_catalog_count(&s)==3);
- store.codes[0]=code(3,1);store.codes[0].source_pc=0x1000000u;assert(db1_level_catalog_count(&s)==3);
+ assert(db1_level_catalog_count(&s)==4&&!db1_level_catalog_request_code(&s,1,20,&no));
+ store.codes[0]=code(0,8);store.codes[0].stage=9;assert(db1_level_catalog_count(&s)==4);
+ store.codes[0]=code(3,1);store.codes[0].length=8;assert(db1_level_catalog_count(&s)==4);
+ store.codes[0]=code(4,7);store.codes[0].mode=9;assert(db1_level_catalog_count(&s)==4);
+ store.codes[0]=code(3,1);store.codes[0].source_pc=0x1000000u;assert(db1_level_catalog_count(&s)==4);
  store.count=DYNA_PROGRESS_LIMIT+1;assert(!db1_level_catalog_count(&s));store.count=0;
  store.rom_sha256[0]='x';assert(!db1_level_catalog_count(&s));store.rom_sha256[0]='0';
  s.rom_size=0x1e87eu+97*4-1;assert(!db1_level_catalog_count(&s));s.rom_size=sizeof rom;
  store.game=2;assert(!db1_level_catalog_count(&s)&&!db1_level_catalog_request_code(&s,0,1,&no));store.game=1;
  assert(!db1_level_catalog_count(NULL)&&!db1_level_catalog_item(&s,0,NULL)&&!db1_level_catalog_request_code(&s,0,1,NULL));
  /* A bad ROM target is never synthesized, even as an otherwise free base. */
- rom[0x1e87eu]=0xff;assert(db1_level_catalog_count(&s)==2&&!db1_level_catalog_request_code(&s,0,1,&no));
+ rom[0x1e87eu]=0xff;assert(db1_level_catalog_count(&s)==3&&!db1_level_catalog_request_code(&s,0,1,&no));
  memcpy(rom,rom_copy,sizeof rom);
  assert(dyna_progress_init(&store,1,hash));DynaProgressCode mhri=code(3,1);mhri.source_pc=0x28f1a;assert(dyna_progress_add(&store,&mhri));
  assert(db1_level_catalog_count(&s)==4&&db1_level_catalog_item(&s,3,&item)&&item.mode==3&&item.stage==1&&item.has_saved_code);
+ assert(!db1_level_catalog_request_code(&s,3,2,&no));
+ s.db1_cleared_modes=0;
+ assert(dyna_progress_init(&store,1,hash));
+ saved(&store,2,1);
+ assert(!db1_level_catalog_request_code(&s,1,20,&no));
+ DynaProgressCode hard_start=code(2,1);hard_start.source_pc=0x1c44;
+ assert(dyna_progress_add(&store,&hard_start)&&store.count==1);
+ saved(&store,2,1);
+ check_code(&s,1,20);check_code(&s,2,1);
+ assert(dyna_progress_init(&store,1,hash));
+ saved(&store,3,1);store.codes[0].source_pc=0x1c44;
+ check_code(&s,2,20);check_code(&s,3,1);
  assert(!db1_level_catalog_request_code(&s,3,2,&no));
  puts("DB1 catalogue bases/frontiers/secret gates/ROM validation/immutability passed");
 }
@@ -85,8 +98,8 @@ static void original_table(const char *path){
  DynaProgressStore store;DynaProgressSession s;DynaProgressCode c;char text[9];
  assert(dyna_progress_init(&store,1,hash)&&dyna_progress_session_init(&s,&store,bytes,(size_t)length));
  assert(db1_level_catalog_count(&s)==0);
- s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==2);check_code(&s,0,1);check_code(&s,1,1);
- s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==3);
+ s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==3);check_code(&s,0,1);check_code(&s,1,1);
+ s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==4);
  for(unsigned mode=0;mode<3;mode++)assert(db1_level_catalog_request_code(&s,mode,1,&c)&&c.source_pc==0);
  c=(DynaProgressCode){0};c.mode=3;c.stage=1;c.length=4;c.source_pc=0x28f1a;memcpy(c.code,bytes+0x1e87eu+60*4,4);
  assert(dyna_progress_session_text(&s,&c,text)&&!strcmp(text,"MHRI"));assert(dyna_progress_add(&store,&c));

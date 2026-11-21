@@ -62,7 +62,7 @@ void dyna_progress_session_before(DynaProgressSession *s,uint32_t pc,
             /* Numbered campaigns replay through their farthest unlocked stage.
              * Alien stages each require their own native password. */
             index=won;
-            if(won<7||(won>=20&&won<80&&won%20!=19))++index;
+            if(won<7||(won>=20&&won<79))++index;
         }
         /* Hard-ending message shows table60 (MHRI), completed stage is59. */
         if(pc==0x28f1a){if(index!=59)return;index=60;}

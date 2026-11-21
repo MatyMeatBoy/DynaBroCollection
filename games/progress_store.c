@@ -78,7 +78,11 @@ int dyna_progress_add(DynaProgressStore *s,const DynaProgressCode *c) {
     if(!valid(s)||!codevalid(c))return 0;
     for(unsigned i=0;i<s->count;i++)if(s->codes[i].mode==c->mode&&
         s->codes[i].stage==c->stage&&s->codes[i].length==c->length&&
-        !memcmp(s->codes[i].code,c->code,c->length))return 1;
+        !memcmp(s->codes[i].code,c->code,c->length)){
+        if(s->game==1&&c->source_pc==0x1c44&&c->stage==1&&(c->mode==2||c->mode==3))
+            s->codes[i].source_pc=c->source_pc;
+        return 1;
+    }
     if(s->count==DYNA_PROGRESS_LIMIT)return 0;
     DynaProgressCode *out=&s->codes[s->count++];memset(out,0,sizeof *out);
     out->mode=c->mode;out->stage=c->stage;out->length=c->length;

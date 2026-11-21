@@ -3,6 +3,7 @@
 - DB1 presents the victory animation and Aliens Ejected result in widescreen.
 - DB1 automatically saves progress on victory and displays a yellow Game Saved notice. The victory screen offers Continue and Back to Title.
 - DB1 lists all unlocked numbered stages through the saved checkpoint, including Stage 1 with existing saves. Progress storage works on all four platforms.
+- DB1 unlocks Hard 1 after Normal 20 and the Reverse entry Back 1 (MHRI) after Hard 20, with both unlocks saved immediately.
 
 # v0.5.4 Beta
 

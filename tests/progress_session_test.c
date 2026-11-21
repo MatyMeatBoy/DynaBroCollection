@@ -29,8 +29,18 @@ int main(void) {
     dyna_progress_session_before(&s,0x1c44,ram,sizeof ram,a);
     c=dyna_progress_session_current(&s);
     assert(c&&c->mode==1&&c->stage==2&&c->source_pc==0x1c44);
-    ram[0x35]=59;ram[0xadde + 60*0x4a]=1;
     const uint8_t secret[4]={0x32,0x1e,0x46,0x22};memcpy(rom+0x1e87e + 60*4,secret,4);
+    const unsigned campaign_finals[]={39,59};
+    for(unsigned i=0;i<sizeof campaign_finals/sizeof campaign_finals[0];i++){
+        unsigned won=campaign_finals[i],descriptor=0xaddeu+won*0x4a;
+        ram[0x35]=(uint8_t)won;
+        ram[0x30]=(uint8_t)(descriptor>>8);ram[0x31]=(uint8_t)descriptor;
+        ram[descriptor]=20;ram[descriptor+0x4a]=1;
+        dyna_progress_session_before(&s,0x1c44,ram,sizeof ram,a);
+        c=dyna_progress_session_current(&s);
+        assert(c&&c->mode==i+2&&c->stage==1&&c->source_pc==0x1c44);
+    }
+    assert(dyna_progress_session_text(&s,c,text)&&!strcmp(text,"MHRI"));
     dyna_progress_session_before(&s,0x28f1a,ram,sizeof ram,a);
     c=dyna_progress_session_current(&s);assert(c&&c->mode==3&&c->stage==1);
     assert(dyna_progress_session_text(&s,c,text));assert(!strcmp(text,"MHRI"));

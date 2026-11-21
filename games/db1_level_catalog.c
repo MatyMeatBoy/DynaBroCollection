@@ -21,7 +21,10 @@ static int collect(const DynaProgressSession *s,Access *a){
  if(!session_valid(s))return 0;
  memset(a,0,sizeof *a);
  for(unsigned mode=0;mode<4;mode++)
-  if(s->db1_cleared_modes&(1u<<mode))a->start_modes=(2u<<mode)-1;
+  if(s->db1_cleared_modes&(1u<<mode)){
+   a->start_modes|=(2u<<mode)-1;
+   if(mode==1||mode==2)a->start_modes|=2u<<mode;
+  }
  for(unsigned i=0;i<s->store->count;i++){
   const DynaProgressCode *c=&s->store->codes[i];char text[9];
   /* Public session validator rechecks exact mode/stage/length/table bytes.
@@ -29,6 +32,10 @@ static int collect(const DynaProgressSession *s,Access *a){
   if(c->source_pc>0xffffffu||!target_valid(c->mode,c->stage)||!dyna_progress_session_text(s,c,text))continue;
   a->saved[c->mode]|=UINT32_C(1)<<(c->stage-1);
   if(c->mode<4&&a->frontier[c->mode]<c->stage)a->frontier[c->mode]=c->stage;
+  /* Only a victory-generated campaign entry implies that the previous
+   * campaign is cleared. A password entered by hand opens its own target. */
+  if(c->source_pc==0x1c44 && c->stage==1 && (c->mode==2||c->mode==3))
+   a->frontier[c->mode-1]=stages[c->mode-1];
  }
  return 1;
 }

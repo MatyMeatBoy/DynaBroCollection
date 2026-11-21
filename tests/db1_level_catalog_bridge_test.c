@@ -22,7 +22,7 @@ int main(void){
  assert(count(NULL,1)==1 && item(NULL,1,0,&out) && !strcmp(out.title,"Practice 1"));
  assert(!item(NULL,1,1,&out));
  final_stage.id=183264;
- assert(count(NULL,1)==2);
+ assert(count(NULL,1)==3);
  assert(item(NULL,1,1,&out));
  assert(!strcmp(out.title,"Normal 1") && strstr(out.detail,"AVAILABLE TO REPLAY"));
  DynaProgressStore before=store;
@@ -32,8 +32,8 @@ int main(void){
  assert(!memcmp(&before,&store,sizeof store));
  assert(!launch(NULL,1,99));
  final_stage.id=183282;
- assert(count(NULL,1)==3 && item(NULL,1,2,&out) && !strcmp(out.title,"Hard 1"));
- assert(!item(NULL,1,3,&out));
+ assert(count(NULL,1)==4 && item(NULL,1,2,&out) && !strcmp(out.title,"Hard 1"));
+ assert(item(NULL,1,3,&out)&&!strcmp(out.title,"Back 1"));
  final_stage.id=183302;
  assert(count(NULL,1)==4 && item(NULL,1,3,&out) && !strcmp(out.title,"Back 1"));
  assert(!item(NULL,1,4,&out));
