@@ -1,3 +1,10 @@
+# v0.5.4 Beta
+
+- DB2 keeps the native sprite positions during the automatic stage-opening camera move and manual B + D-pad pans in widescreen.
+- The Sega Channel Special opening and the first island showdown use English dialogue throughout.
+- Borderless gameplay requests foreground activation once on startup.
+- DB2's widescreen menu renderer reduces work when wrapping plane coordinates.
+
 # v0.5.0 Beta 1
 
 - Both Dyna Brothers games report newly earned achievements through the Recomp Achievements SDK.

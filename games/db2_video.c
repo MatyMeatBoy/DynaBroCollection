@@ -50,6 +50,10 @@ static int hud_on_left;
  * terrain with what the guest actually shows. Every widened row is still
  * verified against the native plane, so a wrong guess only rejects a frame. */
 static int have_k,kx,ky,off_x,off_y,model_x,model_y,disp_x,disp_y,plane_w,plane_h,heal_pending,heal_dx,heal_dy;
+/* Keep using the native raster through the RAM/SAT update after a scroll. */
+enum { SCROLL_SETTLE_FRAMES=3 };
+static int scroll_x,scroll_y,scroll_known;
+static unsigned moving_frames;
 static int visor_offset;
 static int free_hud;
 static uint8_t hud_edges[2][8][104];
@@ -80,7 +84,7 @@ static int plane_layout(const GVDP *v){
  return 0;
 }
 static unsigned word(const uint8_t *p){return ((unsigned)p[0]<<8)|p[1];}
-void db2_video_reset(void){db2_bio_overlay_reset();world_scene=briefing_scene=results_scene=pause_active=actor_effect_active=title_sky=dialogue_hold=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&(!strcmp(t,"1")||!strcmp(t,"2"));trace_frames=t&&!strcmp(t,"2");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;have_k=off_x=off_y=heal_pending=0;held_valid=0;held_misses=0;}
+void db2_video_reset(void){db2_bio_overlay_reset();world_scene=briefing_scene=results_scene=pause_active=actor_effect_active=title_sky=dialogue_hold=ready=rejected=0;count=0;effect_count=0;canvas_top=0;canvas_height=224;memset(native_valid,0,sizeof native_valid);const char *t=getenv("DYNA_DB2_VIDEO_TRACE");trace_enabled=t&&(!strcmp(t,"1")||!strcmp(t,"2"));trace_frames=t&&!strcmp(t,"2");frame_reasons=trace_seen=0;trace_signature=~0u;trace_budget=32;producer_epoch=producer_dirty_since_epoch=0;have_k=off_x=off_y=heal_pending=scroll_known=0;held_valid=0;held_misses=moving_frames=0;}
 void db2_video_observe(unsigned pc){
  if(pc==0x3b64){briefing_scene=1;title_sky=0;}
  else if(pc==0x3b66)briefing_scene=0;
@@ -88,9 +92,9 @@ void db2_video_observe(unsigned pc){
  else if(pc==0x3c78)results_scene=0;
  else if(pc==0x3bb0){
   world_scene=WORLD_BATTLE;briefing_scene=results_scene=pause_active=actor_effect_active=title_sky=0;
-  held_valid=have_k=heal_pending=0;
+  held_valid=have_k=heal_pending=scroll_known=0;moving_frames=0;
  }
- else if(pc==0x734e){world_scene=WORLD_VERSUS;held_valid=have_k=heal_pending=0;}
+ else if(pc==0x734e){world_scene=WORLD_VERSUS;held_valid=have_k=heal_pending=scroll_known=0;moving_frames=0;}
  else if(pc==0xf794)world_scene=WORLD_DEMO;
  else if(pc==0x3bb4||pc==0x7308||pc==0xf728)world_scene=WORLD_NONE;
  else if(pc==0x425c)pause_active=1;
@@ -248,16 +252,6 @@ static void classify_sprites(void){
    * parked 32x32 pattern-0 body at x=-32 during Normal2 play). Ownership is
    * irrelevant for it; any non-zero pattern byte still rejects the frame. */
   if(!kind&&sprite_transparent(attr,size))kind=3;
-  /* During a camera pan a unit's own SAT body can lag one animation step and
-   * go unrecognised. The host already draws that unit (at its pan-aligned
-   * position), so the stale copy is dropped instead of showing it twice. */
-  if(!kind&&x<216){
-   int w8=(int)(((size>>2)&3)+1)*8,h8=(int)((size&3)+1)*8;
-   for(unsigned i=0;i<count&&!kind;i++){
-    int ax=actors[i].x+off_x,ay=actors[i].y+off_y;
-    if(ax+36>x&&ax-4<x+w8&&ay+36>y&&ay-4<y+h8)kind=3;
-   }
-  }
   /* Gameplay prompt banner ("HATCH EGGS FOR DINOS", written by the native
    * routine around 0CA8): a row of 32x32 palette-1 sprites using patterns
    * 370-47F (palette 1 or 2, either flip), slid in from the right and centered on the native 216-pixel
@@ -374,17 +368,29 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
   memcpy(ui+layout.hud_left,hud_edges[y>=224][(unsigned)y&7],104);
  }
  size_t ei=effect_count;
+ /* RAM actors use the modelled origin. The native SAT, including effects
+  * and the HUD, is already in display coordinates. */
+ int actor_shift_x=shift-off_x;
  for(unsigned remaining=count;remaining;){const Db2Actor *ac=actors+--remaining;
   while(ei&&(effects[ei-1].depth<ac->depth||(effects[ei-1].depth==ac->depth&&effects[ei-1].rank>rank[ac->id])))effect_row(effects+--ei,y,w,shift,s,o,hi);
   for(unsigned part=ac->component_count;part;){const Db2ActorComponent *p=ac->part+--part;
-   int xx=ac->x+off_x+p->dx+shift,yy=ac->y+off_y+p->dy;if(y<yy||y>=yy+32)continue;
+   int xx=ac->x+p->dx+actor_shift_x,yy=ac->y+p->dy-off_y;if(y<yy||y>=yy+32)continue;
    for(int px=0;px<32;px++){uint8_t color;db2_actor_pixel(p,(unsigned)px,(unsigned)(y-yy),&color);put(s,o,hi,xx+px,w,color,p->flags);}
   }
-  Db2WorldMarker m[6];unsigned n=db2_world_markers(ram[0x2a89],ram[0x5f58+48*ac->id+0x28],ac->x+off_x,ac->y+off_y,m);
-  while(n){const Db2WorldMarker *p=m+--n;if(y<p->y||y>=p->y+8)continue;for(int px=0;px<8;px++)put(s,o,hi,p->x+px+shift,w,tile_pixel(p->attribute,0,px,y-p->y),p->attribute);}
+  Db2WorldMarker m[6];unsigned n=db2_world_markers(ram[0x2a89],ram[0x5f58+48*ac->id+0x28],ac->x,ac->y-off_y,m);
+  while(n){const Db2WorldMarker *p=m+--n;if(y<p->y||y>=p->y+8)continue;for(int px=0;px<8;px++)put(s,o,hi,p->x+px+actor_shift_x,w,tile_pixel(p->attribute,0,px,y-p->y),p->attribute);}
  }
  while(ei)effect_row(effects+--ei,y,w,shift,s,o,hi);
  if(r){
+  int native_motion=moving_frames||off_x||off_y;
+  if(native_motion){
+   /* While the scroll and the actor producer publish at different times,
+    * keep the native sprite raster authoritative over the native world. */
+   int start=world_start+shift,end=world_end+shift;
+   if(start<0)start=0;
+   if(end>w)end=w;
+   for(int x=start;x<end;x++)s[x]=o[x]=hi[x]=0;
+  }
   int unknown_traced=0;
   for(int x=0;x<320;x++){unsigned owner=r->sprite_owner[x];if(!owner)continue;
    if(owner>80){rejected=1;frame_reasons|=8;continue;}
@@ -404,7 +410,10 @@ static void world_row(int y,int w,const GVDPRasterRow *r,uint32_t *out){
     int center=sx+half_width;
     kind=(hud_on_left?center<104:center>=216)?2:1;
    }
-   if(kind==3)continue;
+   if(kind==3){
+    if(!native_motion)continue;
+    kind=1;
+   }
    int dx=x+(kind==2?layout.hud_shift:shift);
    if(dx<0||dx>=w)continue;
    s[dx]=r->sprite[x];o[dx]=r->opaque[x];hi[dx]=r->high[x];sh[dx]=r->shadow_op[x];hl[dx]=r->hilite_op[x];
@@ -448,7 +457,12 @@ static const uint32_t *remove_parked_title_logo(const GVDP *v,const GVDPRasterRo
 static void scanline(const GVDP *v,int y,int nw,uint32_t *out,int w,GameVideoNativeRow native,void *ctx,const GVDPRasterRow *r){
  background=genesis_dac_cram_to_argb(v->cram[v->reg[7]&63],0);
  int supported=nw==320&&w>=320&&w<=LIMIT&&r&&r->display&&world_raster_enabled();
- if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);memset(hud_edges,0,sizeof hud_edges);if(supported)capture(v);}
+ if(y==0){ready=0;rejected=0;frame_reasons=0;memset(native_valid,0,sizeof native_valid);memset(hud_edges,0,sizeof hud_edges);if(supported)capture(v);
+  if(moving_frames)--moving_frames;
+  if(ready&&scroll_known&&(disp_x!=scroll_x||disp_y!=scroll_y))moving_frames=SCROLL_SETTLE_FRAMES;
+  if(!ready)moving_frames=0;
+  scroll_known=ready;scroll_x=disp_x;scroll_y=disp_y;
+ }
  const uint32_t *p=native(ctx);
  uint32_t cleaned[320];
  if(nw==320&&world_scene==WORLD_NONE)p=remove_parked_title_logo(v,r,p,cleaned);
@@ -835,7 +849,7 @@ static void frame_complete(const GVDP *v,uint32_t *pixels,int stride,int w,int h
  {static int prev_modal;int modal=(g_ram[0x286]&0x88)!=0;if(prev_modal&&!modal)held_misses=0;prev_modal=modal;}
  if(trace_frames&&v){
   unsigned hb=((unsigned)snapshot.reg[13]&63)<<10;
-  fprintf(stderr,"[db2-frame] g286=%02X n=%u ok=%d reasons=%02X ready=%d scene=%d ramscroll=%d,%d vdp_hs=%d,%d vs=%d,%d ring=%u,%u cell=%u,%u\n",g_ram[0x286],trace_ok_frames+trace_fallback_frames,!rejected&&ready,frame_reasons,ready,world_scene,(int)(int16_t)word(g_ram+0x2bf8),(int)(int16_t)word(g_ram+0x2bfa),(int)(word(snapshot.vram+hb)&1023),(int)(word(snapshot.vram+hb+2)&1023),snapshot.vsram[0]&1023,snapshot.vsram[1]&1023,camera.ring_x,camera.ring_y,camera.cell_x,camera.cell_y,off_x,off_y);
+  fprintf(stderr,"[db2-frame] g286=%02X n=%u ok=%d reasons=%02X ready=%d scene=%d ramscroll=%d,%d vdp_hs=%d,%d vs=%d,%d ring=%u,%u cell=%u,%u offset=%d,%d\n",g_ram[0x286],trace_ok_frames+trace_fallback_frames,!rejected&&ready,frame_reasons,ready,world_scene,(int)(int16_t)word(g_ram+0x2bf8),(int)(int16_t)word(g_ram+0x2bfa),(int)(word(snapshot.vram+hb)&1023),(int)(word(snapshot.vram+hb+2)&1023),snapshot.vsram[0]&1023,snapshot.vsram[1]&1023,camera.ring_x,camera.ring_y,camera.cell_x,camera.cell_y,off_x,off_y);
  }
  if(!rejected&&ready){
   for(int y=0;y<h;y++)memcpy(held[y],pixels+(size_t)y*stride,(size_t)w*sizeof *pixels);

@@ -338,6 +338,20 @@ int main(void){
  g_ram[0x5f58+48*42]=200;
  db2_video_observe(0x3bb0);row(0,480);row(4,480);
  assert(calls==2&&out[444]==genesis_dac_cram_to_argb(v.cram[26],0));
+ /* A held B pan can advance the visible scroll one step ahead of the
+  * actor projection in RAM. The extended actor must follow that scroll. */
+ v.reg[13]=0x3f;v.reg[16]=1;
+ g_ram[0x5f58+48*41+5]=16;
+ row(0,480);row(20,480);
+ db2_video.frame_complete(&v,canvas,480,480,224,0,224);
+ w16(v.vram+0xfc02,16);v.vsram[1]=16;
+ row(0,480);row(4,480);
+ assert(out[460]==genesis_dac_cram_to_argb(v.cram[26],0));
+ assert(out[444]!=genesis_dac_cram_to_argb(v.cram[26],0));
+ /* A native actor marker comes from the displayed SAT during that step. */
+ w16(v.vram+4,0x6ec);r.sprite_owner[100]=1;r.sprite[100]=3;r.opaque[100]=1;
+ row(4,480);
+ assert(out[176]==genesis_dac_cram_to_argb(v.cram[3],0));
  /* A late unknown world sprite at x300 must neither become HUD nor leave
   * earlier enhanced rows mixed with native fallback. Test both canvases. */
  setup();db2_video_observe(0x3bb0);

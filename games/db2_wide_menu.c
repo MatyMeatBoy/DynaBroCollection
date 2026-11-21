@@ -19,6 +19,8 @@ uint32_t db2_wide_menu_blend(uint32_t pixel,uint32_t backdrop,unsigned weight){
  return result;
 }
 static int cells(unsigned bits){return bits==0?32:bits==1?64:bits==3?128:32;}
+/* VDP plane dimensions are powers of two, including the 4096-cell cap. */
+static int wrap(int coordinate,int size){return (int)((unsigned)coordinate&((unsigned)size-1u));}
 static int reflect(int coordinate,int size){
  int phase=coordinate%(2*size);
  if(phase<0)phase+=2*size;
@@ -98,14 +100,14 @@ void db2_wide_menu_frame(const GVDP *v){
 static int remap(const uint8_t *art,int pc,int n,int center,int visible){
  if(!occupancy_ready||art[pc]||art[center]!=2)return pc;
  int s=center,e=center,k=0;
- while(k<n&&art[(s-1+n)%n]==2){s=(s-1+n)%n;k++;}
- k=0;while(k<n&&art[(e+1)%n]==2){e=(e+1)%n;k++;}
- int len=(e-s+n)%n+1;
+ while(k<n&&art[wrap(s-1,n)]==2){s=wrap(s-1,n);k++;}
+ k=0;while(k<n&&art[wrap(e+1,n)]==2){e=wrap(e+1,n);k++;}
+ int len=wrap(e-s,n)+1;
  if(len<=visible||len>=n)return pc;
- int left=(s-pc+n)%n,right=(pc-e+n)%n;
+ int left=wrap(s-pc,n),right=wrap(pc-e,n);
  extended_used=1;
- if(left<=right){int q=(EDGE_PERIOD-left%EDGE_PERIOD)%EDGE_PERIOD;return (s+q)%n;}
- int q=(right-1)%EDGE_PERIOD;return (e-EDGE_PERIOD+1+q+n)%n;
+ if(left<=right){int q=wrap(-left,EDGE_PERIOD);return wrap(s+q,n);}
+ int q=wrap(right-1,EDGE_PERIOD);return wrap(e-EDGE_PERIOD+1+q,n);
 }
 
 static Db2MenuMargins margins;
@@ -164,13 +166,13 @@ uint8_t db2_wide_menu_plane_pixel(const GVDP *v,int plane,int x,int line){
   int col=x>>4;if(col<0)col=0;if(col>19)col=19;
   vs=v->vsram[(col*2+plane)&(GVDP_VSRAM_ENTRIES-1)]&1023;
  }else vs=v->vsram[plane]&1023;
- int px=((x-hs)%pw+pw)%pw,py=((line+vs)%ph+ph)%ph;
+ int px=wrap(x-hs,pw),py=wrap(line+vs,ph);
  if(x<0||x>=320){
-  int center=(((160-hs)%pw+pw)%pw)>>3;
+  int center=wrap(160-hs,pw)>>3;
   px=(remap_cached(0,plane,col_art[plane],px>>3,wt,center,40)<<3)|(px&7);
  }
  if(line<0||line>=224){
-  int center=(((112+vs)%ph+ph)%ph)>>3;
+  int center=wrap(112+vs,ph)>>3;
   py=(remap_cached(1,plane,row_art[plane],py>>3,ht,center,28)<<3)|(py&7);
  }
  unsigned name=rd(v,base+((unsigned)((py>>3)*wt+(px>>3))<<1));

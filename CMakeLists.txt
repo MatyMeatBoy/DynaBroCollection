@@ -114,10 +114,10 @@ function(add_dyna target prefix rom crc entry vint hint)
         DEFAULT_DEBUG_PORT=4390 DYNA_NAME="${target}" DYNA_CRC=${crc}
         DYNA_DISPLAY_NAME="${_display}"
         DYNA_SIZE=${rom} DYNA_ENTRY=${entry} DYNA_VINT=${vint} DYNA_HINT=${hint})
-    target_link_libraries(${target} PRIVATE SDL2::SDL2)
     if(WIN32 AND TARGET SDL2::SDL2main)
         target_link_libraries(${target} PRIVATE SDL2::SDL2main)
     endif()
+    target_link_libraries(${target} PRIVATE SDL2::SDL2)
     if(WIN32)
         # Per-game icon (resource id 1 is what SDL uses for the window icon).
         enable_language(RC)

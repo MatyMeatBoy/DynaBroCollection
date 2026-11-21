@@ -280,6 +280,7 @@ static int launch(HWND window,int index) {
     if(!CreateProcessW(path,arguments,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,directory,&startup,&process)) {
         return report_launch_error(window,1,"The game could not be started. Keep the game files and runtime libraries together.");
     }
+    AllowSetForegroundWindow(process.dwProcessId);
     CloseHandle(process.hThread);game_process=process.hProcess;running_game=index+1;
     ShowWindow(window,SW_HIDE);
     EnableWindow(cards[0],FALSE);EnableWindow(cards[1],FALSE);

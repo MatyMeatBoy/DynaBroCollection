@@ -5405,7 +5405,8 @@
       "words": "0140 0124 013F 0124 0001 0133 0173 014A 01C2 001C 01A9 012C 0001 0001 0001 0001 0001 0122 016B 0173 0164 0143 013F 0169",
       "skip": 0,
       "lines": [
-        "IF THIS MODE WAS HERE,"
+        "IF THERE WAS A MODE LIKE THIS,",
+        ""
       ]
     },
     {
@@ -5546,7 +5547,8 @@
       "words": "0182 01AB 01C1 01C2 001C 01A9 0164 01BF 01AB 0192 001C 01C0 0162 0144 0124 0146 016B 0162 0173",
       "skip": 0,
       "lines": [
-        "ANIMATIONS AND MINI-GAMES TOO!"
+        "ANIMATIONS AND MINI-GAMES TOO!",
+        ""
       ]
     },
     {
@@ -5588,6 +5590,34 @@
       "lines": [
         "WHY START WITHOUT ME?!"
       ]
+    },
+    {
+      "id": "db2-sega-channel-intro-aro-reply",
+      "words": "0F8C 014B 0001 10C8 014A 012F 0146 0162 0168 012B 0143 013F 014E 014B",
+      "lines": [
+        "YOU DIDN'T HAVE TO COME."
+      ],
+      "skip": 0,
+      "verification": "Full Sega Channel Special opening; observed in the native RAM glyph trace"
+    },
+    {
+      "id": "db2-sega-channel-intro-aro-surprise",
+      "words": "067F 0147 0164 001C 0143 000A 0009",
+      "lines": [
+        "WHY NOT?!"
+      ],
+      "skip": 0,
+      "verification": "Full Sega Channel Special opening; observed in the native RAM glyph trace"
+    },
+    {
+      "id": "db2-sega-channel-intro-story-advice",
+      "words": "0C14 0C8E 012C 0E31 0137 0161 0164 012B 0169 0001 0001 0001 0001 0001 0001 0001 0001 0199 01A8 001C 01CA 001C 01C2 001C 01A9 0162 0141 0163 0173 0148 0164 016A 0164",
+      "lines": [
+        "THIS MODE IS PRETTY TOUGH,",
+        "SO PLAY STORY MODE TOO!"
+      ],
+      "skip": 0,
+      "verification": "Full Sega Channel Special opening; observed in the native RAM glyph trace"
     },
     {
       "words": "0168 0137 0001 0133 014E 0A42 08B3 012C 0126 015E 012F 0124 0131 0150 0001 0001 0001 0ECB 0B43 085F 0C50 0B49 0AA3 014E 0730 0BAE 0140 0143 000A",
@@ -6917,6 +6947,15 @@
       ],
       "skip": 0,
       "verification": "Practice/Story tutorial script in RAM stream; matched by prefix"
+    },
+    {
+      "words": "015E 013A 014F 0001 013D 0169 015E 0161 012F 0173 014E 0DC7 0147 0001 0001 0001 0001 0C90 0888 0164 0143 000A",
+      "lines": [
+        "FIRST, A SHOWDOWN ON BEANKEY'S",
+        "ISLAND!"
+      ],
+      "skip": 0,
+      "verification": "Sega Channel Special stage 1 opening, 17-cell dialogue row, native RAM glyph trace"
     },
     {
       "words": "0001 018D 01C3 01D3 019B 01CB 000A",
