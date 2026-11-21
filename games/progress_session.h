@@ -17,6 +17,7 @@ void dyna_progress_session_before(DynaProgressSession *,uint32_t pc,
 const DynaProgressCode *dyna_progress_session_current(const DynaProgressSession *);
 /* Explicit save action; memory and previous file remain valid on failure. */
 int dyna_progress_session_save(DynaProgressSession *,const char *path);
+int dyna_progress_session_save_code(DynaProgressSession *,const DynaProgressCode *,const char *path);
 unsigned dyna_progress_session_count(const DynaProgressSession *);
 const DynaProgressCode *dyna_progress_session_item(const DynaProgressSession *,unsigned index);
 /* UTF-8/ASCII display of original code, capacity9. Native DB1 Alien16

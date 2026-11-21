@@ -23,7 +23,7 @@ int main(void){
  dyna_progress_ui_frame(&s,0,&over,&start);
  assert(dyna_progress_ui_frame(&s,DYNA_PROGRESS_UI_CONFIRM,&over,&start));
  dyna_progress_ui_saved(&s,1);
- assert(dyna_progress_ui_prompt(&s,NULL,&feedback)&&!strcmp(feedback,"PROGRESS SAVED"));
+ assert(dyna_progress_ui_prompt(&s,NULL,&feedback)&&!strcmp(feedback,"GAME SAVED"));
  dyna_progress_ui_frame(&s,0,&over,&start);
  dyna_progress_ui_frame(&s,DYNA_PROGRESS_UI_UP,&over,&start);
  dyna_progress_ui_frame(&s,0,&over,&start);
@@ -79,7 +79,7 @@ int main(void){
  dyna_progress_ui_frame(&s,0,&over,&start);
  assert(dyna_progress_ui_frame(&s,DYNA_PROGRESS_UI_CONFIRM,&over,&start)&&!start);
  dyna_progress_ui_saved(&s,1);
- assert(dyna_progress_ui_prompt(&s,NULL,&feedback)&&!strcmp(feedback,"PROGRESS SAVED"));
+ assert(dyna_progress_ui_prompt(&s,NULL,&feedback)&&!strcmp(feedback,"GAME SAVED"));
  dyna_progress_ui_before(&s,0x28f2e,1);
  assert(dyna_progress_ui_kind(&s)==0&&!dyna_progress_ui_prompt(&s,NULL,NULL));
  dyna_progress_ui_frame(&s,DYNA_PROGRESS_UI_CONFIRM,&over,&start);assert(!over&&!start);

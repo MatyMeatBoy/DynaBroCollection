@@ -1,3 +1,9 @@
+# v0.5.5 Beta
+
+- DB1 presents the victory animation and Aliens Ejected result in widescreen.
+- DB1 automatically saves progress on victory and displays a yellow Game Saved notice. The victory screen offers Continue and Back to Title.
+- DB1 lists all unlocked numbered stages through the saved checkpoint, including Stage 1 with existing saves. Progress storage works on all four platforms.
+
 # v0.5.4 Beta
 
 - DB2 keeps the native sprite positions during the automatic stage-opening camera move and manual B + D-pad pans in widescreen.

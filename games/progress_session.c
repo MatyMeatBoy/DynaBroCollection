@@ -9,6 +9,12 @@ static int db1_index(const DynaProgressCode *c) {
     if(c->mode==4&&c->stage>=1&&c->stage<=17)return 79+c->stage;
     return -1;
 }
+static int db1_valid_index(unsigned index) {
+    return index<97 && (index<8 || index>=20);
+}
+static unsigned db1_ordinal(unsigned index) {
+    return index>=80?0:index<8?index+1:index%20+1;
+}
 static int db2_index(unsigned mode,unsigned stage) {
     static const unsigned bases[7]={0,8,0,53,63,73,83};
     static const unsigned counts[7]={8,45,0,10,10,10,10};
@@ -45,17 +51,27 @@ void dyna_progress_session_before(DynaProgressSession *s,uint32_t pc,
     if(!s||!s->store||!ram||n<65536||!a)return;
     DynaProgressCode c={0};size_t p;
     if(s->store->game==1) {
-        if(pc==0x1950||pc==0x1c5a4||pc==0x1d7b6){dyna_progress_session_reset(s);return;}
-        if(pc!=0x1becc&&pc!=0x1dd90&&pc!=0x28f1a)return;
+        if(pc==0x1950||pc==0x1c5a4||pc==0x1d7b6||pc==0x1c40){dyna_progress_session_reset(s);return;}
+        if(pc!=0x1becc&&pc!=0x1dd90&&pc!=0x28f1a&&pc!=0x1c44)return;
         unsigned index=be16(ram+0x34);
+        if(pc==0x1c44){
+            uint32_t descriptor=be32(ram+0x2e);
+            if(ram[0x3d]!=1||descriptor<0xffaddeu||(descriptor-0xffaddeu)%0x4a)return;
+            unsigned won=(descriptor-0xffaddeu)/0x4a;
+            if(!db1_valid_index(won)||(won>=20&&index!=won)||ram[descriptor-0xff0000u]!=db1_ordinal(won))return;
+            /* Numbered campaigns replay through their farthest unlocked stage.
+             * Alien stages each require their own native password. */
+            index=won;
+            if(won<7||(won>=20&&won<80&&won%20!=19))++index;
+        }
         /* Hard-ending message shows table60 (MHRI), completed stage is59. */
         if(pc==0x28f1a){if(index!=59)return;index=60;}
-        if(index>=97||(index>=8&&index<20))return;
+        if(!db1_valid_index(index))return;
         p=0x1e87e + index*4;
         if(pc==0x1becc&&(a[1]&0xffffffu)!=p)return;
         if(pc==0x1dd90&&(be32(ram+0x2e)!=0xffadde + index*0x4a||
                            p+4>s->rom_size||memcmp(ram+0x36,s->rom+p,4)))return;
-        unsigned ordinal=index>=80?0:index<8?index+1:index%20+1;
+        unsigned ordinal=db1_ordinal(index);
         if(ram[0xadde + index*0x4a]!=ordinal||p+4>s->rom_size)return;
         c.mode=(uint16_t)(index>=80?4:index/20);
         c.stage=(uint16_t)(index>=80?index-79:ordinal);c.length=4;
@@ -82,7 +98,10 @@ const DynaProgressCode *dyna_progress_session_current(const DynaProgressSession 
     return s&&s->has_current&&expected(s,&s->current)?&s->current:NULL;
 }
 int dyna_progress_session_save(DynaProgressSession *s,const char *path) {
-    const DynaProgressCode *c=dyna_progress_session_current(s);if(!c)return 0;
+    return dyna_progress_session_save_code(s,dyna_progress_session_current(s),path);
+}
+int dyna_progress_session_save_code(DynaProgressSession *s,const DynaProgressCode *c,const char *path) {
+    if(!expected(s,c))return 0;
     DynaProgressStore copy=*s->store;
     if(!dyna_progress_add(&copy,c)||!dyna_progress_save(&copy,path))return 0;
     *s->store=copy;return 1;

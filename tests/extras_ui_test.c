@@ -20,7 +20,7 @@ static void render_test(int w,int h){
 static void prompt_test(int w,int h){
  size_t stride=(size_t)w+9,n=stride*h;uint32_t *p=malloc((n+2)*4);assert(p);
  for(size_t i=0;i<n+2;i++)p[i]=0x12345678;
- dyna_extras_ui_progress_prompt(p+1,w,h,(int)stride*4,1,"PROGRESS SAVED");
+ dyna_extras_ui_progress_prompt(p+1,w,h,(int)stride*4,1,"GAME SAVED",1);
  int left=(w-320)/2+80,top=(h-224)/2+176;unsigned changed=0;
  assert(p[0]==0x12345678 && p[n+1]==0x12345678);
  for(int y=0;y<h;y++)for(size_t x=0;x<stride;x++){
@@ -30,18 +30,18 @@ static void prompt_test(int w,int h){
  }
  assert(changed>3000);
  for(size_t i=0;i<n+2;i++)p[i]=0x12345678;
- dyna_extras_ui_progress_prompt(p+1,319,h,(int)stride*4,0,NULL);
- dyna_extras_ui_progress_prompt(p+1,w,h,(int)stride*4-1,0,NULL);
+ dyna_extras_ui_progress_prompt(p+1,319,h,(int)stride*4,0,NULL,1);
+ dyna_extras_ui_progress_prompt(p+1,w,h,(int)stride*4-1,0,NULL,1);
  for(size_t i=0;i<n+2;i++)assert(p[i]==0x12345678);
  free(p);
 }
 static void prompt_fade_test(void){
  uint32_t p[320*224];
  for(unsigned i=0;i<320*224;i++)p[i]=0xff000000u;
- dyna_extras_ui_progress_prompt(p,320,224,320*4,0,"CONTINUING");
+ dyna_extras_ui_progress_prompt(p,320,224,320*4,0,"CONTINUING",1);
  for(unsigned i=0;i<320*224;i++)assert(p[i]==0xff000000u);
  for(int y=185;y<201;y++)for(int x=84;x<238;x++)p[y*320+x]=0xff7f7f7fu;
- dyna_extras_ui_progress_prompt(p,320,224,320*4,0,"CONTINUING");
+ dyna_extras_ui_progress_prompt(p,320,224,320*4,0,"CONTINUING",1);
  for(int y=176;y<221;y++)for(int x=80;x<240;x++){
   uint32_t value=p[y*320+x];
   assert(((value>>16)&255)<=127 && ((value>>8)&255)<=127 && (value&255)<=127);
@@ -50,7 +50,7 @@ static void prompt_fade_test(void){
 static void ending_prompt_test(void){
  const int w=427,h=240,stride=436;uint32_t p[436*240];
  for(unsigned i=0;i<436*240;i++)p[i]=0x12345678;
- dyna_extras_ui_ending_save_prompt(p,w,h,stride*4,"PROGRESS SAVED");
+ dyna_extras_ui_ending_save_prompt(p,w,h,stride*4,"GAME SAVED");
  int left=(w-320)/2+80,top=(h-224)/2+201;unsigned changed=0;
  for(int y=0;y<h;y++)for(int x=0;x<stride;x++){
   if(x<left||x>=left+160||y<top||y>=top+22)assert(p[y*stride+x]==0x12345678);

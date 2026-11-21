@@ -4,10 +4,12 @@
 #include "video/genesis_vdp.h"
 typedef enum { DB1_SCENE_UNKNOWN, DB1_SCENE_BRANDING, DB1_SCENE_TITLE,
     DB1_SCENE_OPTIONS, DB1_SCENE_PASSWORD, DB1_SCENE_STAGE_INTRO,
-    DB1_SCENE_BATTLE, DB1_SCENE_GAMEOVER } Db1Scene;
+    DB1_SCENE_BATTLE, DB1_SCENE_GAMEOVER, DB1_SCENE_VICTORY,
+    DB1_SCENE_VICTORY_RESULT } Db1Scene;
 void db1_scenes_reset(void);
 void db1_scenes_observe(unsigned pc);
 Db1Scene db1_scenes_kind(void);
+int db1_scenes_has_background(Db1Scene);
 /* Presentation only: signed native-screen coordinates, immutable VDP snapshot.
  * Returns packed color[5:0], opaque[6], priority[7] from authored plane B. */
 uint8_t db1_scenes_plane_b(const GVDP *, int x, int y);

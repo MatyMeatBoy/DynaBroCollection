@@ -245,7 +245,7 @@ def main():
             visor_jobs[offset]=submit('db1-visor-'+str(offset),'DynaBrothers1AOT.exe',db1,6800,
                 script=ROOT/'games/db1/scenes/camera-vertical.input',widescreen='16:9',
                 window_size='2560x1440',visor=offset)
-        # Use production input, not the Save-test callback, under a real Unicode profile.
+        # Exercise the real Back to Title input after an automatic save in a Unicode profile.
         unicode_script=args.output/'unicode-save.input'
         source=(ROOT/'games/db1/scenes/progress-save-diagnostic.input').read_text(encoding='utf-8')
         source='\n'.join(line for line in source.splitlines() if not line.startswith('SCREENSHOT'))
@@ -264,7 +264,7 @@ def main():
         saves=list((args.output/unicode_name/unicode_profile).glob('dyna1-progress-*.bin'))
         if len(saves)!=1:raise RuntimeError('Unicode profile native Save did not create its progress file')
         data=saves[0].read_bytes()
-        if len(data)!=105 or data[:8]!=b'DYNAPRG1' or int.from_bytes(data[101:105],'big')!=0x1becc:
+        if len(data)!=105 or data[:8]!=b'DYNAPRG1' or int.from_bytes(data[101:105],'big') not in {0x1becc, 0x1c44}:
             raise RuntimeError('Unicode profile saved an unexpected native progress record')
         checked=bytearray(data);checked[84:88]=bytes(4);checksum=2166136261
         for value in checked:checksum=((checksum^value)*16777619)&0xffffffff
@@ -277,17 +277,24 @@ def main():
         if len(progress_seeds)!=1:raise RuntimeError('Missing verified Normal 2 save for title level selection')
         title_jobs={}
         title_meta={}
-        for level in [False,True]:
-            name='db1-title-level' if level else 'db1-title-extras'
+        stage_jobs=[('db1-title-extras',None,None)]
+        if tuple(map(int,version.split('.'))) >= (0,5,5):
+            stage_jobs += [('db1-title-level-normal1',20,0),('db1-title-level',21,1)]
+        else:
+            stage_jobs.append(('db1-title-level',21,0))
+        for name,stage,level_index in stage_jobs:
+            level=stage is not None
             dest=args.output.resolve()/name
             script=args.output/(name+'.input')
             source='WAIT 1999\nPRESS START 12\nWAIT 2000\nPRESS START 12\nWAIT 500\nPRESS UP 12\nWAIT 60\nPRESS A 12\nWAIT 2500\n'
-            if level:source+='ASSERT_RAM16 FF0034 0015\nASSERT_RAM16 FF002E 00FF\nASSERT_RAM16 FF0030 B3F0\n'
+            if level:
+                descriptor=0xadde+stage*0x4a
+                source+=f'ASSERT_RAM16 FF0034 {stage:04X}\nASSERT_RAM16 FF002E 00FF\nASSERT_RAM16 FF0030 {descriptor:04X}\n'
             source+='SCREENSHOT title-result.png\n'
             script.write_text(source,encoding='utf-8')
             env={'DYNA_DB1_TITLE_UI_TEST':str(dest/'extras.bmp'),'DYNA_DB1_TITLE_UI_MODE':'level' if level else 'back','DYNA_PROGRESS_TRACE':'1'}
             markers=['PASS 4 level modal presentations; CPU/RAM/VDP unchanged','PASS real SDL level confirm closed modal','status=5'] if level else ['PASS 6 modal presentations; CPU/RAM/VDP unchanged','PASS real SDL Back event closed modal']
-            if level:env['DYNA_DB1_TITLE_UI_INDEX']='0'
+            if level:env['DYNA_DB1_TITLE_UI_INDEX']=str(level_index)
             title_jobs[name]=submit(name,'DynaBrothers1AOT.exe',db1,8000,script=script,widescreen='16:9',overlays=True,
                 diagnostic_env=env,markers=markers,db1_progress_seed=progress_seeds[0] if level else None)
             title_meta[name]=dest

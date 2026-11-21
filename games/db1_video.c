@@ -167,7 +167,7 @@ static uint8_t weather_plane(const GVDP *v,const uint8_t *ram,int x,int y) {
 }
 /* Presentation-only SAT walk: preserve linked first-wins order and masking,
  * but do not clip effect geometry at raster column320 or run VDP evaluation. */
-static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spawn,int world_shift,
+static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spawn,int world_shift,int cinematic,
                           uint8_t *sprite,uint8_t *opaque,uint8_t *high,
                           uint8_t *shadow,uint8_t *hilite) {
     uint8_t claimed[768]={0},seen[128]={0};unsigned link=0,on_line=0;
@@ -182,7 +182,7 @@ static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spa
         int height=(int)vcells*8,width=(int)hcells*8;
         if(line>=yy && line<yy+height) {
             if(++on_line>1 && xx==-128)break;
-            if(!actor_owner(v,link+1,spawn) && !embedded_marker(tile) && !hud_sprite(v,link+1,tile,spell)) {
+            if(cinematic || (!actor_owner(v,link+1,spawn) && !embedded_marker(tile) && !hud_sprite(v,link+1,tile,spell))) {
                 unsigned py=(unsigned)(line-yy);if(attr&0x1000)py=(unsigned)height-1-py;
                 for(int px=0;px<width;px++) {
                     int x=xx+px+world_shift;if(x<0 || x>=w || claimed[x])continue;
@@ -200,6 +200,26 @@ static void effect_sprites(const GVDP *v,int line,int w,int spell,int sh,int spa
         if(!next)break;
         link=next;
     }
+}
+static void victory_row(const GVDP *v,int line,int w,const uint32_t *native,uint32_t *out){
+    uint8_t b[768]={0},sprite[768]={0},opaque[768]={0},high[768]={0};
+    uint8_t shadow[768]={0},hilite[768]={0},zero[768]={0},pixels[768];
+    int left=(w-320)/2,sh=(v->reg[12]&8)!=0;
+    unsigned backdrop=v->reg[7]&63;
+    if(v->reg[1]&64){
+        for(int x=0;x<w;x++)b[x]=db1_scenes_plane_b(v,x-left,line);
+        effect_sprites(v,line,w,0,sh,0,left,1,sprite,opaque,high,shadow,hilite);
+        gvdp_compose_span(pixels,zero,b,sprite,opaque,high,shadow,hilite,w,(uint8_t)backdrop,sh);
+        for(int x=0;x<w;x++){
+            unsigned p=pixels[x];
+            out[x]=genesis_dac_cram_to_argb(v->cram[p&63],p>=128?2:p>=64?1:0);
+        }
+    }else{
+        uint32_t color=genesis_dac_cram_to_argb(v->cram[backdrop],0);
+        for(int x=0;x<w;x++)out[x]=color;
+    }
+    /* Keep the native raster, including priority, sprite limits and palette changes. */
+    if(native)memcpy(out+left,native,320*sizeof *out);
 }
 static void marker(const GVDP *vdp,int line,int mx,int my,unsigned tile,int edge,
                    uint8_t *sprite,uint8_t *opaque,uint8_t *high,uint8_t *shadow,uint8_t *hilite) {
@@ -320,7 +340,7 @@ static void world_row(const GVDP *vdp,const uint8_t *ram,int line,int w,
             marker(vdp,line,mx,my,0x2e3,w,sprite,opaque,high,shadow,hilite);
       }
     }
-    effect_sprites(vdp,line,w,spell||intro,raster?raster->shadow_mode:((vdp->reg[12]&8)!=0),spawn,shift,
+    effect_sprites(vdp,line,w,spell||intro,raster?raster->shadow_mode:((vdp->reg[12]&8)!=0),spawn,shift,0,
                    sprite,opaque,high,shadow,hilite);
     if(raster)for(int source=0;source<320;source++) {
         unsigned owner=raster->sprite_owner[source];
@@ -377,6 +397,9 @@ static void scanline(const GVDP *vdp,int line,int nw,uint32_t *out,int w,
         }
     }
     if(!supported || !center_supported) {
+        if(db1_scenes_kind()==DB1_SCENE_VICTORY && nw==320 && w>=320 && w<=768){
+            victory_row(vdp,line,w,native,out);return;
+        }
         if(map_overlay && nw==320 && w>=320 && w<=768){
             /* The authored map backing is the verified 2x2 tile checker at
              * (0,0); other plane-B columns contain the original legend. */
@@ -413,10 +436,11 @@ static void canvas_complete(const GVDP *vdp,uint32_t *pixels,int stride,int w,in
                       y-top,w,NULL,bottom?(bottom_spell||bottom_fullplane):(frame_spell||frame_fullplane),bottom?bottom_fullplane:frame_fullplane,
                       frame_scene==DB1_SCENE_STAGE_INTRO,bottom?bottom_spawn:frame_spawn,row);
         }
+        else if(frame_scene==DB1_SCENE_VICTORY)victory_row(&frame_vdp,y-top,w,NULL,row);
         else for(int x=0;x<w;x++) {
             if(frame_map_overlay)
                 row[x]=db1_scenes_background(&frame_vdp,wrap_coord(x-(w-320)/2,16),wrap_coord(y-top,16));
-            else if((frame_scene>=DB1_SCENE_BRANDING && frame_scene<=DB1_SCENE_PASSWORD) || frame_scene==DB1_SCENE_GAMEOVER)
+            else if(db1_scenes_has_background(frame_scene))
                 row[x]=db1_scenes_background_for(frame_scene,&frame_vdp,x-(w-320)/2,y-top);
             else row[x]=frame_background;
         }

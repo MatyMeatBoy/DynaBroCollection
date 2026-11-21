@@ -11,7 +11,7 @@ void dyna_progress_ui_reset(DynaProgressUi *);
 /* qualified_result means a validated display candidate from this hook's
  * expected source:1BECC ordinary result or28F1A timed hard-ending message. */
 void dyna_progress_ui_before(DynaProgressUi *,uint32_t pc,int qualified_result);
-/* Returns a single Save request edge. Candidate/active override is1; start is a
+/* Returns a single Back to Title request edge. Candidate/active override is1; start is a
  * bounded physical START request, never a CPU control-flow operation. */
 int dyna_progress_ui_frame(DynaProgressUi *,unsigned buttons,int *override,int *start);
 void dyna_progress_ui_saved(DynaProgressUi *,int success);

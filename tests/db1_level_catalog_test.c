@@ -22,6 +22,10 @@ static void synthetic(void){
  DynaProgressStore store;DynaProgressSession s;Db1LevelCatalogItem item;
  assert(dyna_progress_init(&store,1,hash)&&dyna_progress_session_init(&s,&store,rom,sizeof rom));
  assert(db1_level_catalog_count(&s)==0);
+ saved(&store,1,2);
+ assert(db1_level_catalog_count(&s)==2);
+ check_code(&s,1,1);check_code(&s,1,2);
+ assert(dyna_progress_init(&store,1,hash));
  s.db1_cleared_modes=2;assert(db1_level_catalog_count(&s)==2);check_code(&s,0,1);check_code(&s,1,1);
  s.db1_cleared_modes=4;assert(db1_level_catalog_count(&s)==3);
  const char *names[]={"Practice","Normal","Hard","Back","Alien"};

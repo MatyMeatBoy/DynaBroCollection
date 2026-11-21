@@ -12,11 +12,21 @@ void db1_scenes_observe(unsigned pc) {
     case 0x1e024: scene=DB1_SCENE_OPTIONS;break;
     case 0x1d7b6: scene=DB1_SCENE_PASSWORD;break;
     case 0x1bc04: scene=DB1_SCENE_GAMEOVER;break;
+    case 0x5db8: case 0x5e66: scene=DB1_SCENE_VICTORY;break;
+    case 0x1ba4a:
+        if(scene==DB1_SCENE_VICTORY)scene=DB1_SCENE_VICTORY_RESULT;
+        break;
+    case 0x48ae: case 0x48b6: case 0x1ec10:
     case 0x1950: scene=DB1_SCENE_UNKNOWN;break;
     case 0x1b38: case 0x1b42: scene=DB1_SCENE_STAGE_INTRO;break;
     case 0x1c40: scene=DB1_SCENE_BATTLE;break;
     case 0x1c44: scene=DB1_SCENE_UNKNOWN;break;
     }
+}
+int db1_scenes_has_background(Db1Scene kind) {
+    return (kind>=DB1_SCENE_BRANDING && kind<=DB1_SCENE_PASSWORD) ||
+           kind==DB1_SCENE_GAMEOVER || kind==DB1_SCENE_VICTORY ||
+           kind==DB1_SCENE_VICTORY_RESULT;
 }
 static unsigned word(const GVDP *v,unsigned a) {
     return ((unsigned)v->vram[a&65535]<<8)|v->vram[(a+1)&65535];
@@ -89,6 +99,9 @@ uint32_t db1_scenes_background_for(Db1Scene kind,const GVDP *v,int x,int y) {
      * sampling that authored backdrop keeps both logos and story coherent. */
     if(kind==DB1_SCENE_BRANDING)
         return genesis_dac_cram_to_argb(v->cram[v->reg[7]&63],GENESIS_DAC_NORMAL);
+    /* 1BE44 authors the repeating result backing over 40 visible tiles.
+     * Continue that band instead of reading unwritten nametable columns. */
+    if(kind==DB1_SCENE_VICTORY_RESULT){x=wrap(x,320);y=wrap(y,224);}
     unsigned p=(kind==DB1_SCENE_OPTIONS || kind==DB1_SCENE_PASSWORD)?
         db1_scenes_menu_background_b(v,x,y):db1_scenes_plane_b(v,x,y);
     unsigned color=p&64?p&63:v->reg[7]&63;
@@ -100,8 +113,7 @@ uint32_t db1_scenes_background(const GVDP *v,int x,int y) {
 }
 int db1_scenes_row(const GVDP *v,int line,const uint32_t *native,int nw,
                    uint32_t *out,int width) {
-    if(!((scene>=DB1_SCENE_BRANDING&&scene<=DB1_SCENE_PASSWORD)||
-         scene==DB1_SCENE_GAMEOVER)||nw!=320||
+    if(!db1_scenes_has_background(scene)||nw!=320||
        width<nw||!v||!native||!out)return 0;
     int left=(width-nw)/2;
     for(int x=0;x<width;x++)out[x]=db1_scenes_background(v,x-left,line);

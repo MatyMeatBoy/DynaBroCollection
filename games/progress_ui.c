@@ -52,7 +52,7 @@ int dyna_progress_ui_frame(DynaProgressUi *s,unsigned buttons,int *override,int 
  return 0;
 }
 void dyna_progress_ui_saved(DynaProgressUi *s,int ok){
- if(s && s->active && !s->continuing)s->feedback=ok?"PROGRESS SAVED":"SAVE FAILED";
+ if(s && s->active && !s->continuing)s->feedback=ok?"GAME SAVED":"SAVE FAILED";
 }
 int dyna_progress_ui_prompt(const DynaProgressUi *s,unsigned *selected,const char **feedback){
  if(selected)*selected=s?s->selected:0;

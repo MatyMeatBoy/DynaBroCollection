@@ -35,7 +35,7 @@ static int collect(const DynaProgressSession *s,Access *a){
 static int allowed(const Access *a,unsigned mode,unsigned stage){
  if(!target_valid(mode,stage))return 0;
  if(mode==4)return (a->saved[4]&(UINT32_C(1)<<(stage-1)))!=0;
- if(stage==1)return (a->start_modes&(1u<<mode))!=0 || (mode==3&&a->frontier[3]!=0);
+ if(stage==1 && (a->start_modes&(1u<<mode)))return 1;
  return stage<=a->frontier[mode];
 }
 static int native_code(const DynaProgressSession *s,unsigned mode,unsigned stage,DynaProgressCode *out){

@@ -7,10 +7,11 @@ void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t 
 int dyna_progress_runtime_action(const char *key);
 const char *dyna_progress_runtime_status(void);
 /* Result-only inline prompt; visibility does not pause guest execution.
- * Optional outputs: selected0 Continue/1 Save; feedback empty/saved/failed/continuing. */
+ * Optional outputs: selected0 Continue/1 Back to Title and save feedback. */
 int dyna_progress_runtime_prompt(unsigned *selected,const char **feedback);
-/* 0 hidden,1 ordinary result,2 timed hard-ending Save-only prompt. */
+/* 0 hidden, 1 victory, 2 timed hard ending, 3 defeat. */
 int dyna_progress_runtime_prompt_kind(void);
+int dyna_progress_runtime_take_title_request(void);
 
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask);
 

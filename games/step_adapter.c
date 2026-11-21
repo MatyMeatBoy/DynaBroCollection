@@ -183,6 +183,7 @@ static int retire(void *user,unsigned *cycles) {
     case 0x1c40:case 0x1c44:case 0x19980:case 0x1b040:
     case 0x1c5a4:case 0x1c7d0:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
     case 0x1e024:case 0x1d7b6:case 0x1b42:case 0x1b38:case 0x1c04:case 0x1950:case 0x1bc04:
+    case 0x5db8:case 0x5e66:case 0x1ba4a:case 0x48ae:case 0x48b6:case 0x1ec10:
     case 0x5ff6:case 0x62fc:case 0x132d8:case 0x13630:
     case 0x12fe6:case 0x13286:case 0x14070:case 0x1429e:case 0x1429c:case 0x144f6:
     case 0x15d2c:case 0x15e52:case 0x5650:case 0x5d62:
@@ -453,8 +454,9 @@ static void game_ui_render(uint32_t *pixels,int w,int h,int pitch) {
 #endif
  unsigned selected;const char *feedback;
  if(dyna_progress_runtime_prompt(&selected,&feedback)){
-  if(dyna_progress_runtime_prompt_kind()==2)dyna_extras_ui_ending_save_prompt(pixels,w,h,pitch,feedback);
-  else dyna_extras_ui_progress_prompt(pixels,w,h,pitch,selected,feedback);
+  int kind=dyna_progress_runtime_prompt_kind();
+  if(kind==2)dyna_extras_ui_ending_save_prompt(pixels,w,h,pitch,feedback);
+  else dyna_extras_ui_progress_prompt(pixels,w,h,pitch,selected,feedback,kind==1);
  }
  dyna_achievement_smoke_render(pixels,w,h,pitch);
  dyna_extras_ui_render(pixels,w,h,pitch);
@@ -495,6 +497,7 @@ static int title_active(void){
 }
 const GameSpec g_game_spec={
     .title_active=title_active,
+    .take_return_to_title=dyna_progress_runtime_take_title_request,
     .menu_input_tick=menu_tick,
     .input_filter=game_input_filter,
     .pacing_default="accurate",.frame_rate_numerator=53693175,.frame_rate_denominator=3420*262,

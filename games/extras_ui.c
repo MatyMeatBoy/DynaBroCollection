@@ -206,9 +206,20 @@ static uint32_t prompt_tint(uint32_t color,unsigned fade){
  return 0xff000000u|((((color>>16)&255)*fade/255)<<16)|
         ((((color>>8)&255)*fade/255)<<8)|((color&255)*fade/255);
 }
+static void result_feedback(Canvas *c,int x,int y,const char *feedback,unsigned fade){
+ if(!feedback||!*feedback)return;
+ uint32_t color=prompt_tint(INK,fade);
+ if(!strcmp(feedback,"GAME SAVED")){
+  color=prompt_tint(0xffffe45bu,fade);
+  rect(c,x,y,7,7,color);rect(c,x+2,y,3,2,BLACK);rect(c,x+2,y+4,3,2,BLACK);
+  pixel(c,x+6,y,BLACK);x+=10;
+ }
+ text(c,x,y,128,feedback,color);
+}
+
 /* Result screen extension: framebuffer only, native viewport anchored. */
 void dyna_extras_ui_progress_prompt(uint32_t *pixels,int w,int h,int pitch_bytes,
-                                    unsigned selected,const char *feedback){
+                                    unsigned selected,const char *feedback,int victory){
  if(!pixels||w<320||h<224||w>8192||h>8192||pitch_bytes<0||pitch_bytes%4||
     pitch_bytes/4<w||pitch_bytes>INT_MAX/h)return;
  Canvas c={pixels,w,h,pitch_bytes/4};int x=(w-320)/2+80,y=(h-224)/2+176;
@@ -228,8 +239,8 @@ void dyna_extras_ui_progress_prompt(uint32_t *pixels,int w,int h,int pitch_bytes
   for(int column=0;column<=3-distance;column++)pixel(&c,x+10+column,y+8+(int)selected*10+row,cyan);
  }
  text(&c,x+23,y+8,128,"CONTINUE",selected==0?cyan:ink);
- text(&c,x+23,y+18,128,"SAVE GAME",selected==1?cyan:ink);
- if(feedback&&*feedback)text(&c,x+13,y+30,134,feedback,ink);
+ text(&c,x+23,y+18,128,victory?"BACK TO TITLE":"SAVE GAME",selected==1?cyan:ink);
+ result_feedback(&c,x+23,y+30,feedback,fade);
 }
 
 void dyna_extras_ui_ending_save_prompt(uint32_t *pixels,int w,int h,int pitch_bytes,
@@ -244,7 +255,6 @@ void dyna_extras_ui_ending_save_prompt(uint32_t *pixels,int w,int h,int pitch_by
   int distance=row>3?row-3:3-row;
   for(int column=0;column<=3-distance;column++)pixel(&c,x+9+column,y+7+row,cyan);
  }
- const char *label=feedback&&*feedback?feedback:"SAVE GAME";
- if(!strcmp(label,"SAVE FAILED"))label="SAVE FAILED - RETRY";
- text(&c,x+22,y+7,130,label,INK);
+ text(&c,x+22,y+5,130,"BACK TO TITLE",INK);
+ result_feedback(&c,x+22,y+12,feedback,255);
 }

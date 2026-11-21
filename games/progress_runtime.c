@@ -7,15 +7,12 @@
 #include "db1_level_catalog.h"
 #include "progress_replay.h"
 #include "progress_ui.h"
+#include "cd/sha256.h"
 #include "video/genesis_bus.h"
 #include "extras_ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <bcrypt.h>
-#endif
 static DynaProgressStore store;
 static DynaProgressSession session;
 static DynaProgressReplay replay;
@@ -25,6 +22,8 @@ static int ready;
 static const char *const *db1_hashes;
 static size_t db1_hash_count;
 static int navigation_requested;
+static int title_requested,autosave_pending,autosave_result,result_won;
+static DynaProgressCode autosave_code;
 /* Dormant unless explicitly requested by a native qualification run. */
 static int test_index=-1,test_queued,test_queue_title,trace_progress;
 static unsigned test_cancel_after;
@@ -67,24 +66,12 @@ void dyna_progress_runtime_settings(const char *settings) {
  char *sep=!a?b:!b?a:a>b?a:b;
  if(sep)sep[1]=0;else strcpy(folder,"./");
 }
-static int identity(const uint8_t *rom,size_t size,char text[65]) {
-#ifdef _WIN32
- BCRYPT_ALG_HANDLE alg=NULL;BCRYPT_HASH_HANDLE hash=NULL;
- unsigned char digest[32];int ok=0;
- if(size>0xffffffffu)return 0;
- if(BCryptOpenAlgorithmProvider(&alg,BCRYPT_SHA256_ALGORITHM,NULL,0)<0)return 0;
- if(BCryptCreateHash(alg,&hash,NULL,0,NULL,0,0)>=0 &&
-    BCryptHashData(hash,(PUCHAR)rom,(ULONG)size,0)>=0 &&
-    BCryptFinishHash(hash,digest,sizeof digest,0)>=0) {
-  static const char digits[]="0123456789abcdef";
-  for(unsigned i=0;i<32;i++){text[2*i]=digits[digest[i]>>4];text[2*i+1]=digits[digest[i]&15];}
-  text[64]=0;ok=1;
- }
- if(hash)BCryptDestroyHash(hash);
- BCryptCloseAlgorithmProvider(alg,0);return ok;
-#else
- (void)rom;(void)size;(void)text;return 0;
-#endif
+static void identity(const uint8_t *rom,size_t size,char text[65]) {
+ static const char digits[]="0123456789abcdef";
+ Sha256 hash;uint8_t digest[32];
+ sha_init(&hash);sha_update(&hash,rom,size);sha_final(&hash,digest);
+ for(unsigned i=0;i<32;i++){text[2*i]=digits[digest[i]>>4];text[2*i+1]=digits[digest[i]&15];}
+ text[64]=0;
 }
 static void refresh_db1_clears(void) {
  static const uint32_t final_stage_ids[]={183310,183264,183282,183302};
@@ -138,10 +125,12 @@ static int launch(void *u,unsigned game,size_t i) {
 }
 int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size) {
  dyna_progress_ui_reset(&prompt);
- navigation_requested=0;
+ navigation_requested=title_requested=autosave_pending=autosave_result=result_won=0;
+ memset(&autosave_code,0,sizeof autosave_code);
  test_setup(game);
  char hash[65];ready=0;snprintf(status,sizeof status,"SAVE UNAVAILABLE");
- if(!folder[0] || !rom || !identity(rom,size,hash))return 0;
+ if(!folder[0] || !rom)return 0;
+ identity(rom,size,hash);
  const char *profile_hash=hash;
  if(game==1 && db1_hashes){
   int known=0;
@@ -169,12 +158,24 @@ int dyna_progress_runtime_start(unsigned game,const uint8_t *rom,size_t size) {
  DynaExtrasLevelProvider provider={NULL,count,item,launch};dyna_extras_ui_set_level_provider(&provider);
  snprintf(status,sizeof status,"SAVE AT A PASSWORD SCREEN");return ready;
 }
+static void queue_autosave(const DynaProgressCode *code){
+ if(autosave_code.length&&autosave_code.mode==code->mode&&autosave_code.stage==code->stage)return;
+ autosave_code=*code;autosave_pending=1;autosave_result=0;
+}
+static void run_autosave(void){
+ autosave_pending=0;
+ autosave_result=dyna_progress_session_save_code(&session,&autosave_code,path)?1:-1;
+ dyna_progress_ui_saved(&prompt,autosave_result>0);
+ fprintf(stderr,"[progress-autosave] %s mode=%u stage=%u source=%06X\n",
+   autosave_result>0?"GAME SAVED":"SAVE FAILED",autosave_code.mode,autosave_code.stage,autosave_code.source_pc);
+}
 void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t d[8],const uint32_t a[8]) {
  switch(pc) {
  case 0x1950:case 0x1a14:case 0x1c5a4:case 0x1d7b6:case 0x1becc:case 0x1dd90:case 0x28f1a:case 0x28f2e:
  case 0x3a38:case 0x6f9a:case 0x4913e:case 0x58ef2:
  case 0x1db7e:case 0x1db88:case 0x1dcec:case 0x1dd1a:case 0x1dce4:
  case 0x1bd6c:case 0x1bd7c:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
+ case 0x1c40:case 0x1c44:
  case 0x49708:case 0x49908:case 0x49926:break;
  default:return;
  }
@@ -192,7 +193,11 @@ void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t 
   }
   dyna_progress_session_before(&session,pc,ram,size,a);dyna_progress_replay_before(&replay,pc,ram,size,d,a);
   if(store.game==1){
+   if(pc==0x1c40 && !autosave_pending){autosave_result=0;autosave_code.length=0;}
+   if(pc==0x1becc)result_won=size>0x3d && ram[0x3d]==1;
    const DynaProgressCode *c=dyna_progress_session_current(&session);
+   if(c && c->source_pc==pc && size>0x3d &&
+      (pc==0x28f1a || ((pc==0x1c44 || pc==0x1becc) && ram[0x3d]==1)))queue_autosave(c);
    uint32_t expected=pc==0x28f1a?0x28f1au:0x1beccu;
    dyna_progress_ui_before(&prompt,pc,c && c->source_pc==expected);
   }
@@ -225,9 +230,18 @@ int dyna_progress_runtime_action(const char *key) {
 }
 const char *dyna_progress_runtime_status(void){return status;}
 int dyna_progress_runtime_prompt(unsigned *selected,const char **feedback) {
- return dyna_progress_ui_prompt(&prompt,selected,feedback);
+ int visible=dyna_progress_ui_prompt(&prompt,selected,feedback);
+ if(visible && feedback && !**feedback)
+  *feedback=autosave_result>0?"GAME SAVED":autosave_result<0?"SAVE FAILED":"";
+ return visible;
 }
-int dyna_progress_runtime_prompt_kind(void){return dyna_progress_ui_kind(&prompt);}
+int dyna_progress_runtime_prompt_kind(void){
+ int kind=dyna_progress_ui_kind(&prompt);
+ return kind==1 && !result_won?3:kind;
+}
+int dyna_progress_runtime_take_title_request(void){
+ int take=title_requested;title_requested=0;return take;
+}
 
 /* Invoked only at the host frame input boundary, never from guest retirement.
  * Public compositor/callback coverage, not physical SDL menu-event coverage. */
@@ -237,8 +251,7 @@ static void save_test_frame(void) {
  int ok=1;
  if(save_test_mode==1){
   const DynaProgressCode *current=dyna_progress_session_current(&session);
-  if(!current || current->source_pc!=0x1becc)ok=0;
-  else if(!dyna_progress_runtime_action("dyna.save") || strcmp(status,"PROGRESS SAVED"))ok=0;
+  if(!current || current->source_pc!=0x1becc || autosave_result!=1)ok=0;
  }
  unsigned n=dyna_progress_session_count(&session);
  if(save_test_mode==3){
@@ -312,6 +325,7 @@ void dyna_progress_runtime_navigation_status(const char *text,int cancel){
 }
 uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask) {
  if(!ready || player)return mask;
+ if(autosave_pending)run_autosave();
  save_test_frame();
  int replace=0;unsigned buttons=0;
  DynaProgressReplayStatus before=replay.status;
@@ -329,8 +343,13 @@ uint16_t dyna_progress_runtime_input(unsigned player,uint16_t mask) {
   if(mask&(GPAD_A|GPAD_C))input|=DYNA_PROGRESS_UI_CONFIRM;
   if(mask&GPAD_START)input|=DYNA_PROGRESS_UI_START;
   if(mask&~(GPAD_UP|GPAD_DOWN|GPAD_A|GPAD_C|GPAD_START))input|=16u;
-  if(dyna_progress_ui_frame(&prompt,input,&block,&start))
-   dyna_progress_ui_saved(&prompt,save_current());
+  if(dyna_progress_ui_frame(&prompt,input,&block,&start)){
+   if(prompt.kind==1 && !result_won)dyna_progress_ui_saved(&prompt,save_current());
+   else{
+    if(autosave_result<0)run_autosave();
+    if(autosave_result>=0)title_requested=1;
+   }
+  }
   if(block)return start?GPAD_START:0;
  }
  if(!replace)return mask;

@@ -18,6 +18,17 @@ int main(void) {
     rom[a[1]]=0xff;assert(dyna_progress_session_count(&s)==0);
     dyna_progress_session_before(&s,0x1950,ram,sizeof ram,a);
     assert(!dyna_progress_session_current(&s));
+    /* The real battle return saves the successor before its cinematic. */
+    const unsigned normal1=0xadde + 20*0x4a;
+    ram[0x2f]=0xff;ram[0x30]=(uint8_t)(normal1>>8);ram[0x31]=(uint8_t)normal1;
+    ram[normal1+0x4a]=2;
+    ram[0x3d]=0xff;
+    dyna_progress_session_before(&s,0x1c44,ram,sizeof ram,a);
+    assert(!dyna_progress_session_current(&s));
+    ram[0x3d]=1;
+    dyna_progress_session_before(&s,0x1c44,ram,sizeof ram,a);
+    c=dyna_progress_session_current(&s);
+    assert(c&&c->mode==1&&c->stage==2&&c->source_pc==0x1c44);
     ram[0x35]=59;ram[0xadde + 60*0x4a]=1;
     const uint8_t secret[4]={0x32,0x1e,0x46,0x22};memcpy(rom+0x1e87e + 60*4,secret,4);
     dyna_progress_session_before(&s,0x28f1a,ram,sizeof ram,a);

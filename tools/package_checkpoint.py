@@ -173,6 +173,7 @@ def close(candidate,qa_path,releases,revision=1):
     if tuple(map(int,version.split('.'))) >= (0,1,7):required.update({'db1-title-extras','db1-title-level','db1-emi-save'})
     if tuple(map(int,version.split('.'))) >= (0,1,8):required.update({'db2-player-6button-original','db2-player-6button-wide','db2-player-6button-state-equality'})
     if tuple(map(int,version.split('.'))) >= (0,5,0):required.update({'sdl3-runtime','recomp-achievements-lists'})
+    if tuple(map(int,version.split('.'))) >= (0,5,5):required.add('db1-title-level-normal1')
     if not required.issubset(qa['cases']) or not all(x['passed'] for x in qa['cases'].values()):
         raise RuntimeError('Missing packaged regression cases')
     destination=releases/f'DynaBrothers-v{version}-win64-checkpoint-r{revision}.zip'
