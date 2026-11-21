@@ -1,6 +1,6 @@
 # DynaBroCollection
 
-[![Release](https://img.shields.io/badge/release-v0.5.0%20Beta%201-brightgreen)](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.0-beta.1)
+[![Release](https://img.shields.io/badge/release-v0.5.4%20Beta-brightgreen)](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.4-beta)
 [![Source checks](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml/badge.svg)](https://github.com/MatyMeatBoy/DynaBroCollection/actions/workflows/source-checks.yml)
 
 <a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
@@ -11,16 +11,16 @@ DynaBroCollection is a native recompilation of *Dyna Brothers* and *Dyna Brother
 
 ## Download and play
 
-Download [v0.5.0 Beta 1](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.0-beta.1) for your platform and bring your own compatible cartridge dumps.
+Download [v0.5.4 Beta](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.4-beta) for your platform and bring your own compatible cartridge dumps.
 
 - **Windows x64** — extract the ZIP and run `DynaBrothers.exe`. Place dumps in `roms/` or select them in the launcher. Keep the adjacent `data/` folder with the executable.
 - **Linux x64** — extract the archive and run `DynaBroCollection`. Requires glibc 2.36 or later. The native settings picker asks for the ROM the first time.
 - **macOS Apple Silicon** — extract the archive and open `DynaBroCollection.app`. The beta is an ad hoc build. A Mac may require you to allow the app in **System Settings → Privacy & Security** after the first open attempt.
-- **Android 7.0 or later** — install the APK, then choose a ROM for each game from the collection screen. The APK contains arm64-v8a and x86_64 executables and on-screen controls.
+- **Android 7.0 or later** — install the APK, then choose a ROM for each game from the collection screen. The APK contains arm64-v8a and x86_64 executables and on-screen controls. The 0.5.4 beta installs alongside the previous Android app and uses a separate save directory.
 
 To play in Japanese, disable **English translation** in **Settings → Mods → Language** and restart the game. The source dumps stay untouched. Change the fullscreen option in **Settings** to switch to windowed or exclusive fullscreen. The selected display mode is saved to the profile.
 
-## What's in v0.5.0 Beta 1
+## Features
 
 - **Dyna Brothers** has a full-screen Extras menu and a scrolling stage selector. Completing a difficulty opens its starting stage and the starting stages of lower difficulties. The widescreen lightning effect reaches both sides of the playfield.
 - **Dyna Brothers 2 Special** keeps its widescreen framing during gameplay and pause. Enhanced mode defaults to a floating HUD. The original HUD remains available.
@@ -29,7 +29,7 @@ To play in Japanese, disable **English translation** in **Settings → Mods → 
 - **Launcher and settings** include a centered, scalable cover, cartridge animation, and tabbed settings available in-game through **Start + Select**, including **Return to Title** and **Quit Game**.
 - **Achievements** include local progress, badge notifications and an in-game list. Both games can also send live unlocks to Recomp Achievements. [Achievement sets, eligibility and setup](docs/recomp-achievements.md)
 
-See the [Beta 1 notes](docs/releases/v0.5.0-checkpoint.md) for the release scope and the [status board](STATUS.md) for project history.
+See the [v0.5.4 release notes](https://github.com/MatyMeatBoy/DynaBroCollection/releases/tag/v0.5.4-beta) for the release scope and the [status board](STATUS.md) for project history.
 
 ## Build and verify
 
