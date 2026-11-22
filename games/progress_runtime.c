@@ -169,16 +169,7 @@ static void run_autosave(void){
  fprintf(stderr,"[progress-autosave] %s mode=%u stage=%u source=%06X\n",
    autosave_result>0?"GAME SAVED":"SAVE FAILED",autosave_code.mode,autosave_code.stage,autosave_code.source_pc);
 }
-void dyna_progress_runtime_before(uint32_t pc,uint8_t *ram,size_t size,uint32_t d[8],const uint32_t a[8]) {
- switch(pc) {
- case 0x1950:case 0x1a14:case 0x1c5a4:case 0x1d7b6:case 0x1becc:case 0x1dd90:case 0x28f1a:case 0x28f2e:
- case 0x3a38:case 0x6f9a:case 0x4913e:case 0x58ef2:
- case 0x1db7e:case 0x1db88:case 0x1dcec:case 0x1dd1a:case 0x1dce4:
- case 0x1bd6c:case 0x1bd7c:case 0x1c9ce:case 0x1caf6:case 0x1cb0c:
- case 0x1c40:case 0x1c44:
- case 0x49708:case 0x49908:case 0x49926:break;
- default:return;
- }
+void dyna_progress_runtime_observe(uint32_t pc,uint8_t *ram,size_t size,uint32_t d[8],const uint32_t a[8]) {
  if(ready){
   DynaProgressReplayStatus before=replay.status;
   if(test_index>=0 && !test_queued && pc==(test_queue_title?0x1c5a4u:0x1d7b6u)){

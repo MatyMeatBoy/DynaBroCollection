@@ -65,6 +65,10 @@ def main():
             put(archive, PORT / name, name, executable=True, text_file=True)
         for name in ("launch.sh", "gameinfo.xml", "port.json", "README.md"):
             put(archive, PORT / name, f"{FOLDER}/{name}", executable=name.endswith(".sh"), text_file=True)
+        put(archive, PORT / "collect-debug.sh", f"{FOLDER}/debug/collect.sh", executable=True, text_file=True)
+        put(archive, ROOT / "tools/r36s_debug.py", f"{FOLDER}/debug/r36s_debug.py", text_file=True)
+        put(archive, ROOT / "games/db1/scenes/r36s-normal1-battle.input",
+            f"{FOLDER}/debug/r36s-normal1-battle.input", text_file=True)
         put(archive, args.screenshot, f"{FOLDER}/screenshot.png")
         for name in (*PROGRAMS, *LIBRARIES, "THIRD_PARTY_NOTICES.md"):
             put(archive, args.stage / name, f"{FOLDER}/{name}", executable=name in PROGRAMS)

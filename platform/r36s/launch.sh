@@ -31,9 +31,10 @@ for controlfolder in /opt/system/Tools/PortMaster /opt/tools/PortMaster \
 done
 set -u
 
-mkdir -p "$GAMEDIR/user" || exit 1
+profile=${DYNA_R36S_PROFILE_DIR:-"$GAMEDIR/user"}
+mkdir -p "$profile" || exit 1
 if [ "${DYNA_R36S_CONSOLE:-}" != 1 ]; then
-    exec >"$GAMEDIR/user/db$game-last-run.log" 2>&1
+    exec >"$profile/db$game-last-run.log" 2>&1
 fi
 if [ ! -r "$rom" ]; then
     message="Copy your supported cartridge dump to dynabrocollection/roms/db$game.md."
@@ -42,7 +43,7 @@ if [ ! -r "$rom" ]; then
     exit 5
 fi
 
-export GENESIS_USER_DIR="$GAMEDIR/user"
+export GENESIS_USER_DIR="$profile"
 export LD_LIBRARY_PATH="$GAMEDIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export SDL_VIDEO_DRIVER="${SDL_VIDEO_DRIVER:-kmsdrm}"
 export SDL_AUDIO_DRIVER="${SDL_AUDIO_DRIVER:-alsa}"

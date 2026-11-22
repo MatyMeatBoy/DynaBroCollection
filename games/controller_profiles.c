@@ -135,7 +135,19 @@ uint16_t dyna_controller_mask(unsigned player,SDL_GameController *pad,uint16_t n
         const GenesisButton logical_directions[]={GB_UP,GB_DOWN,GB_LEFT,GB_RIGHT};
         for(unsigned i=0;i<4;i++)if(SDL_GameControllerGetButton(pad,buttons[i]))normal|=input_button_bit(logical_directions[i]);
     }
-    if(profile==DYNA_PAD_CUSTOM)return normal;
+    if (profile == DYNA_PAD_CUSTOM) {
+#ifdef DYNA_R36S
+        const PlayerInput *input = &g_input_map.p[player];
+        const GamepadBind *accept = &input->pad[GB_C];
+        /* DB1 has no Genesis X button. Use the handheld's X as another
+         * Accept button when the automatic right-trigger binding is active. */
+        if (device->choice == DYNA_PAD_AUTO && input->pad_type == PAD_3BUTTON &&
+            accept->kind == GP_BIND_AXIS && accept->code == SDL_CONTROLLER_AXIS_TRIGGERRIGHT &&
+            accept->axis_dir == 1 && SDL_GameControllerGetButton(pad, SDL_CONTROLLER_BUTTON_X))
+            normal |= input_button_bit(GB_C);
+#endif
+        return normal;
+    }
     SDL_Joystick *stick=SDL_GameControllerGetJoystick(pad);
     uint16_t mask=normal&(input_button_bit(GB_UP)|input_button_bit(GB_DOWN)|input_button_bit(GB_LEFT)|input_button_bit(GB_RIGHT));
     const GenesisButton logical[]={GB_A,GB_B,GB_C,GB_X,GB_Y,GB_Z,GB_START,GB_MODE};
