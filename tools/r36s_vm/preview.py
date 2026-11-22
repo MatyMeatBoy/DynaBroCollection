@@ -48,6 +48,8 @@ class PreviewRates:
 
     def title(self, now):
         viewer_fps = self.measure(now)
+        if viewer_fps == 0:
+            return "Visor sin fotogramas nuevos"
         guest = "VM — FPS"
         if self.guest_fps is not None:
             guest = f"VM {self.guest_fps:.1f} FPS"
@@ -172,8 +174,6 @@ def play_window(cmd, directory, translated=False, virtual_pad=False, control_dir
     canvas.pack()
     status = canvas.create_text(320, 240, fill="white", text="Arrancando dArkOS ARM64…")
     output = canvas.create_image(0, 0, anchor="nw")
-    tk.Label(root, text="Flechas   ·   Z / X / C   ·   Enter (Start)   ·   Esc (Salir)",
-             bg="#181818", fg="#ffffff", pady=8).pack(fill="x")
     frames = queue.Queue(maxsize=1)
     connection = None
     keys = set()
@@ -337,8 +337,9 @@ def play_window(cmd, directory, translated=False, virtual_pad=False, control_dir
             canvas.itemconfigure(output, image=last_image)
             rates.views += 1
         poll_commands()
-        if vm.poll() is not None:
-            if stopping:
+        vm_status = vm.poll()
+        if vm_status is not None:
+            if stopping or vm_status == 0:
                 root.destroy()
                 return
             if not last_image:
