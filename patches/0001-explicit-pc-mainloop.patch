@@ -97,6 +97,59 @@ index 6e54035..b5a376b 100644
      for (int i = 0; i < 3; i++) h = cosim_fnv_u8(h, b->io_data[i]);
      for (int i = 0; i < 3; i++) h = cosim_fnv_u8(h, b->io_ctrl[i]);
      h = cosim_fnv_u8(h, b->version);
+diff --git a/runner/external/minicoro/minicoro.h b/runner/external/minicoro/minicoro.h
+index bb691a7..d58f700 100644
+--- a/runner/external/minicoro/minicoro.h
++++ b/runner/external/minicoro/minicoro.h
+@@ -1103,8 +1103,7 @@ typedef struct _mco_ctxbuf {
+ #ifndef __SOFTFP__
+   void* f[16];
+ #endif
+-  void *d[4]; /* d8-d15 */
+-  void *r[4]; /* r4-r11 */
++  void *r[8]; /* r4-r11 */
+   void *lr;
+   void *sp;
+ } _mco_ctxbuf;
+@@ -1159,9 +1158,9 @@ __asm__(
+ );
+ 
+ static mco_result _mco_makectx(mco_coro* co, _mco_ctxbuf* ctx, void* stack_base, size_t stack_size) {
+-  ctx->d[0] = (void*)(co);
+-  ctx->d[1] = (void*)(_mco_main);
+-  ctx->d[2] = (void*)(0xdeaddead); /* Dummy return address. */
++  ctx->r[0] = (void*)(co);
++  ctx->r[1] = (void*)(_mco_main);
++  ctx->r[2] = (void*)(0xdeaddead); /* Dummy return address. */
+   ctx->lr = (void*)(_mco_wrap_main);
+   ctx->sp = (void*)((size_t)stack_base + stack_size);
+   return MCO_SUCCESS;
+diff --git a/runner/fiber_compat.c b/runner/fiber_compat.c
+index 891e3f8..7acb510 100644
+--- a/runner/fiber_compat.c
++++ b/runner/fiber_compat.c
+@@ -27,7 +27,7 @@
+ #include <string.h>
+ 
+ /* minicoro configuration: assembly switch everywhere we build (Win64,
+- * SysV x86-64, aarch64 — minicoro #errors on anything else), no heap
++ * SysV x86-64, AArch64 and ARM EABI), no heap
+  * allocator (we place the coroutine ourselves), errors reported loudly. */
+ #define MCO_USE_ASM
+ #define MCO_NO_DEFAULT_ALLOCATOR
+@@ -206,10 +206,10 @@ static uintptr_t ctx_saved_sp(const _mco_ctxbuf *c)
+ {
+ #if defined(__x86_64__) || defined(_M_X64)
+     return (uintptr_t)c->rsp;
+-#elif defined(__aarch64__)
++#elif defined(__aarch64__) || defined(__ARM_EABI__)
+     return (uintptr_t)c->sp;
+ #else
+-#  error "fiber_compat: unsupported architecture (minicoro asm: x86-64, aarch64)"
++#  error "fiber_compat: unsupported assembly backend"
+ #endif
+ }
+ 
 diff --git a/runner/game_spec.h b/runner/game_spec.h
 index a135a9b..bd2dcf4 100644
 --- a/runner/game_spec.h

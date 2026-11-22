@@ -32,7 +32,7 @@ endif()
 
 target_sources(DynaBroCollection PRIVATE games/launcher_discovery.c games/launcher_options.c games/launcher_profile.c)
 target_compile_definitions(DynaBroCollection PRIVATE SDL_MAIN_HANDLED)
-target_include_directories(DynaBroCollection PRIVATE games)
+target_include_directories(DynaBroCollection PRIVATE games "${RUNNER_ROOT}")
 target_link_libraries(DynaBroCollection PRIVATE SDL2::SDL2)
 add_dependencies(DynaBroCollection DynaBrothers1AOT DynaBrothers2AOT)
 foreach(_target IN ITEMS DynaBroCollection DynaBrothers1AOT DynaBrothers2AOT)
