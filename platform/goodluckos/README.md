@@ -21,6 +21,8 @@ On a Linux host with `qemu-arm` installed, run `sh platform/goodluckos/smoke.sh 
 
 On hardware, use the port's shell from a local terminal with DRM access. For example, `GENESIS_HOST_TIMING_DUMP=1 sh launch.sh 1 --measure-runtime 7200` measures DB1 for 7200 frames at the normal pace. Keep the resulting `user/db1-last-run.log` and use `sh debug/collect.sh` to collect Linux runtime information. Repeat the same scene and compare the frame intervals before changing a setting.
 
+The JD9366 driver declares a 30 MHz pixel clock and 1040×518 total timing, which implies about 55.7 Hz for that mode. Check the active mode and compare the default synchronized run to `DYNA_GOODLUCKOS_VSYNC=0 GENESIS_HOST_TIMING_DUMP=1 sh launch.sh 1 --measure-runtime 7200`. Compare average game ticks, worst frame and visible tearing before changing the default. Disabling swap synchronization leaves the existing Mega Drive pacer active. An `--runtime-uncapped` run measures throughput without that pacer.
+
 ## Build and package
 
 Define `DYNA_GOODLUCKOS_SYSROOT` as the ARM hard-float Ubuntu 20.04 GCC 10 sysroot. Use the `armv7-focal.cmake` toolchain, `DYNA_R36S=ON`, `DYNA_LAUNCHER_UI=OFF`, and set `SDL2_DIR` to this directory. Set `DYNA_GOODLUCKOS_SDL2_LIBRARY` to the SDL2 shared library extracted from the chosen firmware image, and `DYNA_GOODLUCKOS_SDL2_INCLUDE` to the include directory containing `SDL2/SDL.h`. Build the `DynaBroCollection` target and stage the CMake install. Run `python tools/package_goodluckos.py STAGE OUTPUT.zip` on the staged install.

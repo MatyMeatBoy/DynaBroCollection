@@ -5,6 +5,7 @@ import hashlib
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import zipfile
 
 from package_r36s import PROGRAMS, ROOT, put
@@ -15,6 +16,7 @@ def main():
     parser.add_argument("stage", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--readelf", default="llvm-readelf")
+    parser.add_argument("--strip", default="llvm-strip", help="ARM-capable strip tool")
     args = parser.parse_args()
     platform = ROOT / "platform/goodluckos"
     port = "ports/dynabrocollection"
@@ -28,8 +30,7 @@ def main():
         )):
             parser.error(f"{program} must be an ARM hard-float executable")
 
-    entries = [(args.stage / name, name, True) for name in PROGRAMS]
-    entries.extend((platform / name, name, name.endswith(".sh")) for name in ("launch.sh", "README.md"))
+    entries = [(platform / name, name, name.endswith(".sh")) for name in ("launch.sh", "README.md")]
     entries.append((args.stage / "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md", False))
     entries.append((ROOT / "platform/r36s/collect-debug.sh", "debug/collect.sh", True))
     for directory in ("assets", "licenses"):
@@ -42,13 +43,18 @@ def main():
             if item.is_file():
                 entries.append((item, item.relative_to(args.stage).as_posix(), False))
 
-    with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as archive:
-        put(archive, platform / "dynabrocollection.puppy",
-            ".local/share/applications/dynabrocollection.puppy", text_file=True)
-        archive.writestr(f"{port}/roms/", "")
-        for path, name, executable in entries:
-            put(archive, path, f"{port}/{name}", executable=executable,
-                text_file=path.suffix in {".sh", ".md"})
+    with tempfile.TemporaryDirectory() as temp:
+        for name in PROGRAMS:
+            binary = Path(temp) / name
+            subprocess.run([args.strip, "--strip-unneeded", "-o", str(binary), str(args.stage / name)], check=True)
+            entries.append((binary, name, True))
+        with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as archive:
+            put(archive, platform / "dynabrocollection.puppy",
+                ".local/share/applications/dynabrocollection.puppy", text_file=True)
+            archive.writestr(f"{port}/roms/", "")
+            for path, name, executable in entries:
+                put(archive, path, f"{port}/{name}", executable=executable,
+                    text_file=path.suffix in {".sh", ".md"})
     digest = hashlib.sha256(args.output.read_bytes()).hexdigest()
     args.output.with_suffix(args.output.suffix + ".sha256").write_text(
         f"{digest}  {args.output.name}\n", encoding="ascii"

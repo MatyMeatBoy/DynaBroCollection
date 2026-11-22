@@ -27,4 +27,7 @@ if [ -z "${SDL_GAMECONTROLLERCONFIG:-}" ] && [ -r /etc/profile.d/sdl_controller.
 fi
 export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-kmsdrm}"
 export SDL_AUDIODRIVER="${SDL_AUDIODRIVER:-alsa}"
+if [ "${DYNA_GOODLUCKOS_VSYNC:-1}" = 0 ]; then
+    export GENESIS_NO_VSYNC=1
+fi
 exec "$program" --no-launcher --fullscreen --widescreen off "$rom" "$@"
