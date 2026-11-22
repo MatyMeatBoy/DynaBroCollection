@@ -1,0 +1,13 @@
+[ENTRY]
+CATEGORY=Ports
+NAME=Dyna Brothers
+DESCRIPTION=Dyna Brothers for Mega Drive
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/launch.sh 1
+TERMINAL=0
+
+[ENTRY]
+CATEGORY=Ports
+NAME=Dyna Brothers 2 Special
+DESCRIPTION=Dyna Brothers 2 Special for Mega Drive
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/launch.sh 2
+TERMINAL=0
