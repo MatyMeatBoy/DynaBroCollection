@@ -19,6 +19,7 @@ class R36SDebugTests(unittest.TestCase):
                 "[HOST-HITCH] frame=359 total_us=51000 phase_us=0,50000,0,0,0,0,0,0,1000",
                 "[HOST-SLOW-SIM] frame=11 us=45000 instructions=10000 pc_start=000000 pc_end=000200",
                 "[HOST-SLOW-SIM] frame=359 us=50000 cpu_us=47000 instructions=12000 pc_start=009a14 pc_end=0098d0",
+                "[R36S-68K-PEAK] frame=359 line=72 us=3000 instructions=32 pc_start=0098cc pc_end=0098d4",
                 "[R36S-LIVE] presentations=180 elapsed_us=3000000",
                 "[R36S-LIVE] presentations=180 elapsed_us=3600000",
                 BENCH + json.dumps(run),
@@ -30,6 +31,10 @@ class R36SDebugTests(unittest.TestCase):
             self.assertEqual(outcome["engine_windows"]["phase_average_ms"]["simulation"], 15)
             self.assertEqual(outcome["engine_windows"]["frames_ge_25ms"], 12)
             self.assertEqual(outcome["slow_simulation"][0]["cpu_ms"], 47)
+            self.assertEqual(outcome["m68k_scanline_peaks"], [{
+                "frame": 359, "scanline": 72, "wall_ms": 3, "instructions": 32,
+                "pc_start": "0098cc", "pc_end": "0098d4",
+            }])
             self.assertEqual(len(outcome["slow_simulation"]), 1)
             self.assertEqual(outcome["retained_hitches"]["max_ms"], 51)
             self.assertEqual(outcome["invalid_benchmark_lines"], 1)

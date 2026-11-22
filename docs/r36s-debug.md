@@ -73,6 +73,8 @@ Cuando el tirón se repite en el mismo cuadro, `GENESIS_R36S_TRACE_RASTER_FRAME=
 
 En el laboratorio Windows puedes pasar el mismo número con `--trace-raster-frame 4974` en una prueba `--userspace --preview-bench` de más de 4974 cuadros. Busca `[R36S-RASTER]` en el log del invitado.
 
+La marca `[R36S-68K-PEAK]` identifica la línea más costosa del 68000 dentro del cuadro elegido. Incluye el tiempo, el número de instrucciones retiradas y los PC de entrada y salida. Úsala junto con el total del 68000 para distinguir un tramo aislado de un costo que se reparte a lo largo del cuadro.
+
 ## Lee y compara
 
 ```sh

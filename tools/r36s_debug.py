@@ -16,6 +16,8 @@ WINDOW = re.compile(r"\[HOST-WINDOW\] end_frame=(\d+) count=(\d+) avg_us=(\d+) p
 WINDOW_PEAKS = re.compile(r" max_us=(\d+) frames_ge_25ms=(\d+)")
 SLOW_SIM = re.compile(r"\[HOST-SLOW-SIM\] frame=(\d+) us=(\d+)(?: cpu_us=(\d+))? "
                       r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
+M68K_PEAK = re.compile(r"\[R36S-68K-PEAK\] frame=(\d+) line=(\d+) us=(\d+) "
+                       r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
 
 
 def percentile(values, fraction):
@@ -26,6 +28,7 @@ def percentile(values, fraction):
 def summarize(path, start_frame=0):
     data = {"file": path.name, "benchmarks": [], "renderer": [], "diagnostics": []}
     rates, hitches, windows, window_peaks, slow_sim = [], [], [], [], []
+    m68k_peaks = []
     live_frame = 0
     with path.open(encoding="utf-8-sig", errors="replace") as source:
         for entry in source:
@@ -62,6 +65,10 @@ def summarize(path, start_frame=0):
                 slow_sim.append({"frame": int(match[1]), "wall_ms": round(int(match[2]) / 1000, 3),
                                  "cpu_ms": round(int(match[3]) / 1000, 3) if match[3] and int(match[3]) else None,
                                  "instructions": int(match[4]), "pc_start": match[5], "pc_end": match[6]})
+            if (match := M68K_PEAK.search(line)) and int(match[1]) >= start_frame:
+                m68k_peaks.append({"frame": int(match[1]), "scanline": int(match[2]),
+                                   "wall_ms": int(match[3]) / 1000, "instructions": int(match[4]),
+                                   "pc_start": match[5], "pc_end": match[6]})
             if line.startswith(("[evidence]", "[progress-autosave]", "SDL_Init:", "SDL_CreateWindow:",
                                 "SDL_CreateRenderer:", "[SDL-FAULT]", "[HOST-TIMING]")):
                 if len(data["diagnostics"]) < 40 and line not in data["diagnostics"]:
@@ -103,6 +110,8 @@ def summarize(path, start_frame=0):
         )
     if slow_sim:
         data["slow_simulation"] = sorted(slow_sim, key=lambda row: row["wall_ms"], reverse=True)[:10]
+    if m68k_peaks:
+        data["m68k_scanline_peaks"] = m68k_peaks
     return data
 
 

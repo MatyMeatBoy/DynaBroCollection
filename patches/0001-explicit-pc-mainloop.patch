@@ -2225,22 +2225,23 @@ index 242774c..4734649 100644
  /* Optional cartridge work RAM in the otherwise unmapped $800000-$9FFFFF
   * window. Like g_rom_ext, this is a single game-owned cartridge mapping.
 diff --git a/runner/video/genesis_machine.c b/runner/video/genesis_machine.c
-index bfbe22d..69cd55d 100644
+index bfbe22d..8a025c3 100644
 --- a/runner/video/genesis_machine.c
 +++ b/runner/video/genesis_machine.c
-@@ -4,6 +4,11 @@
+@@ -4,6 +4,12 @@
   * Z80, and our VDP, delivering V/H interrupts. Original implementation.
   */
  #include "genesis_machine.h"
 +#ifdef DYNA_R36S
 +#include "../sim_step.h"
++#include "genesis_runtime.h"
 +#include <SDL2/SDL.h>
 +#include <stdlib.h>
 +#endif
  #if GENESIS_HD_JOBS
  #include "genesis_raster_jobs.h"
  #endif
-@@ -364,19 +369,12 @@ int machine_rb_load(const void *src, size_t len)
+@@ -364,19 +370,12 @@ int machine_rb_load(const void *src, size_t len)
  
  void machine_set_pad(int port, uint16_t buttons)
  {
@@ -2262,7 +2263,7 @@ index bfbe22d..69cd55d 100644
  }
  
  /* NTSC raster timing. */
-@@ -528,6 +526,23 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
+@@ -528,6 +527,24 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
      static uint8_t  idxbuf[GVDP_MAX_WIDTH];
      static uint32_t rowbuf[GVDP_MAX_WIDTH];
      static GVDPRasterRow raster;
@@ -2275,6 +2276,7 @@ index bfbe22d..69cd55d 100644
 +        if (end && *end) trace_frame = -1;
 +    }
 +    uint64_t phases[4] = {0};
++    struct { uint64_t ticks, instructions; uint32_t pc_start, pc_end; int line; } slowest = {0};
 +    const int profile = trace_frame >= 0 && (uint64_t)trace_frame == genesis_sim_tick_count();
 +    uint64_t phase_start = profile ? SDL_GetPerformanceCounter() : 0;
 +#define R36S_RASTER_PHASE(n) do { if (profile) { \
@@ -2286,7 +2288,32 @@ index bfbe22d..69cd55d 100644
  
      for (int line = 0; line < LINES_TOTAL; line++) {
          unsigned irq = gvdp_begin_scanline(&m->vdp, line);
-@@ -546,7 +561,9 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
+@@ -536,7 +553,24 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
+         s_z80_off   = 0;   /* 68K writes during the chunk below land at the line start */
+ 
+         /* Advance the recompiled 68K ~one scanline (it parks at WaitForVBlank). */
++#ifdef DYNA_R36S
++        uint64_t pc_ticks = profile ? SDL_GetPerformanceCounter() : 0;
++        uint64_t instructions = profile ? g_native_insn_count : 0;
++        uint32_t pc_start = profile ? g_cpu.PC : 0;
++#endif
+         glue_run_game_chunk(M68K_PER_LINE);
++#ifdef DYNA_R36S
++        if (profile) {
++            uint64_t elapsed = SDL_GetPerformanceCounter() - pc_ticks;
++            if (elapsed > slowest.ticks) {
++                slowest.ticks = elapsed;
++                slowest.instructions = g_native_insn_count - instructions;
++                slowest.pc_start = pc_start;
++                slowest.pc_end = g_cpu.PC;
++                slowest.line = line;
++            }
++        }
++#endif
+ 
+         /* If a prior V-int was latched while the 68K had IRQs masked (e.g. a
+          * move #$2700,sr screen transition), deliver it now that the chunk above
+@@ -546,7 +580,9 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
          glue_own_hint_service_latched(&m->vdp);
  
          /* Step the Z80 (SMPS driver) for its share of the line. */
@@ -2296,7 +2323,7 @@ index bfbe22d..69cd55d 100644
  
          /* Deliver interrupts to the 68K (and the Z80 at vblank). */
          if (irq & GVDP_IRQ_VBLANK) {
-@@ -579,6 +596,7 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
+@@ -579,6 +615,7 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
              glue_own_interrupt(6, &m->vdp);
          }
  
@@ -2304,7 +2331,7 @@ index bfbe22d..69cd55d 100644
          /* Render + emit active scanlines. In interlace mode 2 each raster
           * line yields TWO output rows (the even and odd fields' lines,
           * rendered progressively into a 448-row frame). */
-@@ -629,13 +647,27 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
+@@ -629,13 +666,31 @@ void machine_run_frame_ex(GenesisScanlineSink sink, void *user,
              }
          }
  
@@ -2316,7 +2343,7 @@ index bfbe22d..69cd55d 100644
  
          m->master_cycle += MASTER_PER_LINE;
 +        R36S_RASTER_PHASE(3);
-+    }
+     }
 +#ifdef DYNA_R36S
 +    if (profile) {
 +        uint64_t frequency = SDL_GetPerformanceFrequency();
@@ -2326,7 +2353,11 @@ index bfbe22d..69cd55d 100644
 +                    (unsigned long long)(phases[1] * 1000000ull / frequency),
 +                    (unsigned long long)(phases[2] * 1000000ull / frequency),
 +                    (unsigned long long)(phases[3] * 1000000ull / frequency));
-     }
++        if (frequency && slowest.ticks)
++            fprintf(stderr, "[R36S-68K-PEAK] frame=%ld line=%d us=%llu instructions=%llu pc_start=%06x pc_end=%06x\n",
++                    trace_frame, slowest.line, (unsigned long long)(slowest.ticks * 1000000ull / frequency),
++                    (unsigned long long)slowest.instructions, slowest.pc_start, slowest.pc_end);
++    }
 +#endif
 +#undef R36S_RASTER_PHASE
      g_snd_frame++;   /* [SND-TRACE] */
