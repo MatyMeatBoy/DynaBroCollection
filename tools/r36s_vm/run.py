@@ -412,6 +412,15 @@ def interactive_console(cmd):
             vm.wait(timeout=8)
 
 
+def latest_port_archive():
+    pattern = re.compile(r"DynaBrothers-v(\d+)\.(\d+)\.(\d+)-r36s-arm64-alpha(\d+)\.zip")
+    releases = []
+    for path in (ROOT / "releases").glob("*-r36s-arm64-alpha*.zip"):
+        if match := pattern.fullmatch(path.name):
+            releases.append((tuple(map(int, match.groups())), path))
+    return max(releases)[1] if releases else None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("image", type=Path)
@@ -490,7 +499,7 @@ def main():
     make_initrd(initrd, opts.interactive, opts.probe, opts.systemd, stress, opts.input_script,
                 use_preview, opts.preview_bench, opts.userspace, opts.bench_frames, opts.bench_input, opts.virtual_pad,
                 opts.candidate, opts.paced,
-                opts.archive or next((ROOT / "releases").glob("*r36s-arm64-alpha1.zip"), None),
+                opts.archive or latest_port_archive(),
                 opts.preview_fps == 60)
     cmd = [
         qemu, "-machine", "q35,pic=off" if opts.userspace else "virt",

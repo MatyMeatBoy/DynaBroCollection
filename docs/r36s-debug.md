@@ -6,10 +6,10 @@ Guarda el binario y su SHA‑256, la versión del firmware o de la VM, el guion 
 
 En el laboratorio Windows, la VM ARM64 completa sirve para compatibilidad de arranque, librerías y fallos de sistema. El modo Linux-user ejecuta el mismo ELF ARM64 con las bibliotecas de dArkOS sobre un kernel x86-64 virtual acelerado. Es el modo de juego interactivo más rápido en este PC. La R36S física completa la matriz con GPU Mali, pantalla, audio, mando y tiempos reales.
 
-Si está disponible la carpeta local del laboratorio, usa `--archive` para elegir el ZIP exacto y `--qemu-dir` si QEMU no está en el PATH.
+Si está disponible la carpeta local del laboratorio, usa `--archive` para elegir el ZIP exacto y `--qemu-dir` si QEMU no está en el PATH. Sin `--archive`, el laboratorio toma la alfa más reciente que encuentre en `releases/`.
 
 ```powershell
-py -3.12 tools/r36s_vm/run.py local/darkos-vm/dArkOS_RG351MP_trixie_11182026.img --archive releases/DynaBrothers-v0.5.5-r36s-arm64-alpha2.zip --preview-bench --userspace --paced --bench-frames 7200 --bench-input games/db1/scenes/r36s-normal1-battle.input
+py -3.12 tools/r36s_vm/run.py local/darkos-vm/dArkOS_RG351MP_trixie_11182026.img --archive releases/DynaBrothers-v0.5.5-r36s-arm64-alpha3.zip --preview-bench --userspace --paced --bench-frames 7200 --bench-input games/db1/scenes/r36s-normal1-battle.input
 ```
 
 ## Maneja el port desde el invitado
@@ -18,7 +18,7 @@ Arranca un invitado dedicado con el mando SDL virtual y un directorio nuevo para
 
 ```powershell
 $sessionFolder = 'local/darkos-vm/db1-session'
-py -3.12 tools/r36s_vm/run.py local/darkos-vm/dArkOS_RG351MP_trixie_11182026.img --archive releases/DynaBrothers-v0.5.5-r36s-arm64-alpha2.zip --play --userspace --virtual-pad --control-dir $sessionFolder
+py -3.12 tools/r36s_vm/run.py local/darkos-vm/dArkOS_RG351MP_trixie_11182026.img --archive releases/DynaBrothers-v0.5.5-r36s-arm64-alpha3.zip --play --userspace --virtual-pad --control-dir $sessionFolder
 ```
 
 Desde otra terminal, consulta la pantalla antes de decidir qué pulsar. En DB1, `START` pasa la intro y una segunda pulsación abre el menú desde `PRESS START BUTTON`. Al probarlo, `DOWN` seleccionó `CONTINUE`, `UP` volvió a `NEW GAME`, `A` inició la primera batalla y `LEFT` movió la selección de la barra de herramientas. `START SELECT` salió del port y el invitado se apagó. Por eso conviene guardar las capturas de interés antes de pulsar esa combinación.

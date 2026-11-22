@@ -1,6 +1,6 @@
 # DynaBroCollection 0.5.5 para R36S
 
-Segunda compilación de prueba para R36S con Linux AArch64. El port usa la ABI de Ubuntu 20.04, SDL2-compat y SDL3. Para mostrar el juego usa KMSDRM/EGL y para sonido usa ALSA del firmware. La alfa 2 reduce el trabajo de seguimiento de progreso durante la simulación e incluye herramientas de diagnóstico en `dynabrocollection/debug/`.
+Tercera compilación de prueba para R36S con Linux AArch64. El port usa la ABI de Ubuntu 20.04, SDL2-compat y SDL3. Para mostrar el juego usa KMSDRM/EGL y para sonido usa ALSA del firmware. La alfa 3 verifica las instrucciones directamente en la ROM cuando el bus lo permite. Incluye herramientas de diagnóstico en `dynabrocollection/debug/`.
 
 ## Instalación manual
 
@@ -27,7 +27,7 @@ cmake -S . -B build/r36s/game -G Ninja \
   -DDYNA_SDL_RUNTIME_LICENSES="$SDL2_LICENSE;$SDL3_LICENSE"
 cmake --build build/r36s/game --target DynaBroCollection
 cmake --install build/r36s/game --prefix build/r36s/stage --strip
-python tools/package_r36s.py build/r36s/stage releases/DynaBrothers-v0.5.5-r36s-arm64-alpha2.zip \
+python tools/package_r36s.py build/r36s/stage releases/DynaBrothers-v0.5.5-r36s-arm64-alpha3.zip \
   --screenshot /path/to/screenshot-640x480.png
 ```
 

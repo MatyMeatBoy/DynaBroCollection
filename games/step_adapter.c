@@ -97,6 +97,22 @@ static unsigned ack_interrupt(void *u,unsigned level) {
 }
 static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16,.ack_interrupt=ack_interrupt};
 
+#ifdef DYNA_R36S
+static const uint8_t *cartridge_code_span(void *user, uint32_t address, size_t length)
+{
+    (void)user;
+    if (address >= sizeof(g_rom) || length > sizeof(g_rom) - address)
+        return NULL;
+    /* The core still compares every fetched word with the descriptor. Any
+     * overlap with the active SRAM mapping needs the ordinary bus resolver. */
+    const GenesisBus *mapping = &g_machine.bus;
+    if (mapping->sram_present && (mapping->sram_enabled || mapping->sram_always_mapped) &&
+        address <= mapping->sram_end && address + length > mapping->sram_base)
+        return NULL;
+    return g_rom + address;
+}
+#endif
+
 #ifdef DYNA_HAS_JP
 static void navigation_sync(void){
  Db1PasswordNavStatus state=db1_password_nav_status(&password_nav);
@@ -293,6 +309,11 @@ static void entry(void) {
      * $000A54 and rejects the shared runner's overseas default $80. */
     g_machine.bus.version=0x00;
     m68k_step_init(&main_cpu,&bus,NULL);
+#ifdef DYNA_R36S
+    const char *code_span = getenv("DYNA_AOT_CODE_SPAN");
+    if (!code_span || strcmp(code_span, "0"))
+        m68k_step_code_span(&main_cpu, cartridge_code_span);
+#endif
     genesis_native_mainloop(DYNA_ENTRY,retire,&main_cpu);
 }
 static void interrupt(uint32_t pc,unsigned level) {
