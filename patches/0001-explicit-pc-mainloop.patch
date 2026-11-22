@@ -458,7 +458,7 @@ index 88a0379..20bf84f 100644
  
  #endif /* RUNNER_GAMEPAD_H */
 diff --git a/runner/glue.c b/runner/glue.c
-index 9678eef..7db2d0e 100644
+index 9678eef..fd715fb 100644
 --- a/runner/glue.c
 +++ b/runner/glue.c
 @@ -25,7 +25,7 @@
@@ -470,7 +470,72 @@ index 9678eef..7db2d0e 100644
  
  /* Tier-3 clean-room 68000 interpreter — the runtime correctness floor. On a
   * dispatch miss the native build used to silently no-op the missed function;
-@@ -851,7 +851,7 @@ static int s_own_hint_latched = 0;
+@@ -294,15 +294,13 @@ static void instruction_watchdog_check(void)
+  * stalls — particularly useful for spin-loop diagnosis where the
+  * spin_check counter shows 0 (something is interleaving). */
+ #define BUS_RING_SIZE 64
+-typedef struct { uint32_t addr; uint8_t kind; } BusRingEntry;
+-static BusRingEntry s_bus_ring[BUS_RING_SIZE];
+-static uint32_t     s_bus_ring_head = 0;     /* next write slot */
++/* All callers pass a 24-bit bus address. Store the address and access kind
++ * together so each access needs one ring store and one counter update. */
++static uint32_t     s_bus_ring[BUS_RING_SIZE];
+ static uint64_t     s_bus_ring_total = 0;    /* total events ever recorded */
+ 
+ static inline void bus_ring_push(uint32_t addr, uint8_t kind) {
+-    s_bus_ring[s_bus_ring_head & (BUS_RING_SIZE - 1)].addr = addr;
+-    s_bus_ring[s_bus_ring_head & (BUS_RING_SIZE - 1)].kind = kind;
+-    s_bus_ring_head++;
++    s_bus_ring[(uint32_t)s_bus_ring_total & (BUS_RING_SIZE - 1)] = addr | ((uint32_t)kind << 24);
+     s_bus_ring_total++;
+ }
+ /* kind: 0=R8 1=R16 2=R32 3=W8 4=W16 5=W32 */
+@@ -318,19 +316,22 @@ static void dump_bus_ring(void)
+     fprintf(stderr, "\n  Bus ring (last %u of %llu accesses):\n",
+             window, (unsigned long long)total);
+     for (uint32_t i = 0; i < window; i++) {
+-        uint32_t idx = (s_bus_ring_head - window + i) & (BUS_RING_SIZE - 1);
+-        const BusRingEntry *e = &s_bus_ring[idx];
+-        const char *k = (e->kind < 6) ? kind_str[e->kind] : "??";
+-        fprintf(stderr, "    [%2u] %s $%06X\n", i, k, e->addr);
++        uint32_t idx = ((uint32_t)total - window + i) & (BUS_RING_SIZE - 1);
++        uint32_t entry = s_bus_ring[idx];
++        unsigned kind = entry >> 24;
++        const char *k = (kind < 6) ? kind_str[kind] : "??";
++        fprintf(stderr, "    [%2u] %s $%06X\n", i, k, entry & 0xFFFFFFu);
+     }
+ }
+ 
+-static void watchdog_check(uint32_t addr, int is_write, uint32_t val)
++/* Keep crash-report storage off the stack of each hot bus accessor. */
++#if defined(__GNUC__) || defined(__clang__)
++__attribute__((cold, noinline))
++#elif defined(_MSC_VER)
++__declspec(noinline)
++#endif
++FIBER_NORETURN static void watchdog_report(uint32_t addr, int is_write)
+ {
+-    (void)val;
+-    if (++s_watchdog_counter != WATCHDOG_LIMIT)
+-        return;
+-
+     char reason[128];
+     snprintf(reason, sizeof(reason),
+              "watchdog: %u bus accesses without yield", s_watchdog_counter);
+@@ -340,6 +341,12 @@ static void watchdog_check(uint32_t addr, int is_write, uint32_t val)
+     exit(2);
+ }
+ 
++static inline void watchdog_check(uint32_t addr, int is_write)
++{
++    if (++s_watchdog_counter == WATCHDOG_LIMIT)
++        watchdog_report(addr, is_write);
++}
++
+ /* =========================================================================
+  * Internal glue state
+  * ========================================================================= */
+@@ -851,7 +858,7 @@ static int s_own_hint_latched = 0;
  
  static int latched_vint_unmasked(void)
  {
@@ -479,7 +544,7 @@ index 9678eef..7db2d0e 100644
  }
  
  /* --- STAGE 1: interleaved interrupt delivery (behind GENESIS_INTERLEAVE_IRQ) --
-@@ -1020,6 +1020,14 @@ static void own_run_handler_interleaved(int level, GVDP *vdp)
+@@ -1020,6 +1027,14 @@ static void own_run_handler_interleaved(int level, GVDP *vdp)
  void glue_own_interrupt(int level, GVDP *vdp)
  {
      if (!s_game_running) return;
@@ -494,7 +559,7 @@ index 9678eef..7db2d0e 100644
      if(s_native_pc_scope && s_native_instruction_open) {
          if(level==6)s_own_vint_latched=1;
          if(level==4)s_own_hint_latched=1;
-@@ -1089,7 +1097,13 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1089,7 +1104,13 @@ void glue_own_interrupt(int level, GVDP *vdp)
          M68KState saved = g_cpu;
          int saved_split_sp_popped = recomp_interrupt_context_enter();
          for (int i = 0; i < 256; i++) save[i] = g_ram[(byteoff + i) & 0xFFFFu];
@@ -509,7 +574,7 @@ index 9678eef..7db2d0e 100644
          s_in_vblank_service = 1;
          /* Same audio-stamp re-base as own_deliver_vint: H-int handler chip
           * writes stamp at the delivery raster, not the parked counter. */
-@@ -1098,6 +1112,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1098,6 +1119,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
          g_rte_pending = 0; g_rte_pending_ptr = &s_rte_dummy; g_rte_pending = 0;
          /* H-int handler cycles owe raster time too (same rule as V-int). */
          uint32_t cyc_before = g_audio_cycle_counter;
@@ -517,7 +582,7 @@ index 9678eef..7db2d0e 100644
          if (genesis_force_interp()) {
              /* Interpret the H-int handler body from the level-4 autovector. */
              m68k_interp_run_handler(m68k_read32(0x70) & 0xFFFFFFu);
-@@ -1109,8 +1124,15 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1109,8 +1131,15 @@ void glue_own_interrupt(int level, GVDP *vdp)
          g_rte_pending_ptr = &s_rte_real; g_rte_pending = 0;
          g_68k_stamp_rebase = saved_rebase;
          s_in_vblank_service = 0;
@@ -534,7 +599,7 @@ index 9678eef..7db2d0e 100644
          recomp_interrupt_context_leave(saved_split_sp_popped);
      }
  }
-@@ -1122,6 +1144,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
+@@ -1122,6 +1151,7 @@ void glue_own_interrupt(int level, GVDP *vdp)
   * yields exactly one V-int when unmasked, same as hardware/clownmdemu). */
  int glue_own_vint_service_latched(GVDP *vdp)
  {
@@ -542,7 +607,7 @@ index 9678eef..7db2d0e 100644
      if (!s_own_vint_latched || !s_game_running) return 0;
      if(s_native_pc_scope && s_native_instruction_open)return 0;
      /* Deliver as soon as the mask drops; do NOT hold behind outstanding raster
-@@ -1138,6 +1161,7 @@ int glue_own_vint_service_latched(GVDP *vdp)
+@@ -1138,6 +1168,7 @@ int glue_own_vint_service_latched(GVDP *vdp)
   * Multiple expiries coalesce into the same asserted request. */
  int glue_own_hint_service_latched(GVDP *vdp)
  {
@@ -550,7 +615,7 @@ index 9678eef..7db2d0e 100644
      if(s_native_pc_scope && s_native_instruction_open)return 0;
      if (!s_own_hint_latched || !s_game_running || s_irq_in_progress || s_pending_irq ||
          !(vdp->reg[0]&16) || ((g_cpu.SR>>8)&7)>=4) return 0;
-@@ -1146,6 +1170,17 @@ int glue_own_hint_service_latched(GVDP *vdp)
+@@ -1146,6 +1177,17 @@ int glue_own_hint_service_latched(GVDP *vdp)
  }
  int glue_cosim_hint_latched(void) { return s_own_hint_latched; }
  
@@ -568,7 +633,7 @@ index 9678eef..7db2d0e 100644
  int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,void *user)
  {
      if(s_native_pc_scope || !step)return 0;
-@@ -1186,6 +1221,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
+@@ -1186,6 +1228,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
      abort();
  }
  
@@ -599,7 +664,7 @@ index 9678eef..7db2d0e 100644
  /* Non-clearing read of the masked-V-int latch for full-state hashing
   * (glue_own_vint_service_latched() would consume it — must not, during a
   * side-effect-free snapshot). */
-@@ -1634,7 +1693,7 @@ void glue_restart_game_fiber(uint32_t resume_pc)
+@@ -1634,7 +1700,7 @@ void glue_restart_game_fiber(uint32_t resume_pc)
  
      s_game_running = 0;
      s_game_yielded_vblank = 0;
@@ -608,7 +673,61 @@ index 9678eef..7db2d0e 100644
  #if SONIC_REVERSE_DEBUG
      s_game_yielded_break = 0;
  #endif
-@@ -2562,7 +2621,7 @@ typedef struct GlueRbSched {
+@@ -1772,7 +1838,7 @@ static inline void spin_check(uint32_t byte_addr, int is_write)
+ uint16_t m68k_read16(uint32_t byte_addr)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 0, 0);
++    watchdog_check(byte_addr, 0);
+     bus_ring_push(byte_addr, 1);
+     if (byte_addr == 0xA11100u) {
+         uint16_t ack = gbus_read16(&g_machine.bus, byte_addr);
+@@ -1799,7 +1865,7 @@ static int      s_z80poll_streak    = 0;
+ uint8_t m68k_read8(uint32_t byte_addr)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 0, 0);
++    watchdog_check(byte_addr, 0);
+     bus_ring_push(byte_addr, 0);
+     /* This bus model grants BUSREQ synchronously in gbus_write16. Latch
+      * its acknowledgement before any scheduler yield. Unconditionally
+@@ -1871,7 +1937,7 @@ uint8_t m68k_read8(uint32_t byte_addr)
+ uint32_t m68k_read32(uint32_t byte_addr)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 0, 0);
++    watchdog_check(byte_addr, 0);
+     bus_ring_push(byte_addr, 2);
+     spin_check(byte_addr, 0);
+     /* Bump once for the whole 32-bit op — both halves at same cycle.
+@@ -1885,7 +1951,7 @@ uint32_t m68k_read32(uint32_t byte_addr)
+ void m68k_write16(uint32_t byte_addr, uint16_t val)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 1, val);
++    watchdog_check(byte_addr, 1);
+     bus_ring_push(byte_addr, 4);
+     /* 16-bit FM writes land one byte per port per cycle on hardware. The
+      * YM2612 only takes 8-bit data; SMPS always uses 8-bit writes. Be
+@@ -1903,7 +1969,7 @@ void m68k_write16(uint32_t byte_addr, uint16_t val)
+ void m68k_write8(uint32_t byte_addr, uint8_t val)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 1, val);
++    watchdog_check(byte_addr, 1);
+     bus_ring_push(byte_addr, 3);
+     audio_detour_write(byte_addr, val);
+     if (s_io_log_enabled && byte_addr >= 0xA10000u && byte_addr <= 0xA1001Fu) {
+@@ -1922,7 +1988,7 @@ void m68k_write8(uint32_t byte_addr, uint8_t val)
+ void m68k_write32(uint32_t byte_addr, uint32_t val)
+ {
+     byte_addr &= 0xFFFFFFu;
+-    watchdog_check(byte_addr, 1, (uint32_t)(val >> 16));
++    watchdog_check(byte_addr, 1);
+     bus_ring_push(byte_addr, 5);
+     /* 32-bit write = two consecutive 16-bit writes. Only matters for FM
+      * bus; SMPS never uses 32-bit to write FM regs so this is defensive
+@@ -2562,7 +2628,7 @@ typedef struct GlueRbSched {
       * _STATICS probe on Sonic 3 (2026-09-25): omitting it forked the replay
       * in cpu/sched/ram at step 1 in 5 of 149 probe passes. */
      int32_t  split_sp_popped;
@@ -617,7 +736,7 @@ index 9678eef..7db2d0e 100644
  } GlueRbSched;
  
  size_t glue_rb_sched_save(void *dst, size_t cap)
-@@ -2619,6 +2678,7 @@ size_t glue_rb_sched_save(void *dst, size_t cap)
+@@ -2619,6 +2685,7 @@ size_t glue_rb_sched_save(void *dst, size_t cap)
      s.native_pc_scope=s_native_pc_scope;
      s.native_instruction_open=s_native_instruction_open;
      s.native_vblank_completed=s_native_vblank_completed;
@@ -625,7 +744,7 @@ index 9678eef..7db2d0e 100644
      memcpy(dst, &s, sizeof s);
      return sizeof s;
  }
-@@ -2630,7 +2690,8 @@ int glue_rb_sched_load(const void *src, size_t len)
+@@ -2630,7 +2697,8 @@ int glue_rb_sched_load(const void *src, size_t len)
      memcpy(&s, src, sizeof s);
      if(s.native_pc_scope<0 || s.native_pc_scope>1 ||
         s.native_instruction_open<0 || s.native_instruction_open>s.native_pc_scope ||
@@ -635,7 +754,7 @@ index 9678eef..7db2d0e 100644
      g_frame_count               = s.frame_count;
      g_cycle_accumulator         = s.cycle_accumulator;
      g_vblank_threshold          = s.vblank_threshold;
-@@ -2679,6 +2740,7 @@ int glue_rb_sched_load(const void *src, size_t len)
+@@ -2679,6 +2747,7 @@ int glue_rb_sched_load(const void *src, size_t len)
      s_native_pc_scope=s.native_pc_scope;
      s_native_instruction_open=s.native_instruction_open;
      s_native_vblank_completed=s.native_vblank_completed;
