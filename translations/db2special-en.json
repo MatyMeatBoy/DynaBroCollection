@@ -3,6 +3,24 @@
   "scope": "Gameplay prompts plus direct-reference inventory strings; biographies remain untranslated",
   "entries": [
     {
+      "id": "six-button-setup-player-1",
+      "address": 312126,
+      "capacity": 8,
+      "before": "00d100f00bdf0d6a",
+      "encoding": "glyph16",
+      "align": "center",
+      "english": "1P"
+    },
+    {
+      "id": "six-button-setup-player-2",
+      "address": 312136,
+      "capacity": 8,
+      "before": "00d200f00bdf0d6a",
+      "encoding": "glyph16",
+      "align": "center",
+      "english": "2P"
+    },
+    {
       "id": "inventory-00226",
       "address": 550,
       "capacity": 27,
@@ -4551,14 +4569,6 @@
   ],
   "provenance": "English wording adapted from the user-supplied IPS (SHA256 1aecbdda25af0b5197b521a0f9dfebd90fdb55393eaf55284aac93c5e0c18bc4); Special addresses independently identified from exact Japanese strings. No IPS padding or code writes reused.",
   "glyph_text": [
-    {
-      "address": 312136,
-      "before": "00d200f00bdf0d6a",
-      "lines": [
-        "2P SETUP"
-      ],
-      "verification": "glyph-ID string; guard exact; scene capture pending"
-    },
     {
       "address": 312146,
       "before": "00d601bc019f01d301b101a301a9014b",

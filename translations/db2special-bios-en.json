@@ -1,0 +1,206 @@
+[
+  {
+    "id": "bio-1-name",
+    "address": 2196922,
+    "before": "01b701a601c9",
+    "lines": [
+      "PTERA"
+    ]
+  },
+  {
+    "id": "bio-1-role",
+    "address": 2197376,
+    "before": "0ef40934085f0e390b490aa3",
+    "lines": [
+      "FLYING CARNIVORE"
+    ]
+  },
+  {
+    "id": "bio-1-description",
+    "address": 2196930,
+    "before": "0ac406b3013701460d8801720cd5013900030c8e110f014f0aef014a0124012c05ec088210e50cc601470bef01260003",
+    "lines": [
+      "PATROLS FOR FOES.",
+      "LOW HP. STRIKES,",
+      "THEN FLIES AWAY."
+    ]
+  },
+  {
+    "id": "bio-2-name",
+    "address": 2195954,
+    "before": "018201cd",
+    "lines": [
+      "ALLO"
+    ]
+  },
+  {
+    "id": "bio-2-role",
+    "address": 2196408,
+    "before": "087e0882085f0e390b490aa3",
+    "lines": [
+      "AMBUSH CARNIVORE"
+    ]
+  },
+  {
+    "id": "bio-2-description",
+    "address": 2195960,
+    "before": "0df0012b013a014b0d8801720c9401410002013901500164012f014801690128016b0003013f015e014b01a90198016b0003",
+    "lines": [
+      "WAITS. QUICKLY",
+      "CATCHES FOES. MAY",
+      "BUNGLE."
+    ]
+  },
+  {
+    "id": "bio-3-name",
+    "address": 2197404,
+    "before": "01b4001c014101630173",
+    "lines": [
+      "P-CHAN"
+    ]
+  },
+  {
+    "id": "bio-3-role",
+    "address": 2197868,
+    "before": "10d10b490aa3",
+    "lines": [
+      "EGG EATER"
+    ]
+  },
+  {
+    "id": "bio-3-description",
+    "address": 2197416,
+    "before": "10d1012c0ca70905012d00030001000100011173110f014f014a0124013101490de801320c6d014f0c410124012a0d3409f20a540003",
+    "lines": [
+      "EGG FAN. SHOWOFF.",
+      "WEAK ARMS. QUICK",
+      "TO FLEE."
+    ]
+  },
+  {
+    "id": "bio-4-name",
+    "address": 2194976,
+    "before": "019901a60194",
+    "lines": [
+      "STEGO"
+    ]
+  },
+  {
+    "id": "bio-4-role",
+    "address": 2195436,
+    "before": "0ecb0b43085f0c500b490aa3",
+    "lines": [
+      "BREEDING HERBIVORE"
+    ]
+  },
+  {
+    "id": "bio-4-description",
+    "address": 2194984,
+    "before": "012a0148014a0137012f0146014e0173012d0a540003014e01730153016a01480c5001720b4901590146000210d1017209da01600003",
+    "lines": [
+      "GENTLE, CAREFREE.",
+      "GRAZES AT EASE.",
+      "LAYS EGGS."
+    ]
+  },
+  {
+    "id": "bio-5-name",
+    "address": 2196436,
+    "before": "01a6018301c901ae",
+    "lines": [
+      "TYRANNO"
+    ]
+  },
+  {
+    "id": "bio-5-role",
+    "address": 2196894,
+    "before": "09160882085f0e390b490aa3",
+    "lines": [
+      "ATTACK CARNIVORE"
+    ]
+  },
+  {
+    "id": "bio-5-description",
+    "address": 2196446,
+    "before": "09050bef0d8a0147013d014e0e6b06b5110f014f098707ef00030dec014f05ad0124012c096c014f0124012401c401a40003",
+    "lines": [
+      "FIERCE. TOP POWER.",
+      "DIM-WITTED. KIND",
+      "AT HEART."
+    ]
+  },
+  {
+    "id": "bio-6-name",
+    "address": 2195464,
+    "before": "01a801ca019101c9",
+    "lines": [
+      "TRICERA"
+    ]
+  },
+  {
+    "id": "bio-6-role",
+    "address": 2195926,
+    "before": "0fe90632085f0c500b490aa3",
+    "lines": [
+      "DEFENSE HERBIVORE"
+    ]
+  },
+  {
+    "id": "bio-6-description",
+    "address": 2195474,
+    "before": "0f7f11620a6707a10140012c0f490131013a08990124000308b701370124074407ed014e0d060147016207ef012f0bb8012d016b0003",
+    "lines": [
+      "PEACEFUL. HATES",
+      "LOSING. THRIVES IN",
+      "HARSH CONDITIONS."
+    ]
+  },
+  {
+    "id": "bio-stat-1",
+    "address": 2194902,
+    "before": "0c8e0001110f",
+    "lines": [
+      "HP"
+    ]
+  },
+  {
+    "id": "bio-stat-2",
+    "address": 2194910,
+    "before": "09160882110f",
+    "lines": [
+      "ATTACK"
+    ]
+  },
+  {
+    "id": "bio-stat-3",
+    "address": 2194918,
+    "before": "0fe908e6110f",
+    "lines": [
+      "DEFEND"
+    ]
+  },
+  {
+    "id": "bio-stat-4",
+    "address": 2194926,
+    "before": "0c270c410135",
+    "lines": [
+      "SPEED"
+    ]
+  },
+  {
+    "id": "bio-stat-5",
+    "address": 2194934,
+    "before": "09da10d110e8",
+    "lines": [
+      "EGGRTE"
+    ]
+  },
+  {
+    "id": "bio-stat-6",
+    "address": 2194942,
+    "before": "00f00c5d0683",
+    "lines": [
+      "P GAIN"
+    ]
+  }
+]

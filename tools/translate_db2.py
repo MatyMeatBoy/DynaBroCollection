@@ -34,7 +34,7 @@ def glyph16(text: str, glyphs: int, align: str = 'left') -> bytes:
     return b''.join(w.to_bytes(2, 'big') for w in words)
 
 
-def translate(source: bytes, catalog: dict) -> bytes:
+def translate(source: bytes, catalog: dict, *, native_only: bool = False) -> bytes:
     if hashlib.sha256(source).hexdigest() != catalog['source_sha256']:
         raise ValueError('Translation source SHA256 mismatch')
     if len(source) < 512 or len(source) & 1:
@@ -77,10 +77,19 @@ def translate(source: bytes, catalog: dict) -> bytes:
             raise ValueError('Overlapping translation edits')
         used |= positions
         words = [int.from_bytes(before[i:i + 2], 'big') for i in range(0, len(before), 2)]
-        edits.append((address, b''.join((2 if w == 1 else w).to_bytes(2, 'big') for w in words)))
+        if not native_only:
+            edits.append((address, b''.join((2 if w == 1 else w).to_bytes(2, 'big') for w in words)))
     out = bytearray(source)
     for address, payload in edits:
         out[address:address + len(payload)] = payload
+    if native_only:
+        # Ignore the domestic/overseas bit, but retain the 50 Hz guard.
+        for address, before, after in ((0xA62, b'\x02\x00\x00\xc0\x67\x72', b'\x02\x00\x00\x40\x67\x72'),
+                                       (0x1F0, b'J ', b'JU')):
+            end = address + len(before)
+            if out[address:end] != before:
+                raise ValueError(f'NTSC compatibility guard failed at {address:06X}')
+            out[address:end] = after
     checksum = sum(struct.unpack('>' + str((len(out) - 512) // 2) + 'H', out[512:])) & 65535
     out[0x18e:0x190] = checksum.to_bytes(2, 'big')
     return bytes(out)
@@ -90,12 +99,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
     parser.add_argument('--catalog', type=Path, default=Path(__file__).resolve().parent.parent / 'translations/db2special-en.json')
-    parser.add_argument('--output', type=Path, default=Path('local/roms/db2special-en-prompts.md'))
-    parser.add_argument('--patch', type=Path, default=Path('local/patches/db2special-en-prompts.bps'))
+    parser.add_argument('--native-only', action='store_true', help='Keep original glyphs for text drawn by the port')
+    parser.add_argument('--output', type=Path)
+    parser.add_argument('--patch', type=Path)
     args = parser.parse_args()
+    stem = 'db2special-en-mega-drive' if args.native_only else 'db2special-en-prompts'
+    args.output = args.output or Path(f'local/roms/{stem}.md')
+    args.patch = args.patch or Path(f'local/patches/{stem}.bps')
     source = args.rom.read_bytes()
     catalog = json.loads(args.catalog.read_text(encoding='utf-8'))
-    output = translate(source, catalog)
+    output = translate(source, catalog, native_only=args.native_only)
     patch = create_bps(source, output)
     if apply_bps(source, patch) != output:
         raise RuntimeError('BPS roundtrip mismatch')
@@ -103,12 +116,14 @@ def main():
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open('xb') as stream:
             stream.write(data)
-    report = dict(scope=catalog['scope'], entries=len(catalog['entries']), source=identity(source), output=identity(output),
+    scope = 'Native ROM text entries only' if args.native_only else catalog['scope']
+    report = dict(scope=scope, entries=len(catalog['entries']), source=identity(source), output=identity(output),
                   patch=identity(patch), verification='binary guards, checksum and BPS roundtrip; scene validation pending')
     args.output.with_suffix('.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
-    header = Path(__file__).resolve().parent.parent / 'generated/db2overlay/translation_identity.h'
-    header.parent.mkdir(parents=True, exist_ok=True)
-    header.write_text('#pragma once\n#define DYNA_DB2_ENGLISH_CRC 0x' + report['output']['crc32'] + 'u\n', encoding='utf-8')
+    if not args.native_only:
+        header = Path(__file__).resolve().parent.parent / 'generated/db2overlay/translation_identity.h'
+        header.parent.mkdir(parents=True, exist_ok=True)
+        header.write_text('#pragma once\n#define DYNA_DB2_ENGLISH_CRC 0x' + report['output']['crc32'] + 'u\n', encoding='utf-8')
     print(json.dumps(report, indent=2))
 
 
