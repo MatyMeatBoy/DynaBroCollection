@@ -15,6 +15,8 @@ Puppy reads the `.puppy` file and launches each game through `/bin/sh`. The laun
 
 Use the firmware root filesystem and a Cortex-A7 QEMU userspace run to check ARM instructions, dynamic linking and scripted game logic. Use dummy SDL backends for deterministic frame and state comparisons. Measure frame pacing with the Mali display path, ALSA audio and the physical controller on the handheld.
 
+On a Linux host with `qemu-arm` installed, run `sh platform/goodluckos/smoke.sh FIRMWARE_ROOT ARMV7_STAGE` to check both engines against the firmware loader. `FIRMWARE_ROOT` is the extracted Linux partition, with its symlinks preserved. The smoke check prints the dependency resolution and build metadata for each executable.
+
 - [GoodLuckOS firmware releases](https://github.com/CodeZombie/goodluckOS/releases)
 - [Puppy configuration](https://github.com/CodeZombie/goodluckOS/blob/main/rootfs/package/puppy/PUPPY.md)
 - [GA36 Ports installation guide](https://ga36.genserek.net/help/)
