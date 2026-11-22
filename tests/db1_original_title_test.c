@@ -11,9 +11,8 @@ int db1_title_art_logo_ready(void){return ready;}
 int db1_title_art_identified(const GVDP *v){return v && v->reg[0]==0x42;}
 void db1_title_art_geometry(int h,int top,int nh){assert(h==224&&top==0&&nh==224);geometry_calls++;}
 void db1_title_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,int english){
- assert(v==&vdp&&line>=24&&line<144&&width==320&&left==0&&english==1);
- /* Deliberately modify the entire row; adapter must copy back only the ROI. */
- for(int x=0;x<320;x++)out[x]=0xff000000u|((unsigned)line<<12)|(unsigned)x;
+ assert(v==&vdp&&line>=24&&line<144&&width==224&&left==-48&&english==1);
+ for(int x=0;x<width;x++)out[x]=0xff000000u|((unsigned)line<<12)|(unsigned)(x-left);
  row_calls++;
 }
 static void fill(void){memset(buffer,0x5a,sizeof buffer);memcpy(before,buffer,sizeof buffer);}

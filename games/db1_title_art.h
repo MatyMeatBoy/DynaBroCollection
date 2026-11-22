@@ -16,4 +16,6 @@ unsigned db1_title_art_nearest(uint32_t rgb,const uint16_t palette[64],unsigned 
 uint32_t db1_title_art_alpha(uint32_t dst,uint32_t src,unsigned alpha);
 int db1_title_art_identified(const GVDP *);
 int db1_title_art_logo_ready(void);
+/* Asset I/O and palette conversion belong to startup, before the first frame. */
+void db1_title_art_preload(void);
 #endif

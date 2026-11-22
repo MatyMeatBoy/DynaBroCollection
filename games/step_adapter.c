@@ -7,6 +7,7 @@
 #include "genesis_runtime.h"
 #include "glue.h"
 #include "game_spec.h"
+#include "sim_step.h"
 #include "native_interruptible.h"
 #include "video/genesis_machine.h"
 #include "m68k_step.h"
@@ -47,6 +48,7 @@ static const RecompRuntimeUiItem language_items[]={
 #include "db1_scenes.h"
 #include "db1_title_menu.h"
 #include "db1_original_title.h"
+#include "db1_title_art.h"
 #include "db1_title_menu_smoke.h"
 #include "db1_password_nav.h"
 static Db1TitleMenu title_menu;
@@ -97,7 +99,6 @@ static unsigned ack_interrupt(void *u,unsigned level) {
 }
 static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16,.ack_interrupt=ack_interrupt};
 
-#ifdef DYNA_R36S
 static const uint8_t *cartridge_code_span(void *user, uint32_t address, size_t length)
 {
     (void)user;
@@ -111,7 +112,6 @@ static const uint8_t *cartridge_code_span(void *user, uint32_t address, size_t l
         return NULL;
     return g_rom + address;
 }
-#endif
 
 #ifdef DYNA_HAS_JP
 static void navigation_sync(void){
@@ -210,8 +210,8 @@ static int retire(void *user,unsigned *cycles) {
     if(DYNA_ENTRY==0x200u && g_cpu.PC==0x9828u && getenv("DYNA_LZ_TRACE")) {
         uint32_t dst=glue_peek32(g_cpu.A[7]+4u);
         uint32_t src=glue_peek32(g_cpu.A[7]+8u);
-        fprintf(stderr,"[DB1-LZ] source=$%06X target=$%06X bytes=%u method=%u\n",
-                src,dst,glue_peek16(src),glue_peek8(src+2u));
+        fprintf(stderr,"[DB1-LZ] frame=%u source=$%06X target=$%06X bytes=%u method=%u\n",
+                genesis_sim_tick_count(),src,dst,glue_peek16(src),glue_peek8(src+2u));
     }
     if(ctx==&main_cpu && !ctx->state.instructions && getenv("DYNA_IRQ_SELFTEST")) {
         g_cpu.SR=0x2300u;
@@ -309,11 +309,9 @@ static void entry(void) {
      * $000A54 and rejects the shared runner's overseas default $80. */
     g_machine.bus.version=0x00;
     m68k_step_init(&main_cpu,&bus,NULL);
-#ifdef DYNA_R36S
     const char *code_span = getenv("DYNA_AOT_CODE_SPAN");
     if (!code_span || strcmp(code_span, "0"))
         m68k_step_code_span(&main_cpu, cartridge_code_span);
-#endif
     genesis_native_mainloop(DYNA_ENTRY,retire,&main_cpu);
 }
 static void interrupt(uint32_t pc,unsigned level) {
@@ -368,6 +366,7 @@ static void settings(const char *path){
     dyna_language_settings_load(path);
 #ifdef DYNA_HAS_JP
     dyna_visor_settings_bind(db1_video_set_visor_offset_tiles);
+    db1_title_art_preload();
 #elif defined(DYNA_HAS_OVERLAY)
     dyna_visor_settings_bind(db2_video_visor_offset);
     dyna_free_hud_bind(db2_video_free_hud);

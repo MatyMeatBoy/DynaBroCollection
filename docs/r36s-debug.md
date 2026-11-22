@@ -39,7 +39,7 @@ En juego manual, el visor acepta flechas para la cruceta, Enter para Start, F8 p
 
 El título muestra los FPS que presenta el juego dentro del invitado, su porcentaje respecto al objetivo indicado por el juego y los FPS que dibuja el visor. Por defecto, el puente transmite uno de cada dos fotogramas, por lo que cerca de 30 FPS del visor pueden corresponder a 100 % en el invitado. Agrega `--preview-fps 60` para enviar cada cuadro en el modo Linux-user. El visor conserva el fotograma más reciente y su tasa efectiva depende del equipo. El título se actualiza una vez por segundo y toma el último bloque de 180 presentaciones del log del invitado.
 
-Para automatizar una prueba, agrega `--input-script ruta.input` y un límite de cuadros. Por ejemplo, `PRESS START 12` mantiene Start durante doce cuadros lógicos. Los guiones reproducen entradas del juego, mientras que la prueba del mando virtual atraviesa la API de SDL.
+Para automatizar una prueba, agrega `--input-script ruta.input` y un límite de cuadros. `PRESS START 12` mantiene Start durante doce cuadros lógicos. Con el mando de seis botones seleccionado, el guion también admite `X`, `Y`, `Z` y `MODE`. Los guiones reproducen entradas del juego, mientras que la prueba del mando virtual atraviesa la API de SDL.
 
 ## Recoge evidencia local
 
@@ -65,6 +65,12 @@ printf '%s\n' "$profile/db1-perf.log"
 
 En un build que incluye las ventanas de temporización, cada registro `HOST-WINDOW` agrega 180 cuadros sin escribir a disco por cuadro. `HOST-HITCH` identifica las fases de los últimos eventos retenidos. La variante temporal para medir por separado la capacidad sin espera es `--runtime-uncapped`. Para una prueba de presentación real mantén el ritmo normal y el backend que usa el jugador.
 
+Con presentación normal y diagnóstico activo, `deadline_wait` mide la espera del reloj y `pacer` mide el resto del tramo, incluida la llamada de presentación. En logs anteriores y en el modo de alta frecuencia la espera queda incluida en `pacer`.
+
+Los bloques recientes incluyen `max_us` y el número de cuadros de 25 ms o más. Revisa el primer cuadro por separado para distinguir inicialización de tirones durante el juego. `HOST-SLOW-SIM` registra el PC, las instrucciones retiradas y el tiempo de CPU del hilo cuando la simulación alcanza 24 ms. Un `cpu_us=0` indica que el reloj del hilo no está disponible. Los ensayos con ritmo normal en la VM también registran cargas de DB1 (`DB1-LZ`) y llamadas lentas del puente gráfico (`R36S-PRESENT-HITCH`).
+
+Cuando el tirón se repite en el mismo cuadro, `GENESIS_R36S_TRACE_RASTER_FRAME=4974` registra el tiempo dedicado al 68000, al Z80, al vídeo y a las interrupciones durante ese cuadro. Cambia el número para otro caso. El muestreo por línea puede alterar esa medición, así que compara la misma configuración antes y después.
+
 ## Lee y compara
 
 ```sh
@@ -72,6 +78,8 @@ python tools/r36s_debug.py referencia.log candidato.log --from-frame 5600
 ```
 
 Usa los mismos inputs, firmware, backend y opciones en ambos registros. El analizador comprueba el tipo y longitud de las corridas y compara los hashes de estado y audio. Compara el arranque y la batalla por separado. La mediana de los bloques `R36S-LIVE` mide las presentaciones del invitado. Los percentiles de `HOST-HITCH` describen solo los eventos retenidos por el motor. Repite en frío y en caliente antes de atribuir una mejora a un cambio.
+
+En el modo `--preview-bench --userspace`, `--no-frame-stream` mantiene el renderizado en el invitado y desactiva la copia de píxeles hacia Windows. Compara con una pasada del mismo ZIP y guion que omita ese argumento. Comprueba `received_bytes` y los hashes para confirmar qué trabajo se eliminó y que ambas pasadas completaron la misma carga.
 
 En el laboratorio, la prueba `--stress` permite aislar renderizado por software, cuotas de CPU, memoria limitada, DRM ausente, renderer inválido, presentación demorada y subidas de textura rechazadas. Usa la prueba en la R36S física para confirmar el ritmo del panel, la salida audible y el comportamiento del mando. Los logs de SDL y kernel ayudan a distinguir errores de arranque de una caída de cuadros en un nivel reproducible.
 

@@ -173,6 +173,7 @@ test -r roms/db1.md
 export GENESIS_USER_DIR="$PWD/user" SDL_VIDEO_DRIVER=dummy SDL_AUDIO_DRIVER=dummy SDL_RENDER_DRIVER=software
 if [ -f /lab/virtual-pad ]; then export R36S_PREVIEW_PAD=1; fi
 if [ -f /lab/preview-60 ]; then export R36S_PREVIEW_FULL_RATE=1; fi
+if [ -f /lab/no-frame-stream ]; then export R36S_PREVIEW_NO_FRAME_STREAM=1; fi
 if [ -f /lab/preview-bench ]; then
     read frames < /lab/preview-bench
     export GENESIS_HOST_TIMING_DUMP=1
@@ -181,6 +182,8 @@ if [ -f /lab/preview-bench ]; then
         mkdir -p "$GENESIS_USER_DIR"
         printf '%s\n' 'vsync = 2' > "$GENESIS_USER_DIR/dynabrothers-video.ini"
         export R36S_PREVIEW_DEFER_VSYNC=1
+        export R36S_PREVIEW_TRACE_PRESENT=1
+        export DYNA_LZ_TRACE=1
     else
         set -- "$@" --runtime-uncapped
     fi
@@ -231,7 +234,8 @@ def add_modules(out, userspace):
 
 
 def make_initrd(path, interactive, probe, systemd, stress, input_script, play, preview_bench,
-                userspace, bench_frames, bench_input, virtual_pad, candidate, paced, archive, full_preview):
+                userspace, bench_frames, bench_input, virtual_pad, candidate, paced, archive, full_preview,
+                no_frame_stream=False):
     installer = HERE / ("installer-amd64-initrd.gz" if userspace else "installer-initrd.gz")
     with installer.open("rb") as source, path.open("wb") as dest:
         shutil.copyfileobj(source, dest)
@@ -261,6 +265,8 @@ def make_initrd(path, interactive, probe, systemd, stress, input_script, play, p
                 cpio(out, "lab/virtual-pad", stat.S_IFREG | 0o644)
             if full_preview:
                 cpio(out, "lab/preview-60", stat.S_IFREG | 0o644)
+            if no_frame_stream:
+                cpio(out, "lab/no-frame-stream", stat.S_IFREG | 0o644)
             if preview_bench:
                 cpio(out, "lab/preview-bench", stat.S_IFREG | 0o644, f"{bench_frames}\n".encode())
                 if paced:
@@ -437,6 +443,8 @@ def main():
     parser.add_argument("--virtual-pad", action="store_true", help="Route keyboard and XInput through an SDL virtual gamepad")
     parser.add_argument("--preview-fps", type=int, choices=(30, 60), default=30,
                         help="Send every frame or every other frame to the Windows preview")
+    parser.add_argument("--no-frame-stream", action="store_true",
+                        help="Measure without transferring frames from the VM")
     parser.add_argument("--control-dir", type=Path, help="New local folder for named pad commands and screenshots")
     parser.add_argument("--cores", type=int, choices=range(1, 5))
     parser.add_argument("--probe", action="store_true")
@@ -461,6 +469,8 @@ def main():
         parser.error("--virtual-pad requires --userspace")
     if opts.preview_fps == 60 and not opts.userspace:
         parser.error("--preview-fps 60 requires --userspace")
+    if opts.no_frame_stream and (not opts.userspace or not opts.preview_bench or opts.virtual_pad or opts.preview_fps == 60):
+        parser.error("--no-frame-stream requires --preview-bench --userspace with scripted inputs only")
     if opts.control_dir and not (opts.play and opts.virtual_pad):
         parser.error("--control-dir requires --play --virtual-pad")
     if use_preview and (opts.interactive or opts.systemd or opts.probe or opts.stress or (opts.play and opts.preview_bench)):
@@ -500,7 +510,7 @@ def main():
                 use_preview, opts.preview_bench, opts.userspace, opts.bench_frames, opts.bench_input, opts.virtual_pad,
                 opts.candidate, opts.paced,
                 opts.archive or latest_port_archive(),
-                opts.preview_fps == 60)
+                opts.preview_fps == 60, opts.no_frame_stream)
     cmd = [
         qemu, "-machine", "q35,pic=off" if opts.userspace else "virt",
         "-cpu", "max" if opts.userspace else "cortex-a35", "-smp", str(opts.cores or (2 if use_preview else 4)), "-m", str(opts.ram),
@@ -524,7 +534,8 @@ def main():
     if opts.preview_bench:
         from preview import benchmark_preview
         benchmark_preview(cmd, HERE, opts.userspace, opts.bench_frames, opts.bench_input, opts.virtual_pad,
-                          "darkos-port-candidate" if opts.candidate else "darkos-port-baseline" if opts.paced else None)
+                          "darkos-port-candidate" if opts.candidate else "darkos-port-baseline" if opts.paced else None,
+                          no_frame_stream=opts.no_frame_stream)
         return
     log = HERE / (f"darkos-stress-{opts.game}.log" if opts.stress else "installer-probe.log" if opts.probe else
                   "darkos-systemd.log" if opts.systemd else "darkos-lab.log")

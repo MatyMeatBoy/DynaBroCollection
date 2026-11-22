@@ -101,10 +101,12 @@ def connect_guest(vm, port):
 
 
 def benchmark_preview(cmd, directory, translated=False, frames=240, input_script=None, virtual_pad=False,
-                      report_prefix=None):
-    custom = frames != 240 or input_script is not None or report_prefix is not None
+                      report_prefix=None, *, no_frame_stream=False):
+    custom = frames != 240 or input_script is not None or report_prefix is not None or no_frame_stream
     prefix = report_prefix or ("darkos-pad-check" if virtual_pad else "darkos-userspace-workload" if custom else
               "darkos-userspace-benchmark" if translated else "darkos-preview-benchmark")
+    if no_frame_stream:
+        prefix += "-no-stream"
     log = directory / f"{prefix}.log"
     vm, port = start_guest(cmd, log)
     received = 0
@@ -112,7 +114,9 @@ def benchmark_preview(cmd, directory, translated=False, frames=240, input_script
     start_up = False
     try:
         with connect_guest(vm, port) as remote:
-            remote.settimeout(120)
+            # A silent run may send no bytes until shutdown. Allow time for
+            # a slow guest to finish the entire requested workload.
+            remote.settimeout(max(120, 20 + frames / 20) if no_frame_stream else 120)
             try:
                 while data := remote.recv(256 * 1024):
                     received += len(data)
@@ -131,7 +135,8 @@ def benchmark_preview(cmd, directory, translated=False, frames=240, input_script
             vm.terminate()
             vm.wait(timeout=8)
     contents = log.read_text(errors="replace")
-    if "PREVIEW_BENCH_OK" not in contents or received < FRAME_BYTES * 4:
+    stream_ok = received == 0 if no_frame_stream else received >= FRAME_BYTES * 4
+    if "PREVIEW_BENCH_OK" not in contents or not stream_ok:
         raise RuntimeError(f"Preview benchmark did not complete; see {log}")
     rows = [json.loads(line) for line in re.findall(r"GENESISRECOMP_BENCHMARK (\{.*\})", contents)]
     if virtual_pad:

@@ -47,6 +47,15 @@ static SDL_GameController *pad_controller;
 static unsigned pad_applied;
 static int pad_ready;
 static int pad_start_seen;
+static int trace_present;
+
+static unsigned long monotonic_us(void)
+{
+    struct timespec now;
+    if (clock_gettime(1, &now) != 0)
+        return 0;
+    return (unsigned long)now.tv_sec * 1000000 + now.tv_nsec / 1000;
+}
 
 static void setup_pad(void)
 {
@@ -175,9 +184,12 @@ static void flush_frame(void)
 int SDL_UpdateTexture(SDL_Texture *texture, const struct rect *rect, const void *pixels, int pitch)
 {
     static int (*update)(SDL_Texture *, const struct rect *, const void *, int);
-    if (!update)
+    static int stream_frames;
+    if (!update) {
         update = dlsym((void *)-1, "SDL_UpdateTexture");
-    if ((picture & preview_skip_mask) == 0 && (!pending || sent == 0) && get_channel() >= 0 &&
+        stream_frames = !getenv("R36S_PREVIEW_NO_FRAME_STREAM");
+    }
+    if (stream_frames && (picture & preview_skip_mask) == 0 && (!pending || sent == 0) && get_channel() >= 0 &&
         rect && pixels && rect->x == 0 && rect->y == 0 &&
         (rect->w == 320 || rect->w == 256) && rect->h > 0 && rect->h <= 240 && pitch >= rect->w * 4) {
         unsigned top = (240 - (unsigned)rect->h) / 2;
@@ -203,8 +215,10 @@ void SDL_RenderPresent(SDL_Renderer *renderer)
 {
     static void (*present)(SDL_Renderer *);
     static SDL_Renderer *pacer_renderer;
-    if (!present)
+    if (!present) {
         present = dlsym((void *)-1, "SDL_RenderPresent");
+        trace_present = getenv("R36S_PREVIEW_TRACE_PRESENT") != 0;
+    }
     if (pacer_renderer != renderer) {
         if (!getenv("R36S_PREVIEW_DEFER_VSYNC"))
             SDL_RenderSetVSync(renderer, 0);
@@ -220,6 +234,17 @@ void SDL_RenderPresent(SDL_Renderer *renderer)
             rate_start = tick;
         }
     }
+    if (!trace_present) {
+        flush_frame();
+        present(renderer);
+        return;
+    }
+    unsigned long start = monotonic_us();
     flush_frame();
+    unsigned long flushed = monotonic_us();
     present(renderer);
+    unsigned long done = monotonic_us();
+    if (start && flushed >= start && done >= flushed && done - start >= 16000)
+        dprintf(2, "[R36S-PRESENT-HITCH] frame=%u flush_us=%lu sdl_us=%lu\n",
+                picture - 1, flushed - start, done - flushed);
 }

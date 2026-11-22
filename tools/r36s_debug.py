@@ -8,11 +8,14 @@ import re
 import statistics
 
 BENCH = "GENESISRECOMP_BENCHMARK "
-PHASES = ("input", "simulation", "reserved", "post", "audio", "persistence", "present", "layout", "pacer")
+PHASES = ("input", "simulation", "deadline_wait", "post", "audio", "persistence", "present", "layout", "pacer")
 LIVE = re.compile(r"\[R36S-LIVE\] presentations=(\d+) elapsed_us=(\d+)")
 HITCH = re.compile(r"\[HOST-HITCH\] frame=(\d+) total_us=(\d+) phase_us=([\d,]+)")
 VIDEO = re.compile(r"\[VIDEO\] renderer name=(\S+) vsync=(\d+)")
 WINDOW = re.compile(r"\[HOST-WINDOW\] end_frame=(\d+) count=(\d+) avg_us=(\d+) phase_avg_us=([\d,]+)")
+WINDOW_PEAKS = re.compile(r" max_us=(\d+) frames_ge_25ms=(\d+)")
+SLOW_SIM = re.compile(r"\[HOST-SLOW-SIM\] frame=(\d+) us=(\d+)(?: cpu_us=(\d+))? "
+                      r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
 
 
 def percentile(values, fraction):
@@ -22,7 +25,7 @@ def percentile(values, fraction):
 
 def summarize(path, start_frame=0):
     data = {"file": path.name, "benchmarks": [], "renderer": [], "diagnostics": []}
-    rates, hitches, windows = [], [], []
+    rates, hitches, windows, window_peaks, slow_sim = [], [], [], [], []
     live_frame = 0
     with path.open(encoding="utf-8-sig", errors="replace") as source:
         for entry in source:
@@ -53,6 +56,12 @@ def summarize(path, start_frame=0):
                 parts = tuple(map(int, match[4].split(",")))
                 if count and frame - count + 1 >= start_frame and len(parts) == len(PHASES):
                     windows.append((count, total, parts))
+                    if peaks := WINDOW_PEAKS.match(line, match.end()):
+                        window_peaks.append(tuple(map(int, peaks.groups())))
+            if (match := SLOW_SIM.search(line)) and int(match[1]) >= start_frame:
+                slow_sim.append({"frame": int(match[1]), "wall_ms": round(int(match[2]) / 1000, 3),
+                                 "cpu_ms": round(int(match[3]) / 1000, 3) if match[3] and int(match[3]) else None,
+                                 "instructions": int(match[4]), "pc_start": match[5], "pc_end": match[6]})
             if line.startswith(("[evidence]", "[progress-autosave]", "SDL_Init:", "SDL_CreateWindow:",
                                 "SDL_CreateRenderer:", "[SDL-FAULT]", "[HOST-TIMING]")):
                 if len(data["diagnostics"]) < 40 and line not in data["diagnostics"]:
@@ -82,8 +91,18 @@ def summarize(path, start_frame=0):
                 name: round(statistics.median(row[2][i] for row in rows) / 1000, 3)
                 for i, name in enumerate(PHASES)
             },
-            "worst": [{"frame": index, "ms": round(total / 1000, 3)} for index, total, _ in rows[:5]],
+            "worst": [{"frame": index, "ms": round(total / 1000, 3),
+                       "phase_ms": {name: round(value / 1000, 3) for name, value in zip(PHASES, parts)}}
+                      for index, total, parts in rows[:5]],
         }
+    if window_peaks:
+        data["engine_windows"].update(
+            peak_windows=len(window_peaks),
+            max_ms=round(max(row[0] for row in window_peaks) / 1000, 3),
+            frames_ge_25ms=sum(row[1] for row in window_peaks),
+        )
+    if slow_sim:
+        data["slow_simulation"] = sorted(slow_sim, key=lambda row: row["wall_ms"], reverse=True)[:10]
     return data
 
 

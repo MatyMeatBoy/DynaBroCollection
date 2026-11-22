@@ -1,14 +1,10 @@
 #include "language_patch.h"
+#include "state_crc.h"
 #include <stdio.h>
 #include <string.h>
 
 uint32_t dyna_language_crc(const uint8_t *data,size_t size) {
-    uint32_t crc=0xFFFFFFFFu;
-    for(size_t i=0;i<size;++i) {
-        crc^=data[i];
-        for(unsigned bit=0;bit<8;++bit)crc=(crc>>1)^((0u-(crc&1u))&0xEDB88320u);
-    }
-    return ~crc;
+    return ~genesis_state_crc32_update(UINT32_MAX,data,size);
 }
 static int fail(char *error,size_t cap,const char *message) {
     if(error&&cap)snprintf(error,cap,"%s",message);

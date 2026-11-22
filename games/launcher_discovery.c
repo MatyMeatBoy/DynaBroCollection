@@ -1,4 +1,5 @@
 ﻿#include "launcher_discovery.h"
+#include "state_crc.h"
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -8,8 +9,7 @@ static const ld_revision revisions[] = {
  {2621440,0xBA3554BC,2},{2621440,0xDAC9BAFC,2},{2621440,0xDE76C2B8,2},{2621440,0x70156BA7,2}
 };
 uint32_t ld_crc32(uint32_t prior,const void *data,size_t n) {
- const unsigned char *p=(const unsigned char*)data; uint32_t c=~prior; size_t i; int j;
- for(i=0;i<n;i++){c^=p[i];for(j=0;j<8;j++)c=(c>>1)^((0u-(c&1u))&0xEDB88320u);} return ~c;
+ return ~genesis_state_crc32_update(~prior,data,n);
 }
 static int eq(const wchar_t *a,const wchar_t *b){while(*a&&*b){wchar_t x=*a++,y=*b++;if(x>=L'A'&&x<=L'Z')x+=32;if(y>=L'A'&&y<=L'Z')y+=32;if(x!=y)return 0;}return *a==*b;}
 ld_kind ld_classify(const wchar_t *p){const wchar_t *e=wcsrchr(p,L'.');if(!e)return LD_UNKNOWN;if(eq(e,L".md")||eq(e,L".bin")||eq(e,L".gen")||eq(e,L".68k"))return LD_ROM;if(eq(e,L".bps"))return LD_BPS;if(eq(e,L".ips"))return LD_IPS;return LD_UNKNOWN;}

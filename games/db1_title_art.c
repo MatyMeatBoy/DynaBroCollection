@@ -49,7 +49,9 @@ unsigned db1_title_art_logo_nearest(uint32_t rgb){
  return reference[index]==0?31:index;
 }
 uint32_t db1_title_art_alpha(uint32_t d,uint32_t s,unsigned a){
- if(a>255)a=255;uint32_t r=0xff000000u;for(unsigned shift=0;shift<24;shift+=8)r|=((((s>>shift)&255)*a+((d>>shift)&255)*(255-a)+127)/255)<<shift;return r;
+ if(!a)return d|0xff000000u;
+ if(a>=255)return s|0xff000000u;
+ uint32_t r=0xff000000u;for(unsigned shift=0;shift<24;shift+=8)r|=((((s>>shift)&255)*a+((d>>shift)&255)*(255-a)+127)/255)<<shift;return r;
 }
 static void load(Art *a,const char *base,const char *name,unsigned first,unsigned count,int target_w,int target_h){
  char path[2048];int channels;if(snprintf(path,sizeof path,"%sassets/img/%s",base,name)>=(int)sizeof path)return;
@@ -67,8 +69,29 @@ static void load(Art *a,const char *base,const char *name,unsigned first,unsigne
  a->map=malloc((size_t)a->w*a->h);if(!a->map){stbi_image_free(a->rgba);a->rgba=NULL;return;}
  for(int i=0;i<a->w*a->h;i++){unsigned char *p=a->rgba+i*4;uint32_t rgb=(uint32_t)p[0]<<16|(uint32_t)p[1]<<8|p[2];a->map[i]=p[3]?(unsigned char)(first==16?db1_title_art_logo_nearest(rgb):db1_title_art_nearest(rgb,reference,first,count)):0;}
 }
-static void ensure(void){if(loaded)return;loaded=1;char *base=SDL_GetBasePath();if(!base)return;load(&bands,base,"db1-title-background-512x288.png",48,16,512,288);load(&logo,base,"dyna-logo-v1.png",16,16,224,120);SDL_free(base);}
-int db1_title_art_logo_ready(void){ensure();return logo.rgba!=NULL && logo.map!=NULL;}
+void db1_title_art_preload(void)
+{
+ if(loaded)return;
+ loaded=1;
+ char *base=SDL_GetBasePath();
+ if(!base)return;
+ const char *timing=getenv("GENESIS_HOST_TIMING_DUMP");
+ int trace=timing && *timing && *timing!='0';
+ Uint64 start=trace?SDL_GetPerformanceCounter():0;
+ load(&bands,base,"db1-title-background-native.png",48,16,512,288);
+ if(!bands.map)load(&bands,base,"db1-title-background-512x288.png",48,16,512,288);
+ Uint64 bands_done=trace?SDL_GetPerformanceCounter():0;
+ load(&logo,base,"db1-title-logo-native.png",16,16,224,120);
+ if(!logo.map)load(&logo,base,"dyna-logo-v1.png",16,16,224,120);
+ if(trace){
+  Uint64 done=SDL_GetPerformanceCounter(), frequency=SDL_GetPerformanceFrequency();
+  if(frequency)fprintf(stderr,"[DB1-TITLE-ART] background_us=%llu logo_us=%llu ready=%d\n",
+      (unsigned long long)((bands_done-start)*1000000/frequency),
+      (unsigned long long)((done-bands_done)*1000000/frequency),logo.map!=NULL);
+ }
+ SDL_free(base);
+}
+int db1_title_art_logo_ready(void){return logo.rgba!=NULL && logo.map!=NULL;}
 int db1_title_art_identified(const GVDP *v){
  if(!v||db1_scenes_kind()!=DB1_SCENE_TITLE||(v->reg[16]&0x33)!=1||(v->reg[12]&6)||!(v->reg[1]&64))return 0;
  unsigned a=(v->reg[2]&56)<<10;
@@ -111,7 +134,7 @@ uint32_t db1_title_art_background_pixel(const GVDP *v,int x,int line){
  return db1_scenes_background(v,x,shifted);
 }
 void db1_title_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,int english){
- if(!out||width<=0||width>768||!db1_title_art_identified(v))return;ensure();
+ if(!out||width<=0||width>768||!db1_title_art_identified(v))return;
  unsigned char sprites[768]={0};sprite_mask(v,line,width,left,sprites);
  for(int dx=0;dx<width;dx++){
   int x=dx-left,sx,sy;
