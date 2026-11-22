@@ -1,0 +1,17 @@
+{
+  "version": 4,
+  "name": "dynabrocollection.zip",
+  "items": ["Dyna Brothers.sh", "Dyna Brothers 2 Special.sh", "dynabrocollection/"],
+  "items_opt": [],
+  "attr": {
+    "title": "DynaBroCollection",
+    "porter": ["MatyMeatBoy"],
+    "desc": "Linux ARM64 ports of Dyna Brothers and Dyna Brothers 2 Special.",
+    "inst": "Place compatible Japanese dumps in dynabrocollection/roms/ as db1.md and db2.md.",
+    "genres": ["strategy"],
+    "readytorun": false,
+    "runtime": [],
+    "reqs": [],
+    "arch": ["aarch64"]
+  }
+}

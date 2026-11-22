@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gameList>
+  <game>
+    <path>./Dyna Brothers.sh</path>
+    <name>Dyna Brothers</name>
+    <genre>Strategy</genre>
+    <desc>Native Linux ARM64 port. Requires a compatible cartridge dump.</desc>
+    <image>./dynabrocollection/screenshot.png</image>
+  </game>
+  <game>
+    <path>./Dyna Brothers 2 Special.sh</path>
+    <name>Dyna Brothers 2 Special</name>
+    <genre>Strategy</genre>
+    <desc>Native Linux ARM64 port. Requires a compatible cartridge dump.</desc>
+    <image>./dynabrocollection/screenshot.png</image>
+  </game>
+</gameList>

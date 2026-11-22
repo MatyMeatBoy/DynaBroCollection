@@ -20,6 +20,8 @@ Download [v0.5.5 Beta](https://github.com/MatyMeatBoy/DynaBroCollection/releases
 
 To play in Japanese, disable **English translation** in **Settings → Mods → Language** and restart the game. The source dumps stay untouched. Change the fullscreen option in **Settings** to switch to windowed or exclusive fullscreen. The selected display mode is saved to the profile.
 
+The [R36S build and installation guide](platform/r36s/README.md) covers the Linux ARM64 handheld variant.
+
 ## Features
 
 - **Dyna Brothers** saves after a win and lists every unlocked stage in its scrolling Extras selector. Clearing Normal unlocks Hard 1, and clearing Hard unlocks Back 1, the original Reverse entry. The victory animation, result, and lightning effect extend across the widescreen playfield.
