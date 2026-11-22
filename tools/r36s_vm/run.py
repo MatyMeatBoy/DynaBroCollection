@@ -174,6 +174,10 @@ export GENESIS_USER_DIR="$PWD/user" SDL_VIDEO_DRIVER=dummy SDL_AUDIO_DRIVER=dumm
 if [ -f /lab/virtual-pad ]; then export R36S_PREVIEW_PAD=1; fi
 if [ -f /lab/preview-60 ]; then export R36S_PREVIEW_FULL_RATE=1; fi
 if [ -f /lab/no-frame-stream ]; then export R36S_PREVIEW_NO_FRAME_STREAM=1; fi
+if [ -f /lab/trace-raster-frame ]; then
+    read GENESIS_R36S_TRACE_RASTER_FRAME < /lab/trace-raster-frame
+    export GENESIS_R36S_TRACE_RASTER_FRAME
+fi
 if [ -f /lab/preview-bench ]; then
     read frames < /lab/preview-bench
     export GENESIS_HOST_TIMING_DUMP=1
@@ -235,7 +239,7 @@ def add_modules(out, userspace):
 
 def make_initrd(path, interactive, probe, systemd, stress, input_script, play, preview_bench,
                 userspace, bench_frames, bench_input, virtual_pad, candidate, paced, archive, full_preview,
-                no_frame_stream=False):
+                no_frame_stream=False, trace_raster_frame=None):
     installer = HERE / ("installer-amd64-initrd.gz" if userspace else "installer-initrd.gz")
     with installer.open("rb") as source, path.open("wb") as dest:
         shutil.copyfileobj(source, dest)
@@ -267,6 +271,8 @@ def make_initrd(path, interactive, probe, systemd, stress, input_script, play, p
                 cpio(out, "lab/preview-60", stat.S_IFREG | 0o644)
             if no_frame_stream:
                 cpio(out, "lab/no-frame-stream", stat.S_IFREG | 0o644)
+            if trace_raster_frame is not None:
+                cpio(out, "lab/trace-raster-frame", stat.S_IFREG | 0o644, f"{trace_raster_frame}\n".encode())
             if preview_bench:
                 cpio(out, "lab/preview-bench", stat.S_IFREG | 0o644, f"{bench_frames}\n".encode())
                 if paced:
@@ -436,6 +442,8 @@ def main():
     parser.add_argument("--bench-frames", type=int, default=240)
     parser.add_argument("--bench-input", type=Path)
     parser.add_argument("--paced", action="store_true", help="Measure using the game's normal pacer")
+    parser.add_argument("--trace-raster-frame", type=int,
+                        help="Profile one guest frame by scanline in an ARM64 userspace benchmark")
     parser.add_argument("--candidate", type=Path, help="Use this DB1 ARM64 ELF inside the isolated benchmark")
     parser.add_argument("--archive", type=Path, help="Run the exact PortMaster ZIP under test")
     parser.add_argument("--qemu-dir", type=Path, help="Directory containing the Windows QEMU executables")
@@ -471,6 +479,9 @@ def main():
         parser.error("--preview-fps 60 requires --userspace")
     if opts.no_frame_stream and (not opts.userspace or not opts.preview_bench or opts.virtual_pad or opts.preview_fps == 60):
         parser.error("--no-frame-stream requires --preview-bench --userspace with scripted inputs only")
+    if opts.trace_raster_frame is not None and (
+            not opts.userspace or not opts.preview_bench or not 0 <= opts.trace_raster_frame < opts.bench_frames):
+        parser.error("--trace-raster-frame requires --preview-bench --userspace and a frame inside the workload")
     if opts.control_dir and not (opts.play and opts.virtual_pad):
         parser.error("--control-dir requires --play --virtual-pad")
     if use_preview and (opts.interactive or opts.systemd or opts.probe or opts.stress or (opts.play and opts.preview_bench)):
@@ -510,7 +521,7 @@ def main():
                 use_preview, opts.preview_bench, opts.userspace, opts.bench_frames, opts.bench_input, opts.virtual_pad,
                 opts.candidate, opts.paced,
                 opts.archive or latest_port_archive(),
-                opts.preview_fps == 60, opts.no_frame_stream)
+                opts.preview_fps == 60, opts.no_frame_stream, opts.trace_raster_frame)
     cmd = [
         qemu, "-machine", "q35,pic=off" if opts.userspace else "virt",
         "-cpu", "max" if opts.userspace else "cortex-a35", "-smp", str(opts.cores or (2 if use_preview else 4)), "-m", str(opts.ram),

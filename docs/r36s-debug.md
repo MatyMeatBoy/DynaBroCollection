@@ -71,6 +71,8 @@ Los bloques recientes incluyen `max_us` y el número de cuadros de 25 ms o más.
 
 Cuando el tirón se repite en el mismo cuadro, `GENESIS_R36S_TRACE_RASTER_FRAME=4974` registra el tiempo dedicado al 68000, al Z80, al vídeo y a las interrupciones durante ese cuadro. Cambia el número para otro caso. El muestreo por línea puede alterar esa medición, así que compara la misma configuración antes y después.
 
+En el laboratorio Windows puedes pasar el mismo número con `--trace-raster-frame 4974` en una prueba `--userspace --preview-bench` de más de 4974 cuadros. Busca `[R36S-RASTER]` en el log del invitado.
+
 ## Lee y compara
 
 ```sh
