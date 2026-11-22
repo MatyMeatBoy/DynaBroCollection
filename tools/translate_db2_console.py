@@ -2,7 +2,6 @@
 
 import argparse
 import json
-from itertools import batched
 from pathlib import Path
 import re
 import shutil
@@ -64,7 +63,7 @@ def title_tiles(rom):
                     for x in range(8 * column, 8 * column + 8):
                         outline = any((x + dx, y + dy) in mask for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)))
                         pixels.append(ink if (x, y) in mask else 1 if outline else 2)
-                packed = bytes(left << 4 | right for left, right in batched(pixels, 2))
+                packed = bytes(left << 4 | right for left, right in zip(pixels[::2], pixels[1::2]))
                 require(updates.setdefault(tile, packed) == packed, f'Conflicting {word} tile {tile:X}')
     for tile in (*range(0x17F, 0x185), *range(0x18F, 0x195)):
         updates[tile] = b'\x22' * 32
@@ -103,7 +102,8 @@ def data_source(catalog, biographies, rom):
     font = font_data(rom)
 
     def bitmaps(line):
-        for group in batched(line.ljust((len(line) + 2) // 3 * 3), 3):
+        for offset in range(0, len(line), 3):
+            group = line[offset:offset + 3].ljust(3)
             rows = bytearray(32)
             for y in range(8):
                 row = 0
@@ -130,8 +130,7 @@ def data_source(catalog, biographies, rom):
     for entry in sorted(catalog['glyph_text'], key=lambda row: row['address']):
         start = entry['address'] + 2 * control_cells(entry['before'])
         end = entry['address'] + len(bytes.fromhex(entry['before']))
-        if start >= end:
-            continue
+        require(start < end, f'No visible glyph cells at {entry["address"]:06X}')
         n = len(ranges)
         ranges[start] = f'        dc.l ${start:06x},${end:06x},string{n}'
         lines = entry['lines']
