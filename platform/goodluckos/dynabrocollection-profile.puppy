@@ -1,0 +1,23 @@
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB1 timing with VSync
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile.sh 1 sync
+TERMINAL=0
+
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB1 timing without VSync
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile.sh 1 paced
+TERMINAL=0
+
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB2 timing with VSync
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile.sh 2 sync
+TERMINAL=0
+
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB2 timing without VSync
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile.sh 2 paced
+TERMINAL=0

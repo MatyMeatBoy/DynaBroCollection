@@ -17,6 +17,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--readelf", default="llvm-readelf")
     parser.add_argument("--strip", default="llvm-strip", help="ARM-capable strip tool")
+    parser.add_argument("--device-diagnostics", action="store_true")
     args = parser.parse_args()
     platform = ROOT / "platform/goodluckos"
     port = "ports/dynabrocollection"
@@ -33,6 +34,9 @@ def main():
     entries = [(platform / name, name, name.endswith(".sh")) for name in ("launch.sh", "README.md")]
     entries.append((args.stage / "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md", False))
     entries.append((ROOT / "platform/r36s/collect-debug.sh", "debug/collect.sh", True))
+    if args.device_diagnostics:
+        entries.append((platform / "profile.sh", "profile.sh", True))
+        entries.append((ROOT / "games/db1/scenes/r36s-normal1-battle.input", "debug/normal1.input", False))
     for directory in ("assets", "licenses"):
         path = args.stage / directory
         if not path.is_dir():
@@ -51,10 +55,13 @@ def main():
         with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as archive:
             put(archive, platform / "dynabrocollection.puppy",
                 ".local/share/applications/dynabrocollection.puppy", text_file=True)
+            if args.device_diagnostics:
+                put(archive, platform / "dynabrocollection-profile.puppy",
+                    ".local/share/applications/dynabrocollection-profile.puppy", text_file=True)
             archive.writestr(f"{port}/roms/", "")
             for path, name, executable in entries:
                 put(archive, path, f"{port}/{name}", executable=executable,
-                    text_file=path.suffix in {".sh", ".md"})
+                    text_file=path.suffix in {".sh", ".md", ".input"})
     digest = hashlib.sha256(args.output.read_bytes()).hexdigest()
     args.output.with_suffix(args.output.suffix + ".sha256").write_text(
         f"{digest}  {args.output.name}\n", encoding="ascii"
