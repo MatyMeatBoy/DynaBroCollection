@@ -98,11 +98,6 @@ int db1_title_art_identified(const GVDP *v){
  return word(v,a+2*(3*64+13))==0x2102&&word(v,a+2*(17*64+31))==0x2262;
 }
 static uint32_t mapped(const GVDP *v,const Art *a,int i){unsigned m=a->map[i];return genesis_dac_cram_to_argb(v->cram[m&63],m>>6);}
-static int a_coordinates(const GVDP *v,int x,int y,int *sx,int *sy){
- int raster=y<0?0:y>223?223:y;unsigned mode=v->reg[11]&3;int hi=mode==0?0:mode==2?raster&~7:raster;
- int col=x/16;if(x<0&&x%16)--col;if(col<0)col=0;if(col>19)col=19;
- *sx=x-(int)(word(v,((v->reg[13]&63)<<10)+hi*4)&1023);*sy=y+(v->vsram[(v->reg[11]&4)?col*2:0]&1023);return 1;
-}
 static unsigned pattern_pixel(const GVDP *v,unsigned attr,int tx,int ty){
  if(attr&2048)tx=7-tx;if(attr&4096)ty=7-ty;
  unsigned bits=v->vram[((attr&2047)*32+ty*4+tx/2)&65535];return (bits>>(tx&1?0:4))&15;
@@ -126,7 +121,7 @@ static void sprite_mask(const GVDP *v,int line,int width,int left,unsigned char 
 }
 uint32_t db1_title_art_background_pixel(const GVDP *v,int x,int line){
  int shifted=db1_title_art_background_line(line),sx,sy;
- if(db1_scenes_plane_b_coordinates(v,x,shifted,&sx,&sy)&&sy<0){
+ if(shifted<0&&db1_scenes_plane_b_coordinates(v,x,shifted,&sx,&sy)&&sy<0){
   if(bands.rgba){int off=db1_title_art_band_offset(bands.w,bands.h,sx,sy< -32?-32:sy);if(off>=0)return mapped(v,&bands,off/4);}
   /* Missing optional sky falls back to the authored first sky raster. */
   return db1_scenes_background(v,x,0);
@@ -136,15 +131,48 @@ uint32_t db1_title_art_background_pixel(const GVDP *v,int x,int line){
 void db1_title_art_row(const GVDP *v,int line,uint32_t *out,int width,int left,int english){
  if(!out||width<=0||width>768||!db1_title_art_identified(v))return;
  unsigned char sprites[768]={0};sprite_mask(v,line,width,left,sprites);
- for(int dx=0;dx<width;dx++){
-  int x=dx-left,sx,sy;
-  a_coordinates(v,x,line,&sx,&sy);int px=wrap(sx,512),py=wrap(sy,256);
-  unsigned attr=word(v,((v->reg[2]&56)<<10)+2*((py/8)*64+px/8)),tile=attr&2047;
-  unsigned opaque=pattern_pixel(v,attr,px&7,py&7);
-  if(!opaque&&!sprites[dx])out[dx]=db1_title_art_background_pixel(v,x,line);
-  if(!english||!logo.rgba)continue;
-  if(px<48||px>=272||py<24||py>=144)continue;
-  if(tile>=0x102&&tile<=0x262&&opaque&&!sprites[dx])out[dx]=db1_title_art_background_pixel(v,x,line);
-  int i=((py-24)*logo.h/120)*logo.w+(px-48)*logo.w/224;out[dx]=db1_title_art_alpha(out[dx],mapped(v,&logo,i),logo.rgba[i*4+3]);
+ unsigned plane=(v->reg[2]&56)<<10;
+ unsigned mode=v->reg[11]&3;
+ int raster=line<0?0:line>223?223:line;
+ int scroll_row=mode==0?0:mode==2?raster&~7:raster;
+ unsigned scroll=word(v,((v->reg[13]&63)<<10)+scroll_row*4)&1023;
+ int column_scroll=v->reg[11]&4;
+
+ /* The title signature fixes Plane A at 64x32 tiles. Horizontal scroll
+  * stays fixed across this raster, and vertical scroll changes only at
+  * native 16-pixel column boundaries. */
+ for(int dx=0;dx<width;){
+  int x=dx-left;
+  int col=x<0?0:x/16;
+  if(col>19)col=19;
+  int end=width;
+  if(column_scroll&&col<19){
+   int next=(col+1)*16+left;
+   if(next<end)end=next;
+  }
+  unsigned py=(unsigned)(line+(v->vsram[column_scroll?col*2:0]&1023))&255;
+  unsigned name_row=plane+128*(py/8);
+  int logo_row=english&&logo.rgba&&py>=24&&py<144
+              ? (int)(py-24)*logo.w : -1;
+  for(;dx<end;dx++,x++){
+   unsigned px=((unsigned)x-scroll)&511;
+   int i=logo_row>=0&&px>=48&&px<272?logo_row+(int)px-48:-1;
+   unsigned alpha=i>=0?logo.rgba[i*4+3]:0;
+
+   /* An opaque replacement covers the backing regardless of tile or SAT
+    * ownership. Transparent replacement pixels still follow native rules. */
+   if(alpha==255){
+    out[dx]=mapped(v,&logo,i);
+    continue;
+   }
+   if(!sprites[dx]){
+    unsigned attr=word(v,name_row+2*(px/8)),tile=attr&2047;
+    unsigned opaque=pattern_pixel(v,attr,px&7,py&7);
+    if(!opaque||(i>=0&&tile>=0x102&&tile<=0x262))
+     out[dx]=db1_title_art_background_pixel(v,x,line);
+   }
+   if(alpha)out[dx]=db1_title_art_alpha(out[dx],mapped(v,&logo,i),alpha);
+   else if(i>=0)out[dx]|=0xff000000u;
+  }
  }
 }
