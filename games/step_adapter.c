@@ -350,6 +350,8 @@ static void hint(void){interrupt(DYNA_HINT,4);}
 /* VSync choice from the launcher (dynabrothers-video.ini beside settings):
  * 1 on (default), 2 off, 3 adaptive (treated as on). */
 static void video_choice(const char *path){
+    const char *override=getenv("GENESIS_NO_VSYNC");
+    if(override&&*override)return;
     char file[1100];snprintf(file,sizeof file,"%s",path?path:"");
     char *a=strrchr(file,'/'),*b=strrchr(file,'\\'),*sep=!a?b:!b?a:a>b?a:b;
     size_t off=sep?(size_t)(sep+1-file):0;snprintf(file+off,sizeof file-off,"dynabrothers-video.ini");

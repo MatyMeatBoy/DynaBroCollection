@@ -18,8 +18,13 @@ int main(void) {
     c.state.regs.PC=0x100;memory[3]=0x35;
     M68kStepState state=c.state;
     assert(dyna_step_cached(&c,&ma)==M68K_STEP_MISS);assert(!memcmp(&state,&c.state,sizeof state));
+    memory[3]=0x34;
+    assert(dyna_step_cached(&c,&ma)==M68K_STEP_OK);assert(c.state.regs.D[0]==3);
+    c.state.regs.PC=0x100;
     memory[2]=0x56;memory[3]=0x78;
-    assert(dyna_step_cached(&c,&mb)==M68K_STEP_OK);assert(c.state.regs.D[0]==4);
+    assert(dyna_step_cached(&c,&mb)==M68K_STEP_OK);assert(c.state.regs.D[0]==5);
     c.state.regs.PC=0x102;state=c.state;assert(dyna_step_cached(&c,&ma)==M68K_STEP_MISS);assert(!memcmp(&state,&c.state,sizeof state));
+    before=fetches;
+    assert(dyna_step_cached(&c,&ma)==M68K_STEP_MISS);assert(fetches==before);assert(!memcmp(&state,&c.state,sizeof state));
     return 0;
 }

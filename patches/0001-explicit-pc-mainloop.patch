@@ -2193,6 +2193,85 @@ index 7294574..ed05b7d 100644
  #endif
  
  /* ---- sections ---------------------------------------------------------------- */
+diff --git a/runner/recomp_audio_drc.h b/runner/recomp_audio_drc.h
+index 0340757..8dedd8c 100644
+--- a/runner/recomp_audio_drc.h
++++ b/runner/recomp_audio_drc.h
+@@ -352,34 +352,45 @@ static void rab__update_controller(rab_bridge *b) {
+     b->stats.last_correction = b->corr;
+ }
+ 
+-/* Evaluate the polyphase resampler at an absolute fractional source position.
+- * Caller guarantees [floor(pos)-half+1 .. floor(pos)+half] are live ring frames. */
+-static void rab__sample_at(const rab_bridge *b, double pos, float *s) {
++/* Evaluate the filter in tap order, wrapping the ring cursor once per crossing.
++ * ARMv7 otherwise needs a 64-bit division for every tap. */
++static void rab__filter(const rab_bridge *b, int64_t i, double fraction, float *s) {
+     int ch = b->cfg.channels;
+-    int64_t i  = (int64_t)floor(pos);
+-    double  fr = pos - (double)i;
+-    int phase = (int)(fr * b->cfg.phases);
++    int phase = (int)(fraction * b->cfg.phases);
+     if (phase >= b->cfg.phases) phase = b->cfg.phases - 1;
+     if (phase < 0) phase = 0;
+     const float *cz = b->coeffs + (size_t)phase * b->cfg.taps;
+     float s0 = 0.0f, s1 = 0.0f;
++    int64_t first = i - b->half + 1;
++    int64_t slot = first < 0 ? 0 : first % b->cap;
+     for (int k = 0; k < b->cfg.taps; ++k) {
+-        int64_t m = i - b->half + 1 + k;
+-        if (m < 0) m = 0;
+-        const float *sl = b->ring + (m % b->cap) * ch;
++        const float *sl = b->ring + slot * ch;
+         s0 += cz[k] * sl[0];
+         if (ch == 2) s1 += cz[k] * sl[1];
++        if (first + k >= 0 && ++slot == b->cap) slot = 0;
+     }
+     s[0] = s0; s[1] = (ch == 2) ? s1 : 0.0f;
+ }
+ 
++static void rab__sample_at(const rab_bridge *b, double pos, float *s) {
++    int64_t i = (int64_t)floor(pos);
++    rab__filter(b, i, pos - (double)i, s);
++}
++
+ static double rab__loop_score(const rab_bridge *b, int64_t end_i, int L, int W, int stride) {
+     int ch = b->cfg.channels;
+     double num = 0.0, d1 = 0.0, d2 = 0.0;
++    int64_t first = end_i % b->cap;
++    int64_t second = (end_i - L) % b->cap;
++    int64_t step = stride % b->cap;
+     for (int k = 0; k < W; k += stride) {
+-        float a = b->ring[((end_i - k)     % b->cap) * ch];
+-        float c = b->ring[((end_i - L - k) % b->cap) * ch];
++        float a = b->ring[first * ch];
++        float c = b->ring[second * ch];
+         num += (double)a * c; d1 += (double)a * a; d2 += (double)c * c;
++        first -= step;
++        second -= step;
++        if (first < 0) first += b->cap;
++        if (second < 0) second += b->cap;
+     }
+     return num / (sqrt(d1 * d2) + 1e-9);
+ }
+@@ -446,16 +457,7 @@ void rab_pull(rab_bridge *b, int16_t *out, int frames) {
+         if (have) {
+             /* live forward play; caught up to real audio, so leave conceal mode */
+             b->concealing = 0;
+-            double fr = b->out_pos - (double)i;
+-            int phase = (int)(fr * b->cfg.phases);
+-            if (phase >= b->cfg.phases) phase = b->cfg.phases - 1;
+-            const float *cz = b->coeffs + (size_t)phase * b->cfg.taps;
+-            for (int k = 0; k < b->cfg.taps; ++k) {
+-                int64_t m = i - b->half + 1 + k;
+-                const float *sl = b->ring + (m % b->cap) * ch;
+-                s[0] += cz[k] * sl[0];
+-                if (ch == 2) s[1] += cz[k] * sl[1];
+-            }
++            rab__filter(b, i, b->out_pos - (double)i, s);
+             b->out_pos += step;             /* advance only when we consumed live */
+             delivering = 1;
+         } else if (b->primed && b->cfg.stretch_enable
 diff --git a/runner/video/genesis_bus.c b/runner/video/genesis_bus.c
 index d0e1647..70e6da9 100644
 --- a/runner/video/genesis_bus.c
@@ -2716,6 +2795,55 @@ index 8d0cdbd..a5f61c0 100644
          out+=8;plane_a+=8;plane_b+=8;sprite+=8;opaque+=8;high+=8;
          shadow_op+=8;hilite_op+=8;count-=8;
      }
+diff --git a/tests/runtime/audio_drc_test.c b/tests/runtime/audio_drc_test.c
+index 7ad13d5..6cc8a88 100644
+--- a/tests/runtime/audio_drc_test.c
++++ b/tests/runtime/audio_drc_test.c
+@@ -6,6 +6,36 @@
+ #include <stdio.h>
+ #include <time.h>
+ 
++static void test_filter_ring_wrap(void)
++{
++    for (int channels = 1; channels <= 2; ++channels) {
++        rab_config cfg;
++        rab_config_defaults(&cfg);
++        cfg.channels = channels;
++        cfg.source_rate = 223721;
++        rab_bridge b;
++        assert(!rab_init(&b, &cfg));
++        for (size_t j = 0; j < (size_t)b.cap * channels; ++j)
++            b.ring[j] = (float)((int)(j % 97) - 48) / 64.0f;
++        const int64_t positions[] = {0, b.half - 2, b.half, b.cap - 3, b.cap, 3 * b.cap + 1};
++        for (unsigned p = 0; p < sizeof positions / sizeof positions[0]; ++p) {
++            for (int phase = 0; phase < cfg.phases; ++phase) {
++                float expected[2] = {0.0f, 0.0f}, actual[2];
++                for (int tap = 0; tap < cfg.taps; ++tap) {
++                    int64_t index = positions[p] - b.half + 1 + tap;
++                    if (index < 0) index = 0;
++                    for (int ch = 0; ch < channels; ++ch)
++                        expected[ch] += b.coeffs[phase * cfg.taps + tap] *
++                                        b.ring[(index % b.cap) * channels + ch];
++                }
++                rab__filter(&b, positions[p], (phase + 0.5) / cfg.phases, actual);
++                assert(!memcmp(expected, actual, sizeof expected));
++            }
++        }
++        rab_free(&b);
++    }
++}
++
+ static void assert_same_bridge(const rab_bridge *a, const rab_bridge *b)
+ {
+     rab_bridge copy = *b;
+@@ -121,6 +151,7 @@ static void test_stall_recovery(double rate, int host_frames)
+ 
+ int main(void)
+ {
++    test_filter_ring_wrap();
+     test_prepared_publication();
+     const double rates[]={22050,44100,48000,96000,223721};
+     for(unsigned r=0;r<sizeof rates/sizeof rates[0];++r) {
 diff --git a/tests/runtime/game_video_frame_test.c b/tests/runtime/game_video_frame_test.c
 index 0ee2d9b..f8cda2a 100644
 --- a/tests/runtime/game_video_frame_test.c

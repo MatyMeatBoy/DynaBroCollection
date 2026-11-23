@@ -4,6 +4,8 @@ This target uses ARMv7 hard float (`/lib/ld-linux-armhf.so.3`) on Allwinner A23/
 
 The ClonDiClon test target is GA36-MB V1.2-20260416 with Allwinner A33, a 640×480 JD9366 MIPI-DSI panel and GoodLuckOS 0.1.0 A33 Rhododendron Panel 1.
 
+The handheld launcher uses fullscreen 4:3 with the widescreen renderer disabled. SDL maps the complete 320×224 game image into a 320×240 logical viewport for the 640×480 panel. The renderer scales the texture to the panel, keeping the input image and HUD within view. Diagnostics log the raw image, logical size, output size and viewport when the geometry changes.
+
 ## Package paths
 
 - `HOME/.local/share/applications/dynabrocollection.puppy`

@@ -13,7 +13,13 @@ esac
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 export DYNA_R36S_PROFILE_DIR="$here/debug/device/db$game-$mode"
 export GENESIS_HOST_TIMING_DUMP=1
+export GENESIS_DISPLAY_TRACE=1
 mkdir -p "$DYNA_R36S_PROFILE_DIR"
+if [ "$mode" = paced ]; then
+    printf '%s\n' 'vsync = 2' > "$DYNA_R36S_PROFILE_DIR/dynabrothers-video.ini"
+else
+    printf '%s\n' 'vsync = 1' > "$DYNA_R36S_PROFILE_DIR/dynabrothers-video.ini"
+fi
 if [ "$game" = 1 ]; then
     set -- --measure-runtime 6200 --input-script "$here/debug/normal1.input"
 else

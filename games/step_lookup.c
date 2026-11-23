@@ -10,8 +10,8 @@ M68kStepResult dyna_step_cached(M68kStepContext *context,const M68kStepModule *m
     if(!module||!module->entries)return M68K_STEP_MISS;
     uint32_t pc=context->state.regs.PC;
     Slot *slot=&slots[((pc>>1)^((uintptr_t)module>>4))&1023u];
-    if(slot->module==module&&slot->pc==pc&&slot->entry)
-        return m68k_step_execute(context,slot->entry);
+    if(slot->module==module&&slot->pc==pc)
+        return slot->entry?m68k_step_execute(context,slot->entry):M68K_STEP_MISS;
     size_t low=0,high=module->count;
     while(low<high) {
         size_t mid=low+(high-low)/2;
@@ -23,5 +23,7 @@ M68kStepResult dyna_step_cached(M68kStepContext *context,const M68kStepModule *m
             return m68k_step_execute(context,entry);
         }
     }
+    /* Cache an absent descriptor, never a live opcode/extension guard miss. */
+    *slot=(Slot){module,NULL,pc};
     return M68K_STEP_MISS;
 }
