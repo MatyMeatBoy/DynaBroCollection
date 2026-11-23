@@ -94,3 +94,9 @@ En el modo `--preview-bench --userspace`, `--no-frame-stream` mantiene el render
 En el laboratorio, la prueba `--stress` permite aislar renderizado por software, cuotas de CPU, memoria limitada, DRM ausente, renderer inválido, presentación demorada y subidas de textura rechazadas. Usa la prueba en la R36S física para confirmar el ritmo del panel, la salida audible y el comportamiento del mando. Los logs de SDL y kernel ayudan a distinguir errores de arranque de una caída de cuadros en un nivel reproducible.
 
 La [investigación de otros ports para RK3326](research/r36s-ports.md) reúne sus métodos de reproducción y medición.
+
+### Prueba experimental del ejecutor 68K de DB1
+
+Configura con `-DDYNA_DB1_REGISTER_EXPERIMENT=ON` para comparar el ejecutor de registros con la ruta habitual. La compilación clasifica los cuerpos C de ambos catálogos de DB1 con el verificador del motor. Las operaciones que necesitan el bus, las excepciones y el modo de traza siguen usando la ruta general. El ejecutor rápido verifica en vivo el opcode y sus extensiones. El interruptor viene desactivado.
+
+En dos pares de recorridos de 6.200 cuadros hasta el combate de Normal 1, bajo QEMU Cortex-A7 con renderizado por software y sin tope, el promedio pasó de 79,83 a 86,12 FPS en el primer par y de 81,29 a 83,20 FPS al invertir el orden. El P95 global bajó en ambos pares. Las huellas de juego y audio coincidieron en todas las pasadas. La réplica también comparó las huellas de imagen de los cuadros 3.100 y 6.200, que coincidieron. El máximo del tramo de combate fue 22,45→18,99 ms en el primer par y 26,21→32,19 ms en la réplica. El promedio de combate empeoró en ambos pares. Estos datos mantienen el cambio en fase experimental.

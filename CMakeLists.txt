@@ -147,6 +147,7 @@ else()
     target_compile_options(DynaRamContractTest PRIVATE -UNDEBUG)
 endif()
 add_test(NAME db2_ram_instruction_contract COMMAND DynaRamContractTest)
+option(DYNA_DB1_REGISTER_EXPERIMENT "Use generated register-only descriptors in DB1's cached executor" OFF)
 if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db1step/db1step_module.c")
     add_dyna(DynaBrothers1AOT db1 1048576 0xC1E5C0DAu 0x200u 0x312u 0x340u)
     get_target_property(_sources DynaBrothers1AOT SOURCES)
@@ -164,6 +165,26 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db1step/db1step_module.c")
         target_sources(DynaBrothers1AOT PRIVATE ${JP_PARTS} generated/db1jp/db1jp_module.c)
         target_include_directories(DynaBrothers1AOT PRIVATE generated/db1jp)
         target_compile_definitions(DynaBrothers1AOT PRIVATE DYNA_HAS_JP=1)
+    endif()
+    if(DYNA_DB1_REGISTER_EXPERIMENT)
+        if(NOT JP_PARTS)
+            message(FATAL_ERROR "The DB1 register experiment needs the Japanese overlay catalog")
+        endif()
+        find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        set(_classifier "${RECOMP_ROOT}/tools/native_catalog_compact.py")
+        set(_bitmap "${CMAKE_CURRENT_BINARY_DIR}/db1_register_bitmap.h")
+        add_custom_command(OUTPUT "${_bitmap}"
+            COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/generate_db1_register_bitmap.py"
+                "${CMAKE_CURRENT_SOURCE_DIR}/generated" "${_classifier}" "${_bitmap}"
+            DEPENDS tools/generate_db1_register_bitmap.py "${_classifier}"
+                generated/db1step/db1step_module.c generated/db1jp/db1jp_module.c
+                ${STEP_PARTS} ${JP_PARTS}
+            VERBATIM)
+        target_sources(DynaBrothers1AOT PRIVATE "${_bitmap}")
+        set_property(SOURCE games/step_lookup.c APPEND PROPERTY COMPILE_DEFINITIONS
+            "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,DynaBrothers1AOT>:DYNA_DB1_REGISTER_EXPERIMENT=1>")
+        set_property(SOURCE games/step_lookup.c APPEND PROPERTY INCLUDE_DIRECTORIES
+            "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,DynaBrothers1AOT>:${CMAKE_CURRENT_BINARY_DIR}>")
     endif()
 endif()
 if(EXISTS "${CMAKE_SOURCE_DIR}/generated/db2step/db2step_module.c")
