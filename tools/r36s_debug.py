@@ -14,10 +14,12 @@ HITCH = re.compile(r"\[HOST-HITCH\] frame=(\d+) total_us=(\d+) phase_us=([\d,]+)
 VIDEO = re.compile(r"\[VIDEO\] renderer name=(\S+) vsync=(\d+)")
 WINDOW = re.compile(r"\[HOST-WINDOW\] end_frame=(\d+) count=(\d+) avg_us=(\d+) phase_avg_us=([\d,]+)")
 WINDOW_PEAKS = re.compile(r" max_us=(\d+) frames_ge_25ms=(\d+)")
+BUILD = re.compile(r"\[evidence\] build exe=([\da-f]+) rom=([\da-f]+)", re.I)
 SLOW_SIM = re.compile(r"\[HOST-SLOW-SIM\] frame=(\d+) us=(\d+)(?: cpu_us=(\d+))? "
                       r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
 M68K_PEAK = re.compile(r"\[R36S-68K-PEAK\] frame=(\d+) line=(\d+) us=(\d+) "
                        r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
+RASTER = re.compile(r"\[R36S-RASTER\] frame=(\d+) m68k_us=(\d+) z80_us=(\d+) video_us=(\d+) irq_us=(\d+)")
 
 
 def percentile(values, fraction):
@@ -25,11 +27,13 @@ def percentile(values, fraction):
     return points[max(0, math.ceil(fraction * len(points)) - 1)]
 
 
-def summarize(path, start_frame=0):
+def summarize(path, start_frame=0, retain_windows=False):
     data = {"file": path.name, "benchmarks": [], "renderer": [], "diagnostics": []}
     rates, hitches, windows, window_peaks, slow_sim = [], [], [], [], []
     m68k_peaks = []
     live_frame = 0
+    if retain_windows:
+        data["indexed_windows"] = {}
     with path.open(encoding="utf-8-sig", errors="replace") as source:
         for entry in source:
             line = entry.strip()
@@ -44,6 +48,8 @@ def summarize(path, start_frame=0):
                     data["invalid_benchmark_lines"] += 1
             if match := VIDEO.search(line):
                 data["renderer"].append({"backend": match[1], "vsync": bool(int(match[2]))})
+            if match := BUILD.search(line):
+                data["build"] = {"exe": match[1].lower(), "rom": match[2].lower()}
             if match := LIVE.search(line):
                 frames, delta = map(int, match.groups())
                 if live_frame >= start_frame and delta:
@@ -61,6 +67,8 @@ def summarize(path, start_frame=0):
                     windows.append((count, total, parts))
                     if peaks := WINDOW_PEAKS.match(line, match.end()):
                         window_peaks.append(tuple(map(int, peaks.groups())))
+                    if retain_windows:
+                        data["indexed_windows"][f"{frame - count + 1}-{frame}"] = (total, *parts)
             if (match := SLOW_SIM.search(line)) and int(match[1]) >= start_frame:
                 slow_sim.append({"frame": int(match[1]), "wall_ms": round(int(match[2]) / 1000, 3),
                                  "cpu_ms": round(int(match[3]) / 1000, 3) if match[3] and int(match[3]) else None,
@@ -69,6 +77,11 @@ def summarize(path, start_frame=0):
                 m68k_peaks.append({"frame": int(match[1]), "scanline": int(match[2]),
                                    "wall_ms": int(match[3]) / 1000, "instructions": int(match[4]),
                                    "pc_start": match[5], "pc_end": match[6]})
+            if (match := RASTER.search(line)) and int(match[1]) >= start_frame:
+                data.setdefault("raster_frames", {})[match[1]] = {
+                    name: int(value) / 1000
+                    for name, value in zip(("m68k", "z80", "video", "irq"), match.groups()[1:])
+                }
             if line.startswith(("[evidence]", "[progress-autosave]", "SDL_Init:", "SDL_CreateWindow:",
                                 "SDL_CreateRenderer:", "[SDL-FAULT]", "[HOST-TIMING]")):
                 if len(data["diagnostics"]) < 40 and line not in data["diagnostics"]:
@@ -129,15 +142,46 @@ def compare(reference, candidate):
             "fps_ratio": round(b["fps"] / a["fps"], 3) if paired and a.get("fps") and b.get("fps") else None}
 
 
+def compare_windows(reference, candidate):
+    same_build = bool(reference.get("build") and reference["build"] == candidate.get("build"))
+    first = reference["indexed_windows"]
+    second = candidate["indexed_windows"]
+    common = [key for key in first if key in second]
+    labels = ("frame", *PHASES)
+    return {
+        "same_executable_and_rom_fingerprints": same_build,
+        "same_reported_renderer": bool(reference["renderer"] and reference["renderer"] == candidate["renderer"]),
+        "matched_frame_ranges": common,
+        "matched_raster_frames": {
+            frame: {"reference_ms": phases, "candidate_ms": candidate["raster_frames"][frame]}
+            for frame, phases in reference.get("raster_frames", {}).items()
+            if frame in candidate.get("raster_frames", {})
+        },
+        "median_ms": {
+            side: {name: round(statistics.median(source[key][i] for key in common) / 1000, 3)
+                   for i, name in enumerate(labels)}
+            for side, source in (("reference", first), ("candidate", second))
+        } if common else None,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("logs", type=Path, nargs="+")
     parser.add_argument("--from-frame", type=int, default=0)
+    parser.add_argument("--match-windows", action="store_true",
+                        help="Compare only identical frame ranges from two timing logs")
     args = parser.parse_args()
-    reports = [summarize(path, args.from_frame) for path in args.logs]
+    if args.match_windows and len(args.logs) != 2:
+        parser.error("--match-windows requires exactly two logs")
+    reports = [summarize(path, args.from_frame, args.match_windows) for path in args.logs]
     result = {"logs": reports}
     if len(reports) == 2:
         result["comparison"] = compare(*reports)
+    if args.match_windows:
+        result["matched_windows"] = compare_windows(*reports)
+        for report in reports:
+            del report["indexed_windows"]
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 

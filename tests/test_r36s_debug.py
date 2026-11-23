@@ -3,10 +3,28 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from tools.r36s_debug import BENCH, compare, summarize
+from tools.r36s_debug import BENCH, compare, compare_windows, summarize
 
 
 class R36SDebugTests(unittest.TestCase):
+    def test_match_windows_and_raster_by_frame(self):
+        with TemporaryDirectory() as tmp:
+            logs = [Path(tmp) / name for name in ("hardware.log", "vm.log")]
+            for i, log in enumerate(logs):
+                log.write_text("\n".join([
+                    "[evidence] build exe=abcdef rom=123456",
+                    f"[VIDEO] renderer name={'gles' if i else 'software'} vsync=0",
+                    f"[HOST-WINDOW] end_frame={179 + i * 360} count=180 avg_us=99000 phase_avg_us=0,0,0,0,0,0,0,0,0",
+                    f"[HOST-WINDOW] end_frame=359 count=180 avg_us={30000 + i * 10000} phase_avg_us=0,24000,0,0,0,0,0,0,0",
+                    f"[R36S-RASTER] frame=300 m68k_us={1000 + i * 500} z80_us=2000 video_us=3000 irq_us=4000",
+                ]), encoding="utf-8")
+            comparison = compare_windows(*(summarize(log, retain_windows=True) for log in logs))
+            self.assertEqual(comparison["matched_frame_ranges"], ["180-359"])
+            self.assertEqual(comparison["median_ms"]["candidate"]["frame"], 40)
+            self.assertEqual(comparison["matched_raster_frames"]["300"]["candidate_ms"]["m68k"], 1.5)
+            self.assertTrue(comparison["same_executable_and_rom_fingerprints"])
+            self.assertFalse(comparison["same_reported_renderer"])
+
     def test_scope_and_phase_windows(self):
         run = {"game": "DynaBrothers1AOT", "workload_scope": "paced-runtime", "frames": 360,
                "complete": True, "state_fnv1a64": "state", "audio_state_fnv1a64": "audio", "fps": 60}
