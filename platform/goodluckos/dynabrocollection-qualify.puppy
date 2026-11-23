@@ -1,5 +1,6 @@
 [ENTRY]
-CATEGORY=Diagnostics
-NAME=DB1 qualification (one run)
+CATEGORY=Ports
+NAME=Dyna Brothers - Diagnostico
+DESCRIPTION=Compara la RC1 con el candidato en tres pasadas de Normal 1
 COMMAND=/bin/sh /home/player/ports/dynabrocollection/qualify.sh
 TERMINAL=0

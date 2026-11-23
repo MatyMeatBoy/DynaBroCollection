@@ -17,7 +17,7 @@ Extract the port ZIP into the root of the existing FAT32 HOME partition and plac
 
 ## Debug targets
 
-The qualification ZIP adds **Diagnostics → DB1 qualification (one run)**. When the ZIP supplies the previous DB1 executable, the diagnostic first runs it with normal cadence. It then runs the new build with normal cadence and uncapped. Each leg uses the same 6200-frame Normal 1 input sequence and VSync off. Let the launcher return to Puppy without pressing gameplay buttons. Find the logs, exit statuses and available system details under `ports/dynabrocollection/debug/device/db1-qualification-<timestamp>/`. A fresh profile per leg keeps the regular saves out of the measurement.
+The qualification ZIP adds **Ports → Dyna Brothers - Diagnostico**. When the ZIP supplies the previous DB1 executable, the diagnostic first runs it with normal cadence. It then runs the new build with normal cadence and uncapped. Each leg uses the same 6200-frame Normal 1 input sequence and VSync off. Let the launcher return to Puppy without pressing gameplay buttons. Find the logs, exit statuses and available system details under `ports/dynabrocollection/debug/device/db1-qualification-<timestamp>/`. A fresh profile per leg keeps the regular saves out of the measurement. The launcher records setup errors and exit codes in `ports/dynabrocollection/debug/qualification-launch.log`.
 
 A qualification ZIP can include `DynaBrothers1Qualification` beside the regular game. The diagnostic enables the DB1 poll-tail experiment for that executable. The regular menu keeps launching `DynaBrothers1AOT`.
 
