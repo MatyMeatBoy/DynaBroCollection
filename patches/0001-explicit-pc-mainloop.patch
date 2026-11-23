@@ -2535,10 +2535,61 @@ index bfbe22d..8a025c3 100644
      g_snd_frame++;   /* [SND-TRACE] */
  }
  
+diff --git a/runner/video/genesis_tile_row.h b/runner/video/genesis_tile_row.h
+index b4d40da..03b1ac3 100644
+--- a/runner/video/genesis_tile_row.h
++++ b/runner/video/genesis_tile_row.h
+@@ -2,6 +2,12 @@
+ #define GENESIS_TILE_ROW_H
+ #include <stdint.h>
+ #include <string.h>
++#if defined(__arm__) && defined(__ARM_NEON) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
++#include <arm_neon.h>
++#define GENESIS_ARM_TILE_ROWS 1
++#else
++#define GENESIS_ARM_TILE_ROWS 0
++#endif
+ 
+ /* Expand a complete four-byte pattern row into eight native packed pixels.
+  * Each byte contains palette/priority, its nibble and bit6 for opacity. The
+@@ -9,6 +15,16 @@
+  * is imposed. Return bytes are in output order on either host endianness. */
+ static inline uint64_t gtile_packed_row(uint32_t bits, uint8_t attr, int flip)
+ {
++#if GENESIS_ARM_TILE_ROWS
++    const uint8x8_t select = {3, 3, 2, 2, 1, 1, 0, 0};
++    const int8x8_t shifts = {-4, 0, -4, 0, -4, 0, -4, 0};
++    uint8x8_t bytes = vreinterpret_u8_u32(vdup_n_u32(bits));
++    uint8x8_t nibbles = vand_u8(vshl_u8(vtbl1_u8(bytes, select), shifts), vdup_n_u8(15));
++    uint8x8_t opacity = vand_u8(vtst_u8(nibbles, nibbles), vdup_n_u8(0x40));
++    uint8x8_t packed = vorr_u8(vorr_u8(nibbles, opacity), vdup_n_u8(attr));
++    if (flip) packed = vrev64_u8(packed);
++    return vget_lane_u64(vreinterpret_u64_u8(packed), 0);
++#else
+     uint64_t p = bits;
+     p = (p | (p << 16)) & UINT64_C(0x0000ffff0000ffff);
+     p = (p | (p << 8)) & UINT64_C(0x00ff00ff00ff00ff);
+@@ -25,6 +41,7 @@ static inline uint64_t gtile_packed_row(uint32_t bits, uint8_t attr, int flip)
+         p = (p << 32) | (p >> 32);
+     }
+     return p;
++#endif
+ }
+ 
+ /* Immutable eight-pixel VRAM pattern row. Rebuild at each tile boundary in
 diff --git a/runner/video/genesis_vdp.c b/runner/video/genesis_vdp.c
-index 353ada4..013fb5e 100644
+index 353ada4..a3fdbc1 100644
 --- a/runner/video/genesis_vdp.c
 +++ b/runner/video/genesis_vdp.c
+@@ -38,7 +38,7 @@ static inline void gvdp_hd_emit(unsigned layer,unsigned x,unsigned count,uint32_
+ #define GENESIS_NATIVE_COMPOSE (UINTPTR_MAX > UINT32_MAX)
+ #endif
+ #ifndef GENESIS_NATIVE_TILE_ROWS
+-#define GENESIS_NATIVE_TILE_ROWS (UINTPTR_MAX > UINT32_MAX)
++#define GENESIS_NATIVE_TILE_ROWS (UINTPTR_MAX > UINT32_MAX || GENESIS_ARM_TILE_ROWS)
+ #endif
+ /* Four states per layer: transparent/opaque crossed with low/high priority.
+  * Select byte 0=backdrop, 1=B, 2=A, 3=sprite; bit 2 reports any opaque high
 @@ -500,6 +500,7 @@ unsigned gvdp_begin_scanline(GVDP *v, int line)
   * compositor below. */
  static uint8_t s_spr_idx[GVDP_MAX_WIDTH];   /* palette index 0..63            */
