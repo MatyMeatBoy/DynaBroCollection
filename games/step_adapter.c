@@ -81,7 +81,6 @@ static unsigned pad_trace_remaining;
 #include <stdlib.h>
 #include <string.h>
 
-extern void genesis_native_mainloop(uint32_t, GenesisNativeInstruction, void *);
 extern void glue_own_interrupt(int, GVDP *);
 static M68kStepContext main_cpu;
 static int cached_lookup=1;
@@ -153,8 +152,85 @@ static void navigation_observe(uint32_t pc){
  navigation_sync();
 }
 #endif
+#ifdef DYNA_HAS_JP
+static int poll_tails;
+extern void db1step_at_000786(M68kStepContext *);
+extern void db1step_at_00078A(M68kStepContext *);
+extern void db1step_at_0028DE(M68kStepContext *);
+extern void db1step_at_0028E2(M68kStepContext *);
+
+static void vdp_poll_tail(M68kStepContext *ctx)
+{
+    db1step_at_000786(ctx);
+    db1step_at_00078A(ctx);
+}
+
+static void ram_poll_tail(M68kStepContext *ctx)
+{
+    db1step_at_0028DE(ctx);
+    db1step_at_0028E2(ctx);
+}
+
+static const M68kStepEntry vdp_poll_test = {0x0786, {0x0800,0x0003}, 2,10,db1step_at_000786};
+static const M68kStepEntry vdp_poll_branch = {0x078a, {0x67f4}, 1,10,db1step_at_00078A};
+static const M68kStepEntry ram_poll_test = {0x28de, {0x0c00,0x0001}, 2,8,db1step_at_0028DE};
+static const M68kStepEntry ram_poll_branch = {0x28e2, {0x65f6}, 1,10,db1step_at_0028E2};
+static const M68kStepEntry *const vdp_poll_entries[] = {&vdp_poll_test, &vdp_poll_branch};
+static const M68kStepEntry *const ram_poll_entries[] = {&ram_poll_test, &ram_poll_branch};
+static const M68kStepFlowSpan vdp_poll = {vdp_poll_entries,vdp_poll_tail,2,20};
+static const M68kStepFlowSpan ram_poll = {ram_poll_entries,ram_poll_tail,2,18};
+
+static const M68kStepEntry *poll_entry(const M68kStepModule *module, uint32_t pc)
+{
+    size_t low=0, high=module->count;
+    while (low<high) {
+        size_t middle=low+(high-low)/2;
+        const M68kStepEntry *entry=&module->entries[middle];
+        if (entry->pc==pc) return entry;
+        if (entry->pc<pc) low=middle+1;
+        else high=middle;
+    }
+    return NULL;
+}
+
+static int poll_tail_matches_catalog(const M68kStepFlowSpan *tail)
+{
+    for (unsigned i=0; i<tail->count; ++i) {
+        const M68kStepEntry *expected=tail->entries[i];
+        const M68kStepEntry *actual=poll_entry(&DYNA_STEP_MODULE,expected->pc);
+        if (!actual || poll_entry(&db1jp_module,expected->pc) ||
+            actual->execute!=expected->execute || actual->cycles!=expected->cycles ||
+            actual->word_count!=expected->word_count ||
+            memcmp(actual->words,expected->words,expected->word_count*sizeof(expected->words[0])))
+            return 0;
+    }
+    return 1;
+}
+
+/* Both tails follow an ordinary bus read and touch only CCR/PC. The four
+ * addresses have no game observer or alternate Japanese catalog entry. */
+static int try_poll_tail(M68kStepContext *ctx, unsigned *cycles)
+{
+    const M68kStepFlowSpan *span;
+    switch (g_cpu.PC) {
+    case 0x0786: span=&vdp_poll; break;
+    case 0x28de: span=&ram_poll; break;
+    default: return 0;
+    }
+    if (!genesis_native_poll_tail_ready(span->cycles)) return 0;
+    copy_registers(&ctx->state.regs,&g_cpu);
+    uint64_t before=ctx->state.cycles;
+    if (m68k_step_execute_flow_span(ctx,span,span->cycles)!=M68K_STEP_OK) return 0;
+    copy_registers(&g_cpu,&ctx->state.regs);
+    *cycles=(unsigned)(ctx->state.cycles-before);
+    return 1;
+}
+#endif
 static int retire(void *user,unsigned *cycles) {
     M68kStepContext *ctx=user;
+#ifdef DYNA_HAS_JP
+    if (poll_tails && ctx==&main_cpu && try_poll_tail(ctx,cycles)) return 2;
+#endif
     dyna_achievement_session_before(g_cpu.PC);
 #ifdef DYNA_HAS_JP
     navigation_observe(g_cpu.PC);
@@ -287,6 +363,9 @@ static int retire(void *user,unsigned *cycles) {
 static void entry(void) {
     dyna_achievement_session_reset();
 #ifdef DYNA_HAS_JP
+    const char *poll_option=getenv("DYNA_DB1_POLL_TAILS");
+    poll_tails=poll_option && !strcmp(poll_option,"1") &&
+               poll_tail_matches_catalog(&vdp_poll) && poll_tail_matches_catalog(&ram_poll);
     db1_video_reset();
     db1_title_menu_smoke_init();
     db1_password_nav_reset(&password_nav);navigation_seen=DB1_PASSWORD_IDLE;

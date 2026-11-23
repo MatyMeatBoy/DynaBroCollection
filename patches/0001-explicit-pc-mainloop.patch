@@ -458,7 +458,7 @@ index 88a0379..20bf84f 100644
  
  #endif /* RUNNER_GAMEPAD_H */
 diff --git a/runner/glue.c b/runner/glue.c
-index 9678eef..fd715fb 100644
+index 9678eef..dae515c 100644
 --- a/runner/glue.c
 +++ b/runner/glue.c
 @@ -25,7 +25,7 @@
@@ -633,10 +633,25 @@ index 9678eef..fd715fb 100644
  int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,void *user)
  {
      if(s_native_pc_scope || !step)return 0;
-@@ -1186,6 +1228,30 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
+@@ -1186,6 +1228,47 @@ int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction step,vo
      abort();
  }
  
++int genesis_native_poll_tail_ready(unsigned cycles)
++{
++#ifdef GENESIS_COSIM
++    (void)cycles;
++    return 0;
++#else
++    if (!s_native_full_program || s_own_vint_latched || s_own_hint_latched ||
++        s_main_cpu_divisor > 1) return 0;
++    return genesis_native_register_budget(g_cycle_accumulator, g_audio_cycle_counter,
++        g_native_insn_count, s_insn_watchdog_base, INSN_WATCHDOG_LIMIT,
++        0, s_interleave_active, s_in_vblank_service, s_main_cpu_divisor,
++        s_cycle_budget, s_budget_cyc_seen, cycles, 2);
++#endif
++}
++
 +/* Game-owned full-program AOT driver. Unlike the bounded native helper,
 + * reset programs have no host return and retain explicit PC across IRQs. */
 +void genesis_native_mainloop(uint32_t entry,GenesisNativeInstruction step,void *user)
@@ -649,12 +664,14 @@ index 9678eef..fd715fb 100644
 +        glue_own_hint_service_latched(&g_machine.vdp);
 +        unsigned cycles=0;
 +        s_native_instruction_open=1;
-+        if (!step(user,&cycles) || !cycles || cycles>65535u) {
++        int retired=step(user,&cycles);
++        if (retired<1 || retired>2 || !cycles || cycles>65535u) {
 +            fprintf(stderr,"native main program miss at $%06X\n",g_cpu.PC);
 +            abort();
 +        }
 +        s_native_instruction_open=0;
-+        ++g_native_insn_count;
++        g_native_insn_count+=(unsigned)retired;
++        if(retired>1)++g_native_span_count;
 +        g_cycle_accumulator+=cycles;g_audio_cycle_counter+=cycles;
 +        GEN_COSIM_TICK(cycles);
 +        check_cycle_budget();
@@ -664,7 +681,7 @@ index 9678eef..fd715fb 100644
  /* Non-clearing read of the masked-V-int latch for full-state hashing
   * (glue_own_vint_service_latched() would consume it — must not, during a
   * side-effect-free snapshot). */
-@@ -1634,7 +1700,7 @@ void glue_restart_game_fiber(uint32_t resume_pc)
+@@ -1634,7 +1717,7 @@ void glue_restart_game_fiber(uint32_t resume_pc)
  
      s_game_running = 0;
      s_game_yielded_vblank = 0;
@@ -673,7 +690,7 @@ index 9678eef..fd715fb 100644
  #if SONIC_REVERSE_DEBUG
      s_game_yielded_break = 0;
  #endif
-@@ -1772,7 +1838,7 @@ static inline void spin_check(uint32_t byte_addr, int is_write)
+@@ -1772,7 +1855,7 @@ static inline void spin_check(uint32_t byte_addr, int is_write)
  uint16_t m68k_read16(uint32_t byte_addr)
  {
      byte_addr &= 0xFFFFFFu;
@@ -682,7 +699,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 1);
      if (byte_addr == 0xA11100u) {
          uint16_t ack = gbus_read16(&g_machine.bus, byte_addr);
-@@ -1799,7 +1865,7 @@ static int      s_z80poll_streak    = 0;
+@@ -1799,7 +1882,7 @@ static int      s_z80poll_streak    = 0;
  uint8_t m68k_read8(uint32_t byte_addr)
  {
      byte_addr &= 0xFFFFFFu;
@@ -691,7 +708,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 0);
      /* This bus model grants BUSREQ synchronously in gbus_write16. Latch
       * its acknowledgement before any scheduler yield. Unconditionally
-@@ -1871,7 +1937,7 @@ uint8_t m68k_read8(uint32_t byte_addr)
+@@ -1871,7 +1954,7 @@ uint8_t m68k_read8(uint32_t byte_addr)
  uint32_t m68k_read32(uint32_t byte_addr)
  {
      byte_addr &= 0xFFFFFFu;
@@ -700,7 +717,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 2);
      spin_check(byte_addr, 0);
      /* Bump once for the whole 32-bit op — both halves at same cycle.
-@@ -1885,7 +1951,7 @@ uint32_t m68k_read32(uint32_t byte_addr)
+@@ -1885,7 +1968,7 @@ uint32_t m68k_read32(uint32_t byte_addr)
  void m68k_write16(uint32_t byte_addr, uint16_t val)
  {
      byte_addr &= 0xFFFFFFu;
@@ -709,7 +726,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 4);
      /* 16-bit FM writes land one byte per port per cycle on hardware. The
       * YM2612 only takes 8-bit data; SMPS always uses 8-bit writes. Be
-@@ -1903,7 +1969,7 @@ void m68k_write16(uint32_t byte_addr, uint16_t val)
+@@ -1903,7 +1986,7 @@ void m68k_write16(uint32_t byte_addr, uint16_t val)
  void m68k_write8(uint32_t byte_addr, uint8_t val)
  {
      byte_addr &= 0xFFFFFFu;
@@ -718,7 +735,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 3);
      audio_detour_write(byte_addr, val);
      if (s_io_log_enabled && byte_addr >= 0xA10000u && byte_addr <= 0xA1001Fu) {
-@@ -1922,7 +1988,7 @@ void m68k_write8(uint32_t byte_addr, uint8_t val)
+@@ -1922,7 +2005,7 @@ void m68k_write8(uint32_t byte_addr, uint8_t val)
  void m68k_write32(uint32_t byte_addr, uint32_t val)
  {
      byte_addr &= 0xFFFFFFu;
@@ -727,7 +744,7 @@ index 9678eef..fd715fb 100644
      bus_ring_push(byte_addr, 5);
      /* 32-bit write = two consecutive 16-bit writes. Only matters for FM
       * bus; SMPS never uses 32-bit to write FM regs so this is defensive
-@@ -2562,7 +2628,7 @@ typedef struct GlueRbSched {
+@@ -2562,7 +2645,7 @@ typedef struct GlueRbSched {
       * _STATICS probe on Sonic 3 (2026-09-25): omitting it forked the replay
       * in cpu/sched/ram at step 1 in 5 of 149 probe passes. */
      int32_t  split_sp_popped;
@@ -736,7 +753,7 @@ index 9678eef..fd715fb 100644
  } GlueRbSched;
  
  size_t glue_rb_sched_save(void *dst, size_t cap)
-@@ -2619,6 +2685,7 @@ size_t glue_rb_sched_save(void *dst, size_t cap)
+@@ -2619,6 +2702,7 @@ size_t glue_rb_sched_save(void *dst, size_t cap)
      s.native_pc_scope=s_native_pc_scope;
      s.native_instruction_open=s_native_instruction_open;
      s.native_vblank_completed=s_native_vblank_completed;
@@ -744,7 +761,7 @@ index 9678eef..fd715fb 100644
      memcpy(dst, &s, sizeof s);
      return sizeof s;
  }
-@@ -2630,7 +2697,8 @@ int glue_rb_sched_load(const void *src, size_t len)
+@@ -2630,7 +2714,8 @@ int glue_rb_sched_load(const void *src, size_t len)
      memcpy(&s, src, sizeof s);
      if(s.native_pc_scope<0 || s.native_pc_scope>1 ||
         s.native_instruction_open<0 || s.native_instruction_open>s.native_pc_scope ||
@@ -754,7 +771,7 @@ index 9678eef..fd715fb 100644
      g_frame_count               = s.frame_count;
      g_cycle_accumulator         = s.cycle_accumulator;
      g_vblank_threshold          = s.vblank_threshold;
-@@ -2679,6 +2747,7 @@ int glue_rb_sched_load(const void *src, size_t len)
+@@ -2679,6 +2764,7 @@ int glue_rb_sched_load(const void *src, size_t len)
      s_native_pc_scope=s.native_pc_scope;
      s_native_instruction_open=s.native_instruction_open;
      s_native_vblank_completed=s.native_vblank_completed;
@@ -2362,17 +2379,22 @@ index 1cb9d42..02f9ae5 100644
   * handlers may rewrite either field before RTE. Work RAM wraps at 64 KiB. */
  static inline void native_interrupt_frame_write(uint8_t ram[65536],uint32_t sp,
 diff --git a/runner/native_interruptible.h b/runner/native_interruptible.h
-index 11c9641..03d3e34 100644
+index 11c9641..7d73204 100644
 --- a/runner/native_interruptible.h
 +++ b/runner/native_interruptible.h
-@@ -7,4 +7,8 @@
+@@ -7,4 +7,13 @@
   * its return PC. The generated caller retains its single guest-stack pop. */
  typedef int (*GenesisNativeInstruction)(void *user,unsigned *cycles);
  int genesis_interruptible_native(uint32_t entry,GenesisNativeInstruction,void *user);
++/* The full-program callback returns the number of retired instructions
++ * (one, or two for an admitted bus-free pair), or zero on failure. */
++void genesis_native_mainloop(uint32_t entry,GenesisNativeInstruction step,void *user);
 +/* Full-program driver only: query at a completed instruction boundary and
 + * acknowledge through the CPU core's interrupt-ack bus callback. */
 +unsigned genesis_native_pending_interrupt(void);
 +void genesis_native_ack_interrupt(unsigned level);
++/* Guard for an explicitly qualified bus-free interval in the full program. */
++int genesis_native_poll_tail_ready(unsigned cycles);
  #endif
 diff --git a/runner/rb_probe.c b/runner/rb_probe.c
 index 6118cc2..7b6568d 100644

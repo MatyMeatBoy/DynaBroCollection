@@ -22,14 +22,20 @@ def main():
     diagnostics.add_argument("--device-qualification", action="store_true")
     parser.add_argument("--qualification-reference", type=Path,
                         help="Previous DB1 ARM hard-float executable for a matched device run")
+    parser.add_argument("--qualification-candidate", type=Path,
+                        help="Separate experimental DB1 executable used only by the device diagnostic")
     args = parser.parse_args()
     if args.qualification_reference and not args.device_qualification:
         parser.error("--qualification-reference needs --device-qualification")
+    if args.qualification_candidate and not args.qualification_reference:
+        parser.error("--qualification-candidate needs --qualification-reference")
     platform = ROOT / "platform/goodluckos"
     port = "ports/dynabrocollection"
     executables = [(args.stage / name, name) for name in PROGRAMS]
     if args.qualification_reference:
         executables.append((args.qualification_reference, "DynaBrothers1Reference"))
+    if args.qualification_candidate:
+        executables.append((args.qualification_candidate, "DynaBrothers1Qualification"))
     for binary, destination in executables:
         elf = subprocess.check_output(
             [args.readelf, "-h", "-l", "-A", str(binary)], text=True
