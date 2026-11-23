@@ -2578,11 +2578,15 @@ index b4d40da..03b1ac3 100644
  
  /* Immutable eight-pixel VRAM pattern row. Rebuild at each tile boundary in
 diff --git a/runner/video/genesis_vdp.c b/runner/video/genesis_vdp.c
-index 353ada4..a3fdbc1 100644
+index 353ada4..ea6accf 100644
 --- a/runner/video/genesis_vdp.c
 +++ b/runner/video/genesis_vdp.c
-@@ -38,7 +38,7 @@ static inline void gvdp_hd_emit(unsigned layer,unsigned x,unsigned count,uint32_
- #define GENESIS_NATIVE_COMPOSE (UINTPTR_MAX > UINT32_MAX)
+@@ -35,10 +35,10 @@ static inline void gvdp_hd_emit(unsigned layer,unsigned x,unsigned count,uint32_
+ #define GENESIS_BATCHED_PLANES 0
+ #endif
+ #ifndef GENESIS_NATIVE_COMPOSE
+-#define GENESIS_NATIVE_COMPOSE (UINTPTR_MAX > UINT32_MAX)
++#define GENESIS_NATIVE_COMPOSE (UINTPTR_MAX > UINT32_MAX || GENESIS_ARM_VDP_COMPOSE)
  #endif
  #ifndef GENESIS_NATIVE_TILE_ROWS
 -#define GENESIS_NATIVE_TILE_ROWS (UINTPTR_MAX > UINT32_MAX)
@@ -2644,6 +2648,74 @@ index 1695d09..d43a139 100644
      uint8_t shadow_op[GVDP_MAX_WIDTH], hilite_op[GVDP_MAX_WIDTH];
      uint32_t host_palette[GVDP_HOST_PALETTE_SIZE];
  } GVDPRasterRow;
+diff --git a/runner/video/genesis_vdp_compose.h b/runner/video/genesis_vdp_compose.h
+index 8d0cdbd..a5f61c0 100644
+--- a/runner/video/genesis_vdp_compose.h
++++ b/runner/video/genesis_vdp_compose.h
+@@ -2,6 +2,12 @@
+ #define GENESIS_VDP_COMPOSE_H
+ #include <stdint.h>
+ #include <string.h>
++#if defined(__arm__) && defined(__ARM_NEON)
++#include <arm_neon.h>
++#define GENESIS_ARM_VDP_COMPOSE 1
++#else
++#define GENESIS_ARM_VDP_COMPOSE 0
++#endif
+ 
+ /* Eight independent byte lanes, using only portable unsigned arithmetic.
+  * Plane bytes carry index[5:0], opacity[6], priority[7]. Sprite flags are
+@@ -31,9 +37,42 @@ static inline void gvdp_compose_span(uint8_t *out,const uint8_t *plane_a,
+     const uint8_t *high,const uint8_t *shadow_op,const uint8_t *hilite_op,
+     int count,uint8_t backdrop,int shadow_mode)
+ {
++#if !GENESIS_ARM_VDP_COMPOSE
+     const uint64_t one=UINT64_C(0x0101010101010101);
+     const uint64_t colors=UINT64_C(0x3f3f3f3f3f3f3f3f);
++#endif
+     while(count>=8) {
++#if GENESIS_ARM_VDP_COMPOSE
++        const uint8x8_t a = vld1_u8(plane_a), b = vld1_u8(plane_b);
++        const uint8x8_t s = vld1_u8(sprite);
++        const uint8x8_t so = vtst_u8(vld1_u8(opaque), vdup_n_u8(1));
++        const uint8x8_t sh = vtst_u8(vld1_u8(high), vdup_n_u8(1));
++        const uint8x8_t ao = vtst_u8(a, vdup_n_u8(0x40)), bo = vtst_u8(b, vdup_n_u8(0x40));
++        const uint8x8_t ap = vtst_u8(a, vdup_n_u8(0x80)), bp = vtst_u8(b, vdup_n_u8(0x80));
++        const uint8x8_t ah = vand_u8(ao, ap), bh = vand_u8(bo, bp);
++        const uint8x8_t ac = vand_u8(a, vdup_n_u8(63)), bc = vand_u8(b, vdup_n_u8(63));
++        uint8x8_t pixel = vbsl_u8(bo, bc, vdup_n_u8(backdrop));
++        pixel = vbsl_u8(ao, ac, pixel);
++        pixel = vbsl_u8(so, s, pixel);
++        pixel = vbsl_u8(bh, bc, pixel);
++        pixel = vbsl_u8(ah, ac, pixel);
++        pixel = vbsl_u8(vand_u8(sh, so), s, pixel);
++        if (shadow_mode) {
++            const uint8x8_t shadow = vtst_u8(vld1_u8(shadow_op), vdup_n_u8(1));
++            const uint8x8_t hilite = vtst_u8(vld1_u8(hilite_op), vdup_n_u8(1));
++            const uint8x8_t normal_planes = vorr_u8(ap, bp);
++            const uint8x8_t wins = vand_u8(vorr_u8(so, vorr_u8(shadow, hilite)),
++                                           vorr_u8(sh, vmvn_u8(vorr_u8(ah, bh))));
++            const uint8x8_t color14 = vceq_u8(vand_u8(s, vdup_n_u8(15)), vdup_n_u8(14));
++            uint8x8_t dark = vmvn_u8(vorr_u8(normal_planes,
++                                             vand_u8(wins, vorr_u8(sh, vorr_u8(color14, hilite)))));
++            dark = vorr_u8(dark, vand_u8(shadow, wins));
++            const uint8x8_t light = vand_u8(vbic_u8(vand_u8(wins, hilite), shadow), normal_planes);
++            const uint8x8_t shade = vorr_u8(vand_u8(dark, vdup_n_u8(64)), vand_u8(light, vdup_n_u8(128)));
++            pixel = vadd_u8(pixel, vand_u8(shade, vclt_u8(pixel, vdup_n_u8(64))));
++        }
++        vst1_u8(out, pixel);
++#else
+         uint64_t a=gvdp_compose_load(plane_a),b=gvdp_compose_load(plane_b);
+         uint64_t s=gvdp_compose_load(sprite),so=gvdp_compose_load(opaque);
+         uint64_t ah=((a&(a<<1))>>7)&one;
+@@ -65,6 +104,7 @@ static inline void gvdp_compose_span(uint8_t *out,const uint8_t *plane_a,
+             pixel+=shade&(normal*UINT64_C(255));
+         }
+         memcpy(out,&pixel,sizeof pixel);
++#endif
+         out+=8;plane_a+=8;plane_b+=8;sprite+=8;opaque+=8;high+=8;
+         shadow_op+=8;hilite_op+=8;count-=8;
+     }
 diff --git a/tests/runtime/game_video_frame_test.c b/tests/runtime/game_video_frame_test.c
 index 0ee2d9b..f8cda2a 100644
 --- a/tests/runtime/game_video_frame_test.c
