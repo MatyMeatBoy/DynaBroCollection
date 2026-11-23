@@ -1,0 +1,11 @@
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB1 raster startup
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile-raster.sh start
+TERMINAL=0
+
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB1 raster battle
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/profile-raster.sh battle
+TERMINAL=0

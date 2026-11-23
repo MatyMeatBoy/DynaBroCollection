@@ -36,6 +36,7 @@ def main():
     entries.append((ROOT / "platform/r36s/collect-debug.sh", "debug/collect.sh", True))
     if args.device_diagnostics:
         entries.append((platform / "profile.sh", "profile.sh", True))
+        entries.append((platform / "profile-raster.sh", "profile-raster.sh", True))
         entries.append((ROOT / "games/db1/scenes/r36s-normal1-battle.input", "debug/normal1.input", False))
     for directory in ("assets", "licenses"):
         path = args.stage / directory
@@ -56,8 +57,8 @@ def main():
             put(archive, platform / "dynabrocollection.puppy",
                 ".local/share/applications/dynabrocollection.puppy", text_file=True)
             if args.device_diagnostics:
-                put(archive, platform / "dynabrocollection-profile.puppy",
-                    ".local/share/applications/dynabrocollection-profile.puppy", text_file=True)
+                for name in ("dynabrocollection-profile.puppy", "dynabrocollection-raster.puppy"):
+                    put(archive, platform / name, f".local/share/applications/{name}", text_file=True)
             archive.writestr(f"{port}/roms/", "")
             for path, name, executable in entries:
                 put(archive, path, f"{port}/{name}", executable=executable,
