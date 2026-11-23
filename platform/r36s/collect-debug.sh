@@ -11,14 +11,16 @@ out=$(CDPATH= cd -- "$out" && pwd)
 
 {
     uname -srm
-    getconf LONG_BIT
-    getconf GNU_LIBC_VERSION || true
+    if command -v getconf >/dev/null 2>&1; then
+        getconf LONG_BIT || true
+        getconf GNU_LIBC_VERSION || true
+    fi
     if [ -r /etc/os-release ]; then cat /etc/os-release; fi
     if [ -r /proc/device-tree/model ]; then
         tr -d '\000' </proc/device-tree/model
         printf '\n'
     fi
-    grep -E '^(MemTotal|MemAvailable):' /proc/meminfo || true
+    grep -E '^(MemTotal|MemAvailable|CmaTotal|CmaFree|SwapTotal|SwapFree):' /proc/meminfo || true
     for item in /sys/class/drm/card*-*/status /sys/class/drm/card*-*/modes \
                 /sys/devices/system/cpu/cpufreq/policy*/scaling_governor \
                 /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq \

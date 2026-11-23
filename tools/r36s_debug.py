@@ -15,6 +15,9 @@ HITCH_AUDIO = re.compile(r" lock_us=(\d+) callback_us=(\d+) fill_us=(\d+) concea
 HITCH_SWAP = re.compile(r" swap_calls=(\d+) swap_wall_us=(\d+) swap_cpu_us=(\d+)")
 SWAP_WINDOW = re.compile(r"\[HOST-SWAP\] end_frame=(\d+) calls=(\d+) avg_wall_us=(\d+) "
                          r"avg_cpu_us=(\d+) max_wall_us=(\d+)")
+GRAPHICS_WINDOW = re.compile(r"\[HOST-GRAPHICS\] end_frame=(\d+) samples=(\d+) prepare_us=(\d+) "
+                             r"clear_us=(\d+) texture_us=(\d+) draw_us=(\d+)")
+HOST_MEMORY = re.compile(r"\[HOST-MEMORY\] rss_kib=(\d+) peak_rss_kib=(\d+)")
 HOST_PERCENTILES = re.compile(r"\[HOST-PERCENTILES\] frames=(\d+) bucket_us=(\d+) overflow_from_us=(\d+) "
                               r"p50_us=(-?\d+) p95_us=(-?\d+) p99_us=(-?\d+)")
 VIDEO = re.compile(r"\[VIDEO\] renderer name=(\S+) vsync=(\d+)")
@@ -104,6 +107,17 @@ def summarize(path, start_frame=0, retain_windows=False):
                         "end_frame": frame, "calls": calls, "avg_wall_ms": wall / 1000,
                         "avg_cpu_ms": cpu / 1000, "max_wall_ms": peak / 1000,
                     })
+            if match := GRAPHICS_WINDOW.search(line):
+                frame, samples, *times = map(int, match.groups())
+                if frame - 179 >= start_frame:
+                    data.setdefault("graphics_windows", []).append({
+                        "end_frame": frame, "samples": samples,
+                        "average_ms": dict(zip(("prepare", "clear", "texture", "draw"),
+                                               (value / 1000 for value in times))),
+                    })
+            if start_frame == 0 and (match := HOST_MEMORY.search(line)):
+                rss, peak = map(int, match.groups())
+                data["process_memory"] = {"rss_kib": rss, "peak_rss_kib": peak}
             if match := WINDOW.search(line):
                 frame, count, total = map(int, match.groups()[:3])
                 parts = tuple(map(int, match[4].split(",")))

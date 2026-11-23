@@ -37,6 +37,8 @@ class R36SDebugTests(unittest.TestCase):
                 " swap_calls=1 swap_wall_us=5100 swap_cpu_us=900",
                 "[HOST-SLOW-SIM-SUMMARY] events=90 retained=64",
                 "[HOST-SWAP] end_frame=179 calls=180 avg_wall_us=3300 avg_cpu_us=700 max_wall_us=5100",
+                "[HOST-GRAPHICS] end_frame=179 samples=180 prepare_us=100 clear_us=200 texture_us=11000 draw_us=900",
+                "[HOST-MEMORY] rss_kib=37120 peak_rss_kib=45056",
                 "[HOST-HITCH] frame=359 total_us=51000 phase_us=0,50000,0,0,0,0,0,0,1000",
             ]), encoding="utf-8")
             result = summarize(log)
@@ -48,11 +50,15 @@ class R36SDebugTests(unittest.TestCase):
             self.assertEqual(result["session_slow_simulation"], {"events": 90, "retained": 64})
             self.assertEqual(result["session_worst_frame"]["swap"], {"calls": 1, "wall_ms": 5.1, "cpu_ms": .9})
             self.assertEqual(result["swap_windows"][0]["calls"], 180)
+            self.assertEqual(result["graphics_windows"][0]["average_ms"]["texture"], 11.0)
+            self.assertEqual(result["process_memory"], {"rss_kib": 37120, "peak_rss_kib": 45056})
             filtered = summarize(log, start_frame=180)
             self.assertNotIn("session_worst_frame", filtered)
             self.assertNotIn("session_frame_percentiles", filtered)
             self.assertNotIn("session_slow_simulation", filtered)
             self.assertNotIn("swap_windows", filtered)
+            self.assertNotIn("graphics_windows", filtered)
+            self.assertNotIn("process_memory", filtered)
 
     def test_match_windows_and_raster_by_frame(self):
         with TemporaryDirectory() as tmp:
