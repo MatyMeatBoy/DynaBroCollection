@@ -17,7 +17,9 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--readelf", default="llvm-readelf")
     parser.add_argument("--strip", default="llvm-strip", help="ARM-capable strip tool")
-    parser.add_argument("--device-diagnostics", action="store_true")
+    diagnostics = parser.add_mutually_exclusive_group()
+    diagnostics.add_argument("--device-diagnostics", action="store_true")
+    diagnostics.add_argument("--device-qualification", action="store_true")
     args = parser.parse_args()
     platform = ROOT / "platform/goodluckos"
     port = "ports/dynabrocollection"
@@ -37,6 +39,9 @@ def main():
     if args.device_diagnostics:
         entries.append((platform / "profile.sh", "profile.sh", True))
         entries.append((platform / "profile-raster.sh", "profile-raster.sh", True))
+    if args.device_qualification:
+        entries.append((platform / "qualify.sh", "qualify.sh", True))
+    if args.device_diagnostics or args.device_qualification:
         entries.append((ROOT / "games/db1/scenes/r36s-normal1-battle.input", "debug/normal1.input", False))
     for directory in ("assets", "licenses"):
         path = args.stage / directory
@@ -59,6 +64,9 @@ def main():
             if args.device_diagnostics:
                 for name in ("dynabrocollection-profile.puppy", "dynabrocollection-raster.puppy"):
                     put(archive, platform / name, f".local/share/applications/{name}", text_file=True)
+            if args.device_qualification:
+                name = "dynabrocollection-qualify.puppy"
+                put(archive, platform / name, f".local/share/applications/{name}", text_file=True)
             archive.writestr(f"{port}/roms/", "")
             for path, name, executable in entries:
                 put(archive, path, f"{port}/{name}", executable=executable,

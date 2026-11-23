@@ -17,6 +17,8 @@ Extract the port ZIP into the root of the existing FAT32 HOME partition and plac
 
 ## Debug targets
 
+The single-pass qualification ZIP adds **Diagnostics → DB1 qualification (one run)**. It runs the same 6200-frame Normal 1 input sequence with normal cadence and uncapped, with VSync off in both profiles. Let both legs return to Puppy without pressing gameplay buttons. Find the two logs, exit statuses and available system details under `ports/dynabrocollection/debug/device/db1-qualification-<timestamp>/`. A fresh profile per leg keeps the regular saves out of the measurement.
+
 The optional device diagnostics ZIP adds a **Diagnostics** category in Puppy. Run the VSync and no-VSync entries for the affected game. DB1 uses the included Normal 1 input script and runs for 6200 frames to reach the battle and its state checks. DB2 runs for 3600 frames and accepts manual input. Each writes its timing report to `ports/dynabrocollection/debug/device/db<game>-<mode>/db<game>-last-run.log`. Diagnostic saves and configuration live under `debug/device`, separate from the normal game profile. Remove `.local/share/applications/dynabrocollection-profile.puppy` from HOME to hide the entries after testing.
 
 Use the firmware root filesystem and a Cortex-A7 QEMU userspace run to check ARM instructions, dynamic linking and scripted game logic. Use dummy SDL backends for deterministic frame and state comparisons. Measure frame pacing with the Mali display path, ALSA audio and the physical controller on the handheld.

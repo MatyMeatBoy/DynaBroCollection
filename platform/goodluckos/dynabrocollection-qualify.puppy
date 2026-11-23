@@ -1,0 +1,5 @@
+[ENTRY]
+CATEGORY=Diagnostics
+NAME=DB1 qualification (one run)
+COMMAND=/bin/sh /home/player/ports/dynabrocollection/qualify.sh
+TERMINAL=0
