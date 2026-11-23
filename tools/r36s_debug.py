@@ -209,15 +209,76 @@ def compare_windows(reference, candidate):
     }
 
 
+def calibrate_ga36(hardware_reference, vm_reference, hardware_candidate, vm_candidate):
+    """Fit the scripted DB1 route on the reference and check a separate build."""
+    pairs = ((hardware_reference, vm_reference), (hardware_candidate, vm_candidate))
+    for hardware, vm in pairs:
+        comparison = compare(hardware, vm)
+        if (not hardware.get("build") or hardware["build"] != vm.get("build") or not comparison
+                or not comparison["same_scope"] or not comparison["both_complete"]
+                or not all(comparison["hash_matches"].values())
+                or hardware["benchmarks"][-1]["workload_scope"] != "paced-runtime"):
+            raise ValueError("Each hardware/VM pair needs matching builds and completed paced state and audio")
+    if hardware_reference["build"]["rom"] != hardware_candidate["build"]["rom"]:
+        raise ValueError("Reference and candidate need the same ROM")
+    ref_hw, ref_vm, new_hw, new_vm = (item["indexed_windows"] for pair in pairs for item in pair)
+    common = ref_hw.keys() & ref_vm.keys() & new_hw.keys() & new_vm.keys()
+    bounds = {key: tuple(map(int, key.split("-"))) for key in common}
+    def remaining(row):
+        # The residual includes graphics and other host work.
+        return row[0] - row[2] - row[3]
+
+    def direction(value, reference):
+        return (value > reference) - (value < reference)
+
+    sections = (("boot", 180, 2159), ("menu", 2160, 4499),
+                ("transition", 4500, 5219), ("battle", 5220, 6119))
+    report = {}
+    for name, start, end in sections:
+        keys = [key for key, (first, last) in bounds.items() if start <= first <= last <= end]
+        keys = [key for key in keys if ref_vm[key][2] > 0]
+        if not keys:
+            raise ValueError(f"No matched DB1 timing windows in {name}")
+        scale = statistics.median(ref_hw[key][2] / ref_vm[key][2] for key in keys)
+        offset = statistics.median(remaining(ref_hw[key]) - remaining(ref_vm[key]) for key in keys)
+        predicted = statistics.median(max(1_000_000 / 59.9227, remaining(new_vm[key])
+                                          + scale * new_vm[key][2] + offset) for key in keys)
+        reference = statistics.median(ref_hw[key][0] for key in keys)
+        observed = statistics.median(new_hw[key][0] for key in keys)
+        raw = statistics.median(new_vm[key][0] for key in keys)
+        report[name] = {
+            "windows": len(keys), "simulation_scale": round(scale, 4),
+            "other_work_offset_ms": round(offset / 1000, 3),
+            "reference_hardware_ms": round(reference / 1000, 3),
+            "candidate_vm_ms": round(raw / 1000, 3),
+            "candidate_estimated_ms": round(predicted / 1000, 3),
+            "candidate_hardware_ms": round(observed / 1000, 3),
+            "candidate_absolute_error_ms": round(abs(predicted - observed) / 1000, 3),
+            "predicts_direction": direction(predicted, reference) == direction(observed, reference),
+        }
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("logs", type=Path, nargs="+")
     parser.add_argument("--from-frame", type=int, default=0)
     parser.add_argument("--match-windows", action="store_true",
                         help="Compare only identical frame ranges from two timing logs")
+    parser.add_argument("--calibrate-ga36", action="store_true",
+                        help="Fit DB1 Normal 1 on hardware/VM reference logs and validate on hardware/VM candidate logs")
     args = parser.parse_args()
     if args.match_windows and len(args.logs) != 2:
         parser.error("--match-windows requires exactly two logs")
+    if args.calibrate_ga36:
+        if len(args.logs) != 4 or args.match_windows or args.from_frame:
+            parser.error("--calibrate-ga36 needs four logs in order: hardware reference, VM reference, hardware candidate, VM candidate")
+        try:
+            reports = [summarize(path, retain_windows=True) for path in args.logs]
+            print(json.dumps(calibrate_ga36(*reports), indent=2))
+        except (ValueError, OSError) as error:
+            parser.error(str(error))
+        return
     reports = [summarize(path, args.from_frame, args.match_windows) for path in args.logs]
     result = {"logs": reports}
     if len(reports) == 2:

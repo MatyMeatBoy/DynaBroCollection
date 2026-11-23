@@ -95,6 +95,16 @@ En el laboratorio, la prueba `--stress` permite aislar renderizado por software,
 
 La [investigación de otros ports para RK3326](research/r36s-ports.md) reúne sus métodos de reproducción y medición.
 
+### Calibración de la VM con la GA36
+
+```sh
+python tools/r36s_debug.py --calibrate-ga36 referencia-ga36.log referencia-vm.log candidato-ga36.log candidato-vm.log
+```
+
+La prueba usa el recorrido de 6.200 cuadros de DB1 Normal 1 a ritmo normal. Exige las mismas huellas de binario, ROM, juego y audio dentro de cada par hardware/VM. Ajusta un factor de simulación y una diferencia para el resto del trabajo por escena solo con el par de referencia y comprueba el resultado sobre el candidato. El cuadro inicial queda fuera del ajuste. Los resultados describen ventanas de 180 cuadros y sirven para medir el error del modelo.
+
+En la primera comparación, la VM bajó de 58,15 a 56,51 FPS mientras la GA36 subió de 40,84 a 43,37 FPS. El ajuste por escena acercó los tiempos absolutos, pero predijo el sentido equivocado en las cuatro escenas. En combate estimó 22,56 ms frente a 19,88 ms medidos. Estos datos permiten usar la VM para validar ejecución y estado y muestran que el modelo aún necesita medir por separado el trabajo de preparación, subida de textura y dibujo en la GA36.
+
 ### Prueba experimental del ejecutor 68K de DB1
 
 Configura con `-DDYNA_DB1_REGISTER_EXPERIMENT=ON` para comparar el ejecutor de registros con la ruta habitual. La compilación clasifica los cuerpos C de ambos catálogos de DB1 con el verificador del motor. Las operaciones que necesitan el bus, las excepciones y el modo de traza siguen usando la ruta general. El ejecutor rápido verifica en vivo el opcode y sus extensiones. El interruptor viene desactivado.

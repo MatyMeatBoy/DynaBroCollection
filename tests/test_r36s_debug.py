@@ -3,10 +3,30 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from tools.r36s_debug import BENCH, compare, compare_windows, summarize
+from tools.r36s_debug import BENCH, calibrate_ga36, compare, compare_windows, summarize
 
 
 class R36SDebugTests(unittest.TestCase):
+    def test_ga36_calibration_keeps_candidate_out_of_fit(self):
+        keys = ("180-359", "2160-2339", "4500-4679", "5220-5399")
+        def run(build, frame, simulation, wait):
+            return {
+                "build": {"exe": build, "rom": "abcd"},
+                "benchmarks": [{"game": "DynaBrothers1AOT", "frames": 6200,
+                                "workload_scope": "paced-runtime", "complete": True,
+                                "state_fnv1a64": "1111", "audio_state_fnv1a64": "2222"}],
+                "indexed_windows": {key: (frame, 0, simulation, wait) for key in keys},
+            }
+
+        reference = run("1111", 28000, 18000, 0), run("1111", 17000, 12000, 4000)
+        candidate = run("2222", 25000, 15000, 0), run("2222", 18000, 14000, 3000)
+        result = calibrate_ga36(*reference, *candidate)["battle"]
+        self.assertEqual(result["candidate_estimated_ms"], 31)
+        self.assertEqual(result["candidate_hardware_ms"], 25)
+        self.assertFalse(result["predicts_direction"])
+        with self.assertRaises(ValueError):
+            calibrate_ga36(reference[0], candidate[1], *candidate)
+
     def test_session_summary_keeps_old_peak_outside_hitch_ring(self):
         with TemporaryDirectory() as tmp:
             log = Path(tmp) / "port.log"
