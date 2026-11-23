@@ -28,6 +28,8 @@ int dyna_language_apply(uint8_t *rom,size_t size,const DynaLanguageImage *image,
             return fail(error,cap,"Language source byte guard failed");
         end=span->address+span->length;
     }
+    /* The current image already passed both the CRC and byte guards. */
+    if(source==target)return 1;
     for(size_t i=0;i<image->count;++i) {
         const DynaLanguageSpan *span=&image->spans[i];
         memcpy(rom+span->address,span->bytes[target],span->length);

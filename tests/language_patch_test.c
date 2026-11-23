@@ -51,6 +51,7 @@ int main(void) {
     assert(!memcmp(rom,original,4));
     span.address=1;
     span.bytes[0]=en; /* qualified CRC alone does not bypass byte guards */
+    assert(!dyna_language_apply(rom,4,&image,0,error,sizeof error));
     assert(!dyna_language_apply(rom,4,&image,1,error,sizeof error));
     assert(!memcmp(rom,original,4));
     span.bytes[0]=jp;image.crc[1]^=1; /* broken target metadata rolls back */

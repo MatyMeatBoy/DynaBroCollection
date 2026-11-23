@@ -1067,7 +1067,7 @@ index c1e5399..2a98c68 100644
  
  /* True iff the script ran an EXIT directive. The caller should
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..ef3248b 100644
+index df30a08..1957c99 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -1745,7 +1745,7 @@ index df30a08..ef3248b 100644
  
      /* Recompiled code is tied to one exact ROM layout. A same-size regional
       * variant can boot far enough to look plausible while executing the wrong
-@@ -2944,9 +3224,10 @@ int main(int argc, char *argv[])
+@@ -2944,12 +3224,14 @@ int main(int argc, char *argv[])
                  g_game_spec.display_name ? g_game_spec.display_name : "game",
                  (unsigned)rom_raw_len,
                  (unsigned)g_game_spec.expected_rom_size);
@@ -1755,9 +1755,14 @@ index df30a08..ef3248b 100644
 -        return 1;
 +        return runner_rom_failure(other?LD_ROM_WRONG_GAME:LD_ROM_INCOMPATIBLE);
      }
++    const uint32_t replay_rom_crc = rom_crc32(rom_raw, rom_raw_len);
      if (g_game_spec.expected_rom_crc32) {
-         uint32_t actual_crc = rom_crc32(rom_raw, rom_raw_len);
-@@ -2971,7 +3252,7 @@ int main(int argc, char *argv[])
+-        uint32_t actual_crc = rom_crc32(rom_raw, rom_raw_len);
++        uint32_t actual_crc = replay_rom_crc;
+         int accepted = actual_crc == g_game_spec.expected_rom_crc32;
+         if (!accepted && g_game_spec.rom_aliases &&
+             g_game_spec.expected_rom_size && rom_raw_len == g_game_spec.expected_rom_size) {
+@@ -2971,7 +3253,7 @@ int main(int argc, char *argv[])
                      (unsigned)g_game_spec.expected_rom_crc32);
              free(rom_buf);
              free(rom_raw);
@@ -1766,10 +1771,11 @@ index df30a08..ef3248b 100644
          }
      }
  
-@@ -2985,6 +3266,7 @@ int main(int argc, char *argv[])
+@@ -2984,7 +3266,7 @@ int main(int argc, char *argv[])
+ #endif
          if(!genesis_replay_mods(p,replay_path)) {fprintf(stderr,"[feedback-replay] cannot restore recorded mods\n");return 1;}
      }
-     uint32_t replay_rom_crc=rom_crc32(rom_raw,rom_raw_len);
+-    uint32_t replay_rom_crc=rom_crc32(rom_raw,rom_raw_len);
 +    if(s_launch_log)fprintf(s_launch_log,"ROM accepted (CRC32=%08X, %u bytes)\n",(unsigned)replay_rom_crc,(unsigned)rom_raw_len);
      /* --- Load input script (if requested) before the SDL window opens
       * so any parse error fails fast without a flash of black window. */
