@@ -63,7 +63,11 @@ LD_LIBRARY_PATH="$PWD/lib" GENESIS_USER_DIR="$profile" \
 printf '%s\n' "$profile/db1-perf.log"
 ```
 
-En un build que incluye las ventanas de temporización, cada registro `HOST-WINDOW` agrega 180 cuadros sin escribir a disco por cuadro. `HOST-HITCH` identifica las fases de los últimos eventos retenidos. La variante temporal para medir por separado la capacidad sin espera es `--runtime-uncapped`. Para una prueba de presentación real mantén el ritmo normal y el backend que usa el jugador.
+Con `GENESIS_HOST_TIMING_DUMP=1`, el port mantiene en RAM las últimas 128 ventanas completas de 180 cuadros y las vuelca al terminar la sesión. `HOST-HITCH` conserva los últimos 128 eventos. `HOST-WORST` guarda el cuadro más lento de toda la sesión, incluido el desglose por fase y los contadores de audio, aunque haya salido del historial. `HOST-PERCENTILES` resume todos los cuadros medidos, incluido el final de una ventana incompleta. Los percentiles son límites superiores con resolución de 512 µs. Un valor `-1` indica que el percentil cae en el intervalo abierto a partir de 261,632 ms. Si el proceso se interrumpe abruptamente, los datos pendientes en RAM se pierden. Otras trazas detalladas activadas por separado pueden escribir durante la captura.
+
+La variante para medir la capacidad sin espera es `--runtime-uncapped`. Para una prueba de presentación real mantén el ritmo normal y el backend que usa el jugador. Los intervalos de la modalidad normal incluyen espera de ritmo. Para estimar el coste del diagnóstico, repite con las mismas entradas y tiempos de reloj, alternando trazas desactivadas y activadas.
+
+En estas líneas, `deadline_wait` mide la espera explícita del limitador en la ruta estándar. La etiqueta histórica `pacer` incluye el intercambio de buffers de SDL y trabajo asociado, incluso sin tope. `present` mide el trabajo posterior a esa fase. El intervalo medido termina antes de los diagnósticos de final de cuadro.
 
 Con presentación normal y diagnóstico activo, `deadline_wait` mide la espera del reloj y `pacer` mide el resto del tramo, incluida la llamada de presentación. En logs anteriores y en el modo de alta frecuencia la espera queda incluida en `pacer`.
 

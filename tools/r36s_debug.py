@@ -10,7 +10,10 @@ import statistics
 BENCH = "GENESISRECOMP_BENCHMARK "
 PHASES = ("input", "simulation", "deadline_wait", "post", "audio", "persistence", "present", "layout", "pacer")
 LIVE = re.compile(r"\[R36S-LIVE\] presentations=(\d+) elapsed_us=(\d+)")
-HITCH = re.compile(r"\[HOST-HITCH\] frame=(\d+) total_us=(\d+) phase_us=([\d,]+)")
+HITCH = re.compile(r"\[(HOST-HITCH|HOST-WORST)\] frame=(\d+) total_us=(\d+) phase_us=([\d,]+)")
+HITCH_AUDIO = re.compile(r" lock_us=(\d+) callback_us=(\d+) fill_us=(\d+) conceals=(\d+) repeated=(\d+)")
+HOST_PERCENTILES = re.compile(r"\[HOST-PERCENTILES\] frames=(\d+) bucket_us=(\d+) overflow_from_us=(\d+) "
+                              r"p50_us=(-?\d+) p95_us=(-?\d+) p99_us=(-?\d+)")
 VIDEO = re.compile(r"\[VIDEO\] renderer name=(\S+) vsync=(\d+)")
 WINDOW = re.compile(r"\[HOST-WINDOW\] end_frame=(\d+) count=(\d+) avg_us=(\d+) phase_avg_us=([\d,]+)")
 WINDOW_PEAKS = re.compile(r" max_us=(\d+) frames_ge_25ms=(\d+)")
@@ -56,10 +59,32 @@ def summarize(path, start_frame=0, retain_windows=False):
                     rates.append(frames * 1_000_000 / delta)
                 live_frame += frames
             if match := HITCH.search(line):
-                frame, total = int(match[1]), int(match[2])
-                parts = tuple(map(int, match[3].split(",")))
+                tag, index, interval, phases = match.groups()
+                frame, total = int(index), int(interval)
+                parts = tuple(map(int, phases.split(",")))
                 if frame >= start_frame and len(parts) == len(PHASES):
-                    hitches.append((frame, total, parts))
+                    if tag == "HOST-WORST":
+                        data["session_worst_frame"] = {
+                            "frame": frame, "ms": total / 1000,
+                            "phase_ms": {name: value / 1000 for name, value in zip(PHASES, parts)},
+                        }
+                        if audio := HITCH_AUDIO.match(line, match.end()):
+                            lock, callback, fill, conceals, repeated = map(int, audio.groups())
+                            data["session_worst_frame"]["audio"] = {
+                                "lock_ms": lock / 1000, "callback_ms": callback / 1000, "fill_ms": fill / 1000,
+                                "conceal_events_to_date": conceals, "concealed_frames_to_date": repeated,
+                            }
+                    else:
+                        hitches.append((frame, total, parts))
+            if start_frame == 0 and (match := HOST_PERCENTILES.search(line)):
+                frames, bucket, overflow, *bounds = map(int, match.groups())
+                data["session_frame_percentiles"] = {
+                    "frames": frames, "bucket_ms": bucket / 1000, "overflow_from_ms": overflow / 1000,
+                    "upper_bounds_ms": {
+                        name: value / 1000 if value >= 0 else None
+                        for name, value in zip(("p50", "p95", "p99"), bounds)
+                    },
+                }
             if match := WINDOW.search(line):
                 frame, count, total = map(int, match.groups()[:3])
                 parts = tuple(map(int, match[4].split(",")))

@@ -763,11 +763,32 @@ index 9678eef..fd715fb 100644
  }
  
 diff --git a/runner/host_timing.h b/runner/host_timing.h
-index c53fab6..cd9a600 100644
+index c53fab6..ae7cd39 100644
 --- a/runner/host_timing.h
 +++ b/runner/host_timing.h
-@@ -17,6 +17,10 @@ typedef struct {
+@@ -6,25 +6,67 @@
+ #include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <string.h>
+ #include "audio.h"
+ 
+ #define HOST_HITCH_CAP 128
++#define HOST_WINDOW_CAP 128
++#define HOST_BUCKET_US 512
++#define HOST_BUCKET_COUNT 512
+ typedef struct {
+     uint32_t frame, interval_us, phase_us[9];
+     AudioHostTiming audio;
+ } HostHitch;
++typedef struct {
++    uint32_t frame, count, average_us, phase_us[9], max_us, slow_count;
++} HostTimingWindow;
+ typedef struct {
      HostHitch ring[HOST_HITCH_CAP];
++    HostHitch worst;
++    HostTimingWindow windows[HOST_WINDOW_CAP];
++    uint32_t window_total_count, sampled_frames, buckets[HOST_BUCKET_COUNT];
      uint32_t count, max_interval_us;
      uint64_t previous_conceals;
 +    uint64_t window_total_us, window_phase_us[9];
@@ -777,44 +798,106 @@ index c53fab6..cd9a600 100644
  } HostTiming;
  
  static void host_timing_record(HostTiming *t, uint32_t frame,
-@@ -24,7 +28,27 @@ static void host_timing_record(HostTiming *t, uint32_t frame,
+                                uint32_t interval_us, const uint32_t phase_us[9],
                                 const AudioHostTiming *audio)
  {
-     if (interval_us > t->max_interval_us) t->max_interval_us = interval_us;
--    if (interval_us >= 50000 || audio->conceal_events != t->previous_conceals) {
 +    if (t->log_windows) {
++        unsigned bucket = interval_us / HOST_BUCKET_US;
++        if (bucket >= HOST_BUCKET_COUNT) bucket = HOST_BUCKET_COUNT - 1;
++        ++t->buckets[bucket];
++        ++t->sampled_frames;
++        if (interval_us > t->max_interval_us || t->sampled_frames == 1) {
++            t->worst = (HostHitch){.frame = frame, .interval_us = interval_us, .audio = *audio};
++            memcpy(t->worst.phase_us, phase_us, sizeof(t->worst.phase_us));
++        }
 +        t->window_total_us += interval_us;
 +        if (interval_us > t->window_max_us) t->window_max_us = interval_us;
 +        if (interval_us >= 25000) ++t->window_slow_count;
 +        for (unsigned i = 0; i < 9; ++i)
 +            t->window_phase_us[i] += phase_us[i];
 +        if (++t->window_count == 180) {
-+            fprintf(stderr, "[HOST-WINDOW] end_frame=%u count=%u avg_us=%llu phase_avg_us=",
-+                    frame, t->window_count, (unsigned long long)(t->window_total_us / t->window_count));
++            HostTimingWindow *w = &t->windows[t->window_total_count++ % HOST_WINDOW_CAP];
++            *w = (HostTimingWindow){.frame = frame, .count = t->window_count,
++                .average_us = t->window_total_us / t->window_count,
++                .max_us = t->window_max_us, .slow_count = t->window_slow_count};
 +            for (unsigned i = 0; i < 9; ++i) {
-+                fprintf(stderr, "%s%llu", i ? "," : "",
-+                        (unsigned long long)(t->window_phase_us[i] / t->window_count));
++                w->phase_us[i] = t->window_phase_us[i] / t->window_count;
 +                t->window_phase_us[i] = 0;
 +            }
-+            fprintf(stderr, " max_us=%u frames_ge_25ms=%u\n", t->window_max_us, t->window_slow_count);
 +            t->window_total_us = 0;
 +            t->window_count = t->window_slow_count = 0;
 +            t->window_max_us = 0;
 +        }
 +    }
+     if (interval_us > t->max_interval_us) t->max_interval_us = interval_us;
+-    if (interval_us >= 50000 || audio->conceal_events != t->previous_conceals) {
 +    if (interval_us >= (t->log_windows ? 25000u : 50000u) || audio->conceal_events != t->previous_conceals) {
          HostHitch *h = &t->ring[t->count++ % HOST_HITCH_CAP];
          h->frame = frame; h->interval_us = interval_us; h->audio = *audio;
          for (unsigned i = 0; i < 9; ++i) h->phase_us[i] = phase_us[i];
-@@ -46,7 +70,7 @@ static void host_timing_dump(const HostTiming *t, FILE *out)
+@@ -38,6 +80,28 @@ static int host_timing_dump_requested(void)
+     return request && *request && *request != '0';
+ }
+ 
++/* The upper bound is inclusive. -1 marks the final, unbounded bucket. */
++static int host_timing_percentile(const HostTiming *t, unsigned percent)
++{
++    uint32_t rank = ((uint64_t)t->sampled_frames * percent + 99) / 100;
++    uint32_t cumulative = 0;
++    for (unsigned i = 0; i < HOST_BUCKET_COUNT - 1; ++i) {
++        cumulative += t->buckets[i];
++        if (cumulative >= rank) return (i + 1) * HOST_BUCKET_US - 1;
++    }
++    return -1;
++}
++
++static void host_timing_print_hitch(FILE *out, const char *tag, const HostHitch *h)
++{
++    fprintf(out, "[%s] frame=%u total_us=%u phase_us=", tag, h->frame, h->interval_us);
++    for (unsigned j = 0; j < 9; ++j) fprintf(out, "%s%u", j ? "," : "", h->phase_us[j]);
++    fprintf(out, " lock_us=%u callback_us=%u fill_us=%u conceals=%llu repeated=%llu\n",
++            h->audio.lock_us, h->audio.callback_us, h->audio.fill_us,
++            (unsigned long long)h->audio.conceal_events,
++            (unsigned long long)h->audio.concealed_frames);
++}
++
+ static void host_timing_dump(const HostTiming *t, FILE *out)
+ {
+     /* External observers retain normal playtest evidence without making
+@@ -46,16 +110,24 @@ static void host_timing_dump(const HostTiming *t, FILE *out)
      if (!host_timing_dump_requested()) return;
      uint32_t n = t->count < HOST_HITCH_CAP ? t->count : HOST_HITCH_CAP;
      fprintf(out, "[HOST-TIMING] events=%u retained=%u max_frame_us=%u "
 -                 "phases=input,simulation,reserved,post,audio,persistence,present,layout,pacer\n",
 +                 "phases=input,simulation,deadline_wait,post,audio,persistence,present,layout,pacer\n",
              t->count, n, t->max_interval_us);
-     for (uint32_t i = t->count - n; i < t->count; ++i) {
-         const HostHitch *h = &t->ring[i % HOST_HITCH_CAP];
+-    for (uint32_t i = t->count - n; i < t->count; ++i) {
+-        const HostHitch *h = &t->ring[i % HOST_HITCH_CAP];
+-        fprintf(out, "[HOST-HITCH] frame=%u total_us=%u phase_us=", h->frame, h->interval_us);
+-        for (unsigned j = 0; j < 9; ++j) fprintf(out, "%s%u", j ? "," : "", h->phase_us[j]);
+-        fprintf(out, " lock_us=%u callback_us=%u fill_us=%u conceals=%llu repeated=%llu\n",
+-                h->audio.lock_us, h->audio.callback_us, h->audio.fill_us,
+-                (unsigned long long)h->audio.conceal_events,
+-                (unsigned long long)h->audio.concealed_frames);
++    if (t->sampled_frames) {
++        fprintf(out, "[HOST-PERCENTILES] frames=%u bucket_us=%u overflow_from_us=%u "
++                     "p50_us=%d p95_us=%d p99_us=%d\n",
++                t->sampled_frames, HOST_BUCKET_US, (HOST_BUCKET_COUNT - 1) * HOST_BUCKET_US,
++                host_timing_percentile(t, 50), host_timing_percentile(t, 95), host_timing_percentile(t, 99));
++        host_timing_print_hitch(out, "HOST-WORST", &t->worst);
++    }
++    uint32_t window_n = t->window_total_count < HOST_WINDOW_CAP ? t->window_total_count : HOST_WINDOW_CAP;
++    for (uint32_t i = t->window_total_count - window_n; i < t->window_total_count; ++i) {
++        const HostTimingWindow *w = &t->windows[i % HOST_WINDOW_CAP];
++        fprintf(out, "[HOST-WINDOW] end_frame=%u count=%u avg_us=%u phase_avg_us=",
++                w->frame, w->count, w->average_us);
++        for (unsigned j = 0; j < 9; ++j) fprintf(out, "%s%u", j ? "," : "", w->phase_us[j]);
++        fprintf(out, " max_us=%u frames_ge_25ms=%u\n", w->max_us, w->slow_count);
+     }
++    for (uint32_t i = t->count - n; i < t->count; ++i)
++        host_timing_print_hitch(out, "HOST-HITCH", &t->ring[i % HOST_HITCH_CAP]);
+ }
+ #endif
 diff --git a/runner/input_script.c b/runner/input_script.c
 index f361f2f..83cfe34 100644
 --- a/runner/input_script.c

@@ -7,6 +7,24 @@ from tools.r36s_debug import BENCH, compare, compare_windows, summarize
 
 
 class R36SDebugTests(unittest.TestCase):
+    def test_session_summary_keeps_old_peak_outside_hitch_ring(self):
+        with TemporaryDirectory() as tmp:
+            log = Path(tmp) / "port.log"
+            log.write_text("\n".join([
+                "[HOST-PERCENTILES] frames=360 bucket_us=512 overflow_from_us=261632 p50_us=16895 p95_us=25599 p99_us=-1",
+                "[HOST-WORST] frame=2 total_us=416800 phase_us=0,410000,0,0,6800,0,0,0,0",
+                "[HOST-HITCH] frame=359 total_us=51000 phase_us=0,50000,0,0,0,0,0,0,1000",
+            ]), encoding="utf-8")
+            result = summarize(log)
+            self.assertEqual(result["session_worst_frame"]["ms"], 416.8)
+            self.assertEqual(result["session_worst_frame"]["phase_ms"]["simulation"], 410)
+            self.assertEqual(result["session_frame_percentiles"]["upper_bounds_ms"],
+                             {"p50": 16.895, "p95": 25.599, "p99": None})
+            self.assertEqual(result["retained_hitches"]["max_ms"], 51)
+            filtered = summarize(log, start_frame=180)
+            self.assertNotIn("session_worst_frame", filtered)
+            self.assertNotIn("session_frame_percentiles", filtered)
+
     def test_match_windows_and_raster_by_frame(self):
         with TemporaryDirectory() as tmp:
             logs = [Path(tmp) / name for name in ("hardware.log", "vm.log")]
