@@ -20,18 +20,25 @@ def main():
     diagnostics = parser.add_mutually_exclusive_group()
     diagnostics.add_argument("--device-diagnostics", action="store_true")
     diagnostics.add_argument("--device-qualification", action="store_true")
+    parser.add_argument("--qualification-reference", type=Path,
+                        help="Previous DB1 ARM hard-float executable for a matched device run")
     args = parser.parse_args()
+    if args.qualification_reference and not args.device_qualification:
+        parser.error("--qualification-reference needs --device-qualification")
     platform = ROOT / "platform/goodluckos"
     port = "ports/dynabrocollection"
-    for program in PROGRAMS:
+    executables = [(args.stage / name, name) for name in PROGRAMS]
+    if args.qualification_reference:
+        executables.append((args.qualification_reference, "DynaBrothers1Reference"))
+    for binary, destination in executables:
         elf = subprocess.check_output(
-            [args.readelf, "-h", "-l", "-A", str(args.stage / program)], text=True
+            [args.readelf, "-h", "-l", "-A", str(binary)], text=True
         )
         if not all(re.search(pattern, elf) for pattern in (
             r"Class:\s+ELF32", r"Machine:\s+ARM\b", r"AAPCS VFP|VFP registers",
             r"\[Requesting program interpreter: /lib/ld-linux-armhf\.so\.3\]",
         )):
-            parser.error(f"{program} must be an ARM hard-float executable")
+            parser.error(f"{destination} must be an ARM hard-float executable")
 
     entries = [(platform / name, name, name.endswith(".sh")) for name in ("launch.sh", "README.md")]
     entries.append((args.stage / "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md", False))
@@ -54,9 +61,12 @@ def main():
                 entries.append((item, item.relative_to(args.stage).as_posix(), False))
 
     with tempfile.TemporaryDirectory() as temp:
-        for name in PROGRAMS:
+        for source, name in executables:
+            if name == "DynaBrothers1Reference":
+                entries.append((source, name, True))
+                continue
             binary = Path(temp) / name
-            subprocess.run([args.strip, "--strip-unneeded", "-o", str(binary), str(args.stage / name)], check=True)
+            subprocess.run([args.strip, "--strip-unneeded", "-o", str(binary), str(source)], check=True)
             entries.append((binary, name, True))
         with zipfile.ZipFile(args.output, "x", zipfile.ZIP_DEFLATED) as archive:
             put(archive, platform / "dynabrocollection.puppy",

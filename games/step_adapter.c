@@ -99,6 +99,19 @@ static unsigned ack_interrupt(void *u,unsigned level) {
 }
 static const M68kStepBus bus={.read8=read8,.read16=read16,.write8=write8,.write16=write16,.fetch16=fetch16,.ack_interrupt=ack_interrupt};
 
+static inline void copy_registers(void *destination, const void *source)
+{
+    _Static_assert(sizeof(M68kStepRegisters) == sizeof(g_cpu), "MC68000 register ABI");
+#if defined(__arm__) && defined(__clang__)
+    /* ARMv7 Clang otherwise emits two libc calls for the 76-byte register
+     * transfer on each guest instruction. Both register blocks are aligned. */
+    __builtin_memcpy_inline(__builtin_assume_aligned(destination, 4),
+                            __builtin_assume_aligned(source, 4), sizeof(g_cpu));
+#else
+    memcpy(destination, source, sizeof(g_cpu));
+#endif
+}
+
 static const uint8_t *cartridge_code_span(void *user, uint32_t address, size_t length)
 {
     (void)user;
@@ -223,8 +236,7 @@ static int retire(void *user,unsigned *cycles) {
         uint32_t src=glue_peek32(g_cpu.A[6]+4u);
         fprintf(stderr,"[LZ] routine=$%04X source=$%06X target=$%06X bytes=%u\n",g_cpu.PC,src,dst,glue_peek16(src));
     }
-    _Static_assert(sizeof(ctx->state.regs)==sizeof(g_cpu),"MC68000 register ABI");
-    memcpy(&ctx->state.regs,&g_cpu,sizeof(g_cpu));
+    copy_registers(&ctx->state.regs,&g_cpu);
     uint64_t before=ctx->state.cycles;
     if(ctx==&main_cpu) {
         unsigned level=genesis_native_pending_interrupt();
@@ -249,7 +261,7 @@ static int retire(void *user,unsigned *cycles) {
                     fprintf(stderr,"[AOT-IRQ] PASS level=%u real exception frame, 44 entry cycles, continuous native execution\n",level);
                 }
             }
-            memcpy(&g_cpu,&ctx->state.regs,sizeof(g_cpu));
+            copy_registers(&g_cpu,&ctx->state.regs);
         }
     }
     M68kStepResult result=execute_module(ctx,&DYNA_STEP_MODULE);
@@ -263,7 +275,7 @@ static int retire(void *user,unsigned *cycles) {
 #endif
     if(result==M68K_STEP_MISS && DYNA_ENTRY==0x738u && g_cpu.PC==0xFF0070u)
         result=m68k_step_execute(ctx,&dyna_db2_ram_return);
-    memcpy(&g_cpu,&ctx->state.regs,sizeof(g_cpu));
+    copy_registers(&g_cpu,&ctx->state.regs);
     if(result==M68K_STEP_STOPPED){*cycles=4;return 1;}
     if(result!=M68K_STEP_OK) {
         fprintf(stderr,"[AOT] missing/invalid operation PC=$%06X opcode=$%04X result=%d\n",g_cpu.PC,glue_peek16(g_cpu.PC),result);

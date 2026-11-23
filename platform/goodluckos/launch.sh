@@ -10,6 +10,9 @@ here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$here"
 rom="$here/roms/db$game.md"
 program="$here/DynaBrothers${game}AOT"
+if [ "$game" = 1 ] && [ "${DYNA_GOODLUCKOS_REFERENCE:-0}" = 1 ]; then
+    program="$here/DynaBrothers1Reference"
+fi
 export GENESIS_USER_DIR="${DYNA_R36S_PROFILE_DIR:-$here/user}"
 mkdir -p "$GENESIS_USER_DIR"
 if [ "${DYNA_R36S_CONSOLE:-}" != 1 ]; then

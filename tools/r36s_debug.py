@@ -12,6 +12,9 @@ PHASES = ("input", "simulation", "deadline_wait", "post", "audio", "persistence"
 LIVE = re.compile(r"\[R36S-LIVE\] presentations=(\d+) elapsed_us=(\d+)")
 HITCH = re.compile(r"\[(HOST-HITCH|HOST-WORST)\] frame=(\d+) total_us=(\d+) phase_us=([\d,]+)")
 HITCH_AUDIO = re.compile(r" lock_us=(\d+) callback_us=(\d+) fill_us=(\d+) conceals=(\d+) repeated=(\d+)")
+HITCH_SWAP = re.compile(r" swap_calls=(\d+) swap_wall_us=(\d+) swap_cpu_us=(\d+)")
+SWAP_WINDOW = re.compile(r"\[HOST-SWAP\] end_frame=(\d+) calls=(\d+) avg_wall_us=(\d+) "
+                         r"avg_cpu_us=(\d+) max_wall_us=(\d+)")
 HOST_PERCENTILES = re.compile(r"\[HOST-PERCENTILES\] frames=(\d+) bucket_us=(\d+) overflow_from_us=(\d+) "
                               r"p50_us=(-?\d+) p95_us=(-?\d+) p99_us=(-?\d+)")
 VIDEO = re.compile(r"\[VIDEO\] renderer name=(\S+) vsync=(\d+)")
@@ -20,6 +23,7 @@ WINDOW_PEAKS = re.compile(r" max_us=(\d+) frames_ge_25ms=(\d+)")
 BUILD = re.compile(r"\[evidence\] build exe=([\da-f]+) rom=([\da-f]+)", re.I)
 SLOW_SIM = re.compile(r"\[HOST-SLOW-SIM\] frame=(\d+) us=(\d+)(?: cpu_us=(\d+))? "
                       r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
+SLOW_SIM_SUMMARY = re.compile(r"\[HOST-SLOW-SIM-SUMMARY\] events=(\d+) retained=(\d+)")
 M68K_PEAK = re.compile(r"\[R36S-68K-PEAK\] frame=(\d+) line=(\d+) us=(\d+) "
                        r"instructions=(\d+) pc_start=([\da-f]+) pc_end=([\da-f]+)", re.I)
 RASTER = re.compile(r"\[R36S-RASTER\] frame=(\d+) m68k_us=(\d+) z80_us=(\d+) video_us=(\d+) irq_us=(\d+)")
@@ -74,6 +78,11 @@ def summarize(path, start_frame=0, retain_windows=False):
                                 "lock_ms": lock / 1000, "callback_ms": callback / 1000, "fill_ms": fill / 1000,
                                 "conceal_events_to_date": conceals, "concealed_frames_to_date": repeated,
                             }
+                            if swap := HITCH_SWAP.match(line, audio.end()):
+                                calls, wall, cpu = map(int, swap.groups())
+                                data["session_worst_frame"]["swap"] = {
+                                    "calls": calls, "wall_ms": wall / 1000, "cpu_ms": cpu / 1000,
+                                }
                     else:
                         hitches.append((frame, total, parts))
             if start_frame == 0 and (match := HOST_PERCENTILES.search(line)):
@@ -85,6 +94,16 @@ def summarize(path, start_frame=0, retain_windows=False):
                         for name, value in zip(("p50", "p95", "p99"), bounds)
                     },
                 }
+            if start_frame == 0 and (match := SLOW_SIM_SUMMARY.search(line)):
+                events, retained = map(int, match.groups())
+                data["session_slow_simulation"] = {"events": events, "retained": retained}
+            if match := SWAP_WINDOW.search(line):
+                frame, calls, wall, cpu, peak = map(int, match.groups())
+                if frame - 179 >= start_frame:
+                    data.setdefault("swap_windows", []).append({
+                        "end_frame": frame, "calls": calls, "avg_wall_ms": wall / 1000,
+                        "avg_cpu_ms": cpu / 1000, "max_wall_ms": peak / 1000,
+                    })
             if match := WINDOW.search(line):
                 frame, count, total = map(int, match.groups()[:3])
                 parts = tuple(map(int, match[4].split(",")))

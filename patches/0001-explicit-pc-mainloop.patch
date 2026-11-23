@@ -763,10 +763,10 @@ index 9678eef..fd715fb 100644
  }
  
 diff --git a/runner/host_timing.h b/runner/host_timing.h
-index c53fab6..ae7cd39 100644
+index c53fab6..53c63f3 100644
 --- a/runner/host_timing.h
 +++ b/runner/host_timing.h
-@@ -6,25 +6,67 @@
+@@ -6,27 +6,113 @@
  #include <stdint.h>
  #include <stdio.h>
  #include <stdlib.h>
@@ -777,29 +777,63 @@ index c53fab6..ae7cd39 100644
 +#define HOST_WINDOW_CAP 128
 +#define HOST_BUCKET_US 512
 +#define HOST_BUCKET_COUNT 512
++#define HOST_SLOW_SIM_CAP 64
++typedef struct {
++    uint32_t calls, wall_us, cpu_us;
++} HostSwapTiming;
  typedef struct {
      uint32_t frame, interval_us, phase_us[9];
      AudioHostTiming audio;
++    HostSwapTiming swap;
  } HostHitch;
 +typedef struct {
 +    uint32_t frame, count, average_us, phase_us[9], max_us, slow_count;
++    uint32_t swap_calls, swap_avg_wall_us, swap_avg_cpu_us, swap_max_wall_us;
 +} HostTimingWindow;
++typedef struct {
++    uint32_t frame, wall_us, pc_start, pc_end;
++    uint64_t cpu_us, instructions;
++} HostSlowSim;
  typedef struct {
      HostHitch ring[HOST_HITCH_CAP];
 +    HostHitch worst;
 +    HostTimingWindow windows[HOST_WINDOW_CAP];
 +    uint32_t window_total_count, sampled_frames, buckets[HOST_BUCKET_COUNT];
++    HostSlowSim slow_sim[HOST_SLOW_SIM_CAP];
++    unsigned slow_sim_count, slow_sim_retained, shortest_slow_sim;
      uint32_t count, max_interval_us;
      uint64_t previous_conceals;
 +    uint64_t window_total_us, window_phase_us[9];
++    uint64_t window_swap_wall_us, window_swap_cpu_us;
++    uint32_t window_swap_calls, window_swap_max_wall_us;
 +    unsigned window_count, window_slow_count;
 +    uint32_t window_max_us;
 +    int log_windows;
  } HostTiming;
  
++static void host_timing_record_slow_sim(HostTiming *t, HostSlowSim sample)
++{
++    ++t->slow_sim_count;
++    if (t->slow_sim_retained < HOST_SLOW_SIM_CAP) {
++        unsigned index = t->slow_sim_retained++;
++        t->slow_sim[index] = sample;
++        if (sample.wall_us < t->slow_sim[t->shortest_slow_sim].wall_us)
++            t->shortest_slow_sim = index;
++        return;
++    }
++    if (sample.wall_us <= t->slow_sim[t->shortest_slow_sim].wall_us) return;
++    t->slow_sim[t->shortest_slow_sim] = sample;
++    t->shortest_slow_sim = 0;
++    for (unsigned i = 1; i < HOST_SLOW_SIM_CAP; ++i) {
++        if (t->slow_sim[i].wall_us < t->slow_sim[t->shortest_slow_sim].wall_us)
++            t->shortest_slow_sim = i;
++    }
++}
++
  static void host_timing_record(HostTiming *t, uint32_t frame,
                                 uint32_t interval_us, const uint32_t phase_us[9],
-                                const AudioHostTiming *audio)
+-                               const AudioHostTiming *audio)
++                               const AudioHostTiming *audio, HostSwapTiming swap)
  {
 +    if (t->log_windows) {
 +        unsigned bucket = interval_us / HOST_BUCKET_US;
@@ -807,19 +841,28 @@ index c53fab6..ae7cd39 100644
 +        ++t->buckets[bucket];
 +        ++t->sampled_frames;
 +        if (interval_us > t->max_interval_us || t->sampled_frames == 1) {
-+            t->worst = (HostHitch){.frame = frame, .interval_us = interval_us, .audio = *audio};
++            t->worst = (HostHitch){.frame = frame, .interval_us = interval_us, .audio = *audio, .swap = swap};
 +            memcpy(t->worst.phase_us, phase_us, sizeof(t->worst.phase_us));
 +        }
 +        t->window_total_us += interval_us;
 +        if (interval_us > t->window_max_us) t->window_max_us = interval_us;
 +        if (interval_us >= 25000) ++t->window_slow_count;
++        t->window_swap_calls += swap.calls;
++        t->window_swap_wall_us += swap.wall_us;
++        t->window_swap_cpu_us += swap.cpu_us;
++        if (swap.wall_us > t->window_swap_max_wall_us) t->window_swap_max_wall_us = swap.wall_us;
 +        for (unsigned i = 0; i < 9; ++i)
 +            t->window_phase_us[i] += phase_us[i];
 +        if (++t->window_count == 180) {
 +            HostTimingWindow *w = &t->windows[t->window_total_count++ % HOST_WINDOW_CAP];
 +            *w = (HostTimingWindow){.frame = frame, .count = t->window_count,
 +                .average_us = t->window_total_us / t->window_count,
-+                .max_us = t->window_max_us, .slow_count = t->window_slow_count};
++                .max_us = t->window_max_us, .slow_count = t->window_slow_count,
++                .swap_calls = t->window_swap_calls, .swap_max_wall_us = t->window_swap_max_wall_us};
++            if (w->swap_calls) {
++                w->swap_avg_wall_us = t->window_swap_wall_us / w->swap_calls;
++                w->swap_avg_cpu_us = t->window_swap_cpu_us / w->swap_calls;
++            }
 +            for (unsigned i = 0; i < 9; ++i) {
 +                w->phase_us[i] = t->window_phase_us[i] / t->window_count;
 +                t->window_phase_us[i] = 0;
@@ -827,15 +870,20 @@ index c53fab6..ae7cd39 100644
 +            t->window_total_us = 0;
 +            t->window_count = t->window_slow_count = 0;
 +            t->window_max_us = 0;
++            t->window_swap_calls = t->window_swap_max_wall_us = 0;
++            t->window_swap_wall_us = t->window_swap_cpu_us = 0;
 +        }
 +    }
      if (interval_us > t->max_interval_us) t->max_interval_us = interval_us;
 -    if (interval_us >= 50000 || audio->conceal_events != t->previous_conceals) {
 +    if (interval_us >= (t->log_windows ? 25000u : 50000u) || audio->conceal_events != t->previous_conceals) {
          HostHitch *h = &t->ring[t->count++ % HOST_HITCH_CAP];
-         h->frame = frame; h->interval_us = interval_us; h->audio = *audio;
+-        h->frame = frame; h->interval_us = interval_us; h->audio = *audio;
++        h->frame = frame; h->interval_us = interval_us; h->audio = *audio; h->swap = swap;
          for (unsigned i = 0; i < 9; ++i) h->phase_us[i] = phase_us[i];
-@@ -38,6 +80,28 @@ static int host_timing_dump_requested(void)
+     }
+     t->previous_conceals = audio->conceal_events;
+@@ -38,6 +124,32 @@ static int host_timing_dump_requested(void)
      return request && *request && *request != '0';
  }
  
@@ -855,16 +903,20 @@ index c53fab6..ae7cd39 100644
 +{
 +    fprintf(out, "[%s] frame=%u total_us=%u phase_us=", tag, h->frame, h->interval_us);
 +    for (unsigned j = 0; j < 9; ++j) fprintf(out, "%s%u", j ? "," : "", h->phase_us[j]);
-+    fprintf(out, " lock_us=%u callback_us=%u fill_us=%u conceals=%llu repeated=%llu\n",
++    fprintf(out, " lock_us=%u callback_us=%u fill_us=%u conceals=%llu repeated=%llu",
 +            h->audio.lock_us, h->audio.callback_us, h->audio.fill_us,
 +            (unsigned long long)h->audio.conceal_events,
 +            (unsigned long long)h->audio.concealed_frames);
++    if (h->swap.calls)
++        fprintf(out, " swap_calls=%u swap_wall_us=%u swap_cpu_us=%u", h->swap.calls,
++                h->swap.wall_us, h->swap.cpu_us);
++    fputc('\n', out);
 +}
 +
  static void host_timing_dump(const HostTiming *t, FILE *out)
  {
      /* External observers retain normal playtest evidence without making
-@@ -46,16 +110,24 @@ static void host_timing_dump(const HostTiming *t, FILE *out)
+@@ -46,16 +158,36 @@ static void host_timing_dump(const HostTiming *t, FILE *out)
      if (!host_timing_dump_requested()) return;
      uint32_t n = t->count < HOST_HITCH_CAP ? t->count : HOST_HITCH_CAP;
      fprintf(out, "[HOST-TIMING] events=%u retained=%u max_frame_us=%u "
@@ -893,9 +945,21 @@ index c53fab6..ae7cd39 100644
 +                w->frame, w->count, w->average_us);
 +        for (unsigned j = 0; j < 9; ++j) fprintf(out, "%s%u", j ? "," : "", w->phase_us[j]);
 +        fprintf(out, " max_us=%u frames_ge_25ms=%u\n", w->max_us, w->slow_count);
-     }
++        if (w->swap_calls)
++            fprintf(out, "[HOST-SWAP] end_frame=%u calls=%u avg_wall_us=%u avg_cpu_us=%u max_wall_us=%u\n",
++                    w->frame, w->swap_calls, w->swap_avg_wall_us, w->swap_avg_cpu_us, w->swap_max_wall_us);
++    }
 +    for (uint32_t i = t->count - n; i < t->count; ++i)
 +        host_timing_print_hitch(out, "HOST-HITCH", &t->ring[i % HOST_HITCH_CAP]);
++    if (t->slow_sim_count)
++        fprintf(out, "[HOST-SLOW-SIM-SUMMARY] events=%u retained=%u\n",
++                t->slow_sim_count, t->slow_sim_retained);
++    for (unsigned i = 0; i < t->slow_sim_retained; ++i) {
++        const HostSlowSim *sample = &t->slow_sim[i];
++        fprintf(out, "[HOST-SLOW-SIM] frame=%u us=%u cpu_us=%llu instructions=%llu pc_start=%06x pc_end=%06x\n",
++                sample->frame, sample->wall_us, (unsigned long long)sample->cpu_us,
++                (unsigned long long)sample->instructions, sample->pc_start, sample->pc_end);
+     }
  }
  #endif
 diff --git a/runner/input_script.c b/runner/input_script.c
@@ -1067,7 +1131,7 @@ index c1e5399..2a98c68 100644
  
  /* True iff the script ran an EXIT directive. The caller should
 diff --git a/runner/main.c b/runner/main.c
-index df30a08..1957c99 100644
+index df30a08..a614f2b 100644
 --- a/runner/main.c
 +++ b/runner/main.c
 @@ -1,3 +1,4 @@
@@ -1905,11 +1969,13 @@ index df30a08..1957c99 100644
          if (chosen) {
              if (strcmp(chosen, "accurate") == 0)
                  g_pacing_mode = GLUE_PACING_CYCLE_ACCURATE;
-@@ -3534,18 +3851,26 @@ session_begin:;
+@@ -3534,18 +3851,28 @@ session_begin:;
      audio_set_playback_enabled(!turbo && !cmd_server_is_paused());
      uint32_t frame_num = 0;
      HostTiming host_timing = {0};
 +    host_timing.log_windows = host_timing_dump_requested();
++    const char *trace_swap = getenv("GENESIS_HOST_SWAP_TIMING");
++    const int measure_swap = host_timing.log_windows && trace_swap && *trace_swap == '1';
      const Uint64 host_perf_freq = SDL_GetPerformanceFrequency();
      int      mode_prev = -1;     /* --hash-on-mode: last Game_Mode seen (-1 = none yet) */
      uint32_t mode_seq  = 0;      /* --hash-on-mode: transition sequence counter */
@@ -1933,7 +1999,15 @@ index df30a08..1957c99 100644
      const char *presentation_trace_path=getenv("GENESIS_PRESENT_TRACE");
      FILE *presentation_trace=presentation_trace_path && *presentation_trace_path?fopen(presentation_trace_path,"w"):NULL;
      if(presentation_trace)fputs("guest_tick,present,phase,interpolated,counter,hash\n",presentation_trace);
-@@ -3613,6 +3938,10 @@ session_begin:;
+@@ -3566,6 +3893,7 @@ session_begin:;
+         Uint64 phase_start=SDL_GetPerformanceCounter();
+         Uint64 frame_start=phase_start;
+         uint32_t phase_us[9]={0};
++        HostSwapTiming swap_timing = {0};
+ #define FRAME_PHASE(n) do { Uint64 now=SDL_GetPerformanceCounter(); phase_us[n]=(uint32_t)((now-phase_start)*1000000ull/host_perf_freq); phase_start=now; } while (0)
+ 
+         runner_sram_complete(1); /* before guest progress or session/input changes */
+@@ -3613,6 +3941,10 @@ session_begin:;
                  genesis_hd_gpu_destroy(hd_gpu);hd_gpu=NULL;hd_checked=0;
                  SDL_DestroyTexture(s_load_hold_texture);s_load_hold_texture=NULL;
              }
@@ -1944,7 +2018,7 @@ index df30a08..1957c99 100644
              load_hold_event(&ev, window);
  #if RECOMP_LAUNCHER
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui))
-@@ -3621,6 +3950,24 @@ session_begin:;
+@@ -3621,6 +3953,24 @@ session_begin:;
                  cancel_load_hold();
                  recomp_runtime_ui_open(s_runtime_ui.ui); continue;
              }
@@ -1969,7 +2043,7 @@ index df30a08..1957c99 100644
              if (recomp_runtime_ui_is_open(s_runtime_ui.ui) && (ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP)) {
                  int k = runtime_ui_key(ev.key.keysym.sym); if (k >= 0) recomp_runtime_ui_handle_input(s_runtime_ui.ui, k, ev.type == SDL_KEYDOWN, ev.key.repeat);
                  continue;
-@@ -3708,6 +4055,18 @@ session_begin:;
+@@ -3708,6 +4058,18 @@ session_begin:;
          }
  
          if (!running) break; /* Close must not execute another game/render tick. */
@@ -1988,7 +2062,7 @@ index df30a08..1957c99 100644
          {
              uint32_t pad = gamepad_overlay_mask();
              uint32_t menu = GP_OVERLAY_BACK | GP_OVERLAY_RB;
-@@ -3735,7 +4094,72 @@ session_begin:;
+@@ -3735,7 +4097,72 @@ session_begin:;
          }
  
  #if RECOMP_LAUNCHER
@@ -2062,7 +2136,7 @@ index df30a08..1957c99 100644
  #endif
  
          /* LB saves immediately. RB starts a continuous hold to load slot 1;
-@@ -3868,6 +4292,17 @@ session_begin:;
+@@ -3868,6 +4295,17 @@ session_begin:;
            else
  #endif
            collect_sim_input(&sim_in);
@@ -2080,7 +2154,7 @@ index df30a08..1957c99 100644
            GenesisSimAudio sim_audio = {
                (int16_t *)s_fm_accum,  FM_ACCUM_FRAMES,  &s_fm_count,
                (int16_t *)s_psg_accum, PSG_ACCUM_FRAMES, &s_psg_count };
-@@ -3882,6 +4317,9 @@ session_begin:;
+@@ -3882,6 +4320,9 @@ session_begin:;
  #if GENESIS_HAS_RECOMP_NET
            Uint64 tick_t0 = SDL_GetPerformanceCounter();
  #endif
@@ -2090,16 +2164,18 @@ index df30a08..1957c99 100644
            int completed = genesis_sim_step(&sim_in, &sim_audio, &sim_hooks);
  #if GENESIS_HAS_RECOMP_NET
            if (genesis_netplay_rollback_active())
-@@ -3893,11 +4331,25 @@ session_begin:;
+@@ -3893,11 +4334,27 @@ session_begin:;
             * every tick; the run must end on the undigested run's machine. */
            if (completed && s_digest_every) { GenesisRbDigest dd; genesis_rb_digest(&dd); }
            FRAME_PHASE(1);
 +          if (host_timing.log_windows && phase_us[1] >= 24000) {
 +              uint64_t cpu_us = first_cpu_us ? host_thread_cpu_us() : 0;
-+              fprintf(stderr, "[HOST-SLOW-SIM] frame=%u us=%u cpu_us=%llu instructions=%llu pc_start=%06x pc_end=%06x\n",
-+                      frame_num, phase_us[1],
-+                      (unsigned long long)(cpu_us >= first_cpu_us ? cpu_us - first_cpu_us : 0),
-+                      (unsigned long long)(g_native_insn_count - first_insn), first_pc, g_cpu.PC);
++              host_timing_record_slow_sim(&host_timing, (HostSlowSim){
++                  .frame = frame_num, .wall_us = phase_us[1],
++                  .cpu_us = cpu_us >= first_cpu_us ? cpu_us - first_cpu_us : 0,
++                  .instructions = g_native_insn_count - first_insn,
++                  .pc_start = first_pc, .pc_end = g_cpu.PC,
++              });
 +          }
            s_screen_width = game_video_output_width(&s_video_frame, gvdp_active_width(&g_machine.vdp));
            /* Output height doubles in interlace mode 2 (S2 2P split-screen);
@@ -2116,7 +2192,7 @@ index df30a08..1957c99 100644
            if (!completed) {                        /* reverse-debug quit */
                fprintf(stderr,genesis_replay_finished()?"[session] diagnostic replay completed\n":
                    "[session] tick stopped by the post-drain hook (reverse-debug quit)\n");
-@@ -4180,6 +4632,7 @@ session_begin:;
+@@ -4180,6 +4637,7 @@ session_begin:;
          }
  #endif
          int ui_open = 0;
@@ -2124,7 +2200,7 @@ index df30a08..1957c99 100644
  #if RECOMP_LAUNCHER
          ui_open = recomp_runtime_ui_is_open(s_runtime_ui.ui);
  #endif
-@@ -4188,7 +4641,7 @@ session_begin:;
+@@ -4188,7 +4646,7 @@ session_begin:;
          int prepared = genesis_frame_pixels(&view, s_framebuf, s_frame_stride * 4,
              s_present_buf, (size_t)s_frame_stride * MAX_SCREEN_HEIGHT * sizeof(uint32_t),
              s_frame_stride * 4, s_screen_width, s_screen_height,
@@ -2133,7 +2209,7 @@ index df30a08..1957c99 100644
              s_color_lut_on ? present_color_row : NULL, &s_color_lut);
          if (prepared) present_src = (const uint32_t *)view.pixels;
          else
-@@ -4199,12 +4652,14 @@ session_begin:;
+@@ -4199,12 +4657,14 @@ session_begin:;
                      s_screen_width, s_screen_height, MAX_SCREEN_WIDTH);
                  present_src = s_present_buf;
              }
@@ -2149,7 +2225,7 @@ index df30a08..1957c99 100644
  #if RECOMP_LAUNCHER
          int ui_width=s_screen_width;
          if (ui_open && s_screen_width==256) {
-@@ -4288,7 +4743,14 @@ session_begin:;
+@@ -4288,7 +4748,14 @@ session_begin:;
              }
              peer_view_was_active = peer_view_is_active;
          }
@@ -2165,7 +2241,7 @@ index df30a08..1957c99 100644
  #if GENESIS_HAS_RECOMP_NET
          /* Process the peer INPUT and emit our CONFIRM before the blocking
           * present, so confirmation delivery overlaps vsync as well. */
-@@ -4312,7 +4774,12 @@ session_begin:;
+@@ -4312,7 +4779,12 @@ session_begin:;
              SDL_DisplayMode dm;int display=SDL_GetWindowDisplayIndex(window);
              display_rate=display>=0 && SDL_GetCurrentDisplayMode(display,&dm)==0 && dm.refresh_rate>0?dm.refresh_rate:target_fps;
          }
@@ -2179,7 +2255,7 @@ index df30a08..1957c99 100644
          if(want_vsync!=presentation_vsync) {
              if(SDL_RenderSetVSync(renderer,want_vsync)==0)presentation_vsync=want_vsync;
          }
-@@ -4364,12 +4831,20 @@ session_begin:;
+@@ -4364,12 +4836,31 @@ session_begin:;
          } else {
              presentation_clock_reset(&presentation_clock);
              Uint64 now=SDL_GetPerformanceCounter();
@@ -2194,7 +2270,18 @@ index df30a08..1957c99 100644
              draw_load_hold(renderer);
 -            SDL_RenderPresent(renderer);++presentation_count;
 +            if(!(display_flags&(SDL_WINDOW_HIDDEN|SDL_WINDOW_MINIMIZED))){
-+                SDL_RenderPresent(renderer);++presentation_count;
++                if (measure_swap) {
++                    uint64_t cpu_started = host_thread_cpu_us();
++                    Uint64 swap_started = SDL_GetPerformanceCounter();
++                    SDL_RenderPresent(renderer);
++                    Uint64 swap_ticks = SDL_GetPerformanceCounter() - swap_started;
++                    uint64_t cpu_finished = host_thread_cpu_us();
++                    swap_timing.calls = 1;
++                    swap_timing.wall_us = (uint32_t)(swap_ticks * 1000000ull / host_perf_freq);
++                    if (cpu_started && cpu_finished >= cpu_started)
++                        swap_timing.cpu_us = (uint32_t)(cpu_finished - cpu_started);
++                } else SDL_RenderPresent(renderer);
++                ++presentation_count;
 +            }
          }
          FRAME_PHASE(8);
@@ -2202,7 +2289,43 @@ index df30a08..1957c99 100644
  #if GENESIS_HAS_RECOMP_NET
          if (!genesis_netplay_active())
  #endif
-@@ -4628,5 +5103,10 @@ session_begin:;
+@@ -4396,11 +4887,15 @@ session_begin:;
+             audio_get_host_timing(&audio_timing);
+             host_timing_record(&host_timing, frame_num - 1,
+                               (uint32_t)((phase_start - frame_start) * 1000000ull / host_perf_freq),
+-                              phase_us, &audio_timing);
++                              phase_us, &audio_timing, swap_timing);
+         }
+ #undef FRAME_PHASE
+         cmd_server_owner_review_frame_done(frame_num);
+     }
++    const int benchmark_active = benchmark_frames || runtime_measure_frames;
++    const Uint64 benchmark_end = benchmark_active ? SDL_GetPerformanceCounter() : 0;
++    const double benchmark_cpu_end = benchmark_active ? benchmark_process_cpu_seconds() : 0.0;
++    const uint64_t benchmark_cycles_end = benchmark_active ? benchmark_process_cpu_cycles() : 0;
+     if (window_close_requested) {
+         SDL_HideWindow(window);
+         audio_close(); /* stop playback before persistence/optional diagnostics */
+@@ -4478,15 +4973,13 @@ session_begin:;
+ 
+     if (max_frames)
+         fprintf(stderr, "[DONE] %u frames completed\n", frame_num);
+-    if (benchmark_frames || runtime_measure_frames) {
+-        Uint64 benchmark_end = SDL_GetPerformanceCounter();
++    if (benchmark_active) {
+         double seconds = (double)(benchmark_end - benchmark_start)
+                        / (double)SDL_GetPerformanceFrequency();
+         double fps = seconds > 0.0 ? (double)frame_num / seconds : 0.0;
+-        double cpu_seconds = benchmark_process_cpu_seconds() - benchmark_cpu_start;
++        double cpu_seconds = benchmark_cpu_end - benchmark_cpu_start;
+         double cpu_fps = cpu_seconds > 0.0 ? (double)frame_num / cpu_seconds : 0.0;
+-        uint64_t cpu_cycles =
+-            benchmark_process_cpu_cycles() - benchmark_cycles_start;
++        uint64_t cpu_cycles = benchmark_cycles_end - benchmark_cycles_start;
+         double cycles_per_frame =
+             frame_num ? (double)cpu_cycles / (double)frame_num : 0.0;
+         /* Hash after the timer stops: correctness metadata must not reduce
+@@ -4628,5 +5121,10 @@ session_begin:;
      SDL_Quit();
      free(rom_buf);
      if(replay_path && (genesis_replay_failed() || !genesis_replay_finished()))return 2;

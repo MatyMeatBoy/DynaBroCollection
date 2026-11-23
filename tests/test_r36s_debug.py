@@ -12,7 +12,11 @@ class R36SDebugTests(unittest.TestCase):
             log = Path(tmp) / "port.log"
             log.write_text("\n".join([
                 "[HOST-PERCENTILES] frames=360 bucket_us=512 overflow_from_us=261632 p50_us=16895 p95_us=25599 p99_us=-1",
-                "[HOST-WORST] frame=2 total_us=416800 phase_us=0,410000,0,0,6800,0,0,0,0",
+                "[HOST-WORST] frame=2 total_us=416800 phase_us=0,410000,0,0,6800,0,0,0,0"
+                " lock_us=0 callback_us=0 fill_us=0 conceals=0 repeated=0"
+                " swap_calls=1 swap_wall_us=5100 swap_cpu_us=900",
+                "[HOST-SLOW-SIM-SUMMARY] events=90 retained=64",
+                "[HOST-SWAP] end_frame=179 calls=180 avg_wall_us=3300 avg_cpu_us=700 max_wall_us=5100",
                 "[HOST-HITCH] frame=359 total_us=51000 phase_us=0,50000,0,0,0,0,0,0,1000",
             ]), encoding="utf-8")
             result = summarize(log)
@@ -21,9 +25,14 @@ class R36SDebugTests(unittest.TestCase):
             self.assertEqual(result["session_frame_percentiles"]["upper_bounds_ms"],
                              {"p50": 16.895, "p95": 25.599, "p99": None})
             self.assertEqual(result["retained_hitches"]["max_ms"], 51)
+            self.assertEqual(result["session_slow_simulation"], {"events": 90, "retained": 64})
+            self.assertEqual(result["session_worst_frame"]["swap"], {"calls": 1, "wall_ms": 5.1, "cpu_ms": .9})
+            self.assertEqual(result["swap_windows"][0]["calls"], 180)
             filtered = summarize(log, start_frame=180)
             self.assertNotIn("session_worst_frame", filtered)
             self.assertNotIn("session_frame_percentiles", filtered)
+            self.assertNotIn("session_slow_simulation", filtered)
+            self.assertNotIn("swap_windows", filtered)
 
     def test_match_windows_and_raster_by_frame(self):
         with TemporaryDirectory() as tmp:
